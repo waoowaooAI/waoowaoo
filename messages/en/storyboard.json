@@ -147,7 +147,6 @@
         "selectCount": "Select count",
         "generateMultiple": "Generate multiple candidates",
         "generateCount": "Generate {count}",
-        "generateCountSuffix": "candidates",
         "undoShort": "Back"
     },
     "candidate": {

@@ -2,19 +2,12 @@ import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
 import { parseSSEBlock } from './event-parser'
 
 function toStreamEvent(data: Record<string, unknown>, parsedEvent: string): RunStreamEvent {
-  const dependsOn = Array.isArray(data.dependsOn)
-    ? data.dependsOn.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    : undefined
-  const blockedBy = Array.isArray(data.blockedBy)
-    ? data.blockedBy.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    : undefined
   return {
     runId: typeof data.runId === 'string' ? data.runId : '',
     event: parsedEvent as RunStreamEvent['event'],
     ts: typeof data.ts === 'string' ? data.ts : new Date().toISOString(),
     status: (data.status as RunStreamEvent['status']) || undefined,
     stepId: typeof data.stepId === 'string' ? data.stepId : undefined,
-    stepAttempt: typeof data.stepAttempt === 'number' ? Math.max(1, Math.floor(data.stepAttempt)) : undefined,
     stepTitle: typeof data.stepTitle === 'string' ? data.stepTitle : undefined,
     stepIndex: typeof data.stepIndex === 'number' ? data.stepIndex : undefined,
     stepTotal: typeof data.stepTotal === 'number' ? data.stepTotal : undefined,
@@ -25,11 +18,6 @@ function toStreamEvent(data: Record<string, unknown>, parsedEvent: string): RunS
     text: typeof data.text === 'string' ? data.text : undefined,
     reasoning: typeof data.reasoning === 'string' ? data.reasoning : undefined,
     message: typeof data.message === 'string' ? data.message : undefined,
-    dependsOn,
-    blockedBy,
-    groupId: typeof data.groupId === 'string' ? data.groupId : undefined,
-    parallelKey: typeof data.parallelKey === 'string' ? data.parallelKey : undefined,
-    retryable: typeof data.retryable === 'boolean' ? data.retryable : undefined,
     payload: (() => {
       const payload =
         typeof data.payload === 'object' && data.payload ? (data.payload as Record<string, unknown>) : null

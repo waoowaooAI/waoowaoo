@@ -1,16 +1,16 @@
 'use client'
 import { logError as _ulogError } from '@/lib/logging/core'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import Navbar from '@/components/Navbar'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, IconGradientDefs } from '@/components/ui/icons'
-import { shouldGuideToModelSetup } from '@/lib/workspace/model-setup'
-import { Link, useRouter } from '@/i18n/navigation'
-import { apiFetch } from '@/lib/api-fetch'
 
 interface ProjectStats {
   episodes: number
@@ -70,7 +70,6 @@ export default function WorkspacePage() {
   const [pagination, setPagination] = useState<Pagination>({ page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 0 })
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
-  const [modelNotConfigured, setModelNotConfigured] = useState(false)
 
   const t = useTranslations('workspace')
   const tc = useTranslations('common')
@@ -79,7 +78,7 @@ export default function WorkspacePage() {
   useEffect(() => {
     if (status === 'loading') return
     if (!session) {
-      router.push({ pathname: '/auth/signin' })
+      router.push('/auth/signin')
       return
     }
   }, [session, status, router])
@@ -96,7 +95,7 @@ export default function WorkspacePage() {
         params.set('search', search.trim())
       }
 
-      const response = await apiFetch(`/api/projects?${params}`)
+      const response = await fetch(`/api/projects?${params}`)
       if (response.ok) {
         const data = await response.json()
         setProjects(data.projects)
@@ -122,23 +121,6 @@ export default function WorkspacePage() {
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
-  // 打开新建项目弹窗并检测模型配置
-  const openCreateModal = useCallback(() => {
-    setShowCreateModal(true)
-    // 异步检测模型配置状态
-    void (async () => {
-      try {
-        const res = await apiFetch('/api/user-preference')
-        if (res.ok) {
-          const payload: unknown = await res.json()
-          setModelNotConfigured(shouldGuideToModelSetup(payload))
-        }
-      } catch {
-        // 忽略检测失败
-      }
-    })()
-  }, [])
-
   // 分页处理
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }))
@@ -150,7 +132,7 @@ export default function WorkspacePage() {
 
     setCreateLoading(true)
     try {
-      const response = await apiFetch('/api/projects', {
+      const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -162,27 +144,13 @@ export default function WorkspacePage() {
       })
 
       if (response.ok) {
-        let shouldOpenModelSetup = true
-        const preferenceResponse = await apiFetch('/api/user-preference')
-        if (preferenceResponse.ok) {
-          const preferencePayload: unknown = await preferenceResponse.json()
-          shouldOpenModelSetup = shouldGuideToModelSetup(preferencePayload)
-        } else {
-          _ulogError('获取用户偏好失败:', { status: preferenceResponse.status })
-        }
-
         // 创建成功后刷新第一页
         setSearchQuery('')
         setSearchInput('')
         setPagination(prev => ({ ...prev, page: 1 }))
-        void fetchProjects(1, '')
+        fetchProjects(1, '')
         setShowCreateModal(false)
         setFormData({ name: '', description: '' })
-
-        if (shouldOpenModelSetup) {
-          alert(t('analysisModelRequiredAfterCreate'))
-          router.push({ pathname: '/profile' })
-        }
       } else {
         alert(t('createFailed'))
       }
@@ -214,7 +182,7 @@ export default function WorkspacePage() {
 
     setCreateLoading(true)
     try {
-      const response = await apiFetch(`/api/projects/${editingProject.id}`, {
+      const response = await fetch(`/api/projects/${editingProject.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -245,7 +213,7 @@ export default function WorkspacePage() {
     setShowDeleteConfirm(false)
 
     try {
-      const response = await apiFetch(`/api/projects/${projectToDelete.id}`, {
+      const response = await fetch(`/api/projects/${projectToDelete.id}`, {
         method: 'DELETE'
       })
 
@@ -342,7 +310,7 @@ export default function WorkspacePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* New Project Card */}
           <div
-            onClick={() => openCreateModal()}
+            onClick={() => setShowCreateModal(true)}
             className="glass-surface p-6 cursor-pointer group flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 hover:from-blue-500/10 hover:via-cyan-500/10 hover:to-blue-600/10 transition-all duration-300"
           >
             <div className="flex flex-col items-center gap-3">
@@ -367,7 +335,7 @@ export default function WorkspacePage() {
             projects.map((project) => (
               <Link
                 key={project.id}
-                href={{ pathname: `/workspace/${project.id}` }}
+                href={`/workspace/${project.id}`}
                 className="glass-surface cursor-pointer relative group block hover:border-[var(--glass-tone-info-fg)]/40 transition-all duration-300 overflow-hidden"
               >
                 {/* 悬停光效 */}
@@ -486,7 +454,7 @@ export default function WorkspacePage() {
             </p>
             {!searchQuery && (
               <button
-                onClick={() => openCreateModal()}
+                onClick={() => setShowCreateModal(true)}
                 className="glass-btn-base glass-btn-primary px-6 py-3"
               >
                 {t('newProject')}
@@ -552,22 +520,6 @@ export default function WorkspacePage() {
         <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="glass-surface-modal p-6 w-full max-w-md mx-4">
             <h2 className="text-xl font-bold text-[var(--glass-text-primary)] mb-4">{t('createProject')}</h2>
-            {modelNotConfigured && (
-              <div className="flex items-start gap-2 mb-4 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
-                <AppIcon name="alert" className="w-4 h-4 shrink-0 mt-0.5" />
-                <span className="text-[12px] leading-relaxed">
-                  {t('modelNotConfigured.before')}
-                  <Link
-                    href={{ pathname: '/profile' }}
-                    className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 mx-0.5"
-                    onClick={() => setShowCreateModal(false)}
-                  >
-                    {t('modelNotConfigured.link')}
-                  </Link>
-                  {t('modelNotConfigured.after')}
-                </span>
-              </div>
-            )}
             <form onSubmit={handleCreateProject}>
               <div className="mb-4">
                 <label htmlFor="name" className="glass-field-label block mb-2">

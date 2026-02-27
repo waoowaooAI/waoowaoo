@@ -25,7 +25,6 @@ interface CharacterSectionProps {
     focusCharacterRequestId?: number
     activeTaskKeys: Set<string>
     onClearTaskKey: (key: string) => void
-    onRegisterTransientTaskKey: (key: string) => void
     isAnalyzingAssets: boolean
     // 回调函数
     onAddCharacter: () => void
@@ -33,11 +32,11 @@ interface CharacterSectionProps {
     onDeleteAppearance: (characterId: string, appearanceId: string) => void
     onEditAppearance: (characterId: string, characterName: string, appearance: CharacterAppearance, introduction?: string | null) => void
     // 🔥 V6.6 重构：重命名为 handleGenerateImage
-    handleGenerateImage: (type: 'character' | 'location', id: string, appearanceId?: string, count?: number) => Promise<void>
+    handleGenerateImage: (type: 'character' | 'location', id: string, appearanceId?: string) => void
     onSelectImage: (characterId: string, appearanceId: string, imageIndex: number | null) => void
     onConfirmSelection: (characterId: string, appearanceId: string) => void
-    onRegenerateSingle: (characterId: string, appearanceId: string, imageIndex: number) => Promise<void>
-    onRegenerateGroup: (characterId: string, appearanceId: string, count?: number) => Promise<void>
+    onRegenerateSingle: (characterId: string, appearanceId: string, imageIndex: number) => void
+    onRegenerateGroup: (characterId: string, appearanceId: string) => void
     onUndo: (characterId: string, appearanceId: string) => void
     onImageClick: (imageUrl: string) => void
     onImageEdit: (characterId: string, appearanceId: string, imageIndex: number, characterName: string) => void
@@ -56,7 +55,6 @@ export default function CharacterSection({
     focusCharacterRequestId = 0,
     activeTaskKeys,
     onClearTaskKey,
-    onRegisterTransientTaskKey,
     isAnalyzingAssets,
     onAddCharacter,
     onDeleteCharacter,
@@ -230,7 +228,7 @@ export default function CharacterSection({
                                             onEdit={() => onEditAppearance(character.id, character.name, appearance, character.introduction)}
                                             onDelete={() => onDeleteCharacter(character.id)}
                                             onDeleteAppearance={() => appearance.id && onDeleteAppearance(character.id, appearance.id)}
-                                            onRegenerate={(count) => {
+                                            onRegenerate={() => {
                                                 // 获取有效图片数量
                                                 const imageUrls = appearance.imageUrls || []
                                                 const validImageCount = imageUrls.filter(url => !!url).length
@@ -246,30 +244,16 @@ export default function CharacterSection({
                                                 // 单图：重新生成单张
                                                 if (validImageCount === 1) {
                                                     const selectedIndex = appearance.selectedIndex ?? 0
-                                                    const taskKey = `character-${character.id}-${appearance.appearanceIndex}-${selectedIndex}`
                                                     _ulogInfo('[CharacterSection] 调用单张重新生成, imageIndex:', selectedIndex)
-                                                    onRegisterTransientTaskKey(taskKey)
-                                                    void onRegenerateSingle(character.id, appearance.id, selectedIndex).catch(() => {
-                                                        onClearTaskKey(taskKey)
-                                                    })
+                                                    onRegenerateSingle(character.id, appearance.id, selectedIndex)
                                                 }
                                                 // 多图或无图：重新生成整组
                                                 else {
-                                                    const taskKey = `character-${character.id}-${appearance.appearanceIndex}-group`
                                                     _ulogInfo('[CharacterSection] 调用整组重新生成')
-                                                    onRegisterTransientTaskKey(taskKey)
-                                                    void onRegenerateGroup(character.id, appearance.id, count).catch(() => {
-                                                        onClearTaskKey(taskKey)
-                                                    })
+                                                    onRegenerateGroup(character.id, appearance.id)
                                                 }
                                             }}
-                                            onGenerate={(count) => {
-                                                const taskKey = `character-${character.id}-${appearance.appearanceIndex}-group`
-                                                onRegisterTransientTaskKey(taskKey)
-                                                void handleGenerateImage('character', character.id, appearance.id, count).catch(() => {
-                                                    onClearTaskKey(taskKey)
-                                                })
-                                            }}
+                                            onGenerate={() => handleGenerateImage('character', character.id, appearance.id)}
                                             onUndo={() => onUndo(character.id, appearance.id)}
                                             onImageClick={onImageClick}
                                             showDeleteButton={true}

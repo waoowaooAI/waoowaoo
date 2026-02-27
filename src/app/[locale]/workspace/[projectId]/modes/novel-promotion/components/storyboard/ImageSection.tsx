@@ -2,7 +2,6 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import './ImageSection.css'
-import { GlassButton } from '@/components/ui/primitives'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
 import TaskStatusOverlay from '@/components/task/TaskStatusOverlay'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
@@ -119,16 +118,15 @@ export default function ImageSection({
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--glass-bg-surface-strong)] text-[var(--glass-text-tertiary)]">
       <AppIcon name="imagePreview" className="w-8 h-8" />
       <span className="text-xs">{t('video.toolbar.showPending')}</span>
-      <GlassButton
-        variant="primary"
-        size="sm"
+      <button
         onClick={() => {
           triggerPulse()
           onRegeneratePanelImage(panelId, 1, false)
         }}
+        className="glass-btn-base glass-btn-tone-success mt-1 px-4 py-2 text-xs rounded-lg transition-all active:scale-95"
       >
         {t('panel.generateImage')}
-      </GlassButton>
+      </button>
     </div>
   )
 

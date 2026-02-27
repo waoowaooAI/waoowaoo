@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { ApiError, apiHandler } from '@/lib/api-errors'
-import { PRIMARY_APPEARANCE_INDEX, isArtStyleValue } from '@/lib/constants'
 
 // 更新形象描述
 export const PATCH = apiHandler(async (
@@ -26,7 +25,7 @@ export const PATCH = apiHandler(async (
     }
 
     const body = await request.json()
-    const { description, descriptionIndex, changeReason, artStyle } = body
+    const { description, descriptionIndex, changeReason } = body
 
     const appearance = await prisma.globalCharacterAppearance.findFirst({
         where: { characterId, appearanceIndex: parseInt(appearanceIndex, 10) }
@@ -59,22 +58,6 @@ export const PATCH = apiHandler(async (
     if (changeReason !== undefined) {
         updateData.changeReason = changeReason
     }
-    if (artStyle !== undefined) {
-        if (typeof artStyle !== 'string') {
-            throw new ApiError('INVALID_PARAMS', {
-                code: 'INVALID_ART_STYLE',
-                message: 'artStyle must be a supported value',
-            })
-        }
-        const normalizedArtStyle = artStyle.trim()
-        if (!isArtStyleValue(normalizedArtStyle)) {
-            throw new ApiError('INVALID_PARAMS', {
-                code: 'INVALID_ART_STYLE',
-                message: 'artStyle must be a supported value',
-            })
-        }
-        updateData.artStyle = normalizedArtStyle
-    }
 
     await prisma.globalCharacterAppearance.update({
         where: { id: appearance.id },
@@ -106,7 +89,7 @@ export const POST = apiHandler(async (
     }
 
     const body = await request.json()
-    const { description, changeReason, artStyle } = body
+    const { description, changeReason } = body
 
     if (!description) {
         throw new ApiError('INVALID_PARAMS')
@@ -114,27 +97,12 @@ export const POST = apiHandler(async (
 
     const maxIndex = character.appearances.reduce((max, a) => Math.max(max, a.appearanceIndex), 0)
     const newIndex = maxIndex + 1
-    const inputArtStyle = typeof artStyle === 'string' ? artStyle.trim() : ''
-    const fallbackArtStyle = (() => {
-        if (inputArtStyle) return inputArtStyle
-        const primaryAppearance = character.appearances.find((item) => item.appearanceIndex === PRIMARY_APPEARANCE_INDEX)
-            || character.appearances[0]
-        const stored = typeof primaryAppearance?.artStyle === 'string' ? primaryAppearance.artStyle.trim() : ''
-        return stored
-    })()
-    if (!isArtStyleValue(fallbackArtStyle)) {
-        throw new ApiError('INVALID_PARAMS', {
-            code: 'INVALID_ART_STYLE',
-            message: 'artStyle is required and must be a supported value',
-        })
-    }
 
     const appearance = await prisma.globalCharacterAppearance.create({
         data: {
             characterId,
             appearanceIndex: newIndex,
             changeReason: changeReason || '形象变化',
-            artStyle: fallbackArtStyle,
             description: description.trim(),
             descriptions: JSON.stringify([description.trim()]),
             imageUrls: encodeImageUrls([]),

@@ -20,8 +20,6 @@ import {
   recordCompletionUsage,
   resolveLlmRuntimeModel,
 } from './runtime-shared'
-import { completeBailianLlm } from '@/lib/providers/bailian'
-import { completeSiliconFlowLlm } from '@/lib/providers/siliconflow'
 
 type GoogleVisionPart = { inlineData: { mimeType: string; data: string } } | { text: string }
 type ArkVisionContentItem = { type: 'input_image'; image_url: string } | { type: 'input_text'; text: string }
@@ -81,15 +79,15 @@ export async function chatCompletionWithVision(
   for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
     const attemptStartedAt = Date.now()
     try {
-      const providerConfig = await getProviderConfig(userId, provider)
-      if (providerKey === 'google' || providerKey === 'gemini-compatible') {
-        const ai = new GoogleGenAI({ apiKey: providerConfig.apiKey })
-        const { normalizeToBase64ForGeneration } = await import('@/lib/media/outbound-image')
+      if (providerKey === 'google') {
+        const { apiKey } = await getProviderConfig(userId, provider)
+        const ai = new GoogleGenAI({ apiKey })
+        const { imageUrlToBase64 } = await import('../cos')
 
         const parts: GoogleVisionPart[] = []
         for (const url of imageUrls) {
           try {
-            const dataUrl = url.startsWith('data:') ? url : await normalizeToBase64ForGeneration(url)
+            const dataUrl = url.startsWith('data:') ? url : await imageUrlToBase64(url)
             const base64Start = dataUrl.indexOf(';base64,')
             if (base64Start !== -1) {
               const mimeType = dataUrl.substring(5, base64Start)
@@ -128,17 +126,17 @@ export async function chatCompletionWithVision(
       }
 
       if (providerKey === 'ark') {
-        const apiKey = providerConfig.apiKey
-        const { normalizeToBase64ForGeneration } = await import('@/lib/media/outbound-image')
+        const { apiKey } = await getProviderConfig(userId, provider)
+        const { imageUrlToBase64 } = await import('../cos')
 
         const content: ArkVisionContentItem[] = []
         for (const url of imageUrls) {
           let finalUrl = url
           try {
             if (!url.startsWith('http') && !url.startsWith('data:')) {
-              finalUrl = await normalizeToBase64ForGeneration(url)
+              finalUrl = await imageUrlToBase64(url)
             } else if (url.startsWith('/')) {
-              finalUrl = await normalizeToBase64ForGeneration(url)
+              finalUrl = await imageUrlToBase64(url)
             }
           } catch (e) {
             _ulogError('[LLM Vision] Ark 图片转换失败:', e)
@@ -174,57 +172,7 @@ export async function chatCompletionWithVision(
         return completion
       }
 
-      if (providerKey === 'bailian') {
-        const prompt = textPrompt || 'analyze vision content'
-        const completion = await completeBailianLlm({
-          modelId: resolvedModelId,
-          apiKey: providerConfig.apiKey,
-          baseUrl: providerConfig.baseUrl,
-          messages: [{ role: 'user', content: prompt }],
-          temperature,
-        })
-        recordCompletionUsage(resolvedModelId, completion)
-        llmLogger.info({
-          action: 'llm.vision.success',
-          message: 'llm vision call succeeded',
-          provider: providerKey,
-          durationMs: Date.now() - attemptStartedAt,
-          details: {
-            model: resolvedModelId,
-            attempt,
-            maxRetries,
-            imageCount: imageUrls.length,
-          },
-        })
-        return completion
-      }
-
-      if (providerKey === 'siliconflow') {
-        const prompt = textPrompt || 'analyze vision content'
-        const completion = await completeSiliconFlowLlm({
-          modelId: resolvedModelId,
-          apiKey: providerConfig.apiKey,
-          baseUrl: providerConfig.baseUrl,
-          messages: [{ role: 'user', content: prompt }],
-          temperature,
-        })
-        recordCompletionUsage(resolvedModelId, completion)
-        llmLogger.info({
-          action: 'llm.vision.success',
-          message: 'llm vision call succeeded',
-          provider: providerKey,
-          durationMs: Date.now() - attemptStartedAt,
-          details: {
-            model: resolvedModelId,
-            attempt,
-            maxRetries,
-            imageCount: imageUrls.length,
-          },
-        })
-        return completion
-      }
-
-      const config = providerConfig
+      const config = await getProviderConfig(userId, provider)
       if (!config.baseUrl) {
         throw new Error(`PROVIDER_BASE_URL_MISSING: ${provider} (llm)`)
       }
@@ -241,8 +189,8 @@ export async function chatCompletionWithVision(
         let finalUrl = url
         if (url.startsWith('/api/files/') || url.startsWith('/')) {
           try {
-            const { normalizeToBase64ForGeneration } = await import('@/lib/media/outbound-image')
-            finalUrl = await normalizeToBase64ForGeneration(url)
+            const { imageUrlToBase64 } = await import('../cos')
+            finalUrl = await imageUrlToBase64(url)
             _ulogInfo('[LLM Vision] 转换本地图片为 Base64')
           } catch (e) {
             _ulogError('[LLM Vision] 转换本地图片失败:', e)

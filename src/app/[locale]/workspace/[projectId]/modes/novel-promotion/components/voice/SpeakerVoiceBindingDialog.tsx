@@ -6,8 +6,6 @@ import { useTranslations } from 'next-intl'
 import VoicePickerDialog from '@/app/[locale]/workspace/asset-hub/components/VoicePickerDialog'
 import VoiceCreationModal from '@/app/[locale]/workspace/asset-hub/components/VoiceCreationModal'
 import { AppIcon } from '@/components/ui/icons'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
-import type { InlineSpeakerVoiceBinding } from '@/lib/novel-promotion/stages/voice-stage-runtime/types'
 
 type BindingTab = 'select' | 'upload' | 'design'
 
@@ -17,7 +15,7 @@ interface SpeakerVoiceBindingDialogProps {
     projectId: string
     episodeId: string
     onClose: () => void
-    onBound: (speaker: string, binding: InlineSpeakerVoiceBinding) => void
+    onBound: (speaker: string, audioUrl: string, voiceType: string, voiceId?: string) => void
 }
 
 /**
@@ -42,10 +40,6 @@ export default function SpeakerVoiceBindingDialog({
         onClose()
     }, [onClose])
 
-    const confirmUploadVoice = useCallback(() => {
-        return window.confirm(t('uploadQwenHint'))
-    }, [t])
-
     // 从音色库选择后的回调
     const handleVoiceSelected = useCallback((voice: {
         id: string
@@ -53,24 +47,12 @@ export default function SpeakerVoiceBindingDialog({
         voiceId: string | null
         voiceType: string
     }) => {
-        if (voice.voiceId) {
-            onBound(speaker, {
-                provider: 'bailian',
-                voiceType: voice.voiceType,
-                voiceId: voice.voiceId,
-                ...(voice.customVoiceUrl ? { previewAudioUrl: voice.customVoiceUrl } : {}),
-            })
-        } else if (voice.customVoiceUrl) {
-            onBound(speaker, {
-                provider: 'fal',
-                voiceType: voice.voiceType,
-                audioUrl: voice.customVoiceUrl,
-            })
-            alert(t('uploadQwenHint'))
+        if (voice.customVoiceUrl) {
+            onBound(speaker, voice.customVoiceUrl, voice.voiceType, voice.voiceId ?? undefined)
         }
         setSubDialogOpen(false)
         onClose()
-    }, [speaker, onBound, onClose, t])
+    }, [speaker, onBound, onClose])
 
     // AI 设计音色或上传音频后的回调
     const handleCreationSuccess = useCallback(() => {
@@ -80,12 +62,13 @@ export default function SpeakerVoiceBindingDialog({
     }, [])
 
     const handleTabClick = useCallback((tab: BindingTab) => {
-        if (tab === 'upload' && !confirmUploadVoice()) {
-            return
+        if (tab === 'select') {
+            setSubDialogOpen(true)
+        } else {
+            setSubDialogOpen(true)
         }
         setActiveTab(tab)
-        setSubDialogOpen(true)
-    }, [confirmUploadVoice])
+    }, [])
 
     if (!isOpen) return null
     if (typeof document === 'undefined') return null
@@ -142,16 +125,42 @@ export default function SpeakerVoiceBindingDialog({
                     </p>
                 </div>
 
+                {/* 胶囊分段选择器 */}
                 <div className="px-5 py-3">
-                    <SegmentedControl
-                        options={[
-                            { value: 'select' as const, label: t('selectFromLibrary') },
-                            { value: 'upload' as const, label: t('uploadAudio') },
-                            { value: 'design' as const, label: t('aiDesign') },
-                        ]}
-                        value={activeTab}
-                        onChange={(val) => handleTabClick(val as BindingTab)}
-                    />
+                    {(() => {
+                        const tabs = [
+                            { id: 'select' as const, label: t('selectFromLibrary') },
+                            { id: 'upload' as const, label: t('uploadAudio') },
+                            { id: 'design' as const, label: t('aiDesign') },
+                        ]
+                        const activeIdx = tabs.findIndex(tab => tab.id === activeTab)
+                        return (
+                            <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
+                                <div className="relative grid gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+                                    <div
+                                        className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
+                                        style={{
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
+                                            width: `calc(100% / ${tabs.length})`,
+                                            transform: `translateX(${Math.max(0, activeIdx) * 100}%)`,
+                                        }}
+                                    />
+                                    {tabs.map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => handleTabClick(tab.id)}
+                                            className={`relative z-[1] px-3 py-1.5 text-sm rounded-md transition-colors cursor-pointer ${activeTab === tab.id
+                                                ? 'text-[var(--glass-text-primary)] font-medium'
+                                                : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'
+                                                }`}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    })()}
                 </div>
 
                 {/* Tab 内容区 — 显示描述和进入按钮 */}
@@ -175,10 +184,7 @@ export default function SpeakerVoiceBindingDialog({
                             {activeTab === 'design' && t('aiDesignDesc')}
                         </p>
                         <button
-                            onClick={() => {
-                                if (activeTab === 'upload' && !confirmUploadVoice()) return
-                                setSubDialogOpen(true)
-                            }}
+                            onClick={() => setSubDialogOpen(true)}
                             className="glass-btn-base glass-btn-primary px-8 py-2.5 rounded-lg text-sm font-medium"
                         >
                             {activeTab === 'select' && t('selectFromLibrary')}

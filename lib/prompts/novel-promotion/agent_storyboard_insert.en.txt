@@ -38,4 +38,3 @@ Rules:
 2. Keep narrative and spatial continuity between previous and next panel.
 3. Use valid character and location names from provided context.
 4. JSON only, no markdown.
-5. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

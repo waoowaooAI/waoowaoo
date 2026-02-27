@@ -8,11 +8,6 @@ import {
     useUploadAssetHubVoice,
 } from '@/lib/query/hooks'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
-import {
-    DEFAULT_VOICE_SCHEME_COUNT,
-    generateVoiceDesignOptions,
-    type GeneratedVoice,
-} from '@/components/voice/voice-design-shared'
 
 export interface VoiceCreationModalShellProps {
     isOpen: boolean
@@ -23,7 +18,23 @@ export interface VoiceCreationModalShellProps {
     initialVoiceName?: string
 }
 
+interface GeneratedVoice {
+    voiceId: string
+    audioBase64: string
+    audioUrl: string
+}
+
 type CreationMode = 'design' | 'upload'
+
+// 声音风格预设
+const VOICE_PRESET_KEYS = [
+    'maleBroadcaster',
+    'gentleFemale',
+    'matureMale',
+    'livelyFemale',
+    'intellectualFemale',
+    'narrator'
+] as const
 
 export function useVoiceCreation({ isOpen, folderId, onClose, onSuccess, initialVoiceName }: VoiceCreationModalShellProps) {
     const t = useTranslations('common')
@@ -37,8 +48,7 @@ export function useVoiceCreation({ isOpen, folderId, onClose, onSuccess, initial
     // 设计模式状态
     const [voiceName, setVoiceName] = useState(initialVoiceName ?? '')
     const [voicePrompt, setVoicePrompt] = useState('')
-    const [previewText, setPreviewText] = useState(tv('defaultPreviewText'))
-    const [schemeCount, setSchemeCount] = useState(String(DEFAULT_VOICE_SCHEME_COUNT))
+    const [previewText, setPreviewText] = useState('')
     const [isVoiceCreationSubmitting, setIsVoiceCreationSubmitting] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -86,21 +96,41 @@ export function useVoiceCreation({ isOpen, folderId, onClose, onSuccess, initial
         setSelectedIndex(null)
 
         try {
-            const voices = await generateVoiceDesignOptions({
-                count: schemeCount,
-                voicePrompt,
-                previewText,
-                defaultPreviewText: tv('defaultPreviewText'),
-                onDesignVoice: (payload) => designVoiceMutation.mutateAsync(payload),
-            })
+            const voices: GeneratedVoice[] = []
+            const actualPreviewText = previewText.trim() || tv('defaultPreviewText')
+
+            for (let i = 0; i < 3; i++) {
+                const safeName = `voice_${Date.now().toString(36)}_${i + 1}`.slice(0, 16)
+
+                const data = await designVoiceMutation.mutateAsync({
+                    voicePrompt: voicePrompt.trim(),
+                    previewText: actualPreviewText,
+                    preferredName: safeName,
+                    language: 'zh'
+                })
+
+                if (data.audioBase64) {
+                    if (typeof data.voiceId !== 'string' || data.voiceId.length === 0) {
+                        throw new Error('VOICE_DESIGN_INVALID_RESPONSE: missing voiceId')
+                    }
+                    voices.push({
+                        voiceId: data.voiceId,
+                        audioBase64: data.audioBase64,
+                        audioUrl: `data:audio/wav;base64,${data.audioBase64}`
+                    })
+                }
+            }
+
+            if (voices.length === 0) {
+                throw new Error(tv('noVoiceGenerated'))
+            }
+
             setGeneratedVoices(voices)
         } catch (err: unknown) {
             const errMsg = err instanceof Error ? err.message : 'Unknown error'
             const status = (err as Error & { status?: number }).status
             if (status === 402) {
                 alert(t('insufficientBalance') + '\n\n' + t('insufficientBalanceDetail'))
-            } else if (errMsg === 'VOICE_DESIGN_EMPTY_RESULT') {
-                setError(tv('noVoiceGenerated'))
             } else if (errMsg !== 'INSUFFICIENT_BALANCE') {
                 setError(errMsg || tv('generationError'))
             }
@@ -256,8 +286,7 @@ export function useVoiceCreation({ isOpen, folderId, onClose, onSuccess, initial
         setMode('design')
         setVoiceName(initialVoiceName ?? '')
         setVoicePrompt('')
-        setPreviewText(tv('defaultPreviewText'))
-        setSchemeCount(String(DEFAULT_VOICE_SCHEME_COUNT))
+        setPreviewText('')
         setError(null)
         setGeneratedVoices([])
         setSelectedIndex(null)
@@ -294,7 +323,6 @@ export function useVoiceCreation({ isOpen, folderId, onClose, onSuccess, initial
         voiceName,
         voicePrompt,
         previewText,
-        schemeCount,
         isVoiceCreationSubmitting,
         isSaving,
         error,
@@ -310,12 +338,13 @@ export function useVoiceCreation({ isOpen, folderId, onClose, onSuccess, initial
         uploadSubmittingState,
         t,
         tHub,
+        tv,
         tvCreate,
+        VOICE_PRESET_KEYS,
         setMode,
         setVoiceName,
         setVoicePrompt,
         setPreviewText,
-        setSchemeCount,
         setError,
         setGeneratedVoices,
         setSelectedIndex,

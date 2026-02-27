@@ -1,4 +1,4 @@
-import { logDebug as _ulogDebug, logError as _ulogError } from '@/lib/logging/core'
+import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
 import Redis from 'ioredis'
 
 type RedisSingleton = {
@@ -34,7 +34,7 @@ function buildBaseConfig() {
 }
 
 function onConnectLog(scope: string, client: Redis) {
-  client.on('connect', () => _ulogDebug(`[Redis:${scope}] connected ${REDIS_HOST}:${REDIS_PORT}`))
+  client.on('connect', () => _ulogInfo(`[Redis:${scope}] connected ${REDIS_HOST}:${REDIS_PORT}`))
   client.on('error', (err) => _ulogError(`[Redis:${scope}] error:`, err.message))
 }
 

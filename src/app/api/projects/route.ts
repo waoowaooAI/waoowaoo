@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { toMoneyNumber } from '@/lib/billing/money'
-import { isArtStyleValue } from '@/lib/constants'
 
 // GET - 获取用户的项目（支持分页和搜索）
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -208,9 +207,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
         storyboardModel: userPreference.storyboardModel,
         editModel: userPreference.editModel,
         videoModel: userPreference.videoModel,
-        audioModel: userPreference.audioModel,
         videoRatio: userPreference.videoRatio,
-        artStyle: isArtStyleValue(userPreference.artStyle) ? userPreference.artStyle : 'american-comic',
+        artStyle: userPreference.artStyle || 'american-comic',
         ttsRate: userPreference.ttsRate
       })
     }

@@ -14,12 +14,9 @@ import VoiceSettings from './VoiceSettings'
 import { useUploadProjectCharacterImage } from '@/lib/query/mutations'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
-import ImageGenerationInlineCountButton from '@/components/image-generation/ImageGenerationInlineCountButton'
 import CharacterCardHeader from './character-card/CharacterCardHeader'
 import CharacterCardGallery from './character-card/CharacterCardGallery'
 import CharacterCardActions from './character-card/CharacterCardActions'
-import { getImageGenerationCountOptions } from '@/lib/image-generation/count'
-import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
 import { AppIcon } from '@/components/ui/icons'
 
 interface CharacterCardProps {
@@ -28,8 +25,8 @@ interface CharacterCardProps {
   onEdit: () => void
   onDelete: () => void
   onDeleteAppearance?: () => void  // 删除单个形象
-  onRegenerate: (count?: number) => void
-  onGenerate: (count?: number) => void
+  onRegenerate: () => void
+  onGenerate: () => void
   onUndo?: () => void  // 撤回到上一版本
   onImageClick: (imageUrl: string) => void
   showDeleteButton: boolean
@@ -74,7 +71,6 @@ export default function CharacterCard({
   // 🔥 使用 mutation
   const uploadImage = useUploadProjectCharacterImage(projectId)
   const t = useTranslations('assets')
-  const { count: generationCount, setCount: setGenerationCount } = useImageGenerationCount('character')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [pendingUploadIndex, setPendingUploadIndex] = useState<number | undefined>(undefined)
   const [showDeleteMenu, setShowDeleteMenu] = useState(false)
@@ -214,22 +210,18 @@ export default function CharacterCard({
   if (showSelectionMode) {
     const selectionActions = (
       <>
-        <ImageGenerationInlineCountButton
-          prefix={isGroupTaskRunning ? (
+        <button
+          onClick={onRegenerate}
+          disabled={isAppearanceTaskRunning || isAnyTaskRunning || uploadImage.isPending}
+          className="w-6 h-6 rounded hover:bg-[var(--glass-tone-info-bg)] flex items-center justify-center transition-colors disabled:opacity-50"
+          title={t('image.regenerateGroup')}
+        >
+          {isGroupTaskRunning ? (
             <TaskStatusInline state={displayTaskPresentation} className="[&_span]:sr-only [&_svg]:text-[var(--glass-tone-info-fg)]" />
           ) : (
             <AppIcon name="refresh" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
           )}
-          suffix={null}
-          value={generationCount}
-          options={getImageGenerationCountOptions('character')}
-          onValueChange={setGenerationCount}
-          onClick={() => onRegenerate(generationCount)}
-          disabled={isAppearanceTaskRunning || isAnyTaskRunning || uploadImage.isPending}
-          ariaLabel={t('image.selectCount')}
-          className="inline-flex h-6 items-center gap-0.5 rounded px-1 hover:bg-[var(--glass-tone-info-bg)] transition-colors disabled:opacity-50"
-          selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-[10px] font-semibold text-[var(--glass-tone-info-fg)] outline-none cursor-pointer leading-none transition-colors"
-        />
+        </button>
         {onUndo && (appearance.previousImageUrl || appearance.previousImageUrls.length > 0) && (
           <button
             onClick={onUndo}
@@ -341,7 +333,7 @@ export default function CharacterCard({
         </button>
       )}
       <button
-        onClick={() => onRegenerate()}
+        onClick={onRegenerate}
         disabled={uploadImage.isPending || isAppearanceTaskRunning}
         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-90 ${(isAppearanceTaskRunning || isAnyTaskRunning)
           ? 'bg-[var(--glass-tone-success-fg)] hover:bg-[var(--glass-tone-success-fg)]'
@@ -473,8 +465,6 @@ export default function CharacterCard({
         isAppearanceTaskRunning={isAppearanceTaskRunning}
         isAnyTaskRunning={isAnyTaskRunning}
         hasDescription={!!appearance.description}
-        generationCount={generationCount}
-        onGenerationCountChange={setGenerationCount}
         onGenerate={onGenerate}
         voiceSettings={compactVoiceSettings}
       />

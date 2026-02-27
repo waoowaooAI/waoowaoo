@@ -15,20 +15,14 @@ function shouldSuppressLogEvent(event: Pick<LogEvent, 'action'>): boolean {
 }
 
 function writeProjectLogLine(line: string, projectId: string | undefined, moduleName: string | undefined): void {
+  if (!projectId) return
   if (typeof window !== 'undefined') return
   if (!fileWriterModulePromise) {
     fileWriterModulePromise = import('./file-writer')
   }
-  // 全局日志（所有日志都写入 app.log）
   void fileWriterModulePromise
-    .then((mod) => mod.writeGlobalLogLine(line))
+    .then((mod) => mod.writeLogToProjectFile(line, projectId, moduleName))
     .catch(() => undefined)
-  // 项目日志
-  if (projectId) {
-    void fileWriterModulePromise
-      .then((mod) => mod.writeLogToProjectFile(line, projectId, moduleName))
-      .catch(() => undefined)
-  }
 }
 
 function serializeError(error: unknown): ErrorFields | undefined {

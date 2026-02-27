@@ -1,6 +1,5 @@
 {
-    "title": "项目配置",
-    "subtitle": "默认沿用设置中心的全局配置，也可为当前项目单独自定义，修改仅对本项目生效。",
+    "title": "项目全局配置",
     "saved": "已保存",
     "autoSave": "自动保存",
     "visualStyle": "视觉风格",
@@ -14,7 +13,6 @@
     "storyboardModel": "分镜图像模型",
     "editModel": "修图/编辑模型",
     "videoModel": "视频模型",
-    "audioModel": "语音合成模型",
     "videoResolution": "视频分辨率",
     "ttsVoice": "旁白音色",
     "ttsRate": "语速",
@@ -29,7 +27,5 @@
     "noParams": "该模型无可配置参数",
     "confirm": "确认",
     "cancel": "取消",
-    "delete": "删除",
-    "boolOn": "开",
-    "boolOff": "关"
+    "delete": "删除"
 }

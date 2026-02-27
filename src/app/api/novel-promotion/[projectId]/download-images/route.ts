@@ -2,7 +2,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import archiver from 'archiver'
-import { getObjectBuffer, toFetchableUrl } from '@/lib/storage'
+import { getCOSClient, toFetchableUrl } from '@/lib/cos'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
@@ -157,6 +157,8 @@ export const GET = apiHandler(async (
   })
 
   async function processImages() {
+    const isLocal = process.env.STORAGE_TYPE === 'local'
+
     for (const image of indexedImages) {
       try {
         _ulogInfo(`Downloading image ${image.index}: ${image.imageUrl}`)
@@ -173,6 +175,7 @@ export const GET = apiHandler(async (
           }
           const arrayBuffer = await response.arrayBuffer()
           imageData = Buffer.from(arrayBuffer)
+
           const contentType = response.headers.get('content-type')
           if (contentType?.includes('jpeg') || contentType?.includes('jpg')) {
             extension = 'jpg'
@@ -180,7 +183,32 @@ export const GET = apiHandler(async (
             extension = 'webp'
           }
         } else if (storageKey) {
-          imageData = await getObjectBuffer(storageKey)
+          if (isLocal) {
+            // 本地存储：通过文件服务 API 获取
+            const { getSignedUrl } = await import('@/lib/cos')
+            const localUrl = toFetchableUrl(getSignedUrl(storageKey))
+            const response = await fetch(localUrl)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch local file: ${response.statusText}`)
+            }
+            imageData = Buffer.from(await response.arrayBuffer())
+          } else {
+            // COS：从 COS 下载
+            const cos = getCOSClient()
+            imageData = await new Promise<Buffer>((resolve, reject) => {
+              cos.getObject(
+                {
+                  Bucket: process.env.COS_BUCKET!,
+                  Region: process.env.COS_REGION!,
+                  Key: storageKey
+                },
+                (err, data) => {
+                  if (err) reject(err)
+                  else resolve(data.Body as Buffer)
+                }
+              )
+            })
+          }
 
           const keyExt = storageKey.split('.').pop()?.toLowerCase()
           if (keyExt && ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(keyExt)) {

@@ -35,4 +35,3 @@ Rules:
 5. If no reliable panel match exists, set "matchedPanel": null.
 6. Use canonical names from character library when possible.
 7. Return strict JSON only, no markdown.
-8. ⚠️ JSON SAFETY: All quotation marks in dialogue (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

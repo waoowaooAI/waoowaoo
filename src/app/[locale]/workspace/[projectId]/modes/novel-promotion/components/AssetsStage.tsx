@@ -76,16 +76,12 @@ export default function AssetsStage({
   const generateLocationImage = useGenerateProjectLocationImage(projectId)
 
   // 🔥 内部图片生成函数 - 使用 mutation hooks 实现乐观更新
-  const handleGenerateImage = useCallback(async (
-    type: 'character' | 'location',
-    id: string,
-    appearanceId?: string,
-    count?: number,
-  ) => {
+  const handleGenerateImage = useCallback(async (type: 'character' | 'location', id: string, appearanceId?: string) => {
     if (type === 'character' && appearanceId) {
-      await generateCharacterImage.mutateAsync({ characterId: id, appearanceId, count })
+      await generateCharacterImage.mutateAsync({ characterId: id, appearanceId })
     } else if (type === 'location') {
-      await generateLocationImage.mutateAsync({ locationId: id, count })
+      // 场景生成默认使用 imageIndex: 0
+      await generateLocationImage.mutateAsync({ locationId: id, imageIndex: 0 })
     }
   }, [generateCharacterImage, generateLocationImage])
 
@@ -119,7 +115,6 @@ export default function AssetsStage({
     isBatchSubmitting,
     batchProgress,
     activeTaskKeys,
-    registerTransientTaskKey,
     clearTransientTaskKey,
     handleGenerateAllImages,
     handleRegenerateAllImages
@@ -311,7 +306,6 @@ export default function AssetsStage({
         focusCharacterRequestId={focusCharacterRequestId}
         activeTaskKeys={activeTaskKeys}
         onClearTaskKey={clearTransientTaskKey}
-        onRegisterTransientTaskKey={registerTransientTaskKey}
         isAnalyzingAssets={isAnalyzingAssets}
         onAddCharacter={() => setShowAddCharacter(true)}
         onDeleteCharacter={handleDeleteCharacter}
@@ -337,7 +331,6 @@ export default function AssetsStage({
         projectId={projectId}
         activeTaskKeys={activeTaskKeys}
         onClearTaskKey={clearTransientTaskKey}
-        onRegisterTransientTaskKey={registerTransientTaskKey}
         onAddLocation={() => setShowAddLocation(true)}
         onDeleteLocation={handleDeleteLocation}
         onEditLocation={handleEditLocation}

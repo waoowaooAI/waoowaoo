@@ -296,13 +296,11 @@
   {
     "modelType": "llm",
     "provider": "google",
-    "modelId": "gemini-3.1-flash-lite-preview",
+    "modelId": "gemini-3-pro-preview",
     "capabilities": {
       "llm": {
         "reasoningEffortOptions": [
-          "minimal",
           "low",
-          "medium",
           "high"
         ]
       }
@@ -637,90 +635,6 @@
           15
         ],
         "firstlastframe": false,
-        "supportGenerateAudio": false
-      }
-    }
-  },
-  {
-    "modelType": "video",
-    "provider": "bailian",
-    "modelId": "wan2.6-i2v-flash",
-    "capabilities": {
-      "video": {
-        "generationModeOptions": [
-          "normal"
-        ],
-        "firstlastframe": false,
-        "supportGenerateAudio": false
-      }
-    }
-  },
-  {
-    "modelType": "video",
-    "provider": "bailian",
-    "modelId": "wan2.6-i2v",
-    "capabilities": {
-      "video": {
-        "generationModeOptions": [
-          "normal"
-        ],
-        "firstlastframe": false,
-        "supportGenerateAudio": false
-      }
-    }
-  },
-  {
-    "modelType": "video",
-    "provider": "bailian",
-    "modelId": "wan2.5-i2v-preview",
-    "capabilities": {
-      "video": {
-        "generationModeOptions": [
-          "normal"
-        ],
-        "firstlastframe": false,
-        "supportGenerateAudio": false
-      }
-    }
-  },
-  {
-    "modelType": "video",
-    "provider": "bailian",
-    "modelId": "wan2.2-i2v-plus",
-    "capabilities": {
-      "video": {
-        "generationModeOptions": [
-          "normal"
-        ],
-        "firstlastframe": false,
-        "supportGenerateAudio": false
-      }
-    }
-  },
-  {
-    "modelType": "video",
-    "provider": "bailian",
-    "modelId": "wan2.2-kf2v-flash",
-    "capabilities": {
-      "video": {
-        "generationModeOptions": [
-          "firstlastframe"
-        ],
-        "firstlastframe": true,
-        "supportGenerateAudio": false
-      }
-    }
-  },
-  {
-    "modelType": "video",
-    "provider": "bailian",
-    "modelId": "wanx2.1-kf2v-plus",
-    "capabilities": {
-      "video": {
-        "generationModeOptions": [
-          "firstlastframe"
-        ],
-        "firstlastframe": true,
         "supportGenerateAudio": false
       }
     }

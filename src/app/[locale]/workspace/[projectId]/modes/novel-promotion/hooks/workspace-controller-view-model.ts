@@ -26,7 +26,6 @@ interface ProjectSnapshotInput {
   storyboardModel: string | undefined
   editModel: string | undefined
   videoModel: string | undefined
-  audioModel: string | undefined
   videoRatio: string | undefined
   capabilityOverrides: CapabilitySelections
   ttsRate: string | number | undefined
@@ -78,7 +77,6 @@ interface BuildWorkspaceControllerViewModelParams {
     showRebuildConfirm: boolean
     rebuildConfirmTitle: string
     rebuildConfirmMessage: string
-    pendingActionType: 'storyToScript' | 'scriptToStoryboard' | null
     runWithRebuildConfirm: (action: 'storyToScript' | 'scriptToStoryboard', operation: () => Promise<void>) => Promise<void>
     handleCancelRebuildConfirm: () => void
     handleAcceptRebuildConfirm: () => void
@@ -88,8 +86,6 @@ interface BuildWorkspaceControllerViewModelParams {
     isAssetAnalysisRunning: boolean
     isConfirmingAssets: boolean
     isTransitioning: boolean
-    isStartingStoryToScript: boolean
-    isStartingScriptToStoryboard: boolean
     transitionProgress: { step?: string; total?: number; current?: number }
     storyToScriptConsoleMinimized: boolean
     setStoryToScriptConsoleMinimized: (minimized: boolean) => void

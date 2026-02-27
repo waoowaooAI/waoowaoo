@@ -17,7 +17,7 @@ Requirements:
 5. Video prompt should focus on motion/performance/camera behavior.
 
 Output format:
-Return JSON only. ⚠️ JSON SAFETY: All quotation marks MUST be converted to corner brackets「」in JSON string values:
+Return JSON only:
 {
   "image_prompt": "updated image prompt",
   "video_prompt": "updated video prompt"

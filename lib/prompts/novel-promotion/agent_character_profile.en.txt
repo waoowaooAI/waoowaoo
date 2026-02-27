@@ -84,4 +84,3 @@ Strict constraints:
 1. JSON only.
 2. If no valid character is found, return empty arrays.
 3. Keep all strings in English.
-4. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

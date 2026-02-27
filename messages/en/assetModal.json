@@ -13,9 +13,6 @@
         "supportedFormats": "Supports JPG, PNG formats",
         "nameRequired": "Please enter character name first to use reference conversion",
         "convertToSheet": "Convert to standard character sheet",
-        "useReferenceGeneratePrefix": "Generate from reference",
-        "generateCountSuffix": "images",
-        "selectReferenceGenerateCount": "Select reference generation count",
         "referenceTip": "Upload any character image, AI will generate a standard character sheet",
         "description": "Character Description",
         "modifyDescription": "Modify Description",
@@ -68,13 +65,6 @@
         "cancel": "Cancel",
         "adding": "Adding...",
         "add": "Add",
-        "addOnly": "Add character only",
-        "addOnlyToAssetHub": "Add only to asset hub",
-        "addOnlyLocation": "Add location only",
-        "addOnlyToAssetHubLocation": "Add location to asset hub only",
-        "addAndGeneratePrefix": "Add and generate",
-        "generateCountSuffix": "images",
-        "selectGenerateCount": "Select generation count",
         "optional": "(Optional)"
     },
     "errors": {

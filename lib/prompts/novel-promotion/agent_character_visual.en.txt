@@ -42,4 +42,3 @@ Strict constraints:
 1. JSON only.
 2. Keep names exactly aligned with input profiles.
 3. Each descriptions array must contain at least 3 valid English strings.
-4. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

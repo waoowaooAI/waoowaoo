@@ -75,8 +75,6 @@ export interface Character {
   // 角色档案（两阶段生成）
   profileData?: string | null             // JSON格式的角色档案
   profileConfirmed?: boolean             // 档案是否已确认
-  // 任务态字段（由 tasks + hook 派生，不再依赖数据库持久化）
-  profileConfirmTaskRunning?: boolean     // 档案确认任务是否正在运行
 }
 
 // 场景图片（独立表）
@@ -242,7 +240,6 @@ export interface NovelPromotionProject {
   storyboardModel: string
   editModel: string
   videoModel: string
-  audioModel: string
   videoRatio: string
   capabilityOverrides?: CapabilitySelections | string | null
   ttsRate: string

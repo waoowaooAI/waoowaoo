@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { ART_STYLES } from '@/lib/constants'
 import CharacterCreationPreview from './CharacterCreationPreview'
 import { AppIcon } from '@/components/ui/icons'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
 
 type Mode = 'asset-hub' | 'project'
 
@@ -42,7 +41,9 @@ interface CharacterCreationFormProps {
   handleFileSelect: (files: FileList) => void
   handleClearReference: (index?: number) => void
   handleExtractDescription: () => void
+  handleCreateWithReference: () => void
   handleAiDesign: () => void
+  handleSubmit: () => void
   isSubmitting: boolean
   isAiDesigning: boolean
   isExtracting: boolean
@@ -83,7 +84,9 @@ export default function CharacterCreationForm({
   handleFileSelect,
   handleClearReference,
   handleExtractDescription,
+  handleCreateWithReference,
   handleAiDesign,
+  handleSubmit,
   isSubmitting,
   isAiDesigning,
   isExtracting,
@@ -93,14 +96,38 @@ export default function CharacterCreationForm({
   return (
     <div className="space-y-5">
       <div className="mb-5">
-        <SegmentedControl
-          options={[
-            { value: 'description', label: <><SparklesIcon className="w-4 h-4" /><span>{t('character.modeDescription')}</span></> },
-            { value: 'reference', label: <><PhotoIcon className="w-4 h-4" /><span>{t('character.modeReference')}</span></> },
-          ]}
-          value={createMode}
-          onChange={(val) => setCreateMode(val as 'reference' | 'description')}
-        />
+        {(() => {
+          const tabs = ['description', 'reference'] as const
+          const activeIdx = tabs.indexOf(createMode)
+          return (
+            <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
+              <div className="relative grid gap-1" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                <div
+                  className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
+                  style={{
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
+                    width: 'calc(100% / 2)',
+                    transform: `translateX(${activeIdx * 100}%)`,
+                  }}
+                />
+                <button
+                  onClick={() => setCreateMode('description')}
+                  className={`relative z-[1] flex items-center justify-center gap-2 rounded-md py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${createMode === 'description' ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                  <span>{t('character.modeDescription')}</span>
+                </button>
+                <button
+                  onClick={() => setCreateMode('reference')}
+                  className={`relative z-[1] flex items-center justify-center gap-2 rounded-md py-2 px-4 text-sm font-medium transition-colors cursor-pointer ${createMode === 'reference' ? 'text-[var(--glass-text-primary)]' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                >
+                  <PhotoIcon className="w-4 h-4" />
+                  <span>{t('character.modeReference')}</span>
+                </button>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {mode === 'project' && availableCharacters.length > 0 && (
@@ -169,7 +196,7 @@ export default function CharacterCreationForm({
         </div>
       )}
 
-      {mode === 'asset-hub' && !isSubAppearance && (
+      {!isSubAppearance && (
         <div className="space-y-2">
           <label className="glass-field-label block">
             {t('artStyle.title')}
@@ -185,6 +212,7 @@ export default function CharacterCreationForm({
                   : 'glass-btn-soft border-[var(--glass-stroke-base)] text-[var(--glass-text-secondary)]'
                   }`}
               >
+                <span>{style.preview}</span>
                 <span>{style.label}</span>
               </button>
             ))}
@@ -204,15 +232,36 @@ export default function CharacterCreationForm({
 
           <div className="glass-surface flex items-center gap-2 p-2 rounded-lg">
             <span className="text-xs text-[var(--glass-text-secondary)] shrink-0">{t('character.generationMode')}：</span>
-            <SegmentedControl
-              className="flex-1"
-              options={[
-                { value: 'direct', label: t('character.directGenerate') },
-                { value: 'extract', label: t('character.extractPrompt') },
-              ]}
-              value={referenceSubMode}
-              onChange={(val) => setReferenceSubMode(val as 'direct' | 'extract')}
-            />
+            {(() => {
+              const subTabs = ['direct', 'extract'] as const
+              const subIdx = subTabs.indexOf(referenceSubMode)
+              return (
+                <div className="flex-1 rounded-md p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
+                  <div className="relative grid gap-1" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+                    <div
+                      className="absolute bottom-0.5 top-0.5 rounded-sm bg-white transition-transform duration-200"
+                      style={{
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
+                        width: 'calc(100% / 2)',
+                        transform: `translateX(${subIdx * 100}%)`,
+                      }}
+                    />
+                    <button
+                      onClick={() => setReferenceSubMode('direct')}
+                      className={`relative z-[1] px-3 py-1.5 text-xs rounded-sm transition-colors cursor-pointer ${referenceSubMode === 'direct' ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                    >
+                      {t('character.directGenerate')}
+                    </button>
+                    <button
+                      onClick={() => setReferenceSubMode('extract')}
+                      className={`relative z-[1] px-3 py-1.5 text-xs rounded-sm transition-colors cursor-pointer ${referenceSubMode === 'extract' ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                    >
+                      {t('character.extractPrompt')}
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {referenceSubMode === 'extract' && (
@@ -233,6 +282,16 @@ export default function CharacterCreationForm({
             onClearReference={handleClearReference}
           />
 
+          <button
+            onClick={handleCreateWithReference}
+            disabled={isSubmitting || !name.trim() || referenceImagesBase64.length === 0}
+            className={`glass-btn-base w-full px-4 py-2.5 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm ${referenceSubMode === 'extract'
+              ? 'glass-btn-tone-info'
+              : 'glass-btn-primary'
+              }`}
+          >
+            {isSubmitting ? t('common.creating') : t('character.convertToSheet')}
+          </button>
         </div>
       )}
 
@@ -284,6 +343,16 @@ export default function CharacterCreationForm({
               className="glass-textarea-base w-full px-3 py-2 text-sm resize-none"
             />
           </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || (isSubAppearance
+              ? !selectedCharacterId.trim() || !changeReason.trim() || !description.trim()
+              : !name.trim() || !description.trim())}
+            className="glass-btn-base glass-btn-primary w-full px-4 py-2.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          >
+            {isSubmitting ? t('common.adding') : t('common.add')}
+          </button>
         </>
       )}
     </div>

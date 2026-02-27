@@ -3,7 +3,6 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-COPY prisma ./prisma
 RUN npm ci
 
 # ==================== Stage 2: Build ====================
@@ -22,7 +21,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install tini for proper signal handling
 RUN apk add --no-cache tini
 
 # node_modules（含 devDeps，因为 npm run start 需要 concurrently + tsx）
@@ -51,8 +49,8 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/middleware.ts ./middleware.ts
 COPY --from=builder /app/postcss.config.mjs ./postcss.config.mjs
 
-# 运行日志目录 + 空 .env（tsx --env-file=.env 需要文件存在，实际 env 由 docker-compose 注入）
-RUN mkdir -p /app/logs && touch /app/.env
+# 本地存储数据目录 + 空 .env（tsx --env-file=.env 需要文件存在，实际 env 由 docker-compose 注入）
+RUN mkdir -p /app/data/uploads /app/logs && touch /app/.env
 
 EXPOSE 3000 3010
 

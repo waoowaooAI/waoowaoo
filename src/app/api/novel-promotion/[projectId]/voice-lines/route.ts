@@ -63,12 +63,6 @@ async function withVoiceLineMedia<T extends Record<string, unknown>>(line: T) {
     media: audioMedia,
     audioMedia,
     audioUrl: audioMedia?.url || line.audioUrl || null,
-    updatedAt:
-      line.updatedAt instanceof Date
-        ? line.updatedAt.toISOString()
-        : typeof line.updatedAt === 'string'
-          ? line.updatedAt
-          : null,
     matchedStoryboardId: matchedPanel?.storyboardId ?? line.matchedStoryboardId,
     matchedPanelIndex: matchedPanel?.panelIndex ?? line.matchedPanelIndex}
 }

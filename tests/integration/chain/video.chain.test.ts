@@ -29,18 +29,6 @@ const utilsMock = vi.hoisted(() => ({
   toSignedUrlIfCos: vi.fn((url: string | null) => (url ? `https://signed.example/${url}` : null)),
   uploadVideoSourceToCos: vi.fn(async () => 'cos/lip-sync/video.mp4'),
 }))
-const configServiceMock = vi.hoisted(() => ({
-  getUserWorkflowConcurrencyConfig: vi.fn(async () => ({
-    analysis: 5,
-    image: 5,
-    video: 5,
-  })),
-}))
-const concurrencyGateMock = vi.hoisted(() => ({
-  withUserConcurrencyGate: vi.fn(async <T>(input: {
-    run: () => Promise<T>
-  }) => await input.run()),
-}))
 
 const prismaMock = vi.hoisted(() => ({
   novelPromotionPanel: {
@@ -98,8 +86,6 @@ vi.mock('@/lib/model-config-contract', () => ({
 vi.mock('@/lib/api-config', () => ({
   getProviderConfig: vi.fn(async () => ({ apiKey: 'api-key' })),
 }))
-vi.mock('@/lib/config-service', () => configServiceMock)
-vi.mock('@/lib/workers/user-concurrency-gate', () => concurrencyGateMock)
 
 function toJob(data: TaskJobData): Job<TaskJobData> {
   return { data } as unknown as Job<TaskJobData>

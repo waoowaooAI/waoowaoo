@@ -1,6 +1,5 @@
 {
-    "title": "Project Config",
-    "subtitle": "Defaults to the global settings. You can customize models for this project only — changes apply to this project only.",
+    "title": "Project Global Configuration",
     "saved": "Saved",
     "autoSave": "Auto-save",
     "visualStyle": "Visual Style",
@@ -14,7 +13,6 @@
     "storyboardModel": "Storyboard Model",
     "editModel": "Edit Model",
     "videoModel": "Video Model",
-    "audioModel": "Speech Synthesis Model",
     "videoResolution": "Video Resolution",
     "ttsVoice": "TTS Voice",
     "ttsRate": "Speech Rate",
@@ -29,7 +27,5 @@
     "noParams": "No configurable parameters",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "delete": "Delete",
-    "boolOn": "On",
-    "boolOff": "Off"
+    "delete": "Delete"
 }

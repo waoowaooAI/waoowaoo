@@ -1,7 +1,7 @@
 import { logError as _ulogError } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { uploadObject, getSignedUrl, toFetchableUrl, generateUniqueKey } from '@/lib/storage'
+import { uploadToCOS, getSignedUrl, toFetchableUrl, generateUniqueKey } from '@/lib/cos'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import sharp from 'sharp'
@@ -152,6 +152,6 @@ async function updateImageLabel(imageUrl: string, newLabelText: string): Promise
 
     // 生成新 key，使 URL 发生变化，强制浏览器绕过缓存
     const newKey = generateUniqueKey('labeled-rename', 'jpg')
-    await uploadObject(processed, newKey)
+    await uploadToCOS(processed, newKey)
     return newKey
 }

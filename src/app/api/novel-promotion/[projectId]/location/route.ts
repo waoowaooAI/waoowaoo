@@ -1,16 +1,14 @@
+import { logError as _ulogError } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { removeLocationPromptSuffix, isArtStyleValue, type ArtStyleValue } from '@/lib/constants'
+import { removeLocationPromptSuffix } from '@/lib/constants'
 import { requireProjectAuth, requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
+import { resolveTaskLocale } from '@/lib/task/resolve-locale'
+
 function toObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as Record<string, unknown>
-}
-
-function normalizeString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
 }
 
 // 删除场景（级联删除关联的图片记录）
@@ -51,28 +49,31 @@ export const POST = apiHandler(async (
   if (isErrorResponse(authResult)) return authResult
   const { novelData } = authResult
 
-  const rawBody = await request.json().catch(() => ({}))
-  const body = toObject(rawBody)
-  const name = normalizeString(body.name)
-  const description = normalizeString(body.description)
-  const summary = normalizeString(body.summary)
-  const count = Object.prototype.hasOwnProperty.call(body, 'count')
-    ? normalizeImageGenerationCount('location', body.count)
-    : 1
-  let artStyle: ArtStyleValue | undefined
-  if (Object.prototype.hasOwnProperty.call(body, 'artStyle')) {
-    const parsedArtStyle = normalizeString(body.artStyle)
-    if (!isArtStyleValue(parsedArtStyle)) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'INVALID_ART_STYLE',
-        message: 'artStyle must be a supported value',
-      })
-    }
-    artStyle = parsedArtStyle
-  }
+  const body = await request.json()
+  const taskLocale = resolveTaskLocale(request, body)
+  const bodyMeta = toObject((body as Record<string, unknown>).meta)
+  const acceptLanguage = request.headers.get('accept-language') || ''
+  const { name, description, artStyle } = body
 
   if (!name || !description) {
     throw new ApiError('INVALID_PARAMS')
+  }
+
+  // 如果传入了 artStyle，更新项目的 artStylePrompt
+  if (artStyle) {
+    const ART_STYLES = [
+      { value: 'american-comic', prompt: '美式漫画风格' },
+      { value: 'chinese-comic', prompt: '精致国漫风格' },
+      { value: 'anime', prompt: '日系动漫风格' },
+      { value: 'realistic', prompt: '真人照片写实风格' }
+    ]
+    const style = ART_STYLES.find(s => s.value === artStyle)
+    if (style) {
+      await prisma.novelPromotionProject.update({
+        where: { id: novelData.id },
+        data: { artStylePrompt: style.prompt }
+      })
+    }
   }
 
   // 创建场景
@@ -81,17 +82,40 @@ export const POST = apiHandler(async (
     data: {
       novelPromotionProjectId: novelData.id,
       name: name.trim(),
-      summary: summary || null
+      summary: body.summary?.trim() || null
     }
   })
 
   // 创建初始图片记录
-  await prisma.locationImage.createMany({
-    data: Array.from({ length: count }, (_value, imageIndex) => ({
+  await prisma.locationImage.create({
+    data: {
       locationId: location.id,
-      imageIndex,
-      description: cleanDescription,
-    })),
+      imageIndex: 0,
+      description: cleanDescription
+    }
+  })
+
+  // 触发后台图片生成
+  const { getBaseUrl } = await import('@/lib/env')
+  const baseUrl = getBaseUrl()
+  fetch(`${baseUrl}/api/novel-promotion/${projectId}/generate-image`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': request.headers.get('cookie') || '',
+      ...(acceptLanguage ? { 'Accept-Language': acceptLanguage } : {}),
+    },
+    body: JSON.stringify({
+      type: 'location',
+      id: location.id,
+      locale: taskLocale || undefined,
+      meta: {
+        ...bodyMeta,
+        locale: taskLocale || bodyMeta.locale || undefined,
+      },
+    })
+  }).catch(err => {
+    _ulogError('[Location API] 后台图片生成任务触发失败:', err)
   })
 
   // 返回包含图片的场景数据

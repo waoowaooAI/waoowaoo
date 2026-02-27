@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { prisma } from '@/lib/prisma'
-import { extractStorageKey } from '@/lib/storage'
+import { extractCOSKey } from '@/lib/cos'
 import { stablePublicIdFromStorageKey } from './hash'
 import type { MediaRef } from './types'
 
@@ -156,7 +156,7 @@ export async function resolveStorageKeyFromMediaValue(value: unknown): Promise<s
       const media = await getMediaObjectByPublicId(publicId)
       return media?.storageKey || null
     }
-    const key = extractStorageKey(value)
+    const key = extractCOSKey(value)
     return key ? normalizeStorageKey(key) : null
   }
 
@@ -176,7 +176,7 @@ export function extractStorageKeyFromLegacyValue(value: unknown): string | null 
 
   // Keep external URLs that are actually COS object URLs (path -> key).
   if (isLikelyExternalUrl(value) || value.startsWith('/api/files/') || !value.startsWith('/')) {
-    return extractStorageKey(value)
+    return extractCOSKey(value)
   }
 
   return null

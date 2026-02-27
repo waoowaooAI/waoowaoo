@@ -2,9 +2,7 @@ import { Worker, type Job } from 'bullmq'
 import { queueRedis } from '@/lib/redis'
 import { QUEUE_NAME } from '@/lib/task/queues'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
-import { getUserWorkflowConcurrencyConfig } from '@/lib/config-service'
 import { reportTaskProgress, withTaskLifecycle } from './shared'
-import { withUserConcurrencyGate } from './user-concurrency-gate'
 import {
   handleAssetHubImageTask,
   handleAssetHubModifyTask,
@@ -50,15 +48,7 @@ async function processImageTask(job: Job<TaskJobData>) {
 export function createImageWorker() {
   return new Worker<TaskJobData>(
     QUEUE_NAME.IMAGE,
-    async (job) => await withTaskLifecycle(job, async (taskJob) => {
-      const workflowConcurrency = await getUserWorkflowConcurrencyConfig(taskJob.data.userId)
-      return await withUserConcurrencyGate({
-        scope: 'image',
-        userId: taskJob.data.userId,
-        limit: workflowConcurrency.image,
-        run: async () => await processImageTask(taskJob),
-      })
-    }),
+    async (job) => await withTaskLifecycle(job, processImageTask),
     {
       connection: queueRedis,
       concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY_IMAGE || '20', 10) || 20,

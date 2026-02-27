@@ -38,59 +38,6 @@ function containsAny(haystack: string, needles: string[]) {
   return false
 }
 
-function isModelNotOpenCode(code: unknown): boolean {
-  if (typeof code !== 'string') return false
-  const normalized = code.trim().toUpperCase()
-  return normalized === 'MODELNOTOPEN' || normalized === 'MODEL_NOT_OPEN'
-}
-
-function isModelNotOpenMessage(message: string): boolean {
-  return containsAny(message, [
-    'modelnotopen',
-    'has not activated the model',
-    'not activated the model',
-    'activate the model service in the ark console',
-  ])
-}
-
-function isModelNotRegisteredMessage(message: string): boolean {
-  return containsAny(message, [
-    'model_not_registered',
-    'model not registered',
-  ])
-}
-
-function isEmptyResponseMessage(message: string): boolean {
-  return containsAny(message, [
-    'channel:empty_response',
-    'empty response',
-    'no meaningful content in candidates',
-    'stream_empty',
-  ])
-}
-
-function isVideoApiFormatUnsupportedMessage(message: string): boolean {
-  if (containsAny(message, [
-    'video_api_format_unsupported',
-    'openai_compat_video_template_required',
-    'openai_compat_video_template_media_type_invalid',
-    'openai_compat_video_template_create_body_required',
-    'openai_compat_video_template_output_not_found',
-    'openai_compat_video_template_task_id_not_found',
-    'openai_compat_template_variable_missing',
-    'openai_compat_template_multipart_body_invalid',
-    'openai_compat_template_multipart_file_invalid',
-  ])) {
-    return true
-  }
-
-  const templateStatusMatch = message.match(/template request failed with status (\d{3})/i)
-  if (!templateStatusMatch) return false
-
-  const parsedStatus = Number.parseInt(templateStatusMatch[1] || '', 10)
-  return parsedStatus === 404 || parsedStatus === 405 || parsedStatus === 415
-}
-
 function buildNormalizedError(
   code: UnifiedErrorCode,
   message?: string,
@@ -117,30 +64,6 @@ function inferCodeFromMessage(message: string): UnifiedErrorCode | null {
     return explicitMatch[1]
   }
 
-  const statusMatch = message.match(/\bstatus\s+(\d{3})\b/)
-  if (statusMatch) {
-    const parsedStatus = Number.parseInt(statusMatch[1] || '', 10)
-    if (Number.isFinite(parsedStatus)) {
-      if (parsedStatus === 404 || parsedStatus === 405 || parsedStatus === 415) {
-        return 'VIDEO_API_FORMAT_UNSUPPORTED'
-      }
-      if (parsedStatus === 401) return 'UNAUTHORIZED'
-      if (parsedStatus === 403) return 'FORBIDDEN'
-      if (parsedStatus === 404) return 'NOT_FOUND'
-      if (parsedStatus === 409) return 'CONFLICT'
-      if (parsedStatus === 422) return 'SENSITIVE_CONTENT'
-      if (parsedStatus === 429) return 'RATE_LIMIT'
-      if (parsedStatus === 502 || parsedStatus === 503) return 'EXTERNAL_ERROR'
-      if (parsedStatus === 504) return 'GENERATION_TIMEOUT'
-      if (parsedStatus >= 500) return 'EXTERNAL_ERROR'
-      if (parsedStatus >= 400) return 'INVALID_PARAMS'
-    }
-  }
-
-  if (isModelNotOpenMessage(message)) return 'MODEL_NOT_OPEN'
-  if (isModelNotRegisteredMessage(message)) return 'MODEL_NOT_REGISTERED'
-  if (isEmptyResponseMessage(message)) return 'EMPTY_RESPONSE'
-  if (isVideoApiFormatUnsupportedMessage(message)) return 'VIDEO_API_FORMAT_UNSUPPORTED'
   if (containsAny(message, ['task cancelled', 'canceled by user', 'cancelled by user', '任务已取消'])) return 'CONFLICT'
   if (containsAny(message, ['unauthorized', 'not authenticated', 'need login', '401'])) return 'UNAUTHORIZED'
   if (containsAny(message, ['forbidden', 'permission denied', '403'])) return 'FORBIDDEN'
@@ -148,7 +71,7 @@ function inferCodeFromMessage(message: string): UnifiedErrorCode | null {
   if (containsAny(message, ['invalid', 'missing', 'required', 'bad request', 'fieldinvalid'])) return 'INVALID_PARAMS'
   if (containsAny(message, ['quota', 'rate limit', 'resource_exhausted', 'throttle', '429'])) return 'RATE_LIMIT'
   if (containsAny(message, ['insufficient balance', 'creditinsufficient', 'balance is not enough', '402', 'insufficient credits', '余额不足', '余额不够', '请充值'])) return 'INSUFFICIENT_BALANCE'
-  if (containsAny(message, ['sensitive', 'unsafe', 'safety', 'blocked', 'prohibited', 'policy_violation', 'moderation', 'harm', '敏感', '违规', '不当', '安全策略', '被过滤']) && !containsAny(message, ['case-sensitive', 'case sensitive'])) return 'SENSITIVE_CONTENT'
+  if (containsAny(message, ['sensitive', 'unsafe', 'safety', 'blocked', 'prohibited', 'policy_violation', 'moderation', 'harm', '敏感', '违规', '不当']) && !containsAny(message, ['case-sensitive', 'case sensitive'])) return 'SENSITIVE_CONTENT'
   if (containsAny(message, ['timeout', 'timed out', 'deadline exceeded'])) return 'GENERATION_TIMEOUT'
   if (containsAny(message, ['503', 'unavailable', 'overloaded', 'upstream error'])) return 'EXTERNAL_ERROR'
   if (containsAny(message, ['network', 'fetch failed', 'econnreset', 'enotfound', 'econnrefused', 'eai_again', 'terminated', 'aborted', 'socket hang up'])) return 'NETWORK_ERROR'
@@ -217,17 +140,6 @@ export function normalizeAnyError(input: unknown, options: NormalizeOptions = {}
       ...(typeof errorLike.details === 'object' && errorLike.details ? (errorLike.details as Record<string, unknown>) : {}),
       ...(options.details || {}),
     }, provider)
-  }
-
-  if (isModelNotOpenCode(errorLike.code) || isModelNotOpenMessage(lowerMessage)) {
-    return buildNormalizedError('MODEL_NOT_OPEN', message, options.details, provider)
-  }
-  if (isModelNotRegisteredMessage(lowerMessage)) {
-    return buildNormalizedError('MODEL_NOT_REGISTERED', message, options.details, provider)
-  }
-
-  if (isEmptyResponseMessage(lowerMessage)) {
-    return buildNormalizedError('EMPTY_RESPONSE', message, options.details, provider)
   }
 
   if (typeof errorLike.status === 'number') {

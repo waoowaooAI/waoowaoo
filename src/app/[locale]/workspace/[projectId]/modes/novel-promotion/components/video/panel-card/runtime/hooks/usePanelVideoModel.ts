@@ -88,17 +88,6 @@ export function usePanelVideoModel({
     setSelectedModel(defaultVideoModel || '')
   }, [defaultVideoModel])
 
-  useEffect(() => {
-    if (!selectedModel) {
-      if (videoModelOptions.length > 0) {
-        setSelectedModel(videoModelOptions[0].value)
-      }
-      return
-    }
-    if (videoModelOptions.some((option) => option.value === selectedModel)) return
-    setSelectedModel(videoModelOptions[0]?.value || '')
-  }, [selectedModel, videoModelOptions])
-
   const capabilityDefinitions = useMemo(
     () => resolveEffectiveVideoCapabilityDefinitions({
       videoCapabilities: selectedOption?.capabilities?.video,

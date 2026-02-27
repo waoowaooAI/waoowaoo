@@ -1,6 +1,5 @@
 'use client'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
-import { apiFetch } from '@/lib/api-fetch'
 
 import { useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -15,7 +14,6 @@ export interface ProjectAssetsData {
 }
 
 const CHARACTER_TASK_TYPES = ['image_character', 'modify_asset_image', 'regenerate_group']
-const CHARACTER_PROFILE_TASK_TYPES = ['character_profile_confirm', 'character_profile_batch_confirm']
 const LOCATION_TASK_TYPES = ['image_location', 'modify_asset_image', 'regenerate_group']
 
 function isRunningPhase(phase: string | null | undefined) {
@@ -32,7 +30,7 @@ export function useProjectAssets(projectId: string | null) {
         queryKey: queryKeys.projectAssets.all(projectId || ''),
         queryFn: async () => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/assets`)
+            const res = await fetch(`/api/novel-promotion/${projectId}/assets`)
             if (!res.ok) throw new Error('Failed to fetch project assets')
             const data = await res.json()
             return data as ProjectAssetsData
@@ -52,12 +50,6 @@ export function useProjectAssets(projectId: string | null) {
                 targetType: 'CharacterAppearance',
                 targetId: character.id,
                 types: CHARACTER_TASK_TYPES,
-            })
-            // 🔥 注册角色档案确认任务的跟踪（使 profileConfirmTaskRunning 在刷新后仍可恢复）
-            targets.push({
-                targetType: 'NovelPromotionCharacter',
-                targetId: character.id,
-                types: CHARACTER_PROFILE_TASK_TYPES,
             })
             for (const appearance of character.appearances || []) {
                 targets.push({
@@ -101,11 +93,8 @@ export function useProjectAssets(projectId: string | null) {
             ...assets,
             characters: (assets.characters || []).map((character) => {
                 const characterState = getState('CharacterAppearance', character.id)
-                // 🔥 获取角色档案确认任务状态
-                const profileState = getState('NovelPromotionCharacter', character.id)
                 return {
                     ...character,
-                    profileConfirmTaskRunning: isRunningPhase(profileState?.phase),
                     appearances: (character.appearances || []).map((appearance) => {
                         const appearanceState = getState('CharacterAppearance', appearance.id)
                         const lastError = appearanceState?.lastError
@@ -158,7 +147,7 @@ export function useProjectCharacters(projectId: string | null) {
         queryKey: queryKeys.projectAssets.characters(projectId || ''),
         queryFn: async () => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/characters`)
+            const res = await fetch(`/api/novel-promotion/${projectId}/characters`)
             if (!res.ok) throw new Error('Failed to fetch characters')
             const data = await res.json()
             return data.characters as Character[]
@@ -175,7 +164,7 @@ export function useProjectLocations(projectId: string | null) {
         queryKey: queryKeys.projectAssets.locations(projectId || ''),
         queryFn: async () => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/locations`)
+            const res = await fetch(`/api/novel-promotion/${projectId}/locations`)
             if (!res.ok) throw new Error('Failed to fetch locations')
             const data = await res.json()
             return data.locations as Location[]

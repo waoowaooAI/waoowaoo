@@ -47,4 +47,3 @@ Rules:
 3. video_prompt should be motion-ready and concrete.
 4. Prefer age+gender wording in video_prompt when naming actors in camera directions.
 5. Return JSON array only.
-6. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

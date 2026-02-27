@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import type { VoiceCreationRuntime } from './hooks/useVoiceCreation'
 import { AppIcon } from '@/components/ui/icons'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
 
 interface VoiceCreationFormProps {
   runtime: VoiceCreationRuntime
@@ -35,16 +34,41 @@ export default function VoiceCreationForm({ runtime, children }: VoiceCreationFo
       </div>
 
       <div className="flex border-b border-[var(--glass-stroke-base)]">
-        <div className="flex-1 px-5 py-2.5">
-          <SegmentedControl
-            options={[
-              { value: 'design' as const, label: tvCreate('aiDesignMode') },
-              { value: 'upload' as const, label: tvCreate('uploadMode') },
-            ]}
-            value={mode}
-            onChange={(val) => handleModeChange(val as 'design' | 'upload')}
-          />
-        </div>
+        {(() => {
+          const tabs = [
+            { id: 'design' as const, label: tvCreate('aiDesignMode') },
+            { id: 'upload' as const, label: tvCreate('uploadMode') },
+          ]
+          const activeIdx = tabs.findIndex(t => t.id === mode)
+          return (
+            <div className="flex-1 px-5 py-2.5">
+              <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
+                <div className="relative grid grid-cols-2 gap-1">
+                  <div
+                    className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
+                    style={{
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
+                      width: '50%',
+                      transform: `translateX(${Math.max(0, activeIdx) * 100}%)`,
+                    }}
+                  />
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => handleModeChange(tab.id)}
+                      className={`relative z-[1] px-4 py-1.5 text-sm rounded-md transition-colors cursor-pointer ${mode === tab.id
+                        ? 'text-[var(--glass-text-primary)] font-medium'
+                        : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'
+                        }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">

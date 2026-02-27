@@ -16,7 +16,7 @@ Rules:
 6. Do not mention skin color, eye color, or lip color.
 
 Output format:
-Return JSON only. ⚠️ JSON SAFETY: All quotation marks MUST be converted to corner brackets「」in JSON string values:
+Return JSON only:
 {
   "prompt": "modified character description"
 }

@@ -1,8 +1,5 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query'
-import { apiFetch } from '@/lib/api-fetch'
 import { resolveTaskErrorMessage } from '@/lib/task/error-message'
-
-export { getPageLocale } from '@/lib/api-fetch'
 
 export type MutationRequestError = Error & {
   status?: number
@@ -35,7 +32,7 @@ export async function requestJsonWithError<T>(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<T> {
-  const response = await apiFetch(input, init)
+  const response = await fetch(input, init)
   const data = await parseJsonSafe(response)
   if (!response.ok) {
     throw createRequestError(response.status, data, fallbackMessage)
@@ -48,7 +45,7 @@ export async function requestVoidWithError(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<void> {
-  const response = await apiFetch(input, init)
+  const response = await fetch(input, init)
   if (response.ok) return
   const data = await parseJsonSafe(response)
   throw createRequestError(response.status, data, fallbackMessage)
@@ -59,7 +56,7 @@ export async function requestTaskResponseWithError(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<Response> {
-  const response = await apiFetch(input, init)
+  const response = await fetch(input, init)
   if (response.ok) return response
   const data = await parseJsonSafe(response)
   throw createRequestError(response.status, data, fallbackMessage)
@@ -70,7 +67,7 @@ export async function requestBlobWithError(
   init: RequestInit,
   fallbackMessage: string,
 ): Promise<Blob> {
-  const response = await apiFetch(input, init)
+  const response = await fetch(input, init)
   if (response.ok) {
     return await response.blob()
   }

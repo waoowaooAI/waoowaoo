@@ -1,13 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
-import { apiFetch } from '@/lib/api-fetch'
 import {
-    clearTaskTargetOverlay,
-    upsertTaskTargetOverlay,
+  clearTaskTargetOverlay,
+  upsertTaskTargetOverlay,
 } from '../task-target-overlay'
 import {
-    invalidateQueryTemplates,
-    requestJsonWithError,
+  invalidateQueryTemplates,
+  requestJsonWithError,
 } from './mutation-shared'
 
 export function useModifyProjectCharacterImage(projectId: string) {
@@ -64,15 +63,7 @@ export function useRegenerateCharacterGroup(projectId: string) {
         invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
 
     return useMutation({
-        mutationFn: async ({
-            characterId,
-            appearanceId,
-            count,
-        }: {
-            characterId: string
-            appearanceId: string
-            count?: number
-        }) => {
+        mutationFn: async ({ characterId, appearanceId }: { characterId: string; appearanceId: string }) => {
             return await requestJsonWithError(`/api/novel-promotion/${projectId}/regenerate-group`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -80,7 +71,6 @@ export function useRegenerateCharacterGroup(projectId: string) {
                     type: 'character',
                     id: characterId,
                     appearanceId,
-                    count,
                 })
             }, 'Failed to regenerate group')
         },
@@ -195,7 +185,7 @@ export function useBatchGenerateCharacterImages(projectId: string) {
         mutationFn: async (items: Array<{ characterId: string; appearanceId: string }>) => {
             const results = await Promise.allSettled(
                 items.map(item =>
-                    apiFetch(`/api/novel-promotion/${projectId}/generate-image`, {
+                    fetch(`/api/novel-promotion/${projectId}/generate-image`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

@@ -50,4 +50,3 @@ Planning rules:
 4. Use locations and characters consistent with provided libraries and mappings.
 5. Prefer concrete, visible actions over abstract wording.
 6. Return strict JSON only.
-7. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

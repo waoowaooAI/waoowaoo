@@ -4,16 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { resolveTaskLocale } from '@/lib/task/resolve-locale'
-import { isArtStyleValue, type ArtStyleValue } from '@/lib/constants'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 
 function toObject(value: unknown): Record<string, unknown> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
     return value as Record<string, unknown>
-}
-
-function normalizeString(value: unknown): string {
-    return typeof value === 'string' ? value.trim() : ''
 }
 
 /**
@@ -31,25 +25,11 @@ export const POST = apiHandler(async (
     const authResult = await requireProjectAuthLight(projectId)
     if (isErrorResponse(authResult)) return authResult
 
-    const rawBody = await request.json().catch(() => ({}))
-    const body = toObject(rawBody)
+    const body = await request.json()
     const taskLocale = resolveTaskLocale(request, body)
-    const bodyMeta = toObject(body.meta)
+    const bodyMeta = toObject((body as Record<string, unknown>).meta)
     const acceptLanguage = request.headers.get('accept-language') || ''
-    const characterId = normalizeString(body.characterId)
-    const appearanceId = normalizeString(body.appearanceId)
-    const count = normalizeImageGenerationCount('character', body.count)
-    let artStyle: ArtStyleValue | undefined
-    if (Object.prototype.hasOwnProperty.call(body, 'artStyle')) {
-        const parsedArtStyle = normalizeString(body.artStyle)
-        if (!isArtStyleValue(parsedArtStyle)) {
-            throw new ApiError('INVALID_PARAMS', {
-                code: 'INVALID_ART_STYLE',
-                message: 'artStyle must be a supported value',
-            })
-        }
-        artStyle = parsedArtStyle
-    }
+    const { characterId, appearanceId, artStyle } = body
 
     if (!characterId) {
         throw new ApiError('INVALID_PARAMS')
@@ -72,6 +52,27 @@ export const POST = apiHandler(async (
         targetAppearanceId = firstAppearance.id
     }
 
+    // 如果设置了 artStyle，需要更新到 novelPromotionProject 中（供 generate-image 使用）
+    if (artStyle) {
+        const novelData = await prisma.novelPromotionProject.findUnique({ where: { projectId } })
+        if (novelData) {
+            // 将风格转换为提示词
+            const ART_STYLES = [
+                { value: 'american-comic', prompt: '美式漫画风格' },
+                { value: 'chinese-comic', prompt: '精致国漫风格' },
+                { value: 'anime', prompt: '日系动漫风格' },
+                { value: 'realistic', prompt: '真人照片写实风格' }
+            ]
+            const style = ART_STYLES.find(s => s.value === artStyle)
+            if (style) {
+                await prisma.novelPromotionProject.update({
+                    where: { id: novelData.id },
+                    data: { artStylePrompt: style.prompt }
+                })
+            }
+        }
+    }
+
     // 调用 generate-image API
     const { getBaseUrl } = await import('@/lib/env')
     const baseUrl = getBaseUrl()
@@ -86,8 +87,6 @@ export const POST = apiHandler(async (
             type: 'character',
             id: characterId,
             appearanceId: targetAppearanceId,  // 使用真正的 UUID
-            count,
-            artStyle,
             locale: taskLocale || undefined,
             meta: {
                 ...bodyMeta,

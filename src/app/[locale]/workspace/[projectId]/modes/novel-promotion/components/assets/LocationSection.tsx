@@ -19,17 +19,16 @@ interface LocationSectionProps {
     projectId: string
     activeTaskKeys: Set<string>
     onClearTaskKey: (key: string) => void
-    onRegisterTransientTaskKey: (key: string) => void
     // 回调函数
     onAddLocation: () => void
     onDeleteLocation: (locationId: string) => void
     onEditLocation: (location: Location) => void
     // 🔥 V6.6 重构：重命名为 handleGenerateImage
-    handleGenerateImage: (type: 'character' | 'location', id: string, appearanceId?: string, count?: number) => Promise<void>
+    handleGenerateImage: (type: 'character' | 'location', id: string, appearanceId?: string) => void
     onSelectImage: (locationId: string, imageIndex: number | null) => void
     onConfirmSelection: (locationId: string) => void
-    onRegenerateSingle: (locationId: string, imageIndex: number) => Promise<void>
-    onRegenerateGroup: (locationId: string, count?: number) => Promise<void>
+    onRegenerateSingle: (locationId: string, imageIndex: number) => void
+    onRegenerateGroup: (locationId: string) => void
     onUndo: (locationId: string) => void
     onImageClick: (imageUrl: string) => void
     onImageEdit: (locationId: string, imageIndex: number, locationName: string) => void
@@ -41,7 +40,6 @@ export default function LocationSection({
     projectId,
     activeTaskKeys,
     onClearTaskKey,
-    onRegisterTransientTaskKey,
     onAddLocation,
     onDeleteLocation,
     onEditLocation,
@@ -88,7 +86,7 @@ export default function LocationSection({
                         location={location}
                         onEdit={() => onEditLocation(location)}
                         onDelete={() => onDeleteLocation(location.id)}
-                        onRegenerate={(count) => {
+                        onRegenerate={() => {
                             // 获取有效图片数量
                             const validImages = location.images?.filter(img => img.imageUrl) || []
 
@@ -102,30 +100,16 @@ export default function LocationSection({
                             // 单图：重新生成单张
                             if (validImages.length === 1) {
                                 const imageIndex = validImages[0].imageIndex
-                                const taskKey = `location-${location.id}-${imageIndex}`
                                 _ulogInfo('[LocationSection] 调用单张重新生成, imageIndex:', imageIndex)
-                                onRegisterTransientTaskKey(taskKey)
-                                void onRegenerateSingle(location.id, imageIndex).catch(() => {
-                                    onClearTaskKey(taskKey)
-                                })
+                                onRegenerateSingle(location.id, imageIndex)
                             }
                             // 多图或无图：重新生成整组
                             else {
-                                const taskKey = `location-${location.id}-group`
                                 _ulogInfo('[LocationSection] 调用整组重新生成')
-                                onRegisterTransientTaskKey(taskKey)
-                                void onRegenerateGroup(location.id, count).catch(() => {
-                                    onClearTaskKey(taskKey)
-                                })
+                                onRegenerateGroup(location.id)
                             }
                         }}
-                        onGenerate={(count) => {
-                            const taskKey = `location-${location.id}-group`
-                            onRegisterTransientTaskKey(taskKey)
-                            void handleGenerateImage('location', location.id, undefined, count).catch(() => {
-                                onClearTaskKey(taskKey)
-                            })
-                        }}
+                        onGenerate={() => handleGenerateImage('location', location.id)}
                         onUndo={() => onUndo(location.id)}
                         onImageClick={onImageClick}
                         onSelectImage={onSelectImage}

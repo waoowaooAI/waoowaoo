@@ -37,11 +37,11 @@ export function useUpdateProjectCharacterVoiceSettings(projectId: string) {
             customVoiceUrl,
         }: {
             characterId: string
-            voiceType: 'qwen-designed' | 'uploaded' | 'custom' | null
+            voiceType: 'custom' | null
             voiceId?: string
             customVoiceUrl?: string
         }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/character-voice`, {
+            return await requestJsonWithError(`/api/novel-promotion/${projectId}/character`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ characterId, voiceType, voiceId, customVoiceUrl }),

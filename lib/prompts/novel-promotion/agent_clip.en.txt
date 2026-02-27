@@ -30,4 +30,3 @@ Rules:
 3. Minimize over-splitting.
 4. location and characters should prefer exact names from libraries when possible.
 5. Return JSON only, no markdown or extra text.
-6. ⚠️ JSON SAFETY: All quotation marks in dialogue (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values—they break JSON structure.

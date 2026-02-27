@@ -29,22 +29,8 @@ import {
   type PricingApiType,
 } from '@/lib/model-pricing/catalog'
 import { getBillingMode } from '@/lib/billing/mode'
-import {
-  DEFAULT_ANALYSIS_WORKFLOW_CONCURRENCY,
-  DEFAULT_IMAGE_WORKFLOW_CONCURRENCY,
-  DEFAULT_VIDEO_WORKFLOW_CONCURRENCY,
-  normalizeWorkflowConcurrencyConfig,
-  normalizeWorkflowConcurrencyValue,
-} from '@/lib/workflow-concurrency'
-import type {
-  OpenAICompatMediaTemplate,
-  OpenAICompatMediaTemplateSource,
-} from '@/lib/openai-compat-media-template'
-import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template/validator'
 
-type ApiModeType = 'gemini-sdk' | 'openai-official'
-type GatewayRouteType = 'official' | 'openai-compat'
-type LlmProtocolType = 'responses' | 'chat-completions'
+type ApiModeType = 'gemini-sdk'
 type DefaultModelField =
   | 'analysisModel'
   | 'characterModel'
@@ -52,34 +38,19 @@ type DefaultModelField =
   | 'storyboardModel'
   | 'editModel'
   | 'videoModel'
-  | 'audioModel'
   | 'lipSyncModel'
-  | 'voiceDesignModel'
 
 interface StoredProvider {
   id: string
   name: string
   baseUrl?: string
   apiKey?: string
-  hidden?: boolean
   apiMode?: ApiModeType
-  gatewayRoute?: GatewayRouteType
-}
-
-interface StoredModelLlmCustomPricing {
-  inputPerMillion?: number
-  outputPerMillion?: number
-}
-
-interface StoredModelMediaCustomPricing {
-  basePrice?: number
-  optionPrices?: Record<string, Record<string, number>>
 }
 
 interface StoredModelCustomPricing {
-  llm?: StoredModelLlmCustomPricing
-  image?: StoredModelMediaCustomPricing
-  video?: StoredModelMediaCustomPricing
+  input?: number
+  output?: number
 }
 
 interface StoredModel {
@@ -88,11 +59,6 @@ interface StoredModel {
   name: string
   type: UnifiedModelType
   provider: string
-  llmProtocol?: LlmProtocolType
-  llmProtocolCheckedAt?: string
-  compatMediaTemplate?: OpenAICompatMediaTemplate
-  compatMediaTemplateCheckedAt?: string
-  compatMediaTemplateSource?: OpenAICompatMediaTemplateSource
   // Non-authoritative display field; billing always uses server pricing catalog.
   price: number
   priceMin?: number
@@ -121,15 +87,7 @@ interface DefaultModelsPayload {
   storyboardModel?: string
   editModel?: string
   videoModel?: string
-  audioModel?: string
   lipSyncModel?: string
-  voiceDesignModel?: string
-}
-
-interface WorkflowConcurrencyPayload {
-  analysis?: number
-  image?: number
-  video?: number
 }
 
 interface ApiConfigPutBody {
@@ -137,7 +95,6 @@ interface ApiConfigPutBody {
   providers?: unknown
   defaultModels?: unknown
   capabilityDefaults?: unknown
-  workflowConcurrency?: unknown
 }
 
 const DEFAULT_MODEL_FIELDS: DefaultModelField[] = [
@@ -147,9 +104,7 @@ const DEFAULT_MODEL_FIELDS: DefaultModelField[] = [
   'storyboardModel',
   'editModel',
   'videoModel',
-  'audioModel',
   'lipSyncModel',
-  'voiceDesignModel',
 ]
 const CAPABILITY_MODEL_TYPES: readonly UnifiedModelType[] = [
   'image',
@@ -165,16 +120,14 @@ const BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE: Readonly<Record<UnifiedModelType,
   audio: 'voice',
   lipsync: 'lip-sync',
 }
-const DEFAULT_FIELD_TO_PRICING_API_TYPE: Readonly<Record<DefaultModelField, 'text' | 'image' | 'video' | 'voice' | 'lip-sync'>> = {
+const DEFAULT_FIELD_TO_PRICING_API_TYPE: Readonly<Record<DefaultModelField, 'text' | 'image' | 'video' | 'lip-sync'>> = {
   analysisModel: 'text',
   characterModel: 'image',
   locationModel: 'image',
   storyboardModel: 'image',
   editModel: 'image',
   videoModel: 'video',
-  audioModel: 'voice',
   lipSyncModel: 'lip-sync',
-  voiceDesignModel: 'voice',
 }
 const DEFAULT_LIPSYNC_MODEL_KEY = composeModelKey('fal', 'fal-ai/kling-video/lipsync/audio-to-video')
 
@@ -185,15 +138,6 @@ const DEFAULT_LIPSYNC_MODEL_KEY = composeModelKey('fal', 'fal-ai/kling-video/lip
 const PRICING_PROVIDER_ALIASES: Readonly<Record<string, string>> = {
   'gemini-compatible': 'google',
 }
-const OPTIONAL_PRICING_PROVIDER_KEYS = new Set([
-  'openai-compatible',
-  'gemini-compatible',
-  'bailian',
-  'siliconflow',
-])
-const OFFICIAL_ONLY_PROVIDER_KEYS = new Set(['bailian', 'siliconflow'])
-const RETIRED_PROVIDER_KEYS = new Set(['qwen'])
-const MINIMAX_OFFICIAL_BASE_URL = 'https://api.minimaxi.com/v1'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -201,24 +145,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
-}
-
-function normalizeMinimaxProviderBaseUrl(input: {
-  providerId: string
-  baseUrl?: string
-  strict: boolean
-  field: string
-}): string | undefined {
-  if (getProviderKey(input.providerId) !== 'minimax') return input.baseUrl
-  if (!input.baseUrl) return MINIMAX_OFFICIAL_BASE_URL
-  if (input.baseUrl === MINIMAX_OFFICIAL_BASE_URL) return MINIMAX_OFFICIAL_BASE_URL
-  if (input.strict) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'PROVIDER_BASEURL_INVALID',
-      field: input.field,
-    })
-  }
-  return MINIMAX_OFFICIAL_BASE_URL
 }
 
 function formatPriceAmount(amount: number): string {
@@ -369,48 +295,17 @@ function withDisplayPricing(model: StoredModel, map: PricingDisplayMap): StoredM
   if (!display) {
     // Derive display from user custom pricing if available
     if (model.customPricing) {
-      const llmPricing = model.customPricing.llm
-      if (typeof llmPricing?.inputPerMillion === 'number' && typeof llmPricing.outputPerMillion === 'number') {
-        const minPrice = Math.min(llmPricing.inputPerMillion, llmPricing.outputPerMillion)
-        const maxPrice = Math.max(llmPricing.inputPerMillion, llmPricing.outputPerMillion)
+      if (typeof model.customPricing.input === 'number' && typeof model.customPricing.output === 'number') {
+        const minPrice = Math.min(model.customPricing.input, model.customPricing.output)
+        const maxPrice = Math.max(model.customPricing.input, model.customPricing.output)
         return {
           ...model,
           price: minPrice,
           priceMin: minPrice,
           priceMax: maxPrice,
           priceLabel: `${formatPriceAmount(minPrice)}~${formatPriceAmount(maxPrice)}`,
-          priceInput: llmPricing.inputPerMillion,
-          priceOutput: llmPricing.outputPerMillion,
-        }
-      }
-
-      const mediaPricing = model.type === 'image'
-        ? model.customPricing.image
-        : model.type === 'video'
-          ? model.customPricing.video
-          : undefined
-      if (mediaPricing) {
-        const basePrice = typeof mediaPricing.basePrice === 'number' ? mediaPricing.basePrice : 0
-        let minExtra = 0
-        let maxExtra = 0
-        if (mediaPricing.optionPrices) {
-          for (const optionMap of Object.values(mediaPricing.optionPrices)) {
-            const values = Object.values(optionMap).filter((value) => Number.isFinite(value))
-            if (values.length === 0) continue
-            minExtra += Math.min(...values)
-            maxExtra += Math.max(...values)
-          }
-        }
-        const minPrice = basePrice + minExtra
-        const maxPrice = basePrice + maxExtra
-        return {
-          ...model,
-          price: minPrice,
-          priceMin: minPrice,
-          priceMax: maxPrice,
-          priceLabel: minPrice === maxPrice
-            ? formatPriceAmount(minPrice)
-            : `${formatPriceAmount(minPrice)}~${formatPriceAmount(maxPrice)}`,
+          priceInput: model.customPricing.input,
+          priceOutput: model.customPricing.output,
         }
       }
     }
@@ -450,63 +345,7 @@ function isUnifiedModelType(value: unknown): value is UnifiedModelType {
 }
 
 function isApiMode(value: unknown): value is ApiModeType {
-  return value === 'gemini-sdk' || value === 'openai-official'
-}
-
-function isGatewayRoute(value: unknown): value is GatewayRouteType {
-  return value === 'official' || value === 'openai-compat'
-}
-
-function isLlmProtocol(value: unknown): value is LlmProtocolType {
-  return value === 'responses' || value === 'chat-completions'
-}
-
-function isMediaTemplateSource(value: unknown): value is OpenAICompatMediaTemplateSource {
-  return value === 'ai' || value === 'manual'
-}
-
-function resolveProviderGatewayRoute(
-  providerId: string,
-  rawGatewayRoute: unknown,
-): GatewayRouteType {
-  const providerKey = getProviderKey(providerId)
-  const isOpenAICompatibleProvider = providerKey === 'openai-compatible'
-  const isGeminiCompatibleProvider = providerKey === 'gemini-compatible'
-
-  if (rawGatewayRoute !== undefined && !isGatewayRoute(rawGatewayRoute)) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'PROVIDER_GATEWAY_ROUTE_INVALID',
-    })
-  }
-
-  if (isOpenAICompatibleProvider) {
-    if (rawGatewayRoute === 'official') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_GATEWAY_ROUTE_INVALID',
-      })
-    }
-    return 'openai-compat'
-  }
-
-  if (isGeminiCompatibleProvider) {
-    if (rawGatewayRoute === 'openai-compat') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_GATEWAY_ROUTE_INVALID',
-      })
-    }
-    return 'official'
-  }
-
-  if (OFFICIAL_ONLY_PROVIDER_KEYS.has(providerKey)) {
-    if (rawGatewayRoute === 'openai-compat') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_GATEWAY_ROUTE_INVALID',
-      })
-    }
-    return 'official'
-  }
-
-  return rawGatewayRoute === 'openai-compat' ? 'openai-compat' : 'official'
+  return value === 'gemini-sdk'
 }
 
 function resolveProviderByIdOrKey(providers: StoredProvider[], providerId: string): StoredProvider | null {
@@ -541,198 +380,7 @@ function withBuiltinCapabilities(model: StoredModel): StoredModel {
   }
 }
 
-function readNonNegativeNumber(value: unknown): number | undefined {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    return undefined
-  }
-  return value
-}
-
-function parseNonNegativeNumberStrict(value: unknown, field: string): number | undefined {
-  if (value === undefined || value === null) return undefined
-  const parsed = readNonNegativeNumber(value)
-  if (parsed !== undefined) return parsed
-  throw new ApiError('INVALID_PARAMS', {
-    code: 'MODEL_CUSTOM_PRICING_INVALID',
-    field,
-  })
-}
-
-function validateAllowedObjectKeys(
-  raw: Record<string, unknown>,
-  allowed: readonly string[],
-  field: string,
-) {
-  const allowedSet = new Set(allowed)
-  for (const key of Object.keys(raw)) {
-    if (allowedSet.has(key)) continue
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'MODEL_CUSTOM_PRICING_INVALID',
-      field: `${field}.${key}`,
-    })
-  }
-}
-
-function normalizeOptionPrices(
-  raw: unknown,
-  options?: { strict?: boolean; field?: string },
-): Record<string, Record<string, number>> | undefined {
-  if (raw === undefined || raw === null) return undefined
-  if (!isRecord(raw)) {
-    if (options?.strict) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_CUSTOM_PRICING_INVALID',
-        field: options.field || 'models.customPricing.optionPrices',
-      })
-    }
-    return undefined
-  }
-
-  const normalized: Record<string, Record<string, number>> = {}
-  for (const [field, rawFieldPricing] of Object.entries(raw)) {
-    if (!isRecord(rawFieldPricing)) {
-      if (options?.strict) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'MODEL_CUSTOM_PRICING_INVALID',
-          field: options.field ? `${options.field}.${field}` : `models.customPricing.optionPrices.${field}`,
-        })
-      }
-      continue
-    }
-    const fieldPricing: Record<string, number> = {}
-    for (const [optionValue, rawAmount] of Object.entries(rawFieldPricing)) {
-      const amount = options?.strict
-        ? parseNonNegativeNumberStrict(
-          rawAmount,
-          options.field
-            ? `${options.field}.${field}.${optionValue}`
-            : `models.customPricing.optionPrices.${field}.${optionValue}`,
-        )
-        : readNonNegativeNumber(rawAmount)
-      if (amount === undefined) continue
-      fieldPricing[optionValue] = amount
-    }
-    if (Object.keys(fieldPricing).length > 0) {
-      normalized[field] = fieldPricing
-    }
-  }
-
-  return Object.keys(normalized).length > 0 ? normalized : undefined
-}
-
-function normalizeMediaCustomPricing(
-  raw: unknown,
-  options?: { strict?: boolean; field?: string },
-): StoredModelMediaCustomPricing | undefined {
-  if (raw === undefined || raw === null) return undefined
-  if (!isRecord(raw)) {
-    if (options?.strict) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_CUSTOM_PRICING_INVALID',
-        field: options.field || 'models.customPricing',
-      })
-    }
-    return undefined
-  }
-  if (options?.strict) {
-    validateAllowedObjectKeys(raw, ['basePrice', 'optionPrices'], options.field || 'models.customPricing')
-  }
-  const basePrice = options?.strict
-    ? parseNonNegativeNumberStrict(raw.basePrice, options.field ? `${options.field}.basePrice` : 'models.customPricing.basePrice')
-    : readNonNegativeNumber(raw.basePrice)
-  const optionPrices = normalizeOptionPrices(raw.optionPrices, {
-    strict: options?.strict,
-    field: options?.field ? `${options.field}.optionPrices` : 'models.customPricing.optionPrices',
-  })
-  if (basePrice === undefined && optionPrices === undefined) return undefined
-
-  return {
-    ...(basePrice !== undefined ? { basePrice } : {}),
-    ...(optionPrices ? { optionPrices } : {}),
-  }
-}
-
-function normalizeCustomPricing(
-  raw: unknown,
-  options?: { strict?: boolean; field?: string },
-): StoredModelCustomPricing | undefined {
-  if (raw === undefined || raw === null) return undefined
-  if (!isRecord(raw)) {
-    if (options?.strict) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_CUSTOM_PRICING_INVALID',
-        field: options.field || 'models.customPricing',
-      })
-    }
-    return undefined
-  }
-  if (options?.strict) {
-    validateAllowedObjectKeys(raw, ['llm', 'image', 'video', 'input', 'output'], options.field || 'models.customPricing')
-  }
-
-  const llmRaw = isRecord(raw.llm) ? raw.llm : raw
-  if (options?.strict && raw.llm !== undefined && !isRecord(raw.llm)) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'MODEL_CUSTOM_PRICING_INVALID',
-      field: options.field ? `${options.field}.llm` : 'models.customPricing.llm',
-    })
-  }
-  if (options?.strict && isRecord(raw.llm)) {
-    validateAllowedObjectKeys(raw.llm, ['inputPerMillion', 'outputPerMillion'], options.field ? `${options.field}.llm` : 'models.customPricing.llm')
-  }
-  const inputPerMillion = options?.strict
-    ? parseNonNegativeNumberStrict(llmRaw.inputPerMillion, options.field ? `${options.field}.llm.inputPerMillion` : 'models.customPricing.llm.inputPerMillion')
-    : readNonNegativeNumber(llmRaw.inputPerMillion)
-  const outputPerMillion = options?.strict
-    ? parseNonNegativeNumberStrict(llmRaw.outputPerMillion, options.field ? `${options.field}.llm.outputPerMillion` : 'models.customPricing.llm.outputPerMillion')
-    : readNonNegativeNumber(llmRaw.outputPerMillion)
-  // Legacy bridge: migrate old shape { input, output } into llm.*
-  const legacyInput = options?.strict
-    ? parseNonNegativeNumberStrict((raw as Record<string, unknown>).input, options.field ? `${options.field}.input` : 'models.customPricing.input')
-    : readNonNegativeNumber((raw as Record<string, unknown>).input)
-  const legacyOutput = options?.strict
-    ? parseNonNegativeNumberStrict((raw as Record<string, unknown>).output, options.field ? `${options.field}.output` : 'models.customPricing.output')
-    : readNonNegativeNumber((raw as Record<string, unknown>).output)
-  const llm = (inputPerMillion !== undefined || outputPerMillion !== undefined || legacyInput !== undefined || legacyOutput !== undefined)
-    ? {
-      ...(inputPerMillion !== undefined ? { inputPerMillion } : {}),
-      ...(outputPerMillion !== undefined ? { outputPerMillion } : {}),
-      ...(inputPerMillion === undefined && legacyInput !== undefined ? { inputPerMillion: legacyInput } : {}),
-      ...(outputPerMillion === undefined && legacyOutput !== undefined ? { outputPerMillion: legacyOutput } : {}),
-    }
-    : undefined
-  if (
-    options?.strict
-    && llm
-    && (
-      typeof llm.inputPerMillion !== 'number'
-      || typeof llm.outputPerMillion !== 'number'
-    )
-  ) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'MODEL_CUSTOM_PRICING_INVALID',
-      field: options.field ? `${options.field}.llm` : 'models.customPricing.llm',
-    })
-  }
-
-  const image = normalizeMediaCustomPricing(raw.image, {
-    strict: options?.strict,
-    field: options?.field ? `${options.field}.image` : 'models.customPricing.image',
-  })
-  const video = normalizeMediaCustomPricing(raw.video, {
-    strict: options?.strict,
-    field: options?.field ? `${options.field}.video` : 'models.customPricing.video',
-  })
-
-  if (!llm && !image && !video) return undefined
-  return {
-    ...(llm ? { llm } : {}),
-    ...(image ? { image } : {}),
-    ...(video ? { video } : {}),
-  }
-}
-
-function normalizeStoredModel(raw: unknown, index: number, options?: { strictCustomPricing?: boolean }): StoredModel {
+function normalizeStoredModel(raw: unknown, index: number): StoredModel {
   if (!isRecord(raw)) {
     throw new ApiError('INVALID_PARAMS', {
       code: 'MODEL_PAYLOAD_INVALID',
@@ -772,47 +420,18 @@ function normalizeStoredModel(raw: unknown, index: number, options?: { strictCus
 
   const modelName = readTrimmedString(raw.name) || modelId
 
-  const customPricing = normalizeCustomPricing(raw.customPricing, {
-    strict: options?.strictCustomPricing,
-    field: `models[${index}].customPricing`,
-  })
-
-  const llmProtocolRaw = raw.llmProtocol
-  let llmProtocol: LlmProtocolType | undefined
-  if (llmProtocolRaw !== undefined && llmProtocolRaw !== null) {
-    if (!isLlmProtocol(llmProtocolRaw)) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_LLM_PROTOCOL_INVALID',
-        field: `models[${index}].llmProtocol`,
-      })
+  // Parse optional user-defined custom pricing
+  let customPricing: StoredModelCustomPricing | undefined
+  if (isRecord(raw.customPricing)) {
+    const cp = raw.customPricing
+    const inputPrice = typeof cp.input === 'number' && Number.isFinite(cp.input) && cp.input >= 0 ? cp.input : undefined
+    const outputPrice = typeof cp.output === 'number' && Number.isFinite(cp.output) && cp.output >= 0 ? cp.output : undefined
+    if (inputPrice !== undefined || outputPrice !== undefined) {
+      customPricing = {
+        ...(inputPrice !== undefined ? { input: inputPrice } : {}),
+        ...(outputPrice !== undefined ? { output: outputPrice } : {}),
+      }
     }
-    llmProtocol = llmProtocolRaw
-  }
-  const llmProtocolCheckedAt = readTrimmedString(raw.llmProtocolCheckedAt) || undefined
-
-  const compatMediaTemplateRaw = raw.compatMediaTemplate
-  let compatMediaTemplate: OpenAICompatMediaTemplate | undefined
-  if (compatMediaTemplateRaw !== undefined && compatMediaTemplateRaw !== null) {
-    const validated = validateOpenAICompatMediaTemplate(compatMediaTemplateRaw)
-    if (!validated.ok || !validated.template) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_COMPAT_MEDIA_TEMPLATE_INVALID',
-        field: `models[${index}].compatMediaTemplate`,
-      })
-    }
-    compatMediaTemplate = validated.template
-  }
-  const compatMediaTemplateCheckedAt = readTrimmedString(raw.compatMediaTemplateCheckedAt) || undefined
-  const compatMediaTemplateSourceRaw = raw.compatMediaTemplateSource
-  let compatMediaTemplateSource: OpenAICompatMediaTemplateSource | undefined
-  if (compatMediaTemplateSourceRaw !== undefined && compatMediaTemplateSourceRaw !== null) {
-    if (!isMediaTemplateSource(compatMediaTemplateSourceRaw)) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'MODEL_COMPAT_MEDIA_TEMPLATE_SOURCE_INVALID',
-        field: `models[${index}].compatMediaTemplateSource`,
-      })
-    }
-    compatMediaTemplateSource = compatMediaTemplateSourceRaw
   }
 
   return {
@@ -821,11 +440,6 @@ function normalizeStoredModel(raw: unknown, index: number, options?: { strictCus
     name: modelName,
     type: modelType,
     provider,
-    ...(llmProtocol ? { llmProtocol } : {}),
-    ...(llmProtocolCheckedAt ? { llmProtocolCheckedAt } : {}),
-    ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
-    ...(compatMediaTemplateCheckedAt ? { compatMediaTemplateCheckedAt } : {}),
-    ...(compatMediaTemplateSource ? { compatMediaTemplateSource } : {}),
     price: 0,
     ...(customPricing ? { customPricing } : {}),
   }
@@ -857,15 +471,8 @@ function normalizeProvidersInput(rawProviders: unknown): StoredProvider[] {
         field: `providers[${index}]`,
       })
     }
-    const normalizedId = id.toLowerCase()
-    const providerKey = getProviderKey(normalizedId)
-    if (RETIRED_PROVIDER_KEYS.has(providerKey)) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_NOT_SUPPORTED',
-        field: `providers[${index}].id`,
-      })
-    }
-    if (normalized.some((provider) => provider.id.toLowerCase() === normalizedId)) {
+    const providerKey = getProviderKey(id)
+    if (normalized.some((provider) => getProviderKey(provider.id) === providerKey)) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'PROVIDER_DUPLICATE',
         field: `providers[${index}].id`,
@@ -878,47 +485,13 @@ function normalizeProvidersInput(rawProviders: unknown): StoredProvider[] {
         field: `providers[${index}].apiMode`,
       })
     }
-    if (getProviderKey(id) === 'gemini-compatible' && apiModeRaw === 'openai-official') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_APIMODE_INVALID',
-        field: `providers[${index}].apiMode`,
-      })
-    }
-    let gatewayRoute: GatewayRouteType
-    try {
-      gatewayRoute = resolveProviderGatewayRoute(id, item.gatewayRoute)
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'PROVIDER_GATEWAY_ROUTE_INVALID',
-          field: `providers[${index}].gatewayRoute`,
-        })
-      }
-      throw error
-    }
-    const hiddenRaw = item.hidden
-    if (hiddenRaw !== undefined && typeof hiddenRaw !== 'boolean') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_HIDDEN_INVALID',
-        field: `providers[${index}].hidden`,
-      })
-    }
-
-    const baseUrl = normalizeMinimaxProviderBaseUrl({
-      providerId: id,
-      baseUrl: readTrimmedString(item.baseUrl) || undefined,
-      strict: true,
-      field: `providers[${index}].baseUrl`,
-    })
 
     normalized.push({
       id,
       name,
-      baseUrl,
+      baseUrl: readTrimmedString(item.baseUrl) || undefined,
       apiKey: typeof item.apiKey === 'string' ? item.apiKey.trim() : undefined,
-      hidden: hiddenRaw === true,
       apiMode: apiModeRaw,
-      gatewayRoute,
     })
   }
 
@@ -934,7 +507,7 @@ function normalizeModelList(rawModels: unknown): StoredModel[] {
     })
   }
 
-  return rawModels.map((item, index) => normalizeStoredModel(item, index, { strictCustomPricing: true }))
+  return rawModels.map((item, index) => normalizeStoredModel(item, index))
 }
 
 function validateModelProviderConsistency(models: StoredModel[], providers: StoredProvider[]) {
@@ -957,226 +530,17 @@ function validateModelProviderTypeSupport(models: StoredModel[], providers: Stor
     if (!matchedProvider) continue
 
     const providerKey = getProviderKey(matchedProvider.id)
-    if (model.type === 'lipsync' && providerKey !== 'fal' && providerKey !== 'vidu' && providerKey !== 'bailian') {
+    if (providerKey === 'openai-compatible' && model.type !== 'llm') {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'MODEL_PROVIDER_TYPE_UNSUPPORTED',
+        field: `models[${index}].type`,
+      })
+    }
+    if (model.type === 'lipsync' && providerKey !== 'fal' && providerKey !== 'vidu') {
       throw new ApiError('INVALID_PARAMS', {
         code: 'MODEL_PROVIDER_TYPE_UNSUPPORTED',
         field: `models[${index}].provider`,
       })
-    }
-  }
-}
-
-function isOpenAICompatibleLlmModel(model: StoredModel): boolean {
-  return model.type === 'llm' && getProviderKey(model.provider) === 'openai-compatible'
-}
-
-function isOpenAICompatibleMediaTemplateModel(model: StoredModel): boolean {
-  if (getProviderKey(model.provider) !== 'openai-compatible') return false
-  return model.type === 'image' || model.type === 'video'
-}
-
-function getDefaultMediaTemplate(type: 'image' | 'video'): OpenAICompatMediaTemplate {
-  if (type === 'image') {
-    return {
-      version: 1,
-      mediaType: 'image',
-      mode: 'sync',
-      create: {
-        method: 'POST',
-        path: '/images/generations',
-        contentType: 'application/json',
-        bodyTemplate: {
-          model: '{{model}}',
-          prompt: '{{prompt}}',
-        },
-      },
-      response: {
-        outputUrlPath: '$.data[0].url',
-        outputUrlsPath: '$.data',
-        errorPath: '$.error.message',
-      },
-    }
-  }
-
-  return {
-    version: 1,
-    mediaType: 'video',
-    mode: 'async',
-    create: {
-      method: 'POST',
-      path: '/videos',
-      contentType: 'multipart/form-data',
-      multipartFileFields: ['input_reference'],
-      bodyTemplate: {
-        model: '{{model}}',
-        prompt: '{{prompt}}',
-        seconds: '{{duration}}',
-        size: '{{size}}',
-        input_reference: '{{image}}',
-      },
-    },
-    status: {
-      method: 'GET',
-      path: '/videos/{{task_id}}',
-    },
-    content: {
-      method: 'GET',
-      path: '/videos/{{task_id}}/content',
-    },
-    response: {
-      taskIdPath: '$.id',
-      statusPath: '$.status',
-      errorPath: '$.error.message',
-    },
-    polling: {
-      intervalMs: 3000,
-      timeoutMs: 600000,
-      doneStates: ['completed', 'succeeded'],
-      failStates: ['failed', 'error', 'canceled'],
-    },
-  }
-}
-
-function resolveStoredLlmProtocols(
-  models: StoredModel[],
-  existingModels: StoredModel[],
-): StoredModel[] {
-  const existingByModelKey = new Map(existingModels.map((model) => [model.modelKey, model] as const))
-  const checkedAtFallback = new Date().toISOString()
-
-  return models.map((model, index) => {
-    const isTargetModel = isOpenAICompatibleLlmModel(model)
-
-    if (!isTargetModel) {
-      if (model.llmProtocol !== undefined || model.llmProtocolCheckedAt !== undefined) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'MODEL_LLM_PROTOCOL_NOT_ALLOWED',
-          field: `models[${index}].llmProtocol`,
-        })
-      }
-      return model
-    }
-
-    if (model.llmProtocol) {
-      return {
-        ...model,
-        llmProtocolCheckedAt: model.llmProtocolCheckedAt || checkedAtFallback,
-      }
-    }
-
-    const existing = existingByModelKey.get(model.modelKey)
-    if (existing?.llmProtocol) {
-      return {
-        ...model,
-        llmProtocol: existing.llmProtocol,
-        llmProtocolCheckedAt: existing.llmProtocolCheckedAt || checkedAtFallback,
-      }
-    }
-    if (existing) {
-      return {
-        ...model,
-        llmProtocol: 'chat-completions',
-        llmProtocolCheckedAt: checkedAtFallback,
-      }
-    }
-
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'MODEL_LLM_PROTOCOL_REQUIRED',
-      field: `models[${index}].llmProtocol`,
-    })
-  })
-}
-
-function resolveStoredMediaTemplates(
-  models: StoredModel[],
-  existingModels: StoredModel[],
-): StoredModel[] {
-  const existingByModelKey = new Map(existingModels.map((model) => [model.modelKey, model] as const))
-  const checkedAtFallback = new Date().toISOString()
-
-  return models.map((model, index) => {
-    const isTargetModel = isOpenAICompatibleMediaTemplateModel(model)
-
-    if (!isTargetModel) {
-      if (model.compatMediaTemplate !== undefined || model.compatMediaTemplateCheckedAt !== undefined || model.compatMediaTemplateSource !== undefined) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'MODEL_COMPAT_MEDIA_TEMPLATE_NOT_ALLOWED',
-          field: `models[${index}].compatMediaTemplate`,
-        })
-      }
-      return model
-    }
-
-    const expectedMediaType = model.type === 'image' ? 'image' : 'video'
-    if (model.compatMediaTemplate) {
-      if (model.compatMediaTemplate.mediaType !== expectedMediaType) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'MODEL_COMPAT_MEDIA_TEMPLATE_MEDIATYPE_MISMATCH',
-          field: `models[${index}].compatMediaTemplate.mediaType`,
-        })
-      }
-      return {
-        ...model,
-        compatMediaTemplateCheckedAt: model.compatMediaTemplateCheckedAt || checkedAtFallback,
-        compatMediaTemplateSource: model.compatMediaTemplateSource || 'ai',
-      }
-    }
-
-    const existing = existingByModelKey.get(model.modelKey)
-    if (existing?.compatMediaTemplate) {
-      return {
-        ...model,
-        compatMediaTemplate: existing.compatMediaTemplate,
-        compatMediaTemplateCheckedAt: existing.compatMediaTemplateCheckedAt || checkedAtFallback,
-        compatMediaTemplateSource: existing.compatMediaTemplateSource || 'manual',
-      }
-    }
-
-    return {
-      ...model,
-      compatMediaTemplate: getDefaultMediaTemplate(expectedMediaType),
-      compatMediaTemplateCheckedAt: checkedAtFallback,
-      compatMediaTemplateSource: 'manual',
-    }
-  })
-}
-
-function validateCustomPricingCapabilityMappings(models: StoredModel[]) {
-  for (let index = 0; index < models.length; index += 1) {
-    const model = models[index]
-    if (model.type !== 'image' && model.type !== 'video') continue
-
-    const mediaPricing = model.type === 'image'
-      ? model.customPricing?.image
-      : model.customPricing?.video
-    const optionPrices = mediaPricing?.optionPrices
-    if (!optionPrices || Object.keys(optionPrices).length === 0) continue
-
-    const context = resolveBuiltinModelContext(model.type, model.modelKey)
-    if (!context) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'CAPABILITY_MODEL_UNSUPPORTED',
-        field: `models[${index}].customPricing.${model.type}.optionPrices`,
-      })
-    }
-
-    const optionFields = getCapabilityOptionFields(model.type, context.capabilities)
-    for (const [field, optionMap] of Object.entries(optionPrices)) {
-      const allowedValues = optionFields[field]
-      if (!allowedValues) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'CAPABILITY_FIELD_INVALID',
-          field: `models[${index}].customPricing.${model.type}.optionPrices.${field}`,
-        })
-      }
-      for (const optionValue of Object.keys(optionMap)) {
-        if (allowedValues.includes(optionValue)) continue
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'CAPABILITY_VALUE_NOT_ALLOWED',
-          field: `models[${index}].customPricing.${model.type}.optionPrices.${field}.${optionValue}`,
-          allowedValues,
-        })
-      }
     }
   }
 }
@@ -1190,27 +554,7 @@ function hasBuiltinPricingForModel(apiType: PricingApiType, provider: string, mo
 
 function hasCustomPricingForType(model: StoredModel): boolean {
   if (!model.customPricing) return false
-  if (model.type === 'llm') {
-    return (
-      typeof model.customPricing.llm?.inputPerMillion === 'number'
-      && typeof model.customPricing.llm?.outputPerMillion === 'number'
-    )
-  }
-  if (model.type === 'image') {
-    const imagePricing = model.customPricing.image
-    return (
-      typeof imagePricing?.basePrice === 'number'
-      || (isRecord(imagePricing?.optionPrices) && Object.keys(imagePricing.optionPrices).length > 0)
-    )
-  }
-  if (model.type === 'video') {
-    const videoPricing = model.customPricing.video
-    return (
-      typeof videoPricing?.basePrice === 'number'
-      || (isRecord(videoPricing?.optionPrices) && Object.keys(videoPricing.optionPrices).length > 0)
-    )
-  }
-  return false
+  return typeof model.customPricing.input === 'number' && typeof model.customPricing.output === 'number'
 }
 
 function validateBillableModelPricing(models: StoredModel[]) {
@@ -1221,7 +565,6 @@ function validateBillableModelPricing(models: StoredModel[]) {
 
     // Skip validation if user provided custom pricing
     if (hasCustomPricingForType(model)) continue
-    if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(model.provider))) continue
 
     if (!hasBuiltinPricingForModel(apiType, model.provider, model.modelId)) {
       throw new ApiError('INVALID_PARAMS', {
@@ -1268,62 +611,6 @@ function normalizeDefaultModelsInput(rawDefaultModels: unknown): DefaultModelsPa
   return normalized
 }
 
-function normalizeWorkflowConcurrencyInput(rawWorkflowConcurrency: unknown): WorkflowConcurrencyPayload {
-  if (rawWorkflowConcurrency === undefined) return {}
-  if (!isRecord(rawWorkflowConcurrency)) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'INVALID_PARAMS',
-      field: 'workflowConcurrency',
-    })
-  }
-
-  const normalized: WorkflowConcurrencyPayload = {}
-
-  if (rawWorkflowConcurrency.analysis !== undefined) {
-    const value = normalizeWorkflowConcurrencyValue(
-      rawWorkflowConcurrency.analysis,
-      DEFAULT_ANALYSIS_WORKFLOW_CONCURRENCY,
-    )
-    if (value !== rawWorkflowConcurrency.analysis) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'INVALID_PARAMS',
-        field: 'workflowConcurrency.analysis',
-      })
-    }
-    normalized.analysis = value
-  }
-
-  if (rawWorkflowConcurrency.image !== undefined) {
-    const value = normalizeWorkflowConcurrencyValue(
-      rawWorkflowConcurrency.image,
-      DEFAULT_IMAGE_WORKFLOW_CONCURRENCY,
-    )
-    if (value !== rawWorkflowConcurrency.image) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'INVALID_PARAMS',
-        field: 'workflowConcurrency.image',
-      })
-    }
-    normalized.image = value
-  }
-
-  if (rawWorkflowConcurrency.video !== undefined) {
-    const value = normalizeWorkflowConcurrencyValue(
-      rawWorkflowConcurrency.video,
-      DEFAULT_VIDEO_WORKFLOW_CONCURRENCY,
-    )
-    if (value !== rawWorkflowConcurrency.video) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'INVALID_PARAMS',
-        field: 'workflowConcurrency.video',
-      })
-    }
-    normalized.video = value
-  }
-
-  return normalized
-}
-
 function validateDefaultModelPricing(defaultModels: DefaultModelsPayload) {
   for (const field of DEFAULT_MODEL_FIELDS) {
     const modelKey = defaultModels[field]
@@ -1331,7 +618,6 @@ function validateDefaultModelPricing(defaultModels: DefaultModelsPayload) {
 
     const parsed = parseModelKeyStrict(modelKey)
     if (!parsed) continue
-    if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(parsed.provider))) continue
     const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
 
     if (!hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId)) {
@@ -1349,7 +635,6 @@ function isModelPricedForBilling(model: StoredModel): boolean {
   const apiType = BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE[model.type]
   if (!apiType) return true
   if (hasCustomPricingForType(model)) return true
-  if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(model.provider))) return true
   return hasBuiltinPricingForModel(apiType, model.provider, model.modelId)
 }
 
@@ -1372,10 +657,6 @@ function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayload): D
     const parsed = parseModelKeyStrict(modelKey)
     if (!parsed) {
       sanitized[field] = ''
-      continue
-    }
-    if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(parsed.provider))) {
-      sanitized[field] = parsed.modelKey
       continue
     }
 
@@ -1405,81 +686,7 @@ function parseStoredProviders(rawProviders: string | null | undefined): StoredPr
       field: 'customProviders',
     })
   }
-
-  const normalized: StoredProvider[] = []
-  for (let index = 0; index < parsedUnknown.length; index += 1) {
-    const raw = parsedUnknown[index]
-    if (!isRecord(raw)) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_PAYLOAD_INVALID',
-        field: `customProviders[${index}]`,
-      })
-    }
-
-    const id = readTrimmedString(raw.id)
-    const name = readTrimmedString(raw.name)
-    if (!id || !name) {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_PAYLOAD_INVALID',
-        field: `customProviders[${index}]`,
-      })
-    }
-
-    const providerKey = getProviderKey(id)
-    const apiModeRaw = raw.apiMode
-    let apiMode: ApiModeType | undefined
-    if (apiModeRaw !== undefined) {
-      if (!isApiMode(apiModeRaw)) {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'PROVIDER_APIMODE_INVALID',
-          field: `customProviders[${index}].apiMode`,
-        })
-      }
-      if (providerKey === 'gemini-compatible' && apiModeRaw === 'openai-official') {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'PROVIDER_APIMODE_INVALID',
-          field: `customProviders[${index}].apiMode`,
-        })
-      }
-      apiMode = apiModeRaw
-    }
-
-    let gatewayRoute: GatewayRouteType
-    try {
-      gatewayRoute = resolveProviderGatewayRoute(id, raw.gatewayRoute)
-    } catch {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_GATEWAY_ROUTE_INVALID',
-        field: `customProviders[${index}].gatewayRoute`,
-      })
-    }
-    const hiddenRaw = raw.hidden
-    if (hiddenRaw !== undefined && typeof hiddenRaw !== 'boolean') {
-      throw new ApiError('INVALID_PARAMS', {
-        code: 'PROVIDER_HIDDEN_INVALID',
-        field: `customProviders[${index}].hidden`,
-      })
-    }
-
-    const baseUrl = normalizeMinimaxProviderBaseUrl({
-      providerId: id,
-      baseUrl: readTrimmedString(raw.baseUrl) || undefined,
-      strict: false,
-      field: `customProviders[${index}].baseUrl`,
-    })
-
-    normalized.push({
-      id,
-      name,
-      baseUrl,
-      apiKey: typeof raw.apiKey === 'string' ? raw.apiKey.trim() : undefined,
-      hidden: hiddenRaw === true,
-      apiMode,
-      gatewayRoute,
-    })
-  }
-
-  return normalized
+  return parsedUnknown as StoredProvider[]
 }
 
 function parseStoredModels(rawModels: string | null | undefined): StoredModel[] {
@@ -1666,13 +873,8 @@ export const GET = apiHandler(async () => {
       storyboardModel: true,
       editModel: true,
       videoModel: true,
-      audioModel: true,
       lipSyncModel: true,
-      voiceDesignModel: true,
       capabilityDefaults: true,
-      analysisConcurrency: true,
-      imageConcurrency: true,
-      videoConcurrency: true,
     },
   })
 
@@ -1691,8 +893,8 @@ export const GET = apiHandler(async () => {
   // gemini-compatible 本质就是改了 baseURL 和 key，模型和能力与 Google 官方完全一致
   const GEMINI_COMPATIBLE_PRESETS: { type: UnifiedModelType; modelId: string; name: string }[] = [
     { type: 'llm', modelId: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro' },
+    { type: 'llm', modelId: 'gemini-3-pro-preview', name: 'Gemini 3 Pro' },
     { type: 'llm', modelId: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
-    { type: 'llm', modelId: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash-Lite' },
     { type: 'image', modelId: 'gemini-3-pro-image-preview', name: 'Banana Pro' },
     { type: 'image', modelId: 'gemini-3.1-flash-image-preview', name: 'Nano Banana 2' },
     { type: 'image', modelId: 'gemini-2.5-flash-image', name: 'Gemini 2.5 Flash Image' },
@@ -1734,29 +936,21 @@ export const GET = apiHandler(async () => {
     storyboardModel: pref?.storyboardModel || '',
     editModel: pref?.editModel || '',
     videoModel: pref?.videoModel || '',
-    audioModel: pref?.audioModel || '',
     lipSyncModel: pref?.lipSyncModel || DEFAULT_LIPSYNC_MODEL_KEY,
-    voiceDesignModel: pref?.voiceDesignModel || '',
   }
   const defaultModels = billingMode === 'OFF'
     ? rawDefaults
     : sanitizeDefaultModelsForBilling(rawDefaults)
   const capabilityDefaults = sanitizeCapabilitySelectionsAgainstModels(
     parseStoredCapabilitySelections(pref?.capabilityDefaults, 'capabilityDefaults'),
-    [...models, ...disabledPresets],
+    models,
   )
-  const workflowConcurrency = normalizeWorkflowConcurrencyConfig({
-    analysis: pref?.analysisConcurrency,
-    image: pref?.imageConcurrency,
-    video: pref?.videoConcurrency,
-  })
 
   return NextResponse.json({
     models: [...pricedModels, ...disabledPresets],
     providers,
     defaultModels,
     capabilityDefaults,
-    workflowConcurrency,
     pricingDisplay,
   })
 })
@@ -1767,24 +961,13 @@ export const PUT = apiHandler(async (request: NextRequest) => {
   const { session } = authResult
   const userId = session.user.id
 
-  let body: ApiConfigPutBody
-  try {
-    body = (await request.json()) as ApiConfigPutBody
-  } catch {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'BODY_PARSE_FAILED',
-      field: 'body',
-    })
-  }
-  const normalizedModelsInput = body.models === undefined ? undefined : normalizeModelList(body.models)
+  const body = (await request.json()) as ApiConfigPutBody
+  const normalizedModels = body.models === undefined ? undefined : normalizeModelList(body.models)
   const normalizedProviders = body.providers === undefined ? undefined : normalizeProvidersInput(body.providers)
   const normalizedDefaults = body.defaultModels === undefined ? undefined : normalizeDefaultModelsInput(body.defaultModels)
   const normalizedCapabilityDefaults = body.capabilityDefaults === undefined
     ? undefined
     : normalizeCapabilitySelectionsInput(body.capabilityDefaults)
-  const normalizedWorkflowConcurrency = body.workflowConcurrency === undefined
-    ? undefined
-    : normalizeWorkflowConcurrencyInput(body.workflowConcurrency)
   const billingMode = await getBillingMode()
 
   const updateData: Record<string, unknown> = {}
@@ -1797,15 +980,11 @@ export const PUT = apiHandler(async (request: NextRequest) => {
   })
   const existingProviders = parseStoredProviders(existingPref?.customProviders)
   const existingModels = parseStoredModels(existingPref?.customModels)
-  const normalizedModels = normalizedModelsInput === undefined
-    ? undefined
-    : resolveStoredMediaTemplates(resolveStoredLlmProtocols(normalizedModelsInput, existingModels), existingModels)
 
   const providerSourceForValidation = normalizedProviders ?? existingProviders
   if (normalizedModels !== undefined) {
     validateModelProviderConsistency(normalizedModels, providerSourceForValidation)
     validateModelProviderTypeSupport(normalizedModels, providerSourceForValidation)
-    validateCustomPricingCapabilityMappings(normalizedModels)
     if (billingMode !== 'OFF') {
       validateBillableModelPricing(normalizedModels)
     }
@@ -1817,7 +996,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
 
   if (normalizedProviders !== undefined) {
     const providersToSave = normalizedProviders.map((provider) => {
-      const existing = existingProviders.find((candidate) => candidate.id === provider.id)
+      const existing = resolveProviderByIdOrKey(existingProviders, provider.id)
       let finalApiKey: string | undefined
       if (provider.apiKey === undefined) {
         finalApiKey = existing?.apiKey
@@ -1826,17 +1005,12 @@ export const PUT = apiHandler(async (request: NextRequest) => {
       } else {
         finalApiKey = encryptApiKey(provider.apiKey)
       }
-      const finalHidden = provider.hidden === undefined
-        ? existing?.hidden === true
-        : provider.hidden === true
 
       return {
         id: provider.id,
         name: provider.name,
         baseUrl: provider.baseUrl,
-        hidden: finalHidden,
         apiMode: provider.apiMode,
-        gatewayRoute: provider.gatewayRoute,
         apiKey: finalApiKey,
       }
     })
@@ -1865,26 +1039,8 @@ export const PUT = apiHandler(async (request: NextRequest) => {
     if (normalizedDefaults.videoModel !== undefined) {
       updateData.videoModel = normalizedDefaults.videoModel || null
     }
-    if (normalizedDefaults.audioModel !== undefined) {
-      updateData.audioModel = normalizedDefaults.audioModel || null
-    }
     if (normalizedDefaults.lipSyncModel !== undefined) {
       updateData.lipSyncModel = normalizedDefaults.lipSyncModel || null
-    }
-    if (normalizedDefaults.voiceDesignModel !== undefined) {
-      updateData.voiceDesignModel = normalizedDefaults.voiceDesignModel || null
-    }
-  }
-
-  if (normalizedWorkflowConcurrency !== undefined) {
-    if (normalizedWorkflowConcurrency.analysis !== undefined) {
-      updateData.analysisConcurrency = normalizedWorkflowConcurrency.analysis
-    }
-    if (normalizedWorkflowConcurrency.image !== undefined) {
-      updateData.imageConcurrency = normalizedWorkflowConcurrency.image
-    }
-    if (normalizedWorkflowConcurrency.video !== undefined) {
-      updateData.videoConcurrency = normalizedWorkflowConcurrency.video
     }
   }
 

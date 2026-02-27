@@ -8,8 +8,6 @@ import {
   type SSEEvent,
 } from './types'
 import { coerceTaskIntent, resolveTaskIntent } from './intent'
-import { mapTaskSSEEventToRunEvents } from '@/lib/run-runtime/task-bridge'
-import { publishRunEvent } from '@/lib/run-runtime/publisher'
 
 const CHANNEL_PREFIX = 'task-events:project:'
 const STREAM_EPHEMERAL_ENABLED = process.env.LLM_STREAM_EPHEMERAL_ENABLED !== 'false'
@@ -220,14 +218,6 @@ export function getProjectChannel(projectId: string) {
   return `${CHANNEL_PREFIX}${projectId}`
 }
 
-async function mirrorTaskEventToRun(message: SSEEvent) {
-  const runEvents = mapTaskSSEEventToRunEvents(message)
-  if (runEvents.length === 0) return
-  for (const event of runEvents) {
-    await publishRunEvent(event)
-  }
-}
-
 export async function publishTaskLifecycleEvent(params: {
   taskId: string
   projectId: string
@@ -271,7 +261,6 @@ export async function publishTaskLifecycleEvent(params: {
   })
 
   await redis.publish(getProjectChannel(params.projectId), JSON.stringify(message))
-  await mirrorTaskEventToRun(message)
   return message
 }
 
@@ -344,7 +333,6 @@ export async function publishTaskStreamEvent(params: {
   })
 
   await redis.publish(getProjectChannel(params.projectId), JSON.stringify(message))
-  await mirrorTaskEventToRun(message)
   return message
 }
 

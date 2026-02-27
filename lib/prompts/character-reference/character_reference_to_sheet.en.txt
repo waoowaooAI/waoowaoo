@@ -2,10 +2,12 @@
 
 Use the provided reference image to extract face traits, hairstyle, body shape, and outfit structure.
 
-## Style priority
-Follow the user-selected style instruction as the highest-priority rule.
-Use reference images only to preserve character identity traits (face, hairstyle, body shape, outfit structure), and do not let reference style override the requested style.
-Only if no explicit style instruction is provided, you may preserve the original visual style.
+## Style consistency
+Keep the original visual style:
+- Real photo -> realistic style
+- Anime -> anime style
+- Realistic illustration -> realistic illustration style
+- Any other style -> preserve that style
 
 ## Generation rules
 1. Ignore the original image color cast and lighting defects

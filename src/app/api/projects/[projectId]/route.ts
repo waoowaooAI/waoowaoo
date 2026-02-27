@@ -1,15 +1,11 @@
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { addSignedUrlsToProject, deleteObjects } from '@/lib/storage'
+import { addSignedUrlsToProject, deleteCOSObjects } from '@/lib/cos'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { logProjectAction } from '@/lib/logging/semantic'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
-import {
-  collectProjectBailianManagedVoiceIds,
-  cleanupUnreferencedBailianVoices,
-} from '@/lib/providers/bailian'
 
 // GET - 获取项目详情
 export const GET = apiHandler(async (
@@ -211,21 +207,13 @@ export const DELETE = apiHandler(async (
 
   // 1. 先收集所有 COS 文件 Key
   _ulogInfo(`[DELETE] 开始删除项目: ${project.name} (${projectId})`)
-  const projectVoiceIds = await collectProjectBailianManagedVoiceIds(projectId)
-  const voiceCleanupResult = await cleanupUnreferencedBailianVoices({
-    voiceIds: projectVoiceIds,
-    scope: {
-      userId: session.user.id,
-      excludeProjectId: projectId,
-    },
-  })
   const cosKeys = await collectProjectCOSKeys(projectId)
 
   // 2. 批量删除 COS 文件
   let cosResult = { success: 0, failed: 0 }
   if (cosKeys.length > 0) {
     _ulogInfo(`[DELETE] 正在删除 ${cosKeys.length} 个 COS 文件...`)
-    cosResult = await deleteObjects(cosKeys)
+    cosResult = await deleteCOSObjects(cosKeys)
   }
 
   // 3. 删除数据库记录 (级联删除所有关联数据)
@@ -242,21 +230,16 @@ export const DELETE = apiHandler(async (
     {
       projectName: project.name,
       cosFilesDeleted: cosResult.success,
-      cosFilesFailed: cosResult.failed,
-      bailianVoicesDeleted: voiceCleanupResult.deletedVoiceIds.length,
-      bailianVoicesSkippedReferenced: voiceCleanupResult.skippedReferencedVoiceIds.length,
+      cosFilesFailed: cosResult.failed
     }
   )
 
   _ulogInfo(`[DELETE] 项目删除完成: ${project.name}`)
   _ulogInfo(`[DELETE] COS 文件: 成功 ${cosResult.success}, 失败 ${cosResult.failed}`)
-  _ulogInfo(`[DELETE] Bailian 音色: 删除 ${voiceCleanupResult.deletedVoiceIds.length}, 跳过(仍被引用) ${voiceCleanupResult.skippedReferencedVoiceIds.length}`)
 
   return NextResponse.json({
     success: true,
     cosFilesDeleted: cosResult.success,
-    cosFilesFailed: cosResult.failed,
-    bailianVoicesDeleted: voiceCleanupResult.deletedVoiceIds.length,
-    bailianVoicesSkippedReferenced: voiceCleanupResult.skippedReferencedVoiceIds.length,
+    cosFilesFailed: cosResult.failed
   })
 })

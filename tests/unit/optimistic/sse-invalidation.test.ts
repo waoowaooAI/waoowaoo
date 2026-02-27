@@ -4,7 +4,7 @@ import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE } from '@/lib/task/types'
 
 type InvalidateArg = { queryKey?: readonly unknown[]; exact?: boolean }
 
-type EffectCleanup = (() => void) | void | null
+type EffectCleanup = (() => void) | void
 
 const runtime = vi.hoisted(() => ({
   queryClient: {

@@ -56,7 +56,7 @@ export function useTTSGeneration({
         try {
             await updateVoiceSettingsMutation.mutateAsync({
                 characterId,
-                voiceType: voiceType as 'qwen-designed' | 'uploaded' | 'custom' | null,
+                voiceType: voiceType as 'custom' | null,
                 voiceId,
                 customVoiceUrl,
             })
@@ -83,12 +83,12 @@ export function useTTSGeneration({
         if (!voiceDesignCharacter) return
 
         try {
-            await saveDesignedVoiceMutation.mutateAsync({
+            const data = await saveDesignedVoiceMutation.mutateAsync({
                 characterId: voiceDesignCharacter.id,
                 voiceId,
                 audioBase64,
             })
-            refreshAssets()
+            await handleVoiceChange(voiceDesignCharacter.id, 'custom', voiceId, data.audioUrl)
             alert(t('tts.voiceDesignSaved', { name: voiceDesignCharacter.name }))
         } catch (error: unknown) {
             alert(t('tts.saveVoiceDesignFailed', { error: getErrorMessage(error, t('common.unknownError')) }))

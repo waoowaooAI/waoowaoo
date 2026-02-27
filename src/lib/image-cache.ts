@@ -1,6 +1,6 @@
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
-import { toFetchableUrl } from '@/lib/storage'
-import { LRUCache } from 'lru-cache'
+import { toFetchableUrl } from '@/lib/cos'
+import LRUCache from 'lru-cache'
 /**
  * 🔥 图片下载缓存系统
  * 

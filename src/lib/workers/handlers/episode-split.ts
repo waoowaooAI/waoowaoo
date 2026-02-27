@@ -1,7 +1,6 @@
 import type { Job } from 'bullmq'
-import { safeParseJsonObject } from '@/lib/json-repair'
 import { prisma } from '@/lib/prisma'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
 import { countWords } from '@/lib/word-count'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { reportTaskProgress } from '@/lib/workers/shared'
@@ -34,8 +33,23 @@ const EPISODE_SPLIT_BOUNDARY_SUFFIX = `
 2. Markers must be locatable in the original text; allow punctuation/whitespace differences only.
 3. If boundaries cannot be located reliably, return an empty episodes array.`
 
+function cleanJsonStringForParse(input: string): string {
+  return input.replace(/"([^"\\]|\\.)*"/g, (match) => {
+    return match
+      .replace(/(?<!\\)\n/g, '\\n')
+      .replace(/(?<!\\)\r/g, '\\r')
+      .replace(/(?<!\\)\t/g, '\\t')
+  })
+}
+
 function parseSplitResponse(aiResponse: string): SplitResponse {
-  const parsed = safeParseJsonObject(aiResponse) as SplitResponse
+  const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/) || aiResponse.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) {
+    throw new Error('Failed to parse AI response: missing JSON payload')
+  }
+
+  const jsonText = cleanJsonStringForParse(jsonMatch[1] || jsonMatch[0])
+  const parsed = JSON.parse(jsonText) as SplitResponse
   if (!parsed || !Array.isArray(parsed.episodes) || parsed.episodes.length === 0) {
     throw new Error('Failed to parse AI response: invalid episodes payload')
   }
@@ -126,26 +140,25 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
         const completion = await withInternalLLMStreamCallbacks(
           streamCallbacks,
           async () =>
-            await executeAiTextStep({
-              userId: job.data.userId,
-              model: analysisModel,
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.3,
-              reasoning: true,
-              reasoningEffort: 'high',
-              projectId,
-              action: 'episode_split',
-              meta: {
-                stepId: 'episode_split',
-                stepAttempt: attempt,
-                stepTitle: '智能分集',
-                stepIndex: 1,
-                stepTotal: 1,
+            await chatCompletion(
+              job.data.userId,
+              analysisModel,
+              [{ role: 'user', content: prompt }],
+              {
+                temperature: 0.3,
+                reasoning: true,
+                reasoningEffort: 'high',
+                projectId,
+                action: 'episode_split',
+                streamStepId: attempt === 1 ? 'episode_split' : `episode_split_retry_${attempt}`,
+                streamStepTitle: '智能分集',
+                streamStepIndex: 1,
+                streamStepTotal: 1,
               },
-            }),
+            ),
         )
 
-        const aiResponse = completion.text
+        const aiResponse = getCompletionContent(completion)
         if (!aiResponse) {
           throw new Error('AI 返回为空')
         }

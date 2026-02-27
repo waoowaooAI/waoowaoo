@@ -2,7 +2,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import archiver from 'archiver'
-import { getObjectBuffer, toFetchableUrl } from '@/lib/storage'
+import { getCOSClient, toFetchableUrl } from '@/lib/cos'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
@@ -190,6 +190,8 @@ export const POST = apiHandler(async (
   })
 
   // 处理视频并打包
+  const isLocal = process.env.STORAGE_TYPE === 'local'
+
   for (const video of indexedVideos) {
     try {
       _ulogInfo(`Downloading video ${video.index}: ${video.videoUrl}`)
@@ -205,7 +207,30 @@ export const POST = apiHandler(async (
         const arrayBuffer = await response.arrayBuffer()
         videoData = Buffer.from(arrayBuffer)
       } else if (storageKey) {
-        videoData = await getObjectBuffer(storageKey)
+        if (isLocal) {
+          const { getSignedUrl } = await import('@/lib/cos')
+          const localUrl = toFetchableUrl(getSignedUrl(storageKey))
+          const response = await fetch(localUrl)
+          if (!response.ok) {
+            throw new Error(`Failed to fetch local file: ${response.statusText}`)
+          }
+          videoData = Buffer.from(await response.arrayBuffer())
+        } else {
+          const cos = getCOSClient()
+          videoData = await new Promise<Buffer>((resolve, reject) => {
+            cos.getObject(
+              {
+                Bucket: process.env.COS_BUCKET!,
+                Region: process.env.COS_REGION!,
+                Key: storageKey
+              },
+              (err, data) => {
+                if (err) reject(err)
+                else resolve(data.Body as Buffer)
+              }
+            )
+          })
+        }
       } else {
         const response = await fetch(toFetchableUrl(video.videoUrl))
         if (!response.ok) {

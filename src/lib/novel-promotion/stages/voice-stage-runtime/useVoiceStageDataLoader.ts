@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { logError as _ulogError } from '@/lib/logging/core'
 import { useFetchProjectVoiceStageData } from '@/lib/query/hooks'
 import type { SpeakerVoiceEntry, VoiceLine } from './types'
@@ -23,23 +23,14 @@ export function useVoiceStageDataLoader({
   const fetchVoiceStageDataMutation = useFetchProjectVoiceStageData(projectId)
   const fetchVoiceStageDataRef = useRef(fetchVoiceStageDataMutation)
   fetchVoiceStageDataRef.current = fetchVoiceStageDataMutation
-  const hasLoadedOnceRef = useRef(false)
 
   const [voiceLines, setVoiceLines] = useState<VoiceLine[]>([])
   const [speakerVoices, setSpeakerVoices] = useState<Record<string, SpeakerVoiceEntry>>({})
   const [projectSpeakers, setProjectSpeakers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    hasLoadedOnceRef.current = false
-    setLoading(true)
-  }, [episodeId])
-
   const loadData = useCallback(async () => {
-    const isInitialLoad = !hasLoadedOnceRef.current
-    if (isInitialLoad) {
-      setLoading(true)
-    }
+    setLoading(true)
     try {
       const data = await fetchVoiceStageDataRef.current.mutateAsync({ episodeId })
       const payload = (data || {}) as VoiceStageDataPayload
@@ -49,7 +40,6 @@ export function useVoiceStageDataLoader({
     } catch (error) {
       _ulogError('Load data error:', error)
     } finally {
-      hasLoadedOnceRef.current = true
       setLoading(false)
     }
   }, [episodeId])

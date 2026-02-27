@@ -16,36 +16,10 @@ const workerMock = vi.hoisted(() => ({
 
 const configMock = vi.hoisted(() => ({
   resolveProjectModelCapabilityGenerationOptions: vi.fn(async () => ({ reasoningEffort: 'high' })),
-  getUserWorkflowConcurrencyConfig: vi.fn(async () => ({
-    analysis: 2,
-    image: 5,
-    video: 5,
-  })),
 }))
 
 const orchestratorMock = vi.hoisted(() => ({
   runStoryToScriptOrchestrator: vi.fn(),
-}))
-const graphExecutorMock = vi.hoisted(() => ({
-  executePipelineGraph: vi.fn(async (input: {
-    runId: string
-    projectId: string
-    userId: string
-    state: Record<string, unknown>
-    nodes: Array<{ key: string; run: (ctx: Record<string, unknown>) => Promise<unknown> }>
-  }) => {
-    for (const node of input.nodes) {
-      await node.run({
-        runId: input.runId,
-        projectId: input.projectId,
-        userId: input.userId,
-        nodeKey: node.key,
-        attempt: 1,
-        state: input.state,
-      })
-    }
-    return input.state
-  }),
 }))
 
 const helperMock = vi.hoisted(() => ({
@@ -58,7 +32,6 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => ({
   chatCompletion: vi.fn(),
   getCompletionParts: vi.fn(() => ({ text: '', reasoning: '' })),
-  getCompletionContent: vi.fn(() => ''),
 }))
 vi.mock('@/lib/config-service', () => configMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
@@ -69,9 +42,6 @@ vi.mock('@/lib/logging/file-writer', () => ({ onProjectNameAvailable: vi.fn() })
 vi.mock('@/lib/workers/shared', () => ({ reportTaskProgress: workerMock.reportTaskProgress }))
 vi.mock('@/lib/workers/utils', () => ({ assertTaskActive: workerMock.assertTaskActive }))
 vi.mock('@/lib/novel-promotion/story-to-script/orchestrator', () => orchestratorMock)
-vi.mock('@/lib/run-runtime/graph-executor', () => ({
-  executePipelineGraph: graphExecutorMock.executePipelineGraph,
-}))
 vi.mock('@/lib/workers/handlers/llm-stream', () => ({
   createWorkerLLMStreamContext: vi.fn(() => ({ streamRunId: 'run-1', nextSeqByStepLane: {} })),
   createWorkerLLMStreamCallbacks: vi.fn(() => ({
@@ -104,18 +74,6 @@ vi.mock('@/lib/workers/handlers/story-to-script-helpers', () => ({
 import { handleStoryToScriptTask } from '@/lib/workers/handlers/story-to-script'
 
 function buildJob(payload: Record<string, unknown>, episodeId: string | null = 'episode-1'): Job<TaskJobData> {
-  const runId = typeof payload.runId === 'string' && payload.runId.trim() ? payload.runId.trim() : 'run-test-story'
-  const payloadMeta = payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
-    ? (payload.meta as Record<string, unknown>)
-    : {}
-  const normalizedPayload: Record<string, unknown> = {
-    ...payload,
-    runId,
-    meta: {
-      ...payloadMeta,
-      runId,
-    },
-  }
   return {
     data: {
       taskId: 'task-story-to-script-1',
@@ -125,7 +83,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       episodeId,
       targetType: 'NovelPromotionEpisode',
       targetId: 'episode-1',
-      payload: normalizedPayload,
+      payload,
       userId: 'user-1',
     },
   } as unknown as Job<TaskJobData>
@@ -148,11 +106,13 @@ describe('worker story-to-script behavior', () => {
       locations: [{ id: 'loc-1', name: 'Old Town', summary: 'town' }],
     })
 
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
-      id: 'episode-1',
-      novelPromotionProjectId: 'np-project-1',
-      novelText: 'episode text',
-    })
+    prismaMock.novelPromotionEpisode.findUnique
+      .mockResolvedValueOnce({
+        id: 'episode-1',
+        novelPromotionProjectId: 'np-project-1',
+        novelText: 'episode text',
+      })
+      .mockResolvedValueOnce({ id: 'episode-1' })
 
     orchestratorMock.runStoryToScriptOrchestrator.mockResolvedValue({
       analyzedCharacters: [{ name: 'New Hero' }],

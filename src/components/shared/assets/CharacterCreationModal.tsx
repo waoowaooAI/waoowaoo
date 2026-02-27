@@ -7,8 +7,6 @@ import { useProjectAssets } from '@/lib/query/hooks'
 import CharacterCreationForm from './character-creation/CharacterCreationForm'
 import { useCharacterCreationSubmit } from './character-creation/hooks/useCharacterCreationSubmit'
 import { AppIcon } from '@/components/ui/icons'
-import ImageGenerationInlineCountButton from '@/components/image-generation/ImageGenerationInlineCountButton'
-import { getImageGenerationCountOptions } from '@/lib/image-generation/count'
 
 export interface CharacterCreationModalProps {
   mode: 'asset-hub' | 'project'
@@ -59,15 +57,10 @@ export function CharacterCreationModal({
     isSubmitting,
     isAiDesigning,
     isExtracting,
-    characterGenerationCount,
-    setCharacterGenerationCount,
-    referenceCharacterGenerationCount,
-    setReferenceCharacterGenerationCount,
     handleExtractDescription,
     handleCreateWithReference,
     handleAiDesign,
     handleSubmit,
-    handleSubmitAndGenerate,
   } = useCharacterCreationSubmit({
     mode,
     folderId,
@@ -210,14 +203,16 @@ export function CharacterCreationModal({
             handleFileSelect={(files) => void handleFileSelect(files)}
             handleClearReference={handleClearReference}
             handleExtractDescription={() => { void handleExtractDescription() }}
+            handleCreateWithReference={() => { void handleCreateWithReference() }}
             handleAiDesign={() => { void handleAiDesign() }}
+            handleSubmit={() => { void handleSubmit() }}
             isSubmitting={isSubmitting}
             isAiDesigning={isAiDesigning}
             isExtracting={isExtracting}
           />
         </div>
 
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] rounded-b-xl flex-shrink-0">
+        <div className="flex justify-end p-4 border-t border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] rounded-b-xl flex-shrink-0">
           <button
             onClick={onClose}
             className="glass-btn-base glass-btn-secondary px-4 py-2 rounded-lg text-sm"
@@ -225,52 +220,6 @@ export function CharacterCreationModal({
           >
             {t('common.cancel')}
           </button>
-          {createMode === 'reference' ? (
-            <ImageGenerationInlineCountButton
-              prefix={<span>{t('character.useReferenceGeneratePrefix')}</span>}
-              suffix={<span>{t('character.generateCountSuffix')}</span>}
-              value={referenceCharacterGenerationCount}
-              options={getImageGenerationCountOptions('reference-to-character')}
-              onValueChange={setReferenceCharacterGenerationCount}
-              onClick={() => { void handleCreateWithReference() }}
-              actionDisabled={!name.trim() || referenceImagesBase64.length === 0}
-              selectDisabled={isSubmitting}
-              ariaLabel={t('character.selectReferenceGenerateCount')}
-              className="glass-btn-base glass-btn-primary flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-sm font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
-            />
-          ) : isSubAppearance ? (
-            <button
-              onClick={() => { void handleSubmit() }}
-              disabled={isSubmitting || !selectedCharacterId.trim() || !changeReason.trim() || !description.trim()}
-              className="glass-btn-base glass-btn-primary px-4 py-2 rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? t('common.adding') : t('common.add')}
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={() => { void handleSubmit() }}
-                disabled={isSubmitting || !name.trim() || !description.trim()}
-                className="glass-btn-base glass-btn-secondary px-4 py-2 rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? t('common.adding') : (mode === 'asset-hub' ? t('common.addOnlyToAssetHub') : t('common.addOnly'))}
-              </button>
-              <ImageGenerationInlineCountButton
-                prefix={<span>{t('common.addAndGeneratePrefix')}</span>}
-                suffix={<span>{t('common.generateCountSuffix')}</span>}
-                value={characterGenerationCount}
-                options={getImageGenerationCountOptions('character')}
-                onValueChange={setCharacterGenerationCount}
-                onClick={() => { void handleSubmitAndGenerate() }}
-                actionDisabled={!name.trim() || !description.trim()}
-                selectDisabled={isSubmitting}
-                ariaLabel={t('common.selectGenerateCount')}
-                className="glass-btn-base glass-btn-primary flex items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-                selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-sm font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
-              />
-            </>
-          )}
         </div>
       </div>
     </div>

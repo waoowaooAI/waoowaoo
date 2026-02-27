@@ -1,7 +1,6 @@
 import { logError as _ulogError } from '@/lib/logging/core'
 import { useState, useCallback } from 'react'
 import { Project } from '@/types/project'
-import { apiFetch } from '@/lib/api-fetch'
 
 /**
  * 刷新范围
@@ -70,7 +69,7 @@ export function useProject(projectId: string) {
     try {
       // 刷新项目数据
       if (scope === 'all' || scope === 'project') {
-        const res = await apiFetch(`/api/projects/${projectId}/data`)
+        const res = await fetch(`/api/projects/${projectId}/data`)
         if (!res.ok) {
           const errorData = await res.json()
           throw new Error(errorData.error || 'Failed to load project')
@@ -86,7 +85,7 @@ export function useProject(projectId: string) {
 
       // 刷新资产数据
       if (scope === 'all' || scope === 'assets') {
-        const res = await apiFetch(`/api/projects/${projectId}/assets`)
+        const res = await fetch(`/api/projects/${projectId}/assets`)
         if (res.ok) {
           const assets = await res.json()
           setProject(prev => {

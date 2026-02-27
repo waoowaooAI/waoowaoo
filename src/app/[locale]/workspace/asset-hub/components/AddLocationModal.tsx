@@ -5,7 +5,6 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { ART_STYLES } from '@/lib/constants'
 import { useAiDesignLocation, useCreateAssetHubLocation } from '@/lib/query/hooks'
-import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
@@ -36,7 +35,6 @@ export function AddLocationModal({ folderId, onClose, onSuccess }: AddLocationMo
 
     const aiDesignMutation = useAiDesignLocation()
     const createLocationMutation = useCreateAssetHubLocation()
-    const { count: locationGenerationCount } = useImageGenerationCount('location')
     const isSubmitting = createLocationMutation.isPending
     const isAiDesigning = aiDesignMutation.isPending
     const aiDesigningState = isAiDesigning
@@ -78,8 +76,7 @@ export function AddLocationModal({ folderId, onClose, onSuccess }: AddLocationMo
                 name: name.trim(),
                 summary: summary.trim(),
                 folderId,
-                artStyle,
-                count: locationGenerationCount,
+                artStyle
             })
             onSuccess()
         } catch (error) {
@@ -171,11 +168,12 @@ export function AddLocationModal({ folderId, onClose, onSuccess }: AddLocationMo
                                         key={style.value}
                                         type="button"
                                         onClick={() => setArtStyle(style.value)}
-                                        className={`glass-btn-base px-3 py-2 rounded-lg text-sm border flex items-center justify-start transition-all ${artStyle === style.value
+                                        className={`glass-btn-base px-3 py-2 rounded-lg text-sm border flex items-center justify-start gap-2 transition-all ${artStyle === style.value
                                             ? 'glass-btn-tone-info border-[var(--glass-stroke-focus)]'
                                             : 'glass-btn-soft border-[var(--glass-stroke-base)] text-[var(--glass-text-secondary)] hover:border-[var(--glass-stroke-strong)]'
                                             }`}
                                     >
+                                        <span>{style.preview}</span>
                                         <span>{style.label}</span>
                                     </button>
                                 ))}

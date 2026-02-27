@@ -41,26 +41,6 @@ export function readStepField(payload: Record<string, unknown>, key: string): nu
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(1, Math.floor(value)) : undefined
 }
 
-function readStringArrayField(payload: Record<string, unknown>, key: string): string[] {
-  const value = payload[key]
-  if (!Array.isArray(value)) return []
-  const rows: string[] = []
-  for (const item of value) {
-    if (typeof item !== 'string') continue
-    const trimmed = item.trim()
-    if (!trimmed) continue
-    rows.push(trimmed)
-  }
-  return rows
-}
-
-function readBoolField(payload: Record<string, unknown>, key: string): boolean | undefined {
-  const value = payload[key]
-  if (value === true) return true
-  if (value === false) return false
-  return undefined
-}
-
 function normalizeLifecycleType(value: unknown): string | null {
   if (typeof value !== 'string') return null
   if (value === TASK_EVENT_TYPE.PROGRESS) return TASK_EVENT_TYPE.PROCESSING
@@ -104,13 +84,9 @@ function extractTerminalPayload(payload: Record<string, unknown>) {
 }
 
 export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
-  const rawPayload = toObject(event.payload)
-  const payloadMeta = toObject(rawPayload.meta)
-  const runId = readTextField(rawPayload, 'runId')
-    || readTextField(payloadMeta, 'runId')
-    || (typeof event.taskId === 'string' ? event.taskId : '')
+  const runId = typeof event.taskId === 'string' ? event.taskId : ''
   if (!runId) return []
-  const payload = rawPayload
+  const payload = toObject(event.payload)
   const lifecycleType =
     event.type === TASK_SSE_EVENT_TYPE.LIFECYCLE
       ? normalizeLifecycleType(payload.lifecycleType)
@@ -136,12 +112,6 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
   const done = payload.done === true
   const text = readTextField(payload, 'output') || readTextField(payload, 'text')
   const reasoning = readTextField(payload, 'reasoning') || readTextField(payload, 'thinking')
-  const dependsOn = readStringArrayField(payload, 'dependsOn')
-  const blockedBy = readStringArrayField(payload, 'blockedBy')
-  const groupId = readTextField(payload, 'groupId')
-  const parallelKey = readTextField(payload, 'parallelKey')
-  const retryable = readBoolField(payload, 'retryable')
-  const stale = readBoolField(payload, 'stale')
 
   if (event.type === TASK_SSE_EVENT_TYPE.STREAM) {
     const stream = toObject(payload.stream)
@@ -166,11 +136,6 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
       stepTitle,
       stepIndex,
       stepTotal,
-      dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-      blockedBy: blockedBy.length > 0 ? blockedBy : undefined,
-      groupId,
-      parallelKey,
-      retryable,
       lane,
       seq,
       textDelta: lane === 'text' ? delta : undefined,
@@ -207,11 +172,6 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
         stepTitle,
         stepIndex,
         stepTotal,
-        dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-        blockedBy: blockedBy.length > 0 ? blockedBy : undefined,
-        groupId,
-        parallelKey,
-        retryable,
         message,
       })
       if (done || stageLooksCompleted(stage)) {
@@ -219,17 +179,12 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
           runId,
           event: 'step.complete',
           ts,
-          status: stale ? 'stale' : 'completed',
+          status: 'completed',
           stepId,
           stepAttempt,
           stepTitle,
           stepIndex,
           stepTotal,
-          dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-          blockedBy: blockedBy.length > 0 ? blockedBy : undefined,
-          groupId,
-          parallelKey,
-          retryable,
           text,
           reasoning,
           message,
@@ -245,11 +200,6 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
           stepTitle,
           stepIndex,
           stepTotal,
-          dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-          blockedBy: blockedBy.length > 0 ? blockedBy : undefined,
-          groupId,
-          parallelKey,
-          retryable,
           message: resolveTaskErrorMessage(payload),
         })
       }
@@ -269,11 +219,6 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
         stepTitle,
         stepIndex,
         stepTotal,
-        dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-        blockedBy: blockedBy.length > 0 ? blockedBy : undefined,
-        groupId,
-        parallelKey,
-        retryable,
         text,
         reasoning,
         message,
@@ -303,11 +248,6 @@ export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
         stepTitle,
         stepIndex,
         stepTotal,
-        dependsOn: dependsOn.length > 0 ? dependsOn : undefined,
-        blockedBy: blockedBy.length > 0 ? blockedBy : undefined,
-        groupId,
-        parallelKey,
-        retryable,
         message: errorMessage,
       })
     }

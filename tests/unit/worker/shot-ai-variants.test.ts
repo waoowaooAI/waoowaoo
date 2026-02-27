@@ -47,7 +47,7 @@ const persistMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => llmMock)
-vi.mock('@/lib/storage', () => cosMock)
+vi.mock('@/lib/cos', () => cosMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => streamCtxMock)
 vi.mock('@/lib/workers/shared', () => ({
   reportTaskProgress: workerMock.reportTaskProgress,

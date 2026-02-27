@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { buildMockRequest } from '../../../helpers/request'
 
 const authMock = vi.hoisted(() => ({
-  requireUserAuth: vi.fn<() => Promise<{ session: { user: { id: string } } } | Response>>(async () => ({
+  requireUserAuth: vi.fn(async () => ({
     session: { user: { id: 'user-1' } },
   })),
   isErrorResponse: vi.fn((value: unknown) => value instanceof Response),
@@ -52,9 +52,7 @@ describe('api specific - characters POST forwarding to reference task', () => {
   })
 
   it('forwards locale and accept-language into background reference task payload', async () => {
-    const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
-      async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
-    )
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
     const mod = await import('@/app/api/asset-hub/characters/route')
@@ -66,15 +64,13 @@ describe('api specific - characters POST forwarding to reference task', () => {
       },
       body: {
         name: 'Hero',
-        artStyle: 'realistic',
         generateFromReference: true,
         referenceImageUrl: 'https://example.com/ref.png',
         customDescription: '冷静，黑发',
-        count: 5,
       },
     })
 
-    const res = await mod.POST(req, { params: Promise.resolve({}) })
+    const res = await mod.POST(req)
     expect(res.status).toBe(200)
 
     const calledUrl = fetchMock.mock.calls[0]?.[0]
@@ -88,21 +84,17 @@ describe('api specific - characters POST forwarding to reference task', () => {
       locale?: string
       meta?: { locale?: string }
       customDescription?: string
-      artStyle?: string
       referenceImageUrls?: string[]
       appearanceId?: string
       characterId?: string
-      count?: number
     }
 
     expect(forwarded.locale).toBe('zh')
     expect(forwarded.meta?.locale).toBe('zh')
     expect(forwarded.customDescription).toBe('冷静，黑发')
-    expect(forwarded.artStyle).toBe('realistic')
     expect(forwarded.referenceImageUrls).toEqual(['https://example.com/ref.png'])
     expect(forwarded.characterId).toBe('character-1')
     expect(forwarded.appearanceId).toBe('appearance-1')
-    expect(forwarded.count).toBe(5)
   })
 
   it('returns unauthorized when auth fails', async () => {
@@ -116,7 +108,7 @@ describe('api specific - characters POST forwarding to reference task', () => {
       body: { name: 'Hero' },
     })
 
-    const res = await mod.POST(req, { params: Promise.resolve({}) })
+    const res = await mod.POST(req)
     expect(res.status).toBe(401)
   })
 })

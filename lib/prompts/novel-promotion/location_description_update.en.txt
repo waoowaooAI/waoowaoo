@@ -20,7 +20,7 @@ Rules:
 4. No protagonist actions or story narration.
 
 Output format:
-Return JSON only. ⚠️ JSON SAFETY: All quotation marks MUST be converted to corner brackets「」in JSON string values:
+Return JSON only:
 {
   "prompt": "updated location description"
 }

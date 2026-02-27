@@ -93,42 +93,11 @@ describe('asset hub character image prompt suffix regression', () => {
 
     await handleAssetHubImageTask(job)
 
-    const generationCall = sharedMock.generateLabeledImageToCos.mock.calls[0] as unknown as [{ prompt?: string }] | undefined
-    const callArg = generationCall?.[0]
+    const callArg = sharedMock.generateLabeledImageToCos.mock.calls[0]?.[0] as { prompt?: string } | undefined
     const prompt = callArg?.prompt || ''
 
     expect(prompt).toContain('主角，黑发，冷静')
     expect(prompt).toContain(CHARACTER_PROMPT_SUFFIX)
     expect(countOccurrences(prompt, CHARACTER_PROMPT_SUFFIX)).toBe(1)
-  })
-
-  it('honors requested count for global location generation', async () => {
-    prismaMock.globalLocation.findFirst.mockResolvedValueOnce({
-      id: 'global-location-1',
-      name: 'Old Town',
-      images: [
-        { id: 'global-location-image-1', description: '雨夜街道 A' },
-        { id: 'global-location-image-2', description: '雨夜街道 B' },
-        { id: 'global-location-image-3', description: '雨夜街道 C' },
-      ],
-    })
-
-    const result = await handleAssetHubImageTask(buildJob({
-      type: 'location',
-      id: 'global-location-1',
-      count: 1,
-    }))
-
-    expect(result).toEqual({
-      type: 'location',
-      locationId: 'global-location-1',
-      imageCount: 1,
-    })
-    expect(sharedMock.generateLabeledImageToCos).toHaveBeenCalledTimes(1)
-    expect(prismaMock.globalLocationImage.update).toHaveBeenCalledTimes(1)
-    expect(prismaMock.globalLocationImage.update).toHaveBeenCalledWith({
-      where: { id: 'global-location-image-1' },
-      data: { imageUrl: 'cos/generated-character.png' },
-    })
   })
 })

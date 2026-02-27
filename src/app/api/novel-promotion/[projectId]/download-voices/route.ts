@@ -2,7 +2,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import archiver from 'archiver'
-import { getObjectBuffer, toFetchableUrl } from '@/lib/storage'
+import { getCOSClient, toFetchableUrl } from '@/lib/cos'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
@@ -63,6 +63,8 @@ export const GET = apiHandler(async (
   })
 
   async function processVoices() {
+    const isLocal = process.env.STORAGE_TYPE === 'local'
+
     for (const line of voiceLines) {
       try {
         if (!line.audioUrl) continue
@@ -80,7 +82,30 @@ export const GET = apiHandler(async (
           const arrayBuffer = await response.arrayBuffer()
           audioData = Buffer.from(arrayBuffer)
         } else if (storageKey) {
-          audioData = await getObjectBuffer(storageKey)
+          if (isLocal) {
+            const { getSignedUrl } = await import('@/lib/cos')
+            const localUrl = toFetchableUrl(getSignedUrl(storageKey))
+            const response = await fetch(localUrl)
+            if (!response.ok) {
+              throw new Error(`Failed to fetch local file: ${response.statusText}`)
+            }
+            audioData = Buffer.from(await response.arrayBuffer())
+          } else {
+            const cos = getCOSClient()
+            audioData = await new Promise<Buffer>((resolve, reject) => {
+              cos.getObject(
+                {
+                  Bucket: process.env.COS_BUCKET!,
+                  Region: process.env.COS_REGION!,
+                  Key: storageKey
+                },
+                (err, data) => {
+                  if (err) reject(err)
+                  else resolve(data.Body as Buffer)
+                }
+              )
+            })
+          }
         } else {
           const response = await fetch(toFetchableUrl(line.audioUrl))
           if (!response.ok) {

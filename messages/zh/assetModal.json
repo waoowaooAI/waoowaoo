@@ -13,9 +13,6 @@
         "supportedFormats": "支持 JPG、PNG 等格式",
         "nameRequired": "请先输入角色名称才能使用参考图转换",
         "convertToSheet": "将参考图转换为标准三视图",
-        "useReferenceGeneratePrefix": "使用参考图生成",
-        "generateCountSuffix": "张图片",
-        "selectReferenceGenerateCount": "选择参考图生成数量",
         "referenceTip": "上传任意角色图片，AI 将自动生成标准三视图设定",
         "description": "角色描述",
         "modifyDescription": "修改描述",
@@ -68,13 +65,6 @@
         "cancel": "取消",
         "adding": "添加中...",
         "add": "添加",
-        "addOnly": "仅添加角色",
-        "addOnlyToAssetHub": "仅添加人物到资产库",
-        "addOnlyLocation": "仅添加场景",
-        "addOnlyToAssetHubLocation": "仅添加场景到资产库",
-        "addAndGeneratePrefix": "添加并生成",
-        "generateCountSuffix": "张图片",
-        "selectGenerateCount": "选择生成数量",
         "optional": "（可选）"
     },
     "errors": {

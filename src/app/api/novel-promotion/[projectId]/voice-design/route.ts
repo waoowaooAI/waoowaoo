@@ -6,7 +6,7 @@ import { submitTask } from '@/lib/task/submitter'
 import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { TASK_TYPE } from '@/lib/task/types'
 import { buildDefaultTaskBillingInfo } from '@/lib/billing'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/providers/bailian/voice-design'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/qwen-voice-design'
 
 /**
  * 声音设计 API

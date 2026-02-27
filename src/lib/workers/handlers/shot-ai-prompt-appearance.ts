@@ -1,4 +1,5 @@
 import type { Job } from 'bullmq'
+import { getCompletionContent } from '@/lib/llm-client'
 import { removeCharacterPromptSuffix } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
@@ -13,7 +14,7 @@ export async function handleModifyAppearanceTask(job: Job<TaskJobData>, payload:
   const appearanceId = readRequiredString(payload.appearanceId, 'appearanceId')
   const currentDescription = readRequiredString(payload.currentDescription, 'currentDescription')
   const modifyInstruction = readRequiredString(payload.modifyInstruction, 'modifyInstruction')
-  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
+  const novelData = await resolveAnalysisModel(job.data.projectId)
 
   const finalPrompt = buildPrompt({
     promptId: PROMPT_IDS.NP_CHARACTER_MODIFY,
@@ -31,7 +32,7 @@ export async function handleModifyAppearanceTask(job: Job<TaskJobData>, payload:
   })
   await assertTaskActive(job, 'ai_modify_appearance_prepare')
 
-  const responseText = await runShotPromptCompletion({
+  const completion = await runShotPromptCompletion({
     job,
     model: novelData.analysisModel,
     prompt: finalPrompt,
@@ -42,6 +43,7 @@ export async function handleModifyAppearanceTask(job: Job<TaskJobData>, payload:
   })
   await assertTaskActive(job, 'ai_modify_appearance_parse')
 
+  const responseText = getCompletionContent(completion)
   const parsed = parseJsonObject(responseText)
   const modifiedDescription = readRequiredString(parsed.prompt, 'prompt')
 

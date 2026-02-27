@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
 import { resolveTaskResponse } from '@/lib/task/client'
 import { resolveTaskErrorMessage } from '@/lib/task/error-message'
-import { apiFetch } from '@/lib/api-fetch'
 import {
     clearTaskTargetOverlay,
     upsertTaskTargetOverlay,
@@ -17,7 +16,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async ({ panelId, count }: { panelId: string; count?: number }) => {
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
+            const res = await fetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ panelId, count: count ?? 1 }),
@@ -97,7 +96,7 @@ export function useModifyProjectStoryboardImage(projectId: string) {
 export function useDownloadProjectImages(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
-            const response = await apiFetch(`/api/novel-promotion/${projectId}/download-images?episodeId=${episodeId}`)
+            const response = await fetch(`/api/novel-promotion/${projectId}/download-images?episodeId=${episodeId}`)
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}))
                 throw new Error(resolveTaskErrorMessage(error, '下载失败'))

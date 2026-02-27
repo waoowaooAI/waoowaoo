@@ -22,21 +22,16 @@ import {
   pickFirstString,
   resolveNovelData,
 } from './image-task-handler-shared'
+import { chatCompletionWithVision, getCompletionContent } from '@/lib/llm-client'
+import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
 import { createScopedLogger } from '@/lib/logging/core'
-import {
-  buildCharacterDescriptionFields,
-  generateModifiedAssetDescription,
-  readIndexedDescription,
-} from './modify-description-sync'
 
 const logger = createScopedLogger({ module: 'worker.modify-asset-image' })
 
 interface LocationImageRecord {
   id: string
   locationId: string
-  description: string | null
   imageUrl: string | null
-  previousDescription: string | null
   location: {
     name: string
   } | null
@@ -61,7 +56,6 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
   const resolution = typeof generationOptions?.resolution === 'string'
     ? generationOptions.resolution
     : undefined
-  const modifyInstruction = typeof modifyPrompt === 'string' ? modifyPrompt.trim() : ''
 
   if (type === 'character') {
     const appearanceId = pickFirstString(payload.appearanceId, payload.targetId, job.data.targetId)
@@ -90,13 +84,8 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     }
     const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
     const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
-    const currentDescription = readIndexedDescription({
-      descriptions: appearance.descriptions,
-      fallbackDescription: appearance.description,
-      index: imageIndex,
-    })
 
-    const prompt = `请根据以下指令修改图片，保持人物核心特征一致：\n${modifyInstruction}`
+    const prompt = `请根据以下指令修改图片，保持人物核心特征一致：\n${modifyPrompt}`
     const source = await resolveImageSourceFromGeneration(job, {
       userId: job.data.userId,
       modelId: editModel,
@@ -118,31 +107,24 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const selectedIndex = appearance.selectedIndex
     const shouldUpdateMain = selectedIndex === imageIndex || (selectedIndex === null && imageIndex === 0) || imageUrls.length === 1
 
-    let descriptionFields: { description: string; descriptions: string } | null = null
-    if (currentDescription && modifyInstruction) {
+    // 如果有参考图，尝试用 AI 分析参考图来更新描述词（后台静默完成，不影响主流程）
+    let extractedDescription: string | undefined
+    if (normalizedExtras.length > 0) {
       try {
         const userModels = await getUserModels(job.data.userId)
         const analysisModel = userModels.analysisModel
         if (analysisModel) {
-          const nextDescription = await generateModifiedAssetDescription({
-            userId: job.data.userId,
-            model: analysisModel,
-            locale: job.data.locale,
-            type: 'character',
-            currentDescription,
-            modifyInstruction,
-            referenceImages: normalizedExtras,
-            projectId: job.data.projectId,
-          })
-          descriptionFields = buildCharacterDescriptionFields({
-            descriptions: appearance.descriptions,
-            fallbackDescription: appearance.description,
-            index: imageIndex,
-            nextDescription,
-          })
+          const completion = await chatCompletionWithVision(
+            job.data.userId,
+            analysisModel,
+            buildPrompt({ promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION, locale: job.data.locale }),
+            normalizedExtras,
+            { temperature: 0.3, projectId: job.data.projectId },
+          )
+          extractedDescription = getCompletionContent(completion) || undefined
         }
       } catch (err) {
-        logger.warn({ message: '项目角色描述同步失败，不影响改图结果', details: { error: String(err) } })
+        logger.warn({ message: '参考图描述提取失败，不影响改图结果', details: { error: String(err) } })
       }
     }
 
@@ -153,10 +135,9 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
         previousImageUrl: appearance.imageUrl || null,
         previousImageUrls: appearance.imageUrls,
         previousDescription: appearance.description || null,
-        previousDescriptions: appearance.descriptions || null,
         imageUrls: encodeImageUrls(imageUrls),
         imageUrl: shouldUpdateMain ? cosKey : appearance.imageUrl,
-        ...(descriptionFields || {}),
+        ...(extractedDescription ? { description: extractedDescription } : {}),
       },
     })
 
@@ -199,7 +180,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
     const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
 
-    const prompt = `请根据以下指令修改场景图片，保持整体风格一致：\n${modifyInstruction}`
+    const prompt = `请根据以下指令修改场景图片，保持整体风格一致：\n${modifyPrompt}`
     const source = await resolveImageSourceFromGeneration(job, {
       userId: job.data.userId,
       modelId: editModel,
@@ -215,37 +196,12 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const labeled = await withLabelBar(source, label)
     const cosKey = await uploadImageSourceToCos(labeled, 'location-modify', locationImage.id)
 
-    let extractedDescription: string | undefined
-    if (locationImage.description && modifyInstruction) {
-      try {
-        const userModels = await getUserModels(job.data.userId)
-        const analysisModel = userModels.analysisModel
-        if (analysisModel) {
-          extractedDescription = await generateModifiedAssetDescription({
-            userId: job.data.userId,
-            model: analysisModel,
-            locale: job.data.locale,
-            type: 'location',
-            currentDescription: locationImage.description,
-            modifyInstruction,
-            referenceImages: normalizedExtras,
-            locationName: locationImage.location?.name || '场景',
-            projectId: job.data.projectId,
-          })
-        }
-      } catch (err) {
-        logger.warn({ message: '项目场景描述同步失败，不影响改图结果', details: { error: String(err) } })
-      }
-    }
-
     await assertTaskActive(job, 'persist_location_modify')
     await prisma.locationImage.update({
       where: { id: locationImage.id },
       data: {
         previousImageUrl: locationImage.imageUrl,
-        previousDescription: locationImage.description || null,
         imageUrl: cosKey,
-        ...(extractedDescription ? { description: extractedDescription } : {}),
       },
     })
 

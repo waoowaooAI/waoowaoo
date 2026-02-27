@@ -1,20 +1,6 @@
 {
     "appName": "waoowaoo",
-    "betaVersion": "Beta v{version}",
-    "updateNotice": {
-        "title": "发现新版本",
-        "subtitle": "当前 v{current} · 最新 v{latest}",
-        "description": "软件已发布新版本，建议立刻前去升级。",
-        "releaseName": "版本",
-        "publishedAt": "发布时间",
-        "updateTag": "Update",
-        "viewRelease": "查看更新",
-        "remindLater": "稍后提醒",
-        "close": "关闭",
-        "openDialog": "打开更新弹窗",
-        "checkUpdate": "检查新版本",
-        "upToDate": "已是最新版本"
-    },
+    "betaVersion": "Beta v0.1 (测试版)",
     "loading": "加载中...",
     "save": "保存",
     "cancel": "取消",

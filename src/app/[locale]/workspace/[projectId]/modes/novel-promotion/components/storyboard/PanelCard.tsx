@@ -91,7 +91,7 @@ export default function PanelCard({
     <GlassSurface
       variant="elevated"
       padded={false}
-      className="relative h-full overflow-visible transition-all hover:shadow-[var(--glass-shadow-md)] group/card"
+      className="relative overflow-visible transition-all hover:shadow-[var(--glass-shadow-md)] group/card"
       data-storyboard-id={storyboardId}
     >
       {/* 删除按钮 - 右上角外部 */}

@@ -15,11 +15,9 @@ import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
 
 /**
  * RatioIcon - 比例预览图标组件
- * 需求：所有比例选项的图标永远保持蓝色，帮助用户建立比例视觉记忆
  */
 function RatioIcon({ ratio, size = 24, selected = false }: { ratio: string; size?: number; selected?: boolean }) {
-  // 始终以选中态渲染图标，但仍保留 selected 参数以满足类型与未来扩展
-  return <RatioPreviewIcon ratio={ratio} size={size} selected={selected || true} />
+  return <RatioPreviewIcon ratio={ratio} size={size} selected={selected} />
 }
 
 /**
@@ -28,17 +26,14 @@ function RatioIcon({ ratio, size = 24, selected = false }: { ratio: string; size
 function RatioSelector({
   value,
   onChange,
-  options,
-  getUsage
+  options
 }: {
   value: string
   onChange: (value: string) => void
-  options: { value: string; label: string; recommended?: boolean }[]
-  getUsage?: (ratio: string) => string
+  options: { value: string; label: string }[]
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const t = useTranslations('novelPromotion')
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -58,7 +53,7 @@ function RatioSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base h-11 px-3 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
+        className="glass-input-base px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
       >
         <div className="flex items-center gap-3">
           <RatioIcon ratio={value} size={20} selected />
@@ -85,20 +80,8 @@ function RatioSelector({
                   }`}
               >
                 <RatioIcon ratio={option.value} size={28} selected={value === option.value} />
-                <span className={`flex flex-col items-center gap-1 text-xs ${value === option.value ? 'text-[var(--glass-tone-info-fg)] font-medium' : 'text-[var(--glass-text-secondary)]'}`}>
-                  <span className="flex items-center gap-1">
-                    <span>{option.label}</span>
-                    {option.recommended && (
-                      <span className="px-1.5 py-0.5 rounded-full bg-[var(--glass-tone-info-bg)] text-[10px] text-[var(--glass-tone-info-fg)] font-semibold">
-                        {t('smartImport.smartImport.recommended')}
-                      </span>
-                    )}
-                  </span>
-                  {getUsage && (
-                    <span className="text-[10px] font-normal text-[var(--glass-text-tertiary)] leading-snug text-center">
-                      {getUsage(option.value)}
-                    </span>
-                  )}
+                <span className={`text-xs ${value === option.value ? 'text-[var(--glass-tone-info-fg)] font-medium' : 'text-[var(--glass-text-secondary)]'}`}>
+                  {option.label}
                 </span>
               </button>
             ))}
@@ -119,11 +102,10 @@ function StyleSelector({
 }: {
   value: string
   onChange: (value: string) => void
-  options: { value: string; label: string; recommended?: boolean }[]
+  options: { value: string; label: string; preview: string }[]
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const t = useTranslations('novelPromotion')
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -143,9 +125,10 @@ function StyleSelector({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base h-11 px-3 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
+        className="glass-input-base px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">{selectedOption.preview}</span>
           <span className="text-sm text-[var(--glass-text-primary)] font-medium">{selectedOption.label}</span>
         </div>
         <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -163,19 +146,13 @@ function StyleSelector({
                   onChange(option.value)
                   setIsOpen(false)
                 }}
-                className={`flex items-center p-3 rounded-lg text-left transition-all ${value === option.value
+                className={`flex items-center gap-2 p-3 rounded-lg text-left transition-all ${value === option.value
                   ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
                   : 'hover:bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
                   }`}
               >
-                <span className="flex items-center gap-1 font-medium text-sm">
-                  <span>{option.label}</span>
-                  {option.recommended && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-[var(--glass-tone-info-bg)] text-[10px] text-[var(--glass-tone-info-fg)] font-semibold">
-                      {t('smartImport.smartImport.recommended')}
-                    </span>
-                  )}
-                </span>
+                <span className="text-lg">{option.preview}</span>
+                <span className="font-medium text-sm">{option.label}</span>
               </button>
             ))}
           </div>
@@ -221,82 +198,7 @@ export default function NovelInputStage({
   onArtStyleChange
 }: NovelInputStageProps) {
   const t = useTranslations('novelPromotion')
-
-  // ── IME 组合输入处理 ──
-  // 中文/日文/韩文输入法在组合（composing）期间会持续触发 onChange，
-  // 如果此时同步到父组件（触发 API 请求 + React Query invalidation），
-  // 服务端返回的旧数据会覆盖当前输入，导致拼音跳动。
-  // 解决方案：组合期间仅更新本地 state，组合结束后再同步到父组件。
-  const isComposingRef = useRef(false)
-  const [localText, setLocalText] = useState(novelText)
-
-  // 当父组件的 novelText 变化（非本地编辑触发）时，同步到本地 state
-  useEffect(() => {
-    if (!isComposingRef.current) {
-      setLocalText(novelText)
-    }
-  }, [novelText])
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value
-    setLocalText(newValue)
-    // 仅在非 IME 组合状态下才同步到父组件
-    if (!isComposingRef.current) {
-      onNovelTextChange(newValue)
-    }
-  }
-
-  const handleCompositionStart = () => {
-    isComposingRef.current = true
-  }
-
-  const handleCompositionEnd = (e: React.CompositionEvent<HTMLTextAreaElement>) => {
-    isComposingRef.current = false
-    // 组合结束，将最终文本同步到父组件
-    onNovelTextChange(e.currentTarget.value)
-  }
-
-  const hasContent = localText.trim().length > 0
-
-  // 当前配置展示文案
-  const ratioDisplayLabel = (VIDEO_RATIOS.find((option) => option.value === videoRatio) ?? VIDEO_RATIOS[0])?.label
-  const artStyleDisplayLabel = (ART_STYLES.find((option) => option.value === artStyle) ?? ART_STYLES[0])?.label
-
-  // 不同比例适合的素材类型文案映射（完整句子，用于 info 悬浮层）
-  const ratioUsageTextMap: Record<string, string> = {
-    '1:1': t('storyInput.ratioUsage.1_1'),
-    '9:16': t('storyInput.ratioUsage.9_16'),
-    '16:9': t('storyInput.ratioUsage.16_9'),
-    '4:3': t('storyInput.ratioUsage.4_3'),
-    '3:4': t('storyInput.ratioUsage.3_4'),
-    '2:3': t('storyInput.ratioUsage.2_3'),
-    '3:2': t('storyInput.ratioUsage.3_2'),
-    '4:5': t('storyInput.ratioUsage.4_5'),
-    '5:4': t('storyInput.ratioUsage.5_4'),
-    '21:9': t('storyInput.ratioUsage.21_9'),
-  }
-
-  // 下拉中使用的简短标签（低信息密度）
-  const ratioUsageTagMap: Record<string, string> = {
-    '1:1': t('storyInput.ratioUsageTag.1_1'),
-    '9:16': t('storyInput.ratioUsageTag.9_16'),
-    '16:9': t('storyInput.ratioUsageTag.16_9'),
-    '4:3': t('storyInput.ratioUsageTag.4_3'),
-    '3:4': t('storyInput.ratioUsageTag.3_4'),
-    '2:3': t('storyInput.ratioUsageTag.2_3'),
-    '3:2': t('storyInput.ratioUsageTag.3_2'),
-    '4:5': t('storyInput.ratioUsageTag.4_5'),
-    '5:4': t('storyInput.ratioUsageTag.5_4'),
-    '21:9': t('storyInput.ratioUsageTag.21_9'),
-  }
-
-  const getRatioUsageText = (ratio: string): string =>
-    ratioUsageTextMap[ratio] ?? t('storyInput.videoRatioHint')
-
-  const getRatioUsageTag = (ratio: string): string =>
-    ratioUsageTagMap[ratio] ?? ''
-
-  const ratioUsageText = getRatioUsageText(videoRatio)
+  const hasContent = novelText.trim().length > 0
   const stageSwitchingState = isSwitchingStage
     ? resolveTaskPresentationState({
       phase: 'processing',
@@ -325,16 +227,14 @@ export default function NovelInputStage({
           {/* 字数统计 */}
           <div className="flex items-center justify-end mb-3">
             <span className="glass-chip glass-chip-neutral text-xs">
-              {t("storyInput.wordCount")} {localText.length}
+              {t("storyInput.wordCount")} {novelText.length}
             </span>
           </div>
 
           {/* 剧本输入框 */}
           <textarea
-            value={localText}
-            onChange={handleTextChange}
-            onCompositionStart={handleCompositionStart}
-            onCompositionEnd={handleCompositionEnd}
+            value={novelText}
+            onChange={(e) => onNovelTextChange(e.target.value)}
             placeholder={`请输入您的剧本或小说内容...
 
 AI 将根据您的文本智能分析：
@@ -370,64 +270,25 @@ AI 将根据您的文本智能分析：
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 画面比例 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-1">
-              <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">
-                {t("storyInput.videoRatio")}
-              </h3>
-              <div className="relative inline-flex items-center group">
-                <div className="w-4 h-4 flex items-center justify-center rounded-full bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] shadow-sm">
-                  <AppIcon name="info" className="w-3 h-3" />
-                </div>
-                <div className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 z-20">
-                  <div
-                    className="rounded-lg border bg-[var(--glass-bg-surface-strong)]/95 border-[var(--glass-tone-info-bg)] px-3.5 py-2.5 text-xs leading-relaxed text-[var(--glass-text-primary)] shadow-[0_18px_45px_rgba(15,23,42,0.55)] whitespace-pre-wrap"
-                    style={{ minWidth: 220 }}
-                  >
-                    {ratioUsageText}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-[var(--glass-text-tertiary)]">
-              {t("storyInput.videoRatioHint")}
-            </p>
+            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.videoRatio")}</h3>
             <RatioSelector
               value={videoRatio}
               onChange={(value) => onVideoRatioChange?.(value)}
-              options={VIDEO_RATIOS.map((option) => ({
-                ...option,
-                recommended: option.value === '9:16'
-              }))}
-              getUsage={getRatioUsageTag}
+              options={VIDEO_RATIOS}
             />
           </div>
 
           {/* 视觉风格 */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">{t("storyInput.visualStyle")}</h3>
-            <p className="text-xs text-[var(--glass-text-tertiary)]">
-              {t("storyInput.visualStyleHint")}
-            </p>
             <StyleSelector
               value={artStyle}
               onChange={(value) => onArtStyleChange?.(value)}
-              options={ART_STYLES.map((option) => ({
-                ...option,
-                recommended: option.value === 'realistic'
-              }))}
+              options={ART_STYLES}
             />
           </div>
         </div>
-        <p className="text-xs text-[var(--glass-text-secondary)] mt-4 text-center">
-          {t("storyInput.currentConfigSummary", {
-            ratio: ratioDisplayLabel,
-            style: artStyleDisplayLabel
-          })}
-        </p>
-        <p className="text-xs text-[var(--glass-text-tertiary)] mt-1 text-center">
-          {t("storyInput.assetLibraryRatioNote")}
-        </p>
-        <p className="text-xs text-[var(--glass-text-tertiary)] mt-1 text-center">
+        <p className="text-xs text-[var(--glass-text-tertiary)] mt-4 text-center">
           {t("storyInput.moreConfig")}
         </p>
       </div>

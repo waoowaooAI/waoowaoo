@@ -13,7 +13,7 @@ Rules:
 6. If crowd is implied by context, use generic crowd terms only (guests, pedestrians, audience).
 
 Output format:
-Return JSON only. ⚠️ JSON SAFETY: All quotation marks MUST be converted to corner brackets「」in JSON string values:
+Return JSON only:
 {
   "prompt": "[Scene Name] environment description"
 }

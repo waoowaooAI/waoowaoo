@@ -17,9 +17,6 @@ const reportTaskProgressMock = vi.hoisted(() => vi.fn(async () => undefined))
 const assertTaskActiveMock = vi.hoisted(() => vi.fn(async () => undefined))
 const chatCompletionMock = vi.hoisted(() => vi.fn(async () => ({ responseId: 'resp-1' })))
 const getCompletionPartsMock = vi.hoisted(() => vi.fn(() => ({ text: 'voice lines json', reasoning: '' })))
-const withInternalLLMStreamCallbacksMock = vi.hoisted(() =>
-  vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
-)
 const resolveProjectModelCapabilityGenerationOptionsMock = vi.hoisted(() =>
   vi.fn(async () => ({ reasoningEffort: 'high' })),
 )
@@ -47,32 +44,9 @@ const runScriptToStoryboardOrchestratorMock = vi.hoisted(() =>
     },
   })),
 )
-const graphExecutorMock = vi.hoisted(() => ({
-  executePipelineGraph: vi.fn(async (input: {
-    runId: string
-    projectId: string
-    userId: string
-    state: Record<string, unknown>
-    nodes: Array<{ key: string; run: (ctx: Record<string, unknown>) => Promise<unknown> }>
-  }) => {
-    for (const node of input.nodes) {
-      await node.run({
-        runId: input.runId,
-        projectId: input.projectId,
-        userId: input.userId,
-        nodeKey: node.key,
-        attempt: 1,
-        state: input.state,
-      })
-    }
-    return input.state
-  }),
-}))
 
 const parseVoiceLinesJsonMock = vi.hoisted(() => vi.fn())
 const persistStoryboardsAndPanelsMock = vi.hoisted(() => vi.fn())
-const parseStoryboardRetryTargetMock = vi.hoisted(() => vi.fn())
-const runScriptToStoryboardAtomicRetryMock = vi.hoisted(() => vi.fn())
 
 const txState = vi.hoisted(() => ({
   createdRows: [] as Array<Record<string, unknown>>,
@@ -96,20 +70,14 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => ({
   chatCompletion: chatCompletionMock,
   getCompletionParts: getCompletionPartsMock,
-  getCompletionContent: vi.fn(() => 'voice lines json'),
 }))
 
 vi.mock('@/lib/config-service', () => ({
   resolveProjectModelCapabilityGenerationOptions: resolveProjectModelCapabilityGenerationOptionsMock,
-  getUserWorkflowConcurrencyConfig: vi.fn(async () => ({
-    analysis: 2,
-    image: 5,
-    video: 5,
-  })),
 }))
 
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
-  withInternalLLMStreamCallbacks: withInternalLLMStreamCallbacksMock,
+  withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 
 vi.mock('@/lib/logging/semantic', () => ({
@@ -143,9 +111,6 @@ vi.mock('@/lib/novel-promotion/script-to-storyboard/orchestrator', () => ({
       this.rawText = rawText
     }
   },
-}))
-vi.mock('@/lib/run-runtime/graph-executor', () => ({
-  executePipelineGraph: graphExecutorMock.executePipelineGraph,
 }))
 
 vi.mock('@/lib/workers/handlers/llm-stream', () => ({
@@ -187,26 +152,10 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-helpers', () => ({
     return n > 0 ? n : null
   },
 }))
-vi.mock('@/lib/workers/handlers/script-to-storyboard-atomic-retry', () => ({
-  parseStoryboardRetryTarget: parseStoryboardRetryTargetMock,
-  runScriptToStoryboardAtomicRetry: runScriptToStoryboardAtomicRetryMock,
-}))
 
 import { handleScriptToStoryboardTask } from '@/lib/workers/handlers/script-to-storyboard'
 
 function buildJob(payload: Record<string, unknown>, episodeId: string | null = 'episode-1'): Job<TaskJobData> {
-  const runId = typeof payload.runId === 'string' && payload.runId.trim() ? payload.runId.trim() : 'run-test-storyboard'
-  const payloadMeta = payload.meta && typeof payload.meta === 'object' && !Array.isArray(payload.meta)
-    ? (payload.meta as Record<string, unknown>)
-    : {}
-  const normalizedPayload: Record<string, unknown> = {
-    ...payload,
-    runId,
-    meta: {
-      ...payloadMeta,
-      runId,
-    },
-  }
   return {
     data: {
       taskId: 'task-1',
@@ -216,7 +165,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       episodeId,
       targetType: 'NovelPromotionEpisode',
       targetId: 'episode-1',
-      payload: normalizedPayload,
+      payload,
       userId: 'user-1',
     },
   } as unknown as Job<TaskJobData>
@@ -241,8 +190,6 @@ describe('worker script-to-storyboard behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     txState.createdRows = []
-    parseStoryboardRetryTargetMock.mockReturnValue(null)
-    runScriptToStoryboardAtomicRetryMock.mockReset()
 
     prismaMock.project.findUnique.mockResolvedValue({
       id: 'project-1',
@@ -346,98 +293,5 @@ describe('worker script-to-storyboard behavior', () => {
     }))
     expect(chatCompletionMock).toHaveBeenCalledTimes(2)
     expect(parseVoiceLinesJsonMock).toHaveBeenCalledTimes(2)
-    expect(withInternalLLMStreamCallbacksMock).toHaveBeenCalledTimes(3)
-    const firstChatCall = chatCompletionMock.mock.calls[0] as unknown as [unknown, unknown, unknown, Record<string, unknown>] | undefined
-    expect(firstChatCall?.[3]).toEqual(expect.objectContaining({
-      action: 'voice_analyze',
-      streamStepId: 'voice_analyze',
-      streamStepAttempt: 1,
-    }))
-    const secondChatCall = chatCompletionMock.mock.calls[1] as unknown as [unknown, unknown, unknown, Record<string, unknown>] | undefined
-    expect(secondChatCall?.[3]).toEqual(expect.objectContaining({
-      action: 'voice_analyze',
-      streamStepId: 'voice_analyze',
-      streamStepAttempt: 2,
-    }))
-    expect(reportTaskProgressMock).toHaveBeenCalledWith(
-      job,
-      84,
-      expect.objectContaining({
-        stage: 'script_to_storyboard_step',
-        stepId: 'voice_analyze',
-        stepAttempt: 2,
-        message: '台词分析失败，准备重试 (2/2)',
-      }),
-    )
-  })
-
-  it('phase 级重试: 仅执行原子 phase，不走整图重跑', async () => {
-    parseStoryboardRetryTargetMock.mockReturnValue({
-      stepKey: 'clip_clip-1_phase3_detail',
-      clipId: 'clip-1',
-      phase: 'phase3_detail',
-    })
-    runScriptToStoryboardAtomicRetryMock.mockResolvedValue({
-      clipPanels: [
-        {
-          clipId: 'clip-1',
-          clipIndex: 1,
-          finalPanels: [
-            {
-              panel_number: 1,
-              description: 'phase3 retry panel',
-              location: 'Office',
-            },
-          ],
-        },
-      ],
-      phase1PanelsByClipId: {},
-      phase2CinematographyByClipId: {},
-      phase2ActingByClipId: {},
-      phase3PanelsByClipId: {
-        'clip-1': [
-          {
-            panel_number: 1,
-            description: 'phase3 retry panel',
-            location: 'Office',
-          },
-        ],
-      },
-      totalPanelCount: 1,
-      totalStepCount: 6,
-    })
-
-    const job = buildJob({
-      episodeId: 'episode-1',
-      retryStepKey: 'clip_clip-1_phase3_detail',
-      retryStepAttempt: 2,
-    })
-    const result = await handleScriptToStoryboardTask(job)
-
-    expect(result).toEqual({
-      episodeId: 'episode-1',
-      storyboardCount: 1,
-      panelCount: 1,
-      voiceLineCount: 0,
-      retryStepKey: 'clip_clip-1_phase3_detail',
-    })
-    expect(runScriptToStoryboardAtomicRetryMock).toHaveBeenCalledTimes(1)
-    expect(runScriptToStoryboardOrchestratorMock).not.toHaveBeenCalled()
-    expect(persistStoryboardsAndPanelsMock).toHaveBeenCalledWith({
-      episodeId: 'episode-1',
-      clipPanels: [
-        {
-          clipId: 'clip-1',
-          clipIndex: 1,
-          finalPanels: [
-            {
-              panel_number: 1,
-              description: 'phase3 retry panel',
-              location: 'Office',
-            },
-          ],
-        },
-      ],
-    })
   })
 })

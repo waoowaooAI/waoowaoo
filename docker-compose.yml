@@ -39,30 +39,9 @@ services:
       retries: 30
       start_period: 5s
 
-  # ==================== MinIO ====================
-  minio:
-    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
-    container_name: waoowaoo-minio
-    restart: unless-stopped
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    ports:
-      - "19000:9000"
-      - "19001:9001"
-    volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 10s
-
   # ==================== App (Next.js + Workers) ====================
   app:
-    image: ghcr.io/saturndec/waoowaoo:latest
+    build: .
     container_name: waoowaoo-app
     restart: unless-stopped
     environment:
@@ -74,14 +53,8 @@ services:
       REDIS_USERNAME: ""
       REDIS_PASSWORD: ""
       REDIS_TLS: ""
-      # 存储：默认 MinIO（S3 兼容）
-      STORAGE_TYPE: minio
-      MINIO_ENDPOINT: "http://minio:9000"
-      MINIO_REGION: "us-east-1"
-      MINIO_BUCKET: "waoowaoo"
-      MINIO_ACCESS_KEY: "minioadmin"
-      MINIO_SECRET_KEY: "minioadmin"
-      MINIO_FORCE_PATH_STYLE: "true"
+      # 存储：默认本地存储
+      STORAGE_TYPE: local
       # 认证
       NEXTAUTH_URL: "http://localhost:3000"
       NEXTAUTH_SECRET: "waoowaoo-default-secret-2026"
@@ -111,7 +84,7 @@ services:
       LOG_SERVICE: "waoowaoo"
       LOG_REDACT_KEYS: "password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token"
       # 计费
-      BILLING_MODE: "OFF"
+      BILLING_MODE: "SHADOW"
       # 流式
       LLM_STREAM_EPHEMERAL_ENABLED: "true"
     ports:
@@ -124,8 +97,6 @@ services:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
     command: >
       sh -c "
@@ -147,4 +118,4 @@ services:
 volumes:
   mysql_data:
   redis_data:
-  minio_data:
+

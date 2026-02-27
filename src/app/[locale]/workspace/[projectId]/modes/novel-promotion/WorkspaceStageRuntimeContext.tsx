@@ -19,8 +19,6 @@ export interface WorkspaceStageRuntimeValue {
   isSubmittingTTS: boolean
   isTransitioning: boolean
   isConfirmingAssets: boolean
-  isStartingStoryToScript: boolean
-  isStartingScriptToStoryboard: boolean
   videoRatio: string | null | undefined
   artStyle: string | null | undefined
   videoModel: string | null | undefined

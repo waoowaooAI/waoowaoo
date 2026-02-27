@@ -5,7 +5,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 
 import { BaseVideoGenerator, VideoGenerateParams, GenerateResult } from './base'
 import { getProviderConfig } from '@/lib/api-config'
-import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { imageUrlToBase64 } from '@/lib/cos'
 
 const VIDU_BASE_URL = 'https://api.vidu.cn/ent/v2'
 const VIDU_STANDARD_RATIOS = new Set(['16:9', '9:16', '1:1'])
@@ -555,7 +555,7 @@ export class ViduVideoGenerator extends BaseVideoGenerator {
 
         const logPrefix = `[Vidu Video ${modelId}]`
 
-        const firstFrameDataUrl = imageUrl.startsWith('data:') ? imageUrl : await normalizeToBase64ForGeneration(imageUrl)
+        const firstFrameDataUrl = imageUrl.startsWith('data:') ? imageUrl : await imageUrlToBase64(imageUrl)
         const images: string[] = [firstFrameDataUrl]
         if (generationMode === 'firstlastframe') {
             if (!lastFrameImageUrl) {
@@ -564,7 +564,7 @@ export class ViduVideoGenerator extends BaseVideoGenerator {
             images.push(
                 lastFrameImageUrl.startsWith('data:')
                     ? lastFrameImageUrl
-                    : await normalizeToBase64ForGeneration(lastFrameImageUrl),
+                    : await imageUrlToBase64(lastFrameImageUrl),
             )
         }
 

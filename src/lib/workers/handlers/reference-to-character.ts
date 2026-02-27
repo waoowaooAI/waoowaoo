@@ -5,21 +5,20 @@ import { generateImage } from '@/lib/generator-api'
 import { queryFalStatus } from '@/lib/async-submit'
 import { fetchWithTimeoutAndRetry } from '@/lib/ark-api'
 import { getProviderConfig } from '@/lib/api-config'
-import { executeAiVisionStep } from '@/lib/ai-runtime'
 import { getUserModelConfig } from '@/lib/config-service'
+import { chatCompletionWithVision, getCompletionContent } from '@/lib/llm-client'
 import {
   CHARACTER_IMAGE_BANANA_RATIO,
   addCharacterPromptSuffix,
   getArtStylePrompt,
 } from '@/lib/constants'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
-import { generateUniqueKey, getSignedUrl, uploadObject } from '@/lib/storage'
+import { generateUniqueKey, getSignedUrl, uploadToCOS } from '@/lib/cos'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import {
   parseReferenceImages,
   readBoolean,
@@ -112,7 +111,7 @@ async function generateLabeledImage(params: {
       .toBuffer()
 
     const key = generateUniqueKey(`${keyPrefix}-${Date.now()}-${imageIndex}`, 'jpg')
-    return await uploadObject(processed, key)
+    return await uploadToCOS(processed, key)
   } catch {
     return null
   }
@@ -168,17 +167,16 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       stageLabel: '提取参考图描述',
       displayMode: 'detail',
     })
-    const completion = await executeAiVisionStep({
-      userId: job.data.userId,
-      model: analysisModel,
-      prompt: buildPrompt({
+    const completion = await chatCompletionWithVision(
+      job.data.userId,
+      analysisModel,
+      buildPrompt({
         promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION,
         locale: job.data.locale,
       }),
-      imageUrls: allReferenceImages,
-      temperature: 0.3,
-      ...(isProject ? { projectId: job.data.projectId } : {}),
-    })
+      allReferenceImages,
+      isProject ? { temperature: 0.3, projectId: job.data.projectId } : { temperature: 0.3 },
+    )
     await assertTaskActive(job, 'reference_to_character_extract_done')
     await reportTaskProgress(job, 96, {
       stage: 'reference_to_character_extract_done',
@@ -187,7 +185,7 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     })
     return {
       success: true,
-      description: completion.text,
+      description: getCompletionContent(completion),
     }
   }
 
@@ -205,7 +203,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
   const useReferenceImages = !customDescription
   const { apiKey: falApiKey } = await getProviderConfig(job.data.userId, 'fal')
   const keyPrefix = isAssetHub ? 'ref-char' : `proj-ref-char-${job.data.projectId}`
-  const count = normalizeImageGenerationCount('reference-to-character', payload.count)
 
   await reportTaskProgress(job, 35, {
     stage: 'reference_to_character_generate',
@@ -213,7 +210,7 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     displayMode: 'detail',
   })
 
-  const imageResults = await Promise.all(Array.from({ length: count }, (_value, index) => index).map(async (index) =>
+  const imageResults = await Promise.all([0, 1, 2].map(async (index) =>
     await generateLabeledImage({
       job,
       imageIndex: index,
@@ -233,15 +230,14 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       promptId: PROMPT_IDS.CHARACTER_IMAGE_TO_DESCRIPTION,
       locale: job.data.locale,
     })
-    const completion = await executeAiVisionStep({
-      userId: job.data.userId,
-      model: analysisModel,
-      prompt: analysisPrompt,
-      imageUrls: allReferenceImages,
-      temperature: 0.3,
-      ...(isProject ? { projectId: job.data.projectId } : {}),
-    })
-    description = completion.text
+    const completion = await chatCompletionWithVision(
+      job.data.userId,
+      analysisModel,
+      analysisPrompt,
+      allReferenceImages,
+      isProject ? { temperature: 0.3, projectId: job.data.projectId } : { temperature: 0.3 },
+    )
+    description = getCompletionContent(completion)
   }
 
   const successfulCosKeys = imageResults.filter((item): item is string => Boolean(item))

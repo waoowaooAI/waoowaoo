@@ -177,5 +177,4 @@
 9. panel_number、characters、location、scene_type保持不变
 10. description可以适当优化，但不要改变核心内容
 11. ⚠️ 必须保留输入分镜中的 source_text 字段，原样输出到结果中，不得遗漏或修改
-12. ⚠️ JSON安全：所有引号（""''等）在 JSON 字符串值中必须统一替换为「」，严禁出现未转义的英文双引号 "
 

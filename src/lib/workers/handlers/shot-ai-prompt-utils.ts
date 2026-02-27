@@ -1,5 +1,3 @@
-import { safeParseJsonObject } from '@/lib/json-repair'
-
 export type AnyObj = Record<string, unknown>
 
 export function readText(value: unknown): string {
@@ -15,7 +13,13 @@ export function readRequiredString(value: unknown, field: string): string {
 }
 
 export function parseJsonObject(responseText: string): AnyObj {
-  return safeParseJsonObject(responseText) as AnyObj
+  let cleaned = responseText.trim()
+  cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '')
+  const match = cleaned.match(/\{[\s\S]*\}/)
+  if (!match) {
+    throw new Error('No JSON object found in response')
+  }
+  return JSON.parse(match[0]) as AnyObj
 }
 
 export function parseShotPromptResponse(responseText: string): {
@@ -38,6 +42,29 @@ export function parseShotPromptResponse(responseText: string): {
     }
   } catch {
     // fall through
+  }
+
+  let cleaned = responseText.trim()
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) {
+    throw new Error('No JSON found in response')
+  }
+  cleaned = jsonMatch[0]
+    .replace(/\/\/.*$/gm, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/,(\s*[}\]])/g, '$1')
+  const parsed = JSON.parse(cleaned) as AnyObj
+  if (typeof parsed.image_prompt === 'string' && parsed.image_prompt.trim()) {
+    return {
+      imagePrompt: parsed.image_prompt.trim(),
+      videoPrompt: typeof parsed.video_prompt === 'string' ? parsed.video_prompt.trim() : '',
+    }
+  }
+  if (typeof parsed.prompt === 'string' && parsed.prompt.trim()) {
+    return {
+      imagePrompt: parsed.prompt.trim(),
+      videoPrompt: '',
+    }
   }
   throw new Error('Invalid shot prompt response')
 }

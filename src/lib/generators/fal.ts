@@ -24,7 +24,7 @@ import {
 } from './base'
 import { getProviderConfig } from '@/lib/api-config'
 import { submitFalTask } from '@/lib/async-submit'
-import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { imageUrlToBase64 } from '@/lib/cos'
 
 // ============================================================
 // 图像模型端点映射（modelId → FAL 端点前缀）
@@ -130,7 +130,7 @@ export class FalImageGenerator extends BaseImageGenerator {
                     // 如果已经是data URL，直接返回
                     if (url.startsWith('data:')) return url
                     // 否则转换为Data URL
-                    return await normalizeToBase64ForGeneration(url)
+                    return await imageUrlToBase64(url)
                 })
             )
             body.image_urls = dataUrls

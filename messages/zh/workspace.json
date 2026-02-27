@@ -21,17 +21,11 @@
   "creating": "创建中...",
   "saving": "保存中...",
   "createFailed": "创建项目失败",
-  "analysisModelRequiredAfterCreate": "项目已创建。请先前往个人设置配置默认模型（至少设置分析模型），否则无法使用。",
   "updateFailed": "更新项目失败",
   "deleteFailed": "删除项目失败",
   "totalProjects": "共 {count} 个项目",
   "statsEpisodes": "章节数",
   "statsImages": "图片数",
   "statsVideos": "视频数",
-  "noContent": "暂无内容",
-  "modelNotConfigured": {
-    "before": "检测到尚未配置模型，请先前往",
-    "link": "设置中心",
-    "after": "配置模型，或在创建项目后于项目配置中自定义。"
-  }
+  "noContent": "暂无内容"
 }

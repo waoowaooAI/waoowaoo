@@ -50,10 +50,6 @@ export default function VoiceSettings({
 
     const hasCustomVoice = !!customVoiceUrl
 
-    const confirmUploadVoice = () => {
-        return window.confirm(t('tts.uploadQwenHint'))
-    }
-
     // 预览音色（播放/暂停自定义音频）
     const handlePreviewVoice = async () => {
         if (!customVoiceUrl) return
@@ -144,10 +140,7 @@ export default function VoiceSettings({
             <div className="flex flex-wrap gap-2 w-full justify-center">
                 {/* 上传音频按钮 */}
                 <button
-                    onClick={() => {
-                        if (!confirmUploadVoice()) return
-                        voiceFileInputRef.current?.click()
-                    }}
+                    onClick={() => voiceFileInputRef.current?.click()}
                     disabled={uploadVoice.isPending}
                     className="flex-1 min-w-[80px] px-2 py-1.5 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg text-xs text-[var(--glass-text-secondary)] font-medium hover:border-[var(--glass-stroke-success)] hover:bg-[var(--glass-tone-success-bg)] hover:text-[var(--glass-tone-success-fg)] transition-all relative group whitespace-nowrap"
                 >

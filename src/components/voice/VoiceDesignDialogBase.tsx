@@ -3,18 +3,39 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
+import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
-import VoiceDesignGeneratorSection from './VoiceDesignGeneratorSection'
-import {
-  DEFAULT_VOICE_SCHEME_COUNT,
-  generateVoiceDesignOptions,
-  type GeneratedVoice,
-  type VoiceDesignMutationPayload,
-  type VoiceDesignMutationResult,
-} from './voice-design-shared'
 
-export type { VoiceDesignMutationPayload, VoiceDesignMutationResult } from './voice-design-shared'
+const VOICE_PRESET_KEYS = [
+  'maleBroadcaster',
+  'gentleFemale',
+  'matureMale',
+  'livelyFemale',
+  'intellectualFemale',
+  'narrator',
+] as const
+
+type VoicePresetKey = (typeof VOICE_PRESET_KEYS)[number]
+
+export type VoiceDesignMutationPayload = {
+  voicePrompt: string
+  previewText: string
+  preferredName: string
+  language: 'zh'
+}
+
+export type VoiceDesignMutationResult = {
+  voiceId?: string
+  audioBase64?: string
+  detail?: string
+}
+
+type GeneratedVoice = {
+  voiceId: string
+  audioBase64: string
+  audioUrl: string
+}
 
 interface VoiceDesignDialogBaseProps {
   isOpen: boolean
@@ -38,7 +59,6 @@ export default function VoiceDesignDialogBase({
 
   const [voicePrompt, setVoicePrompt] = useState('')
   const [previewText, setPreviewText] = useState(tv('defaultPreviewText'))
-  const [schemeCount, setSchemeCount] = useState(String(DEFAULT_VOICE_SCHEME_COUNT))
   const [isDesignSubmitting, setIsDesignSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [generatedVoices, setGeneratedVoices] = useState<GeneratedVoice[]>([])
@@ -67,13 +87,32 @@ export default function VoiceDesignDialogBase({
     setSelectedIndex(null)
 
     try {
-      const voices = await generateVoiceDesignOptions({
-        count: schemeCount,
-        voicePrompt,
-        previewText,
-        defaultPreviewText: tv('defaultPreviewText'),
-        onDesignVoice,
-      })
+      const voices: GeneratedVoice[] = []
+      for (let i = 0; i < 3; i += 1) {
+        const safeName = `voice_${Date.now().toString(36)}_${i + 1}`.slice(0, 16)
+        const data = await onDesignVoice({
+          voicePrompt: voicePrompt.trim(),
+          previewText: previewText.trim(),
+          preferredName: safeName,
+          language: 'zh',
+        })
+
+        if (data.audioBase64) {
+          if (typeof data.voiceId !== 'string' || data.voiceId.length === 0) {
+            throw new Error('VOICE_DESIGN_INVALID_RESPONSE: missing voiceId')
+          }
+          voices.push({
+            voiceId: data.voiceId,
+            audioBase64: data.audioBase64,
+            audioUrl: `data:audio/wav;base64,${data.audioBase64}`,
+          })
+        }
+      }
+
+      if (voices.length === 0) {
+        throw new Error(tv('noVoiceGenerated'))
+      }
+
       setGeneratedVoices(voices)
     } catch (err: unknown) {
       const status = err instanceof Error ? (err as Error & { status?: number }).status : undefined
@@ -85,7 +124,7 @@ export default function VoiceDesignDialogBase({
       }
 
       const message = err instanceof Error ? err.message : tv('generationError')
-      setError(message === 'VOICE_DESIGN_EMPTY_RESULT' ? tv('noVoiceGenerated') : (message || tv('generationError')))
+      setError(message || tv('generationError'))
     } finally {
       setIsDesignSubmitting(false)
     }
@@ -131,7 +170,6 @@ export default function VoiceDesignDialogBase({
   const handleClose = () => {
     setVoicePrompt('')
     setPreviewText(tv('defaultPreviewText'))
-    setSchemeCount(String(DEFAULT_VOICE_SCHEME_COUNT))
     setError(null)
     setGeneratedVoices([])
     setSelectedIndex(null)
@@ -167,30 +205,120 @@ export default function VoiceDesignDialogBase({
         </div>
 
         <div className="p-5 space-y-4">
-          <VoiceDesignGeneratorSection
-            voicePrompt={voicePrompt}
-            onVoicePromptChange={setVoicePrompt}
-            previewText={previewText}
-            onPreviewTextChange={setPreviewText}
-            schemeCount={schemeCount}
-            onSchemeCountChange={setSchemeCount}
-            isSubmitting={isDesignSubmitting}
-            submittingState={designSubmittingState}
-            error={error}
-            generatedVoices={generatedVoices}
-            selectedIndex={selectedIndex}
-            onSelectIndex={setSelectedIndex}
-            playingIndex={playingIndex}
-            onPlayVoice={handlePlayVoice}
-            onGenerate={() => {
-              void handleGenerate()
-            }}
-            footer={(
+          <div>
+            <div className="text-sm text-[var(--glass-text-secondary)] mb-2">{tv('selectStyle')}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {VOICE_PRESET_KEYS.map((presetKey, index) => {
+                const prompt = tv(`presetsPrompts.${presetKey}` as `presetsPrompts.${VoicePresetKey}`)
+                return (
+                  <button
+                    key={index}
+                    onClick={() => setVoicePrompt(prompt)}
+                    className={`glass-btn-base px-2.5 py-1 text-xs rounded-md border transition-all ${
+                      voicePrompt === prompt
+                        ? 'glass-btn-tone-info border-[var(--glass-stroke-focus)]'
+                        : 'glass-btn-soft text-[var(--glass-text-secondary)] border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
+                    }`}
+                  >
+                    {tv(`presets.${presetKey}` as `presets.${VoicePresetKey}`)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-sm text-[var(--glass-text-secondary)] mb-1">{tv('orCustomDescription')}</div>
+            <textarea
+              value={voicePrompt}
+              onChange={(event) => setVoicePrompt(event.target.value)}
+              placeholder={tv('describePlaceholder')}
+              className="glass-textarea-base w-full px-3 py-2 text-sm resize-none"
+              rows={2}
+            />
+          </div>
+
+          <details className="text-sm">
+            <summary className="text-[var(--glass-text-secondary)] cursor-pointer hover:text-[var(--glass-text-primary)]">
+              {tv('editPreviewText')}
+            </summary>
+            <input
+              type="text"
+              value={previewText}
+              onChange={(event) => setPreviewText(event.target.value)}
+              className="glass-input-base w-full mt-2 px-3 py-2 text-sm"
+            />
+          </details>
+
+          {error && (
+            <div className="text-sm text-[var(--glass-tone-danger-fg)] bg-[var(--glass-tone-danger-bg)] px-3 py-2 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {generatedVoices.length === 0 && !isDesignSubmitting && (
+            <button
+              onClick={handleGenerate}
+              disabled={!voicePrompt.trim()}
+              className="glass-btn-base glass-btn-primary w-full py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              {tv('generate3Schemes')}
+            </button>
+          )}
+
+          {isDesignSubmitting && (
+            <div className="py-6">
+              <TaskStatusInline
+                state={designSubmittingState}
+                className="justify-center text-[var(--glass-text-secondary)] [&>span]:text-[var(--glass-text-secondary)]"
+              />
+            </div>
+          )}
+
+          {generatedVoices.length > 0 && (
+            <div className="space-y-3">
+              <div className="text-sm text-[var(--glass-text-secondary)]">{tv('selectScheme')}</div>
+              <div className="grid grid-cols-3 gap-2">
+                {generatedVoices.map((voice, index) => (
+                  <div
+                    key={voice.voiceId}
+                    onClick={() => setSelectedIndex(index)}
+                    className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                      selectedIndex === index
+                        ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)]'
+                        : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
+                    }`}
+                  >
+                    {selectedIndex === index && (
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 glass-chip glass-chip-info rounded-full flex items-center justify-center p-0">
+                        <AppIcon name="checkSolid" className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                    <div className="text-sm font-medium text-[var(--glass-text-primary)] mb-2">{tv('schemeN', { n: index + 1 })}</div>
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handlePlayVoice(index)
+                      }}
+                      className={`w-10 h-10 mx-auto rounded-full glass-btn-base flex items-center justify-center transition-all ${
+                        playingIndex === index
+                          ? 'glass-btn-tone-info animate-pulse'
+                          : 'glass-btn-secondary text-[var(--glass-text-secondary)]'
+                      }`}
+                    >
+                      {playingIndex === index ? (
+                        <AppIcon name="pause" className="w-4 h-4" />
+                      ) : (
+                        <AppIcon name="play" className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
               <div className="flex gap-2 pt-2">
                 <button
-                  onClick={() => {
-                    void handleGenerate()
-                  }}
+                  onClick={handleGenerate}
                   disabled={isDesignSubmitting}
                   className="glass-btn-base glass-btn-secondary flex-1 py-2 rounded-lg text-sm"
                 >
@@ -204,8 +332,8 @@ export default function VoiceDesignDialogBase({
                   {tv('confirmUse')}
                 </button>
               </div>
-            )}
-          />
+            </div>
+          )}
         </div>
       </div>
 

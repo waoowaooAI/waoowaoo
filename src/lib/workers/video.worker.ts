@@ -3,9 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { queueRedis } from '@/lib/redis'
 import { QUEUE_NAME } from '@/lib/task/queues'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
-import { getUserWorkflowConcurrencyConfig } from '@/lib/config-service'
 import { reportTaskProgress, withTaskLifecycle } from './shared'
-import { withUserConcurrencyGate } from './user-concurrency-gate'
 import {
   assertTaskActive,
   getProjectModels,
@@ -24,11 +22,6 @@ type VideoOptionValue = string | number | boolean
 type VideoOptionMap = Record<string, VideoOptionValue>
 type VideoGenerationMode = 'normal' | 'firstlastframe'
 type PanelRecord = NonNullable<Awaited<ReturnType<typeof prisma.novelPromotionPanel.findUnique>>>
-
-function toDurationMs(value: number | null | undefined): number | undefined {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
-  return value > 1000 ? Math.round(value) : Math.round(value * 1000)
-}
 
 function extractGenerationOptions(payload: AnyObj): VideoOptionMap {
   const fromEnvelope = payload.generationOptions
@@ -141,7 +134,7 @@ async function generateVideoForPanel(
     }
   }
 
-  const generatedVideo = await resolveVideoSourceFromGeneration(job, {
+  const videoSource = await resolveVideoSourceFromGeneration(job, {
     userId: job.data.userId,
     modelId: model,
     imageUrl: sourceImageBase64,
@@ -156,10 +149,7 @@ async function generateVideoForPanel(
   })
 
   let downloadHeaders: Record<string, string> | undefined
-  const videoSource = generatedVideo.url
-  if (generatedVideo.downloadHeaders) {
-    downloadHeaders = generatedVideo.downloadHeaders
-  } else if (typeof videoSource === 'string') {
+  if (typeof videoSource === 'string') {
     const parsedModel = parseModelKeyStrict(model)
     const isGoogleDownloadUrl = videoSource.includes('generativelanguage.googleapis.com/')
       && videoSource.includes('/files/')
@@ -258,8 +248,6 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
     userId: job.data.userId,
     videoUrl: signedVideoUrl,
     audioUrl: signedAudioUrl,
-    audioDurationMs: typeof voiceLine.audioDuration === 'number' ? voiceLine.audioDuration : undefined,
-    videoDurationMs: toDurationMs(panel.duration),
     modelKey: lipSyncModel,
   })
 
@@ -299,15 +287,7 @@ async function processVideoTask(job: Job<TaskJobData>) {
 export function createVideoWorker() {
   return new Worker<TaskJobData>(
     QUEUE_NAME.VIDEO,
-    async (job) => await withTaskLifecycle(job, async (taskJob) => {
-      const workflowConcurrency = await getUserWorkflowConcurrencyConfig(taskJob.data.userId)
-      return await withUserConcurrencyGate({
-        scope: 'video',
-        userId: taskJob.data.userId,
-        limit: workflowConcurrency.video,
-        run: async () => await processVideoTask(taskJob),
-      })
-    }),
+    async (job) => await withTaskLifecycle(job, processVideoTask),
     {
       connection: queueRedis,
       concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY_VIDEO || '4', 10) || 4,

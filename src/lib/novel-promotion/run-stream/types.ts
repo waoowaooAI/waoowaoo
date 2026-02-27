@@ -10,7 +10,7 @@ export type RunStreamEventType =
   | 'step.error'
 
 export type RunStreamStatus = 'idle' | 'running' | 'completed' | 'failed'
-export type RunStepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'blocked' | 'stale'
+export type RunStepStatus = 'pending' | 'running' | 'completed' | 'failed'
 
 export type RunStreamEvent = {
   runId: string
@@ -29,10 +29,5 @@ export type RunStreamEvent = {
   text?: string
   reasoning?: string
   message?: string
-  dependsOn?: string[]
-  groupId?: string
-  parallelKey?: string
-  retryable?: boolean
-  blockedBy?: string[]
   payload?: Record<string, unknown> | null
 }

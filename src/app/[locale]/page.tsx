@@ -1,41 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
-import Image from 'next/image'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { useRouter } from '@/i18n/navigation'
 import Navbar from '@/components/Navbar'
-import { Link } from '@/i18n/navigation'
 
 export default function Home() {
   const t = useTranslations('landing')
-  const { data: session, status } = useSession()
-  const router = useRouter()
-
-  // 已登录用户自动跳转到 workspace
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.replace({ pathname: '/workspace' })
-    }
-  }, [status, router])
-
-  // session 加载中或已登录（即将跳转），不渲染落地页，避免闪烁
-  if (status !== 'unauthenticated') {
-    return (
-      <div className="glass-page min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Image
-            src="/logo-small.png?v=1"
-            alt="waoowaoo"
-            width={80}
-            height={80}
-            className="animate-pulse"
-          />
-        </div>
-      </div>
-    )
-  }
+  const { data: session } = useSession()
 
   return (
     <div className="glass-page min-h-screen overflow-hidden font-sans selection:bg-[var(--glass-tone-info-bg)]">
@@ -63,12 +35,21 @@ export default function Home() {
               </h1>
 
               <div className="flex flex-wrap gap-4 pt-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-                <Link
-                  href={{ pathname: '/auth/signup' }}
-                  className="glass-btn-base glass-btn-primary px-8 py-4 rounded-xl font-semibold transition-all duration-300"
-                >
-                  {t('getStarted')}
-                </Link>
+                {session ? (
+                  <Link
+                    href="/workspace"
+                    className="glass-btn-base glass-btn-primary px-8 py-4 rounded-xl font-semibold transition-all duration-300"
+                  >
+                    {t('enterWorkspace')}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/signup"
+                    className="glass-btn-base glass-btn-primary px-8 py-4 rounded-xl font-semibold transition-all duration-300"
+                  >
+                    {t('getStarted')}
+                  </Link>
+                )}
               </div>
             </div>
 

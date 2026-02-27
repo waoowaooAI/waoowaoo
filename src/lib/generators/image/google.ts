@@ -12,7 +12,6 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from '@google/genai'
 import { BaseImageGenerator, ImageGenerateParams, GenerateResult } from '../base'
 import { getProviderConfig } from '@/lib/api-config'
 import { getImageBase64Cached } from '@/lib/image-cache'
-import { setProxy } from '../../../../lib/prompts/proxy'
 
 type ContentPart = { inlineData: { mimeType: string; data: string } } | { text: string }
 
@@ -70,7 +69,6 @@ export class GoogleGeminiImageGenerator extends BaseImageGenerator {
             }
         }
 
-        await setProxy()
         const ai = new GoogleGenAI({ apiKey })
 
         // 构建内容数组
@@ -194,7 +192,6 @@ export class GoogleImagenGenerator extends BaseImageGenerator {
             aspectRatio,
         } = options
 
-        await setProxy()
         const ai = new GoogleGenAI({ apiKey })
 
         try {
@@ -257,7 +254,6 @@ export class GoogleGeminiBatchImageGenerator extends BaseImageGenerator {
 
         // 使用 Batch API 提交异步任务
         const { submitGeminiBatch } = await import('@/lib/gemini-batch-utils')
-        await setProxy()
 
         const result = await submitGeminiBatch(apiKey, prompt, {
             referenceImages,

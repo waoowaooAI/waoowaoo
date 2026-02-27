@@ -20,7 +20,7 @@ export default function ScriptStage() {
       onClipUpdate={runtime.onClipUpdate}
       onOpenAssetLibrary={runtime.onOpenAssetLibrary}
       onGenerateStoryboard={runtime.onRunScriptToStoryboard}
-      isSubmittingStoryboardBuild={runtime.isConfirmingAssets || runtime.isStartingScriptToStoryboard}
+      isSubmittingStoryboardBuild={runtime.isConfirmingAssets}
     />
   )
 }

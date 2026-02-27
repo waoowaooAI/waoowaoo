@@ -219,7 +219,7 @@ function buildVoiceDesignTaskInfo(taskType: TaskType): TaskBillingInfo {
     source: 'task',
     taskType,
     apiType: 'voice-design',
-    model: 'bailian-voice-design',
+    model: 'qwen-voice-design',
     quantity: 1,
     unit: 'call',
     maxFrozenCost: calcVoiceDesign(),

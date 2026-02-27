@@ -58,29 +58,6 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     ],
   },
   {
-    id: 'REQ-NP-INSERT-PANEL-AUTO-ANALYZE',
-    feature: 'Novel promotion insert panel',
-    userValue: 'AI 自动分析插入分镜时不会因空输入失败',
-    risk: 'route 与 worker 契约分叉导致异步任务直接报错',
-    priority: 'P0',
-    tests: [
-      'tests/unit/novel-promotion/insert-panel-user-input.test.ts',
-      'tests/integration/api/contract/direct-submit-routes.test.ts',
-    ],
-  },
-  {
-    id: 'REQ-NP-PANEL-VARIANT-SAFETY',
-    feature: 'Novel promotion panel variant',
-    userValue: '镜头变体只能插入当前 storyboard，任务失败可回滚，资产开关真实生效',
-    risk: '跨分镜误插入、创建脏 panel、参考图开关失效',
-    priority: 'P0',
-    tests: [
-      'tests/integration/api/specific/panel-variant-route.test.ts',
-      'tests/integration/api/contract/direct-submit-routes.test.ts',
-      'tests/unit/worker/panel-variant-task-handler.test.ts',
-    ],
-  },
-  {
     id: 'REQ-NP-TEXT-ANALYSIS',
     feature: 'Text analysis and storyboard orchestration',
     userValue: '文本分析链路稳定并可回放结果',
@@ -102,26 +79,6 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
       'tests/unit/helpers/task-state-service.test.ts',
       'tests/integration/api/contract/task-infra-routes.test.ts',
       'tests/unit/optimistic/sse-invalidation.test.ts',
-    ],
-  },
-  {
-    id: 'REQ-API-CONFIG-TUTORIAL-PORTAL',
-    feature: 'API config tutorial modal layering',
-    userValue: '开通教程浮层只高亮当前教程，不污染其他 provider card',
-    risk: '弹层挂载在局部层叠上下文内，导致高亮重叠和误覆盖',
-    priority: 'P1',
-    tests: [
-      'tests/unit/api-config/provider-card-tutorial-modal.test.ts',
-    ],
-  },
-  {
-    id: 'REQ-INFRA-PUBLIC-ROUTES',
-    feature: 'Infra and public routes',
-    userValue: '基础公共路由可稳定访问，公开范围明确且有测试兜底',
-    risk: '特殊公开路由缺少约束或回归覆盖，导致泄漏、误拦截或行为漂移',
-    priority: 'P1',
-    tests: [
-      'tests/integration/api/contract/infra-routes.test.ts',
     ],
   },
 ]

@@ -3,7 +3,6 @@ import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { TASK_TYPE } from '@/lib/task/types'
 import { maybeSubmitLLMTask } from '@/lib/llm-observe/route-task'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 
 function parseReferenceImages(body: Record<string, unknown>): string[] {
   const list = Array.isArray(body.referenceImageUrls)
@@ -32,8 +31,6 @@ export const POST = apiHandler(async (
   if (referenceImages.length === 0) {
     throw new ApiError('INVALID_PARAMS')
   }
-  const count = normalizeImageGenerationCount('reference-to-character', body.count)
-  body.count = count
 
   const isBackgroundJob = body.isBackgroundJob === true || body.isBackgroundJob === 1 || body.isBackgroundJob === '1'
   const characterId = typeof body.characterId === 'string' ? body.characterId : ''
@@ -51,7 +48,7 @@ export const POST = apiHandler(async (
     targetId: appearanceId || characterId || projectId,
     routePath: `/api/novel-promotion/${projectId}/reference-to-character`,
     body,
-    dedupeKey: `reference_to_character:${appearanceId || characterId || projectId}:${count}`})
+    dedupeKey: `reference_to_character:${appearanceId || characterId || projectId}`})
   if (asyncTaskResponse) return asyncTaskResponse
 
   throw new ApiError('INVALID_PARAMS')

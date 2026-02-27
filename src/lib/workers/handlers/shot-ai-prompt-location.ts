@@ -1,4 +1,5 @@
 import type { Job } from 'bullmq'
+import { getCompletionContent } from '@/lib/llm-client'
 import { removeLocationPromptSuffix } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
@@ -18,7 +19,7 @@ export async function handleModifyLocationTask(job: Job<TaskJobData>, payload: A
   const imageIndex = Number.isFinite(imageIndexValue) ? Math.max(0, Math.floor(imageIndexValue)) : 0
   const currentDescription = readRequiredString(payload.currentDescription, 'currentDescription')
   const modifyInstruction = readRequiredString(payload.modifyInstruction, 'modifyInstruction')
-  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
+  const novelData = await resolveAnalysisModel(job.data.projectId)
   const location = await requireProjectLocation(locationId, novelData.id)
 
   const finalPrompt = buildPrompt({
@@ -38,7 +39,7 @@ export async function handleModifyLocationTask(job: Job<TaskJobData>, payload: A
   })
   await assertTaskActive(job, 'ai_modify_location_prepare')
 
-  const responseText = await runShotPromptCompletion({
+  const completion = await runShotPromptCompletion({
     job,
     model: novelData.analysisModel,
     prompt: finalPrompt,
@@ -49,6 +50,7 @@ export async function handleModifyLocationTask(job: Job<TaskJobData>, payload: A
   })
   await assertTaskActive(job, 'ai_modify_location_parse')
 
+  const responseText = getCompletionContent(completion)
   const parsed = parseJsonObject(responseText)
   const prompt = readRequiredString(parsed.prompt, 'prompt')
   const modifiedDescription = removeLocationPromptSuffix(prompt)

@@ -1,24 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSignedUrl } from '@/lib/storage'
+import { getSignedUrl } from '@/lib/cos'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
-import {
-  parseSpeakerVoiceMap,
-  type SpeakerVoiceEntry,
-  type SpeakerVoiceMap,
-} from '@/lib/voice/provider-voice-binding'
 
-function readTrimmedString(input: unknown): string | null {
-  if (typeof input !== 'string') return null
-  const value = input.trim()
-  return value.length > 0 ? value : null
-}
-
-function signUrlIfNeeded(url: string): string {
-  if (url.startsWith('http')) return url
-  return getSignedUrl(url, 7200)
+interface SpeakerVoiceConfig {
+  voiceType?: string
+  voiceId?: string
+  audioUrl: string
 }
 
 /**
@@ -33,6 +23,7 @@ export const GET = apiHandler(async (
   const { searchParams } = new URL(request.url)
   const episodeId = searchParams.get('episodeId')
 
+  // 🔐 统一权限验证
   const authResult = await requireProjectAuthLight(projectId)
   if (isErrorResponse(authResult)) return authResult
 
@@ -40,33 +31,28 @@ export const GET = apiHandler(async (
     throw new ApiError('INVALID_PARAMS')
   }
 
+  // 获取剧集
   const episode = await prisma.novelPromotionEpisode.findUnique({
-    where: { id: episodeId },
+    where: { id: episodeId }
   })
 
   if (!episode) {
     throw new ApiError('NOT_FOUND')
   }
 
-  const storedSpeakerVoices = parseSpeakerVoiceMap(episode.speakerVoices)
-  const speakerVoices: SpeakerVoiceMap = {}
-
-  for (const [speaker, voice] of Object.entries(storedSpeakerVoices)) {
-    if (voice.provider === 'fal') {
-      speakerVoices[speaker] = {
-        provider: 'fal',
-        voiceType: voice.voiceType,
-        audioUrl: signUrlIfNeeded(voice.audioUrl),
+  // 解析发言人音色
+  let speakerVoices: Record<string, SpeakerVoiceConfig> = {}
+  if (episode.speakerVoices) {
+    try {
+      speakerVoices = JSON.parse(episode.speakerVoices)
+      // 为音频URL生成签名
+      for (const speaker of Object.keys(speakerVoices)) {
+        if (speakerVoices[speaker].audioUrl && !speakerVoices[speaker].audioUrl.startsWith('http')) {
+          speakerVoices[speaker].audioUrl = getSignedUrl(speakerVoices[speaker].audioUrl, 7200)
+        }
       }
-      continue
-    }
-
-    const previewAudioUrl = voice.previewAudioUrl ? signUrlIfNeeded(voice.previewAudioUrl) : undefined
-    speakerVoices[speaker] = {
-      provider: 'bailian',
-      voiceType: voice.voiceType,
-      voiceId: voice.voiceId,
-      ...(previewAudioUrl ? { previewAudioUrl } : {}),
+    } catch {
+      speakerVoices = {}
     }
   }
 
@@ -88,17 +74,11 @@ export const PATCH = apiHandler(async (
   if (isErrorResponse(authResult)) return authResult
 
   const body = await request.json().catch(() => null)
-  const episodeId = readTrimmedString(body?.episodeId) ?? ''
-  const speaker = readTrimmedString(body?.speaker) ?? ''
-  const voiceType = readTrimmedString(body?.voiceType) ?? 'uploaded'
-  const providerRaw = readTrimmedString(body?.provider)?.toLowerCase() ?? null
-  if (!providerRaw || (providerRaw !== 'fal' && providerRaw !== 'bailian')) {
-    throw new ApiError('INVALID_PARAMS')
-  }
-  const provider = providerRaw
-  const audioUrl = readTrimmedString(body?.audioUrl)
-  const previewAudioUrl = readTrimmedString(body?.previewAudioUrl)
-  const voiceId = readTrimmedString(body?.voiceId)
+  const episodeId = typeof body?.episodeId === 'string' ? body.episodeId : ''
+  const speaker = typeof body?.speaker === 'string' ? body.speaker.trim() : ''
+  const audioUrl = typeof body?.audioUrl === 'string' ? body.audioUrl.trim() : ''
+  const voiceType = typeof body?.voiceType === 'string' ? body.voiceType : 'uploaded'
+  const voiceId = typeof body?.voiceId === 'string' ? body.voiceId : undefined
 
   if (!episodeId) {
     throw new ApiError('INVALID_PARAMS')
@@ -106,16 +86,13 @@ export const PATCH = apiHandler(async (
   if (!speaker) {
     throw new ApiError('INVALID_PARAMS')
   }
-  if (provider === 'fal' && !audioUrl) {
-    throw new ApiError('INVALID_PARAMS')
-  }
-  if (provider === 'bailian' && !voiceId) {
+  if (!audioUrl) {
     throw new ApiError('INVALID_PARAMS')
   }
 
   const projectData = await prisma.novelPromotionProject.findUnique({
     where: { projectId },
-    select: { id: true },
+    select: { id: true }
   })
   if (!projectData) {
     throw new ApiError('NOT_FOUND')
@@ -123,46 +100,36 @@ export const PATCH = apiHandler(async (
 
   const episode = await prisma.novelPromotionEpisode.findFirst({
     where: { id: episodeId, novelPromotionProjectId: projectData.id },
-    select: { id: true, speakerVoices: true },
+    select: { id: true, speakerVoices: true }
   })
   if (!episode) {
     throw new ApiError('NOT_FOUND')
   }
 
-  const speakerVoices = parseSpeakerVoiceMap(episode.speakerVoices)
-
-  let nextVoiceEntry: SpeakerVoiceEntry
-  if (provider === 'fal') {
-    const sourceAudioUrl = audioUrl!
-    const resolvedStorageKey = await resolveStorageKeyFromMediaValue(sourceAudioUrl)
-    const audioUrlToStore = resolvedStorageKey || sourceAudioUrl
-    nextVoiceEntry = {
-      provider: 'fal',
-      voiceType,
-      audioUrl: audioUrlToStore,
-    }
-  } else {
-    const previewCandidate = previewAudioUrl || audioUrl
-    const resolvedPreviewKey = previewCandidate
-      ? await resolveStorageKeyFromMediaValue(previewCandidate)
-      : null
-    const previewAudioUrlToStore = previewCandidate
-      ? (resolvedPreviewKey || previewCandidate)
-      : undefined
-
-    nextVoiceEntry = {
-      provider: 'bailian',
-      voiceType,
-      voiceId: voiceId!,
-      ...(previewAudioUrlToStore ? { previewAudioUrl: previewAudioUrlToStore } : {}),
+  // 解析现有 speakerVoices，合并新条目
+  let speakerVoices: Record<string, SpeakerVoiceConfig> = {}
+  if (episode.speakerVoices) {
+    try {
+      speakerVoices = JSON.parse(episode.speakerVoices)
+    } catch {
+      speakerVoices = {}
     }
   }
 
-  speakerVoices[speaker] = nextVoiceEntry
+  // 将前端传来的 audioUrl（可能是 /m/m_xxx 媒体路由）还原为原始 storageKey
+  // 保证与资产库角色的 customVoiceUrl 格式一致，Worker 端能正确处理
+  const resolvedStorageKey = await resolveStorageKeyFromMediaValue(audioUrl)
+  const audioUrlToStore = resolvedStorageKey || audioUrl
+
+  speakerVoices[speaker] = {
+    voiceType,
+    ...(voiceId ? { voiceId } : {}),
+    audioUrl: audioUrlToStore
+  }
 
   await prisma.novelPromotionEpisode.update({
     where: { id: episodeId },
-    data: { speakerVoices: JSON.stringify(speakerVoices) },
+    data: { speakerVoices: JSON.stringify(speakerVoices) }
   })
 
   return NextResponse.json({ success: true })

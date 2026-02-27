@@ -1,7 +1,7 @@
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSignedUrl } from '@/lib/storage'
+import { getSignedUrl } from '@/lib/cos'
 import { decodeImageUrlsFromDb } from '@/lib/contracts/image-urls-contract'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'

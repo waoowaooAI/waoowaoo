@@ -9,7 +9,6 @@ type LocationCardHeaderProps =
     locationName: string
     summary?: string | null
     selectedIndex: number | null
-    statusText?: string | null
     actions: ReactNode
   }
   | {
@@ -35,11 +34,9 @@ export default function LocationCardHeader(props: LocationCardHeaderProps) {
             </div>
           )}
           <div className="text-xs text-[var(--glass-text-tertiary)]">
-            {props.statusText ?? (
-              props.selectedIndex !== null
-                ? t('image.optionSelected', { number: props.selectedIndex + 1 })
-                : t('image.selectFirst')
-            )}
+            {props.selectedIndex !== null
+              ? t('image.optionSelected', { number: props.selectedIndex + 1 })
+              : t('image.selectFirst')}
           </div>
         </div>
         <div className="flex items-center gap-1 ml-2">{props.actions}</div>

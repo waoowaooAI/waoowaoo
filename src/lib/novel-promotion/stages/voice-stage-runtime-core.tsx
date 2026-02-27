@@ -17,12 +17,7 @@ import {
 import VoiceLineList from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/voice-stage/VoiceLineList'
 import VoiceControlPanel from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/voice-stage/VoiceControlPanel'
 import SpeakerVoiceBindingDialog from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/voice/SpeakerVoiceBindingDialog'
-import type {
-  Character,
-  InlineSpeakerVoiceBinding,
-  PendingVoiceGenerationMap,
-  VoiceStageShellProps,
-} from './voice-stage-runtime/types'
+import type { Character, VoiceStageShellProps } from './voice-stage-runtime/types'
 import { useVoicePlayback } from './voice-stage-runtime/useVoicePlayback'
 import { useVoiceLineEditorState } from './voice-stage-runtime/useVoiceLineEditorState'
 import { useVoiceTaskState } from './voice-stage-runtime/useVoiceTaskState'
@@ -80,16 +75,6 @@ export function useVoiceStageRuntime({
   const notifyVoiceLinesChanged = useCallback(() => {
     onVoiceLinesChanged?.()
   }, [onVoiceLinesChanged])
-  const handleVoiceTaskFailure = useCallback((params: {
-    lineId: string
-    line: { lineIndex: number } | null
-    taskId: string | null
-    errorMessage: string | null
-  }) => {
-    const lineLabel = params.line ? `#${params.line.lineIndex}` : t('common.regenerate')
-    const reason = params.errorMessage?.trim() || t('errors.generateFailed')
-    alert(`${t('errors.generateFailed')} (${lineLabel}): ${reason}`)
-  }, [t])
   const {
     speakerCharacterMap,
     speakerStats,
@@ -129,11 +114,7 @@ export function useVoiceStageRuntime({
     speakerOptions,
   })
   const { playingLineId, handleTogglePlayAudio } = useVoicePlayback()
-  const [pendingVoiceGenerationByLineId, setPendingVoiceGenerationByLineId] = useState<PendingVoiceGenerationMap>({})
-  const submittingVoiceLineIds = useMemo(
-    () => new Set(Object.keys(pendingVoiceGenerationByLineId)),
-    [pendingVoiceGenerationByLineId],
-  )
+  const [submittingVoiceLineIds, setSubmittingVoiceLineIds] = useState<Set<string>>(new Set())
   const { voiceStatusStateByLineId, activeVoiceTaskLineIds, runningLineIds } = useVoiceTaskState({
     projectId,
     voiceLines,
@@ -143,9 +124,8 @@ export function useVoiceStageRuntime({
     loadData,
     voiceLines,
     activeVoiceTaskLineIds,
-    pendingVoiceGenerationByLineId,
-    setPendingVoiceGenerationByLineId,
-    onTaskFailure: handleVoiceTaskFailure,
+    submittingVoiceLineIds,
+    setSubmittingVoiceLineIds,
   })
   const { handleOpenAssetLibraryForSpeaker } = useSpeakerAssetNavigation({
     episodeId,
@@ -164,7 +144,6 @@ export function useVoiceStageRuntime({
     handleGenerateAll,
     handleDownloadAll,
   } = useVoiceGenerationActions({
-    projectId,
     episodeId,
     t: (key) => t(key as never),
     voiceLines,
@@ -176,7 +155,7 @@ export function useVoiceStageRuntime({
     downloadVoicesMutation,
     loadData,
     notifyVoiceLinesChanged,
-    setPendingVoiceGenerationByLineId,
+    setSubmittingVoiceLineIds,
   })
   const {
     getBoundPanelIdForLine,
@@ -202,7 +181,7 @@ export function useVoiceStageRuntime({
     editingSpeaker,
     editingMatchedPanelId,
     setVoiceLines,
-    setPendingVoiceGenerationByLineId,
+    setSubmittingVoiceLineIds,
     setIsSavingLineEditor,
     getBoundPanelIdForLine,
     handleCancelEdit,
@@ -236,13 +215,17 @@ export function useVoiceStageRuntime({
    */
   const handleInlineVoiceBound = useCallback(async (
     speaker: string,
-    binding: InlineSpeakerVoiceBinding,
+    audioUrl: string,
+    voiceType: string,
+    voiceId?: string,
   ) => {
     try {
       await updateSpeakerVoiceMutation.mutateAsync({
         episodeId,
         speaker,
-        ...binding,
+        audioUrl,
+        voiceType,
+        voiceId,
       })
       // 重新加载数据以刷新 speakerVoices
       await loadData()

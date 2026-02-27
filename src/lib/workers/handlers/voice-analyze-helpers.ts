@@ -1,5 +1,3 @@
-import { safeParseJsonArray } from '@/lib/json-repair'
-
 export interface StoryboardPanelLike {
   panelIndex: number
   srtSegment: string | null
@@ -39,9 +37,9 @@ function parseVoiceLinePayload(value: unknown): VoiceLinePayload | null {
     emotionStrength: typeof record.emotionStrength === 'number' ? record.emotionStrength : undefined,
     matchedPanel: matchedPanelRaw
       ? {
-        storyboardId: typeof matchedPanelRaw.storyboardId === 'string' ? matchedPanelRaw.storyboardId : undefined,
-        panelIndex: typeof matchedPanelRaw.panelIndex === 'number' ? matchedPanelRaw.panelIndex : undefined,
-      }
+          storyboardId: typeof matchedPanelRaw.storyboardId === 'string' ? matchedPanelRaw.storyboardId : undefined,
+          panelIndex: typeof matchedPanelRaw.panelIndex === 'number' ? matchedPanelRaw.panelIndex : undefined,
+        }
       : null,
   }
 }
@@ -76,8 +74,19 @@ export function buildStoryboardJson(storyboards: StoryboardLike[]): string {
 }
 
 export function parseVoiceLinesJson(responseText: string): VoiceLinePayload[] {
-  const parsed = safeParseJsonArray(responseText)
-  if (parsed.length === 0) {
+  let jsonText = responseText.trim()
+  jsonText = jsonText.replace(/^```json\s*/i, '')
+  jsonText = jsonText.replace(/^```\s*/, '')
+  jsonText = jsonText.replace(/\s*```$/, '')
+
+  const firstBracket = jsonText.indexOf('[')
+  const lastBracket = jsonText.lastIndexOf(']')
+  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    jsonText = jsonText.substring(firstBracket, lastBracket + 1)
+  }
+
+  const parsed = JSON.parse(jsonText)
+  if (!Array.isArray(parsed) || parsed.length === 0) {
     throw new Error('Invalid voice lines data structure')
   }
   const voiceLines = parsed

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { uploadObject, generateUniqueKey } from '@/lib/storage'
+import { uploadToCOS, generateUniqueKey } from '@/lib/cos'
 import sharp from 'sharp'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
@@ -96,7 +96,7 @@ export const POST = apiHandler(async (
     ? `char-${id}-${appearanceId}-upload`
     : `loc-${id}-upload`
   const key = generateUniqueKey(keyPrefix, 'jpg')
-  await uploadObject(processed, key)
+  await uploadToCOS(processed, key)
 
   // 更新数据库
   if (type === 'character' && appearanceId !== null) {

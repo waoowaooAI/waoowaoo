@@ -36,4 +36,3 @@ Strict constraints:
 2. Array length must equal {panel_count}.
 3. Each character object must contain only "name" and "acting".
 4. Keep character names exactly consistent with panel input.
-5. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

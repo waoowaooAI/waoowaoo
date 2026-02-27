@@ -12,7 +12,6 @@ import { logError as _ulogError } from '@/lib/logging/core'
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { CharacterAppearance } from '@/types/project'
-import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
 import { useProjectAssets, useRefreshProjectAssets, useGenerateProjectCharacterImage, useGenerateProjectLocationImage, type Character } from '@/lib/query/hooks'
 import {
     createManualKeyBaseline,
@@ -24,7 +23,7 @@ import {
 interface UseBatchGenerationProps {
     projectId: string
     // 🔥 V6.6：移除 onGenerateImage，内部使用 mutation hooks
-    handleGenerateImage?: (type: 'character' | 'location', id: string, appearanceId?: string, count?: number) => Promise<void> | void
+    handleGenerateImage?: (type: 'character' | 'location', id: string, appearanceId?: string) => Promise<void> | void
 }
 
 export function useBatchGeneration({
@@ -36,8 +35,6 @@ export function useBatchGeneration({
     const { data: assets } = useProjectAssets(projectId)
     const characters = useMemo(() => assets?.characters ?? [], [assets?.characters])
     const locations = useMemo(() => assets?.locations ?? [], [assets?.locations])
-    const { count: characterGenerationCount } = useImageGenerationCount('character')
-    const { count: locationGenerationCount } = useImageGenerationCount('location')
 
     // 🔥 使用刷新函数
     const refreshAssets = useRefreshProjectAssets(projectId)
@@ -47,16 +44,11 @@ export function useBatchGeneration({
     const generateLocationImage = useGenerateProjectLocationImage(projectId)
 
     // 🔥 内部图片生成函数
-    const internalHandleGenerateImage = useCallback(async (
-        type: 'character' | 'location',
-        id: string,
-        appearanceId?: string,
-        count?: number,
-    ) => {
+    const internalHandleGenerateImage = useCallback(async (type: 'character' | 'location', id: string, appearanceId?: string) => {
         if (type === 'character' && appearanceId) {
-            await generateCharacterImage.mutateAsync({ characterId: id, appearanceId, count })
+            await generateCharacterImage.mutateAsync({ characterId: id, appearanceId })
         } else if (type === 'location') {
-            await generateLocationImage.mutateAsync({ locationId: id, count })
+            await generateLocationImage.mutateAsync({ locationId: id, imageIndex: 0 })
         }
     }, [generateCharacterImage, generateLocationImage])
 
@@ -204,12 +196,7 @@ export function useBatchGeneration({
                 tasks.map(async (task) => {
                     let submitted = false
                     try {
-                        await handleGenerateImage(
-                            task.type,
-                            task.id,
-                            task.appearanceId,
-                            task.type === 'character' ? characterGenerationCount : locationGenerationCount,
-                        )
+                        await handleGenerateImage(task.type, task.id, task.appearanceId)
                         submitted = true
                         setBatchProgress(prev => ({ ...prev, current: prev.current + 1 }))
                     } catch (error) {
@@ -297,12 +284,7 @@ export function useBatchGeneration({
                 tasks.map(async (task) => {
                     let submitted = false
                     try {
-                        await handleGenerateImage(
-                            task.type,
-                            task.id,
-                            task.appearanceId,
-                            task.type === 'character' ? characterGenerationCount : locationGenerationCount,
-                        )
+                        await handleGenerateImage(task.type, task.id, task.appearanceId)
                         submitted = true
                         setBatchProgress(prev => ({ ...prev, current: prev.current + 1 }))
                     } catch (error) {
@@ -346,17 +328,6 @@ export function useBatchGeneration({
         })
     }, [])
 
-    const registerTransientTaskKey = useCallback((key: string) => {
-        setPendingRegenerationKeys(prev => new Set([...prev, key]))
-        setPendingRegenerationBaselines(prev => {
-            const baseline = createManualKeyBaseline(key, characters, locations)
-            if (!baseline) return prev
-            const next = new Map(prev)
-            next.set(key, baseline)
-            return next
-        })
-    }, [characters, locations])
-
     return {
         // 🔥 暴露数据供组件使用
         characters,
@@ -366,7 +337,6 @@ export function useBatchGeneration({
         isBatchSubmitting: isBatchSubmittingAll,
         batchProgress,
         activeTaskKeys,
-        registerTransientTaskKey,
         setTransientRegenerationKeys: setPendingRegenerationKeys,
         clearTransientTaskKey,
         // 操作

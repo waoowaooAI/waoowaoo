@@ -88,15 +88,9 @@ export function resolveTaskErrorSummary(payload: unknown, fallbackMessage = 'Tas
       ? getUserMessageByCode(normalized.code as UnifiedErrorCode)
       : null
 
-  const shouldPreferUserFriendlyMessage =
-    normalized?.code === 'MODEL_NOT_OPEN'
-    || normalized?.code === 'EMPTY_RESPONSE'
-
   return {
     code: normalized?.code || code || null,
-    message: shouldPreferUserFriendlyMessage
-      ? (userFriendlyMessage || message || normalizedMessage || fallbackMessage)
-      : (message || userFriendlyMessage || normalizedMessage || fallbackMessage),
+    message: message || userFriendlyMessage || normalizedMessage || fallbackMessage,
     cancelled: false,
   }
 }

@@ -73,20 +73,6 @@ export const ERROR_CATALOG = {
     userMessageKey: 'errors.RATE_LIMIT',
     defaultMessage: 'Rate limit exceeded',
   },
-  MODEL_NOT_OPEN: {
-    httpStatus: 403,
-    retryable: false,
-    category: ERROR_CATEGORY.PROVIDER,
-    userMessageKey: 'errors.MODEL_NOT_OPEN',
-    defaultMessage: 'Model is not activated for this account',
-  },
-  MODEL_NOT_REGISTERED: {
-    httpStatus: 400,
-    retryable: false,
-    category: ERROR_CATEGORY.PROVIDER,
-    userMessageKey: 'errors.MODEL_NOT_REGISTERED',
-    defaultMessage: 'Model is not registered',
-  },
   QUOTA_EXCEEDED: {
     httpStatus: 429,
     retryable: true,
@@ -108,13 +94,6 @@ export const ERROR_CATALOG = {
     userMessageKey: 'errors.NETWORK_ERROR',
     defaultMessage: 'Network request failed',
   },
-  EMPTY_RESPONSE: {
-    httpStatus: 502,
-    retryable: true,
-    category: ERROR_CATEGORY.PROVIDER,
-    userMessageKey: 'errors.EMPTY_RESPONSE',
-    defaultMessage: 'Model returned empty response',
-  },
   INSUFFICIENT_BALANCE: {
     httpStatus: 402,
     retryable: false,
@@ -135,13 +114,6 @@ export const ERROR_CATALOG = {
     category: ERROR_CATEGORY.PROVIDER,
     userMessageKey: 'errors.GENERATION_TIMEOUT',
     defaultMessage: 'Generation timed out',
-  },
-  VIDEO_API_FORMAT_UNSUPPORTED: {
-    httpStatus: 400,
-    retryable: false,
-    category: ERROR_CATEGORY.VALIDATION,
-    userMessageKey: 'errors.VIDEO_API_FORMAT_UNSUPPORTED',
-    defaultMessage: 'Video API format is unsupported',
   },
   GENERATION_FAILED: {
     httpStatus: 500,

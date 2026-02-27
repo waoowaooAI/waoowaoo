@@ -125,8 +125,7 @@ describe('worker image-task-handlers-core', () => {
       }),
     )
 
-    const locationUpdateCall = prismaMock.locationImage.update.mock.calls.at(-1) as [unknown] | undefined
-    const updateArg = locationUpdateCall?.[0]
+    const updateArg = prismaMock.locationImage.update.mock.calls.at(-1)?.[0]
     const updateData = readUpdateData(updateArg)
     expect(updateData.previousImageUrl).toBe('cos/location-old.png')
     expect(updateData.imageUrl).toBe('cos/new-image.png')
@@ -171,8 +170,7 @@ describe('worker image-task-handlers-core', () => {
       }),
     )
 
-    const panelUpdateCall = prismaMock.novelPromotionPanel.update.mock.calls.at(-1) as [unknown] | undefined
-    const updateArg = panelUpdateCall?.[0]
+    const updateArg = prismaMock.novelPromotionPanel.update.mock.calls.at(-1)?.[0]
     const updateData = readUpdateData(updateArg)
     expect(updateData.previousImageUrl).toBe('cos/panel-old.png')
     expect(updateData.imageUrl).toBe('cos/new-image.png')

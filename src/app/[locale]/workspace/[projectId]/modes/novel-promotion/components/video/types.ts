@@ -51,13 +51,11 @@ export interface Panel {
   linkedToNextPanel?: boolean | null
   videoTaskRunning?: boolean | null
   videoErrorMessage?: string | null  // 视频生成错误消息
-  videoErrorCode?: string | null
   imageTaskRunning?: boolean | null
   // 口型同步相关
   lipSyncVideoUrl?: string | null
   lipSyncTaskRunning?: boolean | null
   lipSyncErrorMessage?: string | null  // 口型同步错误消息
-  lipSyncErrorCode?: string | null
 }
 
 export interface Storyboard {
@@ -89,7 +87,6 @@ export interface VideoPanel {
   videoGenerationMode?: VideoGenerationMode
   videoTaskRunning?: boolean
   videoErrorMessage?: string  // 视频生成错误消息
-  videoErrorCode?: string
   videoModel?: string
   linkedToNextPanel?: boolean
   // 口型同步相关
@@ -97,7 +94,6 @@ export interface VideoPanel {
   lipSyncTaskRunning?: boolean
   lipSyncTaskId?: string
   lipSyncErrorMessage?: string  // 口型同步错误消息
-  lipSyncErrorCode?: string
 }
 
 // 匹配的配音信息

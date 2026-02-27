@@ -3,11 +3,6 @@ import { generateText, type ModelMessage } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { GoogleGenAI } from '@google/genai'
 import {
-  resolveModelGatewayRoute,
-  runOpenAICompatChatCompletion,
-  runOpenAICompatResponsesCompletion,
-} from '@/lib/model-gateway'
-import {
   getProviderConfig,
   getProviderKey,
 } from '../api-config'
@@ -22,7 +17,6 @@ import {
   getSystemPrompt,
   mapReasoningEffort,
 } from './utils'
-import { shouldUseOpenAIReasoningProviderOptions } from './reasoning-capability'
 import {
   _ulogError,
   _ulogWarn,
@@ -34,10 +28,6 @@ import {
   recordCompletionUsage,
   resolveLlmRuntimeModel,
 } from './runtime-shared'
-import { completeBailianLlm } from '@/lib/providers/bailian'
-import { completeSiliconFlowLlm } from '@/lib/providers/siliconflow'
-
-const OFFICIAL_ONLY_PROVIDER_KEYS = new Set(['bailian', 'siliconflow'])
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
@@ -50,7 +40,9 @@ function errorMessage(error: unknown): string {
   return 'unknown error'
 }
 
-
+function supportsArkReasoningEffort(modelId: string): boolean {
+  return modelId === 'doubao-seed-1-8-251228' || modelId.startsWith('doubao-seed-2-0-')
+}
 
 export async function chatCompletion(
   userId: string,
@@ -79,10 +71,6 @@ export async function chatCompletion(
   const resolvedModelId = selection.modelId
   const provider = selection.provider
   const providerKey = getProviderKey(provider).toLowerCase()
-  const providerConfig = await getProviderConfig(userId, provider)
-  const gatewayRoute = OFFICIAL_ONLY_PROVIDER_KEYS.has(providerKey)
-    ? 'official'
-    : (providerConfig.gatewayRoute || resolveModelGatewayRoute(provider))
 
   const {
     temperature = 0.7,
@@ -113,67 +101,12 @@ export async function chatCompletion(
   for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
     const attemptStartedAt = Date.now()
     try {
-      if (gatewayRoute === 'openai-compat') {
-        // openai-compatible protocol probing only applies to openai-compatible + llm.
-        // gemini-compatible is explicitly excluded and must not enter this branch.
-        if (providerKey !== 'openai-compatible') {
-          throw new Error(`OPENAI_COMPAT_PROVIDER_UNSUPPORTED: ${provider}`)
-        }
-        if (!selection.llmProtocol) {
-          throw new Error(`MODEL_LLM_PROTOCOL_REQUIRED: ${selection.modelKey}`)
-        }
-
-        const completion = selection.llmProtocol === 'responses'
-          ? await runOpenAICompatResponsesCompletion({
-            userId,
-            providerId: provider,
-            modelId: resolvedModelId,
-            messages,
-            temperature,
-          })
-          : await runOpenAICompatChatCompletion({
-            userId,
-            providerId: provider,
-            modelId: resolvedModelId,
-            messages,
-            temperature,
-          })
-        const completionParts = getCompletionParts(completion)
-        const compatEngine = selection.llmProtocol === 'responses'
-          ? 'openai_compat_responses'
-          : 'openai_compat_chat_completions'
-        logLlmRawOutput({
-          userId,
-          projectId,
-          provider: compatEngine,
-          modelId: resolvedModelId,
-          modelKey: selection.modelKey,
-          stream: false,
-          action: options.action,
-          text: completionParts.text,
-          reasoning: completionParts.reasoning,
-          usage: completionUsageSummary(completion),
-        })
-        recordCompletionUsage(resolvedModelId, completion)
-        llmLogger.info({
-          action: 'llm.call.success',
-          message: 'llm call succeeded',
-          provider: compatEngine,
-          durationMs: Date.now() - attemptStartedAt,
-          details: {
-            model: resolvedModelId,
-            attempt,
-            maxRetries,
-            llmProtocol: selection.llmProtocol,
-          },
-        })
-        return completion
-      }
-
       if (providerKey === 'google' || providerKey === 'gemini-compatible') {
-        const googleAiOptions = providerConfig.baseUrl
-          ? { apiKey: providerConfig.apiKey, httpOptions: { baseUrl: providerConfig.baseUrl } }
-          : { apiKey: providerConfig.apiKey }
+        const config = await getProviderConfig(userId, provider)
+        // gemini-compatible 可能有自定义 baseUrl（指向第三方兼容服务）
+        const googleAiOptions = config.baseUrl
+          ? { apiKey: config.apiKey, httpOptions: { baseUrl: config.baseUrl } }
+          : { apiKey: config.apiKey }
         const ai = new GoogleGenAI(googleAiOptions)
 
         const systemParts = messages
@@ -242,95 +175,28 @@ export async function chatCompletion(
         return completion
       }
 
-      if (providerKey === 'bailian') {
-        const completion = await completeBailianLlm({
-          modelId: resolvedModelId,
-          messages,
-          apiKey: providerConfig.apiKey,
-          baseUrl: providerConfig.baseUrl,
-          temperature,
-        })
-        const completionParts = getCompletionParts(completion)
-        logLlmRawOutput({
-          userId,
-          projectId,
-          provider: providerKey,
-          modelId: resolvedModelId,
-          modelKey: selection.modelKey,
-          stream: false,
-          action: options.action,
-          text: completionParts.text,
-          reasoning: completionParts.reasoning,
-          usage: completionUsageSummary(completion),
-        })
-        recordCompletionUsage(resolvedModelId, completion)
-        llmLogger.info({
-          action: 'llm.call.success',
-          message: 'llm call succeeded',
-          provider: providerKey,
-          durationMs: Date.now() - attemptStartedAt,
-          details: {
-            model: resolvedModelId,
-            attempt,
-            maxRetries,
-          },
-        })
-        return completion
-      }
-
-      if (providerKey === 'siliconflow') {
-        const completion = await completeSiliconFlowLlm({
-          modelId: resolvedModelId,
-          messages,
-          apiKey: providerConfig.apiKey,
-          baseUrl: providerConfig.baseUrl,
-          temperature,
-        })
-        const completionParts = getCompletionParts(completion)
-        logLlmRawOutput({
-          userId,
-          projectId,
-          provider: providerKey,
-          modelId: resolvedModelId,
-          modelKey: selection.modelKey,
-          stream: false,
-          action: options.action,
-          text: completionParts.text,
-          reasoning: completionParts.reasoning,
-          usage: completionUsageSummary(completion),
-        })
-        recordCompletionUsage(resolvedModelId, completion)
-        llmLogger.info({
-          action: 'llm.call.success',
-          message: 'llm call succeeded',
-          provider: providerKey,
-          durationMs: Date.now() - attemptStartedAt,
-          details: {
-            model: resolvedModelId,
-            attempt,
-            maxRetries,
-          },
-        })
-        return completion
-      }
-
 
       if (providerKey === 'ark') {
-        const { arkResponsesCompletion, convertChatMessagesToArkInput, buildArkThinkingParam } = await import('@/lib/ark-llm')
-        const arkThinkingParams = buildArkThinkingParam(resolvedModelId, reasoning)
-
-        const arkResult = await arkResponsesCompletion({
-          apiKey: providerConfig.apiKey,
-          model: resolvedModelId,
-          input: convertChatMessagesToArkInput(messages),
-          thinking: arkThinkingParams.thinking,
+        const { apiKey } = await getProviderConfig(userId, provider)
+        const client = new OpenAI({
+          baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+          apiKey,
         })
+        const extraParams: Record<string, unknown> = {}
+        if (supportsArkReasoningEffort(resolvedModelId)) {
+          extraParams.reasoning_effort = reasoning ? reasoningEffort : 'minimal'
+        } else {
+          extraParams.thinking = { type: reasoning ? 'enabled' : 'disabled' }
+        }
 
-        const completion = buildOpenAIChatCompletion(
-          resolvedModelId,
-          buildReasoningAwareContent(arkResult.text, arkResult.reasoning),
-          arkResult.usage,
-        )
+        const completion = await client.chat.completions.create({
+          model: resolvedModelId,
+          messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+          temperature,
+          max_completion_tokens: 65535,
+          ...extraParams,
+        } as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming)
+        const completionParts = getCompletionParts(completion)
         logLlmRawOutput({
           userId,
           projectId,
@@ -339,9 +205,9 @@ export async function chatCompletion(
           modelKey: selection.modelKey,
           stream: false,
           action: options.action,
-          text: arkResult.text,
-          reasoning: arkResult.reasoning,
-          usage: arkResult.usage,
+          text: completionParts.text,
+          reasoning: completionParts.reasoning,
+          usage: completionUsageSummary(completion),
         })
         recordCompletionUsage(resolvedModelId, completion)
         llmLogger.info({
@@ -353,31 +219,31 @@ export async function chatCompletion(
             model: resolvedModelId,
             attempt,
             maxRetries,
-            engine: 'ark_responses',
           },
         })
         return completion
       }
 
-      if (!providerConfig.baseUrl) {
+      const config = await getProviderConfig(userId, provider)
+      if (!config.baseUrl) {
         throw new Error(`PROVIDER_BASE_URL_MISSING: ${provider} (llm)`)
       }
 
-      const isOpenRouter = !!providerConfig.baseUrl?.includes('openrouter')
+      const isOpenRouter = !!config.baseUrl?.includes('openrouter')
       const providerName = isOpenRouter ? 'openrouter' : 'openai_compatible'
       if (!isOpenRouter) {
         const aiOpenAI = createOpenAI({
-          baseURL: providerConfig.baseUrl,
-          apiKey: providerConfig.apiKey,
+          baseURL: config.baseUrl,
+          apiKey: config.apiKey,
           name: providerName,
         })
         // 只有原生 OpenAI 推理模型才支持 forceReasoning/reasoningEffort
         // gemini-compatible 等 OAI-compat 提供商传这些参数会导致空响应
-        const isNativeOpenAIReasoning = shouldUseOpenAIReasoningProviderOptions({
-          providerKey,
-          providerApiMode: providerConfig.apiMode,
-          modelId: resolvedModelId,
-        })
+        const isNativeOpenAIReasoning =
+          resolvedModelId.startsWith('o1') ||
+          resolvedModelId.startsWith('o3') ||
+          resolvedModelId.includes('deepseek-r') ||
+          resolvedModelId.includes('deepseek-reasoner')
         const aiSdkProviderOptions = reasoning && isNativeOpenAIReasoning
           ? {
             openai: {
@@ -438,8 +304,8 @@ export async function chatCompletion(
       }
 
       const client = new OpenAI({
-        baseURL: providerConfig.baseUrl,
-        apiKey: providerConfig.apiKey,
+        baseURL: config.baseUrl,
+        apiKey: config.apiKey,
       })
 
       const extraParams: Record<string, unknown> = {}

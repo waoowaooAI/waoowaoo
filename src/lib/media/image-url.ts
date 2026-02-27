@@ -1,6 +1,6 @@
 const LOCAL_ORIGIN = 'http://localhost'
 const NEXT_IMAGE_PATH = '/_next/image'
-const COS_SIGN_PATH = '/api/storage/sign'
+const COS_SIGN_PATH = '/api/cos/sign'
 const MAX_NEXT_UNWRAP_DEPTH = 5
 const STORAGE_KEY_PREFIXES = ['images/', 'video/', 'voice/'] as const
 

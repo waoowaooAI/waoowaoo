@@ -242,7 +242,6 @@ model NovelPromotionProject {
   analysisModel   String? // 用户配置的分析模型（nullable，必须配置后才能使用）
   imageModel      String? // 用户配置的图片模型
   videoModel      String? // 用户配置的视频模型
-  audioModel      String? // 用户配置的语音模型
   videoRatio      String                    @default("9:16")
   ttsRate         String                    @default("+50%")
   globalAssetText String?
@@ -429,12 +428,7 @@ model UserPreference {
   storyboardModel String? // 用户配置的分镜图片模型
   editModel       String? // 用户配置的修图模型
   videoModel      String? // 用户配置的视频模型
-  audioModel      String? // 用户配置的语音模型
   lipSyncModel    String? // 用户配置的口型同步模型
-  voiceDesignModel String? // 用户配置的音色设计模型
-  analysisConcurrency Int? // 分析流程并发上限
-  imageConcurrency Int? // 图像流程并发上限
-  videoConcurrency Int? // 视频流程并发上限
   videoRatio      String   @default("9:16")
   videoResolution String   @default("720p")
   artStyle        String   @default("american-comic")
@@ -685,7 +679,6 @@ model GlobalCharacterAppearance {
   characterId          String
   appearanceIndex      Int
   changeReason         String   @default("default")
-  artStyle             String?
   description          String?
   descriptions         String?
   imageUrl             String?
@@ -717,7 +710,6 @@ model GlobalLocation {
   userId    String
   folderId  String?
   name      String
-  artStyle  String?
   summary   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

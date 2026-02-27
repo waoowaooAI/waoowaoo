@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { GlassModalShell } from '@/components/ui/primitives'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import type { CapabilityValue } from '@/lib/model-config-contract'
-import { apiFetch } from '@/lib/api-fetch'
 import {
   encodeModelKey,
   getProviderDisplayName,
@@ -14,21 +13,22 @@ import {
 } from '../api-config'
 import { ApiConfigToolbar } from './ApiConfigToolbar'
 import { ApiConfigProviderList } from './ApiConfigProviderList'
-import { DefaultModelCards } from './DefaultModelCards'
 import { useApiConfigFilters } from './hooks/useApiConfigFilters'
+import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
 import { AppIcon } from '@/components/ui/icons'
 
-type TestStepStatus = 'pass' | 'fail' | 'skip'
-interface TestStep {
-  name: string
-  status: TestStepStatus
-  message: string
-  model?: string
-  detail?: string
-}
-type TestStatus = 'idle' | 'testing' | 'passed' | 'failed'
-
 type CustomProviderType = 'gemini-compatible' | 'openai-compatible'
+type DefaultModelField =
+  | 'analysisModel'
+  | 'characterModel'
+  | 'locationModel'
+  | 'storyboardModel'
+  | 'editModel'
+  | 'videoModel'
+  | 'lipSyncModel'
+
+const MONO_ICON_BADGE =
+  'inline-flex items-center justify-center rounded-lg bg-[var(--glass-bg-surface)] p-1 text-[var(--glass-text-secondary)]'
 
 const Icons = {
   settings: () => (
@@ -43,9 +43,6 @@ const Icons = {
   video: () => (
     <AppIcon name="video" className="w-3.5 h-3.5" />
   ),
-  audio: () => (
-    <AppIcon name="audioWave" className="w-3.5 h-3.5" />
-  ),
   lipsync: () => (
     <AppIcon name="audioWave" className="w-3.5 h-3.5" />
   ),
@@ -54,7 +51,12 @@ const Icons = {
   ),
 }
 
-
+interface DefaultModelCardConfig {
+  field: DefaultModelField
+  modelType: 'llm' | 'image' | 'video' | 'lipsync'
+  title: string
+  icon: keyof Pick<typeof Icons, 'llm' | 'image' | 'video' | 'lipsync'>
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -62,21 +64,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isCapabilityValue(value: unknown): value is CapabilityValue {
   return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-}
-
-function extractCapabilityFieldsFromModel(
-  capabilities: Record<string, unknown> | undefined,
-  modelType: string,
-): Array<{ field: string; options: CapabilityValue[] }> {
-  if (!capabilities) return []
-  const namespace = capabilities[modelType]
-  if (!isRecord(namespace)) return []
-  return Object.entries(namespace)
-    .filter(([key, value]) => key.endsWith('Options') && Array.isArray(value) && value.every(isCapabilityValue) && value.length > 0)
-    .map(([key, value]) => ({
-      field: key.slice(0, -'Options'.length),
-      options: value as CapabilityValue[],
-    }))
 }
 
 function parseBySample(input: string, sample: CapabilityValue): CapabilityValue {
@@ -95,15 +82,11 @@ export function ApiConfigTabContainer() {
     providers,
     models,
     defaultModels,
-    workflowConcurrency,
     capabilityDefaults,
     loading,
     saveStatus,
-    flushConfig,
-    updateProviderHidden,
     updateProviderApiKey,
     updateProviderBaseUrl,
-    reorderProviders,
     addProvider,
     deleteProvider,
     toggleModel,
@@ -111,8 +94,6 @@ export function ApiConfigTabContainer() {
     addModel,
     updateModel,
     updateDefaultModel,
-    batchUpdateDefaultModels,
-    updateWorkflowConcurrency,
     updateCapabilityDefault,
   } = useProviders()
 
@@ -132,6 +113,7 @@ export function ApiConfigTabContainer() {
 
   const {
     modelProviders,
+    audioProviders,
     getModelsForProvider,
     getEnabledModelsByType,
   } = useApiConfigFilters({
@@ -151,13 +133,14 @@ export function ApiConfigTabContainer() {
     apiKey: '',
     apiType: 'gemini-compatible',
   })
-  const [testStatus, setTestStatus] = useState<TestStatus>('idle')
-  const [testSteps, setTestSteps] = useState<TestStep[]>([])
 
-  const doAddProvider = useCallback(() => {
-    const uuid = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  const handleAddGeminiProvider = () => {
+    if (!newGeminiProvider.name || !newGeminiProvider.baseUrl) {
+      alert(tp('fillRequired'))
+      return
+    }
+
+    const uuid = crypto.randomUUID()
     const providerId = `${newGeminiProvider.apiType}:${uuid}`
     const name = newGeminiProvider.name.trim()
     const baseUrl = newGeminiProvider.baseUrl.trim()
@@ -168,71 +151,26 @@ export function ApiConfigTabContainer() {
       name,
       baseUrl,
       apiKey,
-      apiMode: newGeminiProvider.apiType === 'openai-compatible' ? 'openai-official' : 'gemini-sdk',
     })
 
-    setNewGeminiProvider({ name: '', baseUrl: '', apiKey: '', apiType: 'gemini-compatible' })
-    setTestStatus('idle')
-    setTestSteps([])
-    setShowAddGeminiProvider(false)
-  }, [newGeminiProvider, addProvider])
-
-  const handleAddGeminiProvider = useCallback(async () => {
-    if (!newGeminiProvider.name || !newGeminiProvider.baseUrl) {
-      alert(tp('fillRequired'))
-      return
-    }
-
-    setTestStatus('testing')
-    setTestSteps([])
-
-    try {
-      const res = await apiFetch('/api/user/api-config/test-provider', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiType: newGeminiProvider.apiType,
-          baseUrl: newGeminiProvider.baseUrl.trim(),
-          apiKey: newGeminiProvider.apiKey.trim(),
-        }),
-      })
-
-      const data = await res.json()
-      const steps: TestStep[] = data.steps || []
-      setTestSteps(steps)
-
-      if (data.success) {
-        setTestStatus('passed')
-        // Auto-add on success
-        doAddProvider()
-      } else {
-        setTestStatus('failed')
-      }
-    } catch {
-      setTestSteps([{ name: 'models', status: 'fail', message: 'Network error' }])
-      setTestStatus('failed')
-    }
-  }, [newGeminiProvider, tp, doAddProvider])
-
-  const handleForceAdd = useCallback(() => {
-    doAddProvider()
-  }, [doAddProvider])
-
-  const handleCancelAddGeminiProvider = () => {
-    setNewGeminiProvider({ name: '', baseUrl: '', apiKey: '', apiType: 'gemini-compatible' })
-    setTestStatus('idle')
-    setTestSteps([])
+    setNewGeminiProvider({
+      name: '',
+      baseUrl: '',
+      apiKey: '',
+      apiType: 'gemini-compatible',
+    })
     setShowAddGeminiProvider(false)
   }
 
-  const handleWorkflowConcurrencyChange = useCallback(
-    (field: 'analysis' | 'image' | 'video', rawValue: string) => {
-      const parsed = Number.parseInt(rawValue, 10)
-      if (!Number.isFinite(parsed) || parsed <= 0) return
-      updateWorkflowConcurrency(field, parsed)
-    },
-    [updateWorkflowConcurrency],
-  )
+  const handleCancelAddGeminiProvider = () => {
+    setNewGeminiProvider({
+      name: '',
+      baseUrl: '',
+      apiKey: '',
+      apiType: 'gemini-compatible',
+    })
+    setShowAddGeminiProvider(false)
+  }
 
   if (loading) {
     return (
@@ -242,7 +180,15 @@ export function ApiConfigTabContainer() {
     )
   }
 
-
+  const defaultModelCards: DefaultModelCardConfig[] = [
+    { field: 'analysisModel', modelType: 'llm', title: t('textDefault'), icon: 'llm' },
+    { field: 'characterModel', modelType: 'image', title: t('characterDefault'), icon: 'image' },
+    { field: 'locationModel', modelType: 'image', title: t('locationDefault'), icon: 'image' },
+    { field: 'storyboardModel', modelType: 'image', title: t('storyboardDefault'), icon: 'image' },
+    { field: 'editModel', modelType: 'image', title: t('editDefault'), icon: 'image' },
+    { field: 'videoModel', modelType: 'video', title: t('videoDefault'), icon: 'video' },
+    { field: 'lipSyncModel', modelType: 'lipsync', title: t('lipsyncDefault'), icon: 'lipsync' },
+  ]
 
   return (
     <div className="flex h-full flex-col">
@@ -256,53 +202,149 @@ export function ApiConfigTabContainer() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="space-y-6 p-6">
-          <DefaultModelCards
-            t={t}
-            defaultModels={defaultModels}
-            getEnabledModelsByType={getEnabledModelsByType}
-            parseModelKey={parseModelKey}
-            encodeModelKey={encodeModelKey}
-            getProviderDisplayName={getProviderDisplayName}
-            locale={locale}
-            updateDefaultModel={updateDefaultModel}
-            batchUpdateDefaultModels={batchUpdateDefaultModels}
-            extractCapabilityFieldsFromModel={extractCapabilityFieldsFromModel}
-            toCapabilityFieldLabel={toCapabilityFieldLabel}
-            capabilityDefaults={capabilityDefaults}
-            updateCapabilityDefault={updateCapabilityDefault}
-            parseBySample={parseBySample}
-            workflowConcurrency={workflowConcurrency}
-            handleWorkflowConcurrencyChange={handleWorkflowConcurrencyChange}
-          />
+        <div className="mx-auto max-w-4xl space-y-6 p-6">
+          <div className="glass-surface rounded-2xl p-3.5">
+            <div className="mb-1 flex items-center gap-2 px-1">
+              <span className="glass-surface-soft inline-flex h-6 w-6 items-center justify-center rounded-lg text-[var(--glass-text-secondary)]">
+                <Icons.settings />
+              </span>
+              <h2 className="text-[15px] font-semibold text-[var(--glass-text-primary)]">{t('defaultModels')}</h2>
+            </div>
+            <p className="mb-2.5 px-1 text-[12px] text-[var(--glass-text-secondary)]">
+              {t('defaultModel.hint')}
+            </p>
+            <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3">
+              {defaultModelCards.map((card) => {
+                const options = getEnabledModelsByType(card.modelType)
+                const currentKey = defaultModels[card.field]
+                const parsed = parseModelKey(currentKey)
+                const normalizedKey = parsed ? encodeModelKey(parsed.provider, parsed.modelId) : ''
+                const current = normalizedKey
+                  ? options.find((option) => option.modelKey === normalizedKey)
+                  : null
+                const capabilityFields = (() => {
+                  if (!current || !current.capabilities) return [] as Array<{ field: string; options: CapabilityValue[] }>
+                  const namespace = current.capabilities[card.modelType]
+                  if (!isRecord(namespace)) return [] as Array<{ field: string; options: CapabilityValue[] }>
+                  return Object.entries(namespace)
+                    .filter(([key, value]) => key.endsWith('Options') && Array.isArray(value) && value.every(isCapabilityValue) && value.length > 0)
+                    .map(([key, value]) => ({
+                      field: key.slice(0, -'Options'.length),
+                      options: value as CapabilityValue[],
+                    }))
+                })()
+                const ModelIcon = Icons[card.icon]
+
+                return (
+                  <div
+                    key={card.field}
+                    className="glass-surface-soft rounded-xl p-2.5"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className={MONO_ICON_BADGE}>
+                        <ModelIcon />
+                      </span>
+                      <span className="text-[12px] font-semibold text-[var(--glass-text-primary)]">
+                        {card.title}
+                      </span>
+                    </div>
+                    {card.modelType === 'video' || card.modelType === 'image' || card.modelType === 'llm' ? (
+                      /* Unified model capability dropdown */
+                      <ModelCapabilityDropdown
+                        compact
+                        models={options.map((opt) => ({
+                          value: opt.modelKey,
+                          label: opt.name,
+                          provider: opt.provider,
+                          providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
+                        }))}
+                        value={normalizedKey || undefined}
+                        onModelChange={(v) => updateDefaultModel(card.field, v, capabilityFields)}
+                        capabilityFields={capabilityFields.map((d) => ({
+                          ...d,
+                          label: toCapabilityFieldLabel(d.field),
+                        }))}
+                        capabilityOverrides={
+                          current
+                            ? Object.fromEntries(
+                              capabilityFields
+                                .filter((d) => capabilityDefaults[current.modelKey]?.[d.field] !== undefined)
+                                .map((d) => [d.field, capabilityDefaults[current.modelKey][d.field]])
+                            )
+                            : {}
+                        }
+                        onCapabilityChange={(field, rawValue, sample) => {
+                          if (!current) return
+                          if (!rawValue) {
+                            updateCapabilityDefault(current.modelKey, field, null)
+                            return
+                          }
+                          updateCapabilityDefault(
+                            current.modelKey,
+                            field,
+                            parseBySample(rawValue, sample),
+                          )
+                        }}
+                        placeholder={t('selectDefault')}
+                      />
+                    ) : (
+                      /* Non-video models: keep native select */
+                      <>
+                        <div className="relative">
+                          <select
+                            value={normalizedKey}
+                            onChange={(event) => updateDefaultModel(card.field, event.target.value)}
+                            className="glass-select-base w-full cursor-pointer appearance-none py-1.5 pl-2.5 pr-7 text-[12px]"
+                          >
+                            <option value="">{t('selectDefault')}</option>
+                            {options.map((option, index) => (
+                              <option
+                                key={`${option.modelKey}-${index}`}
+                                value={option.modelKey}
+                              >
+                                {option.name} ({option.providerName || getProviderDisplayName(option.provider, locale)})
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute right-2.5 top-2 text-[var(--glass-text-tertiary)]">
+                            <Icons.chevronDown />
+                          </div>
+                        </div>
+                        {current && card.modelType !== 'lipsync' && (
+                          <div className="mt-1.5 flex items-center justify-between px-0.5">
+                            <span className="text-[11px] text-[var(--glass-text-tertiary)]">
+                              {current.providerName}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
           <ApiConfigProviderList
             modelProviders={modelProviders}
             allModels={models}
             defaultModels={defaultModels}
+            audioProviders={audioProviders}
             getModelsForProvider={getModelsForProvider}
             onAddGeminiProvider={() => setShowAddGeminiProvider(true)}
             onToggleModel={toggleModel}
             onUpdateApiKey={updateProviderApiKey}
             onUpdateBaseUrl={updateProviderBaseUrl}
-            onReorderProviders={reorderProviders}
             onDeleteModel={deleteModel}
             onUpdateModel={updateModel}
             onDeleteProvider={deleteProvider}
             onAddModel={addModel}
-            onFlushConfig={flushConfig}
-            onToggleProviderHidden={updateProviderHidden}
             labels={{
               providerPool: t('providerPool'),
-              providerPoolDesc: t('providerPoolDesc'),
-              dragToSort: t('dragToSort'),
-              dragToSortHint: t('dragToSortHint'),
-              hideProvider: t('hideProvider'),
-              showProvider: t('showProvider'),
-              showHiddenProviders: t('showHiddenProviders'),
-              hideHiddenProviders: t('hideHiddenProviders'),
-              hiddenProvidersPrefix: t('hiddenProvidersPrefix'),
               addGeminiProvider: t('addGeminiProvider'),
+              otherProviders: t('otherProviders'),
+              audioCategory: t('audioCategory'),
+              audioApiKey: t('sections.audioApiKey'),
             }}
           />
         </div>
@@ -322,38 +364,16 @@ export function ApiConfigTabContainer() {
             >
               {tc('cancel')}
             </button>
-            {testStatus === 'failed' && (
-              <button
-                onClick={handleForceAdd}
-                className="glass-btn-base glass-btn-secondary px-3 py-1.5 text-sm"
-              >
-                {t('addAnyway')}
-              </button>
-            )}
-            {testStatus === 'failed' ? (
-              <button
-                onClick={handleAddGeminiProvider}
-                className="glass-btn-base glass-btn-primary px-3 py-1.5 text-sm"
-              >
-                {t('testRetry')}
-              </button>
-            ) : (
-              <button
-                onClick={handleAddGeminiProvider}
-                disabled={testStatus === 'testing'}
-                className="glass-btn-base glass-btn-primary px-3 py-1.5 text-sm disabled:opacity-50"
-              >
-                {testStatus === 'testing' ? t('testing') : tp('add')}
-              </button>
-            )}
+            <button
+              onClick={handleAddGeminiProvider}
+              className="glass-btn-base glass-btn-primary px-3 py-1.5 text-sm"
+            >
+              {tp('add')}
+            </button>
           </div>
         }
       >
         <div className="space-y-3">
-          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
-            <AppIcon name="alert" className="w-4 h-4 shrink-0 mt-0.5" />
-            <span className="text-[12px] leading-relaxed">{t('customProviderTip')}</span>
-          </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-[var(--glass-text-primary)]">
               {t('apiType')}
@@ -367,7 +387,6 @@ export function ApiConfigTabContainer() {
                     apiType: event.target.value as CustomProviderType,
                   })
                 }
-                disabled={testStatus === 'testing'}
                 className="glass-select-base w-full cursor-pointer appearance-none px-3 py-2.5 pr-8 text-sm"
               >
                 <option value="gemini-compatible">{t('apiTypeGeminiCompatible')}</option>
@@ -392,7 +411,6 @@ export function ApiConfigTabContainer() {
                   name: event.target.value,
                 })
               }
-              disabled={testStatus === 'testing'}
               placeholder={tp('name')}
               className="glass-input-base w-full px-3 py-2.5 text-sm"
             />
@@ -411,7 +429,6 @@ export function ApiConfigTabContainer() {
                   baseUrl: event.target.value,
                 })
               }
-              disabled={testStatus === 'testing'}
               placeholder={t('baseUrl')}
               className="glass-input-base w-full px-3 py-2.5 text-sm font-mono"
             />
@@ -430,81 +447,10 @@ export function ApiConfigTabContainer() {
                   apiKey: event.target.value,
                 })
               }
-              disabled={testStatus === 'testing'}
               placeholder={t('apiKeyLabel')}
               className="glass-input-base w-full px-3 py-2.5 text-sm"
             />
           </div>
-
-          {/* Test Results */}
-          {testStatus !== 'idle' && (
-            <div className="space-y-2 rounded-xl border border-[var(--glass-border)] p-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--glass-text-primary)]">
-                <AppIcon name="settingsHex" className="h-3.5 w-3.5" />
-                {t('testConnection')}
-              </div>
-
-              {testStatus === 'testing' && testSteps.length === 0 && (
-                <div className="flex items-center gap-2 text-xs text-[var(--glass-text-secondary)]">
-                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  {t('testing')}
-                </div>
-              )}
-
-              {testSteps.map((step) => {
-                const stepLabel = t(`testStep.${step.name}` as Parameters<typeof t>[0])
-                return (
-                  <div key={step.name} className="space-y-0.5">
-                    <div className="flex items-center gap-2 text-xs">
-                      {step.status === 'pass' && (
-                        <span className="text-green-500">
-                          <AppIcon name="check" className="h-3.5 w-3.5" />
-                        </span>
-                      )}
-                      {step.status === 'fail' && (
-                        <span className="text-red-500">
-                          <AppIcon name="close" className="h-3.5 w-3.5" />
-                        </span>
-                      )}
-                      {step.status === 'skip' && (
-                        <span className="text-[var(--glass-text-tertiary)]">–</span>
-                      )}
-                      <span className="font-medium text-[var(--glass-text-primary)]">
-                        {stepLabel}
-                      </span>
-                      {step.model && (
-                        <span className="rounded bg-[var(--glass-bg-surface)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--glass-text-secondary)]">
-                          {step.model}
-                        </span>
-                      )}
-                    </div>
-                    <p className={`pl-5 text-[11px] ${step.status === 'fail' ? 'text-red-400' : 'text-[var(--glass-text-secondary)]'}`}>
-                      {step.message}
-                    </p>
-                    {step.detail && (
-                      <p className="pl-5 text-[10px] text-[var(--glass-text-tertiary)] break-all line-clamp-3">
-                        {step.detail}
-                      </p>
-                    )}
-                  </div>
-                )
-              })}
-
-              {testStatus === 'failed' && (
-                <div className="flex items-start gap-2 rounded-lg bg-yellow-500/10 px-2.5 py-2 text-[11px] text-yellow-600 dark:text-yellow-400">
-                  <span className="mt-0.5 shrink-0">⚠</span>
-                  <span>{t('testWarning')}</span>
-                </div>
-              )}
-
-              {testStatus === 'passed' && (
-                <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-2.5 py-2 text-[11px] text-green-600 dark:text-green-400">
-                  <AppIcon name="check" className="h-3.5 w-3.5" />
-                  {t('testPassed')}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </GlassModalShell>
     </div>

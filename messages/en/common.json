@@ -1,20 +1,6 @@
 {
     "appName": "waoowaoo",
-    "betaVersion": "Beta v{version}",
-    "updateNotice": {
-        "title": "New version available",
-        "subtitle": "Current v{current} · Latest v{latest}",
-        "description": "A newer version has been published on GitHub Releases. View the changelog to update safely.",
-        "releaseName": "Release",
-        "publishedAt": "Published",
-        "updateTag": "Update",
-        "viewRelease": "View update",
-        "remindLater": "Remind me later",
-        "close": "Close",
-        "openDialog": "Open update dialog",
-        "checkUpdate": "Check for updates",
-        "upToDate": "Already up to date"
-    },
+    "betaVersion": "Beta v0.1",
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",

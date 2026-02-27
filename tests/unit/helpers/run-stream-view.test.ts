@@ -10,11 +10,6 @@ function buildStep(overrides: Partial<RunStepState> = {}): RunStepState {
     stepIndex: 1,
     stepTotal: 1,
     status: 'running',
-    dependsOn: [],
-    blockedBy: [],
-    groupId: null,
-    parallelKey: null,
-    retryable: true,
     textOutput: '',
     reasoningOutput: '',
     textLength: 0,
@@ -103,72 +98,5 @@ describe('run stream view', () => {
     })
 
     expect(view.outputText).toBe('【错误】\nNETWORK_ERROR')
-  })
-
-  it('keeps failed run visible until user reset', () => {
-    const state = buildRunState({
-      status: 'failed',
-      terminalAt: Date.now() - 60_000,
-      errorMessage: 'failed',
-    })
-
-    const view = deriveRunStreamView({
-      runState: state,
-      isLiveRunning: false,
-      clock: Date.now(),
-    })
-
-    expect(view.isVisible).toBe(true)
-  })
-
-  it('hides completed run console after stream settles', () => {
-    const state = buildRunState({
-      status: 'completed',
-      terminalAt: Date.now() - 30_000,
-    })
-
-    const view = deriveRunStreamView({
-      runState: state,
-      isLiveRunning: false,
-      clock: Date.now(),
-    })
-
-    expect(view.isVisible).toBe(false)
-  })
-
-  it('uses active step message instead of selected completed step message', () => {
-    const completedStep = buildStep({
-      id: 'step-1',
-      title: 'step 1',
-      status: 'completed',
-      message: 'progress.runtime.llm.completed',
-      updatedAt: Date.now() - 1000,
-    })
-    const runningStep = buildStep({
-      id: 'step-2',
-      title: 'step 2',
-      stepIndex: 2,
-      stepTotal: 2,
-      status: 'running',
-      message: 'progress.runtime.stage.llmStreaming',
-      updatedAt: Date.now(),
-    })
-    const state = buildRunState({
-      stepsById: {
-        'step-1': completedStep,
-        'step-2': runningStep,
-      },
-      stepOrder: ['step-1', 'step-2'],
-      activeStepId: 'step-2',
-      selectedStepId: 'step-1',
-    })
-
-    const view = deriveRunStreamView({
-      runState: state,
-      isLiveRunning: false,
-      clock: Date.now(),
-    })
-
-    expect(view.activeMessage).toBe('progress.runtime.stage.llmStreaming')
   })
 })

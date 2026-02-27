@@ -1,14 +1,32 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
-import { applyRunStreamEvent } from './state-machine'
-import { clearRunSnapshot, loadRunSnapshot, saveRunSnapshot } from './snapshot'
+import type {
+  RunStreamEvent,
+} from '@/lib/novel-promotion/run-stream/types'
+import { type SSEEvent } from '@/lib/task/types'
+import {
+  mapTaskSSEEventToRunEvents,
+  toObject,
+  toTerminalRunResult,
+} from './event-parser'
+import {
+  applyRunStreamEvent,
+} from './state-machine'
+import {
+  clearRunSnapshot,
+  loadRunSnapshot,
+  saveRunSnapshot,
+} from './snapshot'
+import { pollTaskTerminalState } from './task-terminal-poll'
 import { subscribeRecoveredRun } from './recovered-run-subscription'
 import { executeRunRequest } from './run-request-executor'
 import { deriveRunStreamView } from './run-stream-view'
-import type { RunResult, RunState, RunStreamView, UseRunStreamStateOptions } from './types'
-import { apiFetch } from '@/lib/api-fetch'
+import type {
+  RunResult,
+  RunState,
+  UseRunStreamStateOptions,
+} from './types'
 
 export type {
   RunResult,
@@ -17,21 +35,26 @@ export type {
   UseRunStreamStateOptions,
 } from './types'
 
+const TERMINAL_CLEANUP_MS = 15_000
 const TASK_STREAM_TIMEOUT_MS = 1000 * 60 * 30
+
+// Module-level guard: prevents repeated resolveActiveTaskId probes even if
+// React unmounts / remounts the hook (e.g. StrictMode, HMR, layout shifts).
+// Entries expire after 60 s so a genuine page navigation re-probes.
 const PROBE_COOLDOWN_MS = 60_000
 const probedScopes = new Map<string, number>()
 
-export function useRunStreamState<TParams extends Record<string, unknown>>(
-  options: UseRunStreamStateOptions<TParams>,
-): RunStreamView {
+export function useRunStreamState<TParams>(options: UseRunStreamStateOptions<TParams>) {
   const {
     projectId,
     endpoint,
     storageKeyPrefix,
     storageScopeKey,
+    eventSourceMode = 'internal',
+    acceptedTaskTypes,
     buildRequestBody,
     validateParams,
-    resolveActiveRunId,
+    resolveActiveTaskId,
   } = options
   const [runState, setRunState] = useState<RunState | null>(null)
   const runStateRef = useRef<RunState | null>(null)
@@ -41,7 +64,7 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
   const abortRef = useRef<AbortController | null>(null)
   const finalResultRef = useRef<RunResult | null>(null)
   const hydratedStorageKeyRef = useRef<string | null>(null)
-  const resolveActiveRunIdRef = useRef(resolveActiveRunId)
+  const resolveActiveTaskIdRef = useRef(resolveActiveTaskId)
   const storageKey = useMemo(() => {
     if (storageScopeKey) {
       return `${storageKeyPrefix}:${projectId}:${storageScopeKey}`
@@ -53,13 +76,62 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
     setRunState((prev) => applyRunStreamEvent(prev, event))
   }, [])
 
+  const applyAndCapture = useCallback((streamEvent: RunStreamEvent) => {
+    if (!streamEvent.runId) return
+    applyEvent(streamEvent)
+    const terminalResult = toTerminalRunResult(streamEvent)
+    if (terminalResult) {
+      finalResultRef.current = terminalResult
+    }
+  }, [applyEvent])
+
+  const ingestTaskEvent = useCallback((taskEvent: SSEEvent) => {
+    if (!taskEvent || typeof taskEvent.taskId !== 'string' || !taskEvent.taskId) return
+    if (
+      Array.isArray(acceptedTaskTypes) &&
+      acceptedTaskTypes.length > 0 &&
+      (typeof taskEvent.taskType !== 'string' || !acceptedTaskTypes.includes(taskEvent.taskType))
+    ) {
+      return
+    }
+
+    const payload = toObject(taskEvent.payload)
+    const eventEpisodeId =
+      typeof taskEvent.episodeId === 'string'
+        ? taskEvent.episodeId
+        : typeof payload.episodeId === 'string'
+          ? payload.episodeId
+          : null
+    const activeRun = runStateRef.current
+    if (storageScopeKey && !eventEpisodeId && !activeRun?.runId) return
+    if (storageScopeKey && eventEpisodeId && eventEpisodeId !== storageScopeKey) return
+
+    if (
+      activeRun &&
+      activeRun.status === 'running' &&
+      activeRun.runId &&
+      taskEvent.taskId !== activeRun.runId
+    ) {
+      return
+    }
+
+    const runEvents = mapTaskSSEEventToRunEvents(taskEvent)
+    for (const runEvent of runEvents) {
+      applyAndCapture(runEvent)
+    }
+  }, [acceptedTaskTypes, applyAndCapture, storageScopeKey])
+
   useEffect(() => {
     runStateRef.current = runState
   }, [runState])
 
   useEffect(() => {
-    resolveActiveRunIdRef.current = resolveActiveRunId
-  }, [resolveActiveRunId])
+    resolveActiveTaskIdRef.current = resolveActiveTaskId
+  }, [resolveActiveTaskId])
+
+  const pollTaskTerminalStateFn = useCallback(async (taskId: string): Promise<RunResult | null> => {
+    return await pollTaskTerminalState({ taskId, applyAndCapture })
+  }, [applyAndCapture])
 
   useEffect(() => {
     if (!projectId) return
@@ -73,29 +145,33 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
     }
   }, [projectId, storageKey])
 
+  // Probe for active task only ONCE per storageKey (module-level guard).
+  // After the initial probe, all updates come through SSE.
   useEffect(() => {
-    if (!projectId || !resolveActiveRunIdRef.current) return
+    if (!projectId || !resolveActiveTaskIdRef.current) return
 
+    // Module-level guard: skip if probed recently
     const lastProbed = probedScopes.get(storageKey)
     if (lastProbed && Date.now() - lastProbed < PROBE_COOLDOWN_MS) return
     probedScopes.set(storageKey, Date.now())
 
+    // If there's already state (e.g. from snapshot hydration), skip probe
     if (runStateRef.current) return
     const existingSnapshot = loadRunSnapshot(storageKey)
     if (existingSnapshot) return
 
     let cancelled = false
     void (async () => {
-      const activeRunId = await resolveActiveRunIdRef.current?.({
+      const activeTaskId = await resolveActiveTaskIdRef.current?.({
         projectId,
         storageScopeKey,
       }).catch(() => null)
-      if (cancelled || !activeRunId) return
+      if (cancelled || !activeTaskId) return
       const now = Date.now()
       setRunState((prev) => {
         if (prev) return prev
         return {
-          runId: activeRunId,
+          runId: activeTaskId,
           status: 'running',
           startedAt: now,
           updatedAt: now,
@@ -119,24 +195,31 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
 
   useEffect(() => {
     if (!projectId || !isRecoveredRunning || isLiveRunning) return
-    const runId = runState?.runId || ''
-    if (!runId || runState?.status !== 'running') return
+    const taskId = runState?.runId || ''
+    if (!taskId || runState?.status !== 'running') return
 
     return subscribeRecoveredRun({
-      runId,
+      projectId,
+      storageScopeKey,
+      taskId,
+      eventSourceMode,
       taskStreamTimeoutMs: TASK_STREAM_TIMEOUT_MS,
-      applyAndCapture: applyEvent,
+      applyAndCapture,
+      pollTaskTerminalState: pollTaskTerminalStateFn,
       onSettled: () => {
         setIsRecoveredRunning(false)
       },
     })
   }, [
-    applyEvent,
+    applyAndCapture,
+    eventSourceMode,
     isLiveRunning,
     isRecoveredRunning,
+    pollTaskTerminalStateFn,
     projectId,
     runState?.runId,
     runState?.status,
+    storageScopeKey,
   ])
 
   useEffect(() => {
@@ -172,11 +255,14 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
       try {
         const requestBody = buildRequestBody(params)
         return await executeRunRequest({
+          projectId,
           endpointUrl: endpoint(projectId),
           requestBody,
           controller,
+          eventSourceMode,
           taskStreamTimeoutMs: TASK_STREAM_TIMEOUT_MS,
-          applyAndCapture: applyEvent,
+          applyAndCapture,
+          pollTaskTerminalState: pollTaskTerminalStateFn,
           finalResultRef,
         })
       } finally {
@@ -187,78 +273,29 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
       }
     },
     [
-      applyEvent,
+      applyAndCapture,
       buildRequestBody,
       endpoint,
+      eventSourceMode,
+      pollTaskTerminalStateFn,
       projectId,
       validateParams,
     ],
   )
 
-  const retryStep = useCallback(async (params: {
-    stepId: string
-    modelOverride?: string
-    reason?: string
-  }): Promise<RunResult> => {
-    const runId = runStateRef.current?.runId || ''
-    if (!runId) {
-      throw new Error('runId is required')
-    }
-    const stepId = params.stepId.trim()
-    if (!stepId) {
-      throw new Error('stepId is required')
-    }
-
-    const response = await apiFetch(
-      `/api/runs/${runId}/steps/${encodeURIComponent(stepId)}/retry`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          modelOverride: params.modelOverride || undefined,
-          reason: params.reason || undefined,
-        }),
-      },
-    )
-    const payload = await response.json().catch(() => null)
-    if (!response.ok) {
-      const errorMessage =
-        payload && typeof payload === 'object' && typeof (payload as { error?: { message?: unknown } }).error?.message === 'string'
-          ? (payload as { error: { message: string } }).error.message
-          : 'retry step failed'
-      throw new Error(errorMessage)
-    }
-
-    applyEvent({
-      runId,
-      event: 'run.start',
-      ts: new Date().toISOString(),
-      status: 'running',
-      message: 'retrying failed step',
-    })
-    setIsRecoveredRunning(true)
-    return {
-      runId,
-      status: 'running',
-      summary: null,
-      payload: payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : null,
-      errorMessage: '',
-    }
-  }, [applyEvent])
-
   const stop = useCallback(() => {
-    const runningRunId = runState?.status === 'running' ? runState.runId : ''
-    if (runningRunId) {
-      void apiFetch(`/api/runs/${runningRunId}/cancel`, {
-        method: 'POST',
-      }).catch(() => null)
+    const runningTaskId = runState?.status === 'running' ? runState.runId : ''
+    if (runningTaskId) {
       applyEvent({
-        runId: runningRunId,
+        runId: runningTaskId,
         event: 'run.error',
         ts: new Date().toISOString(),
         status: 'failed',
         message: 'aborted',
       })
+      void fetch(`/api/tasks/${runningTaskId}`, {
+        method: 'DELETE',
+      }).catch(() => null)
     }
     abortRef.current?.abort()
     abortRef.current = null
@@ -277,6 +314,18 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
     const timer = window.setInterval(() => setClock(Date.now()), 500)
     return () => window.clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    if (!runState?.terminalAt) return
+    const timer = window.setTimeout(() => {
+      setRunState((prev) => {
+        if (!prev || !prev.terminalAt) return prev
+        if (Date.now() - prev.terminalAt < TERMINAL_CLEANUP_MS) return prev
+        return null
+      })
+    }, TERMINAL_CLEANUP_MS + 100)
+    return () => window.clearTimeout(timer)
+  }, [runState?.terminalAt])
 
   const view = useMemo(() => {
     return deriveRunStreamView({
@@ -313,8 +362,8 @@ export function useRunStreamState<TParams extends Record<string, unknown>>(
     outputText: view.outputText,
     overallProgress: view.overallProgress,
     activeMessage: view.activeMessage,
-    run: run as (params: Record<string, unknown>) => Promise<RunResult>,
-    retryStep,
+    ingestTaskEvent,
+    run,
     stop,
     reset,
     selectStep,

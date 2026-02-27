@@ -1,10 +1,10 @@
 'use client'
 import { logError as _ulogError } from '@/lib/logging/core'
-import { apiFetch } from '@/lib/api-fetch'
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
+import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FolderSidebar } from './components/FolderSidebar'
 import { AssetGrid } from './components/AssetGrid'
@@ -27,14 +27,10 @@ import {
 } from '@/lib/query/hooks'
 import { queryKeys } from '@/lib/query/keys'
 import { AppIcon } from '@/components/ui/icons'
-import { Link } from '@/i18n/navigation'
-import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
 
 export default function AssetHubPage() {
     const t = useTranslations('assetHub')
     const queryClient = useQueryClient()
-    const { count: characterGenerationCount } = useImageGenerationCount('character')
-    const { count: locationGenerationCount } = useImageGenerationCount('location')
 
     // 文件夹选择状态
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
@@ -83,7 +79,6 @@ export default function AssetHubPage() {
         appearanceId: string
         appearanceIndex: number
         changeReason: string
-        artStyle: string | null
         description: string
     } | null>(null)
 
@@ -93,14 +88,13 @@ export default function AssetHubPage() {
         locationName: string
         summary: string
         imageIndex: number
-        artStyle: string | null
         description: string
     } | null>(null)
 
     // 创建文件夹
     const handleCreateFolder = async (name: string) => {
         try {
-            const res = await apiFetch('/api/asset-hub/folders', {
+            const res = await fetch('/api/asset-hub/folders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
@@ -117,7 +111,7 @@ export default function AssetHubPage() {
     // 更新文件夹
     const handleUpdateFolder = async (folderId: string, name: string) => {
         try {
-            const res = await apiFetch(`/api/asset-hub/folders/${folderId}`, {
+            const res = await fetch(`/api/asset-hub/folders/${folderId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
@@ -137,7 +131,7 @@ export default function AssetHubPage() {
         if (!confirm(t('confirmDeleteFolder'))) return
 
         try {
-            const res = await apiFetch(`/api/asset-hub/folders/${folderId}`, {
+            const res = await fetch(`/api/asset-hub/folders/${folderId}`, {
                 method: 'DELETE'
             })
             if (res.ok) {
@@ -204,7 +198,7 @@ export default function AssetHubPage() {
         if (!voiceDesignCharacter) return
 
         try {
-            const res = await apiFetch('/api/asset-hub/character-voice', {
+            const res = await fetch('/api/asset-hub/character-voice', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -241,7 +235,6 @@ export default function AssetHubPage() {
             appearanceId: typedAppearance.id,
             appearanceIndex: typedAppearance.appearanceIndex,
             changeReason: typedAppearance.changeReason || t('appearanceLabel', { index: typedAppearance.appearanceIndex }),
-            artStyle: typedAppearance.artStyle || null,
             description: typedAppearance.description || ''
         })
     }
@@ -252,7 +245,6 @@ export default function AssetHubPage() {
             id: string
             name: string
             summary: string | null
-            artStyle: string | null
             images: Array<{ imageIndex: number; description: string | null }>
         }
         const image = typedLocation.images.find(img => img.imageIndex === imageIndex)
@@ -261,7 +253,6 @@ export default function AssetHubPage() {
             locationName: typedLocation.name,
             summary: typedLocation.summary || '',
             imageIndex: imageIndex,
-            artStyle: typedLocation.artStyle || null,
             description: image?.description || typedLocation.summary || ''
         })
     }
@@ -271,15 +262,13 @@ export default function AssetHubPage() {
         if (!characterEditModal) return
 
         try {
-            await apiFetch('/api/asset-hub/generate-image', {
+            await fetch('/api/asset-hub/generate-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'character',
                     id: characterEditModal.characterId,
-                    appearanceIndex: characterEditModal.appearanceIndex,
-                    artStyle: characterEditModal.artStyle || undefined,
-                    count: characterGenerationCount,
+                    appearanceIndex: characterEditModal.appearanceIndex
                 })
             })
             queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.characters() })
@@ -293,14 +282,12 @@ export default function AssetHubPage() {
         if (!locationEditModal) return
 
         try {
-            await apiFetch('/api/asset-hub/generate-image', {
+            await fetch('/api/asset-hub/generate-image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'location',
-                    id: locationEditModal.locationId,
-                    artStyle: locationEditModal.artStyle || undefined,
-                    count: locationGenerationCount,
+                    id: locationEditModal.locationId
                 })
             })
             queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.locations() })
@@ -314,7 +301,7 @@ export default function AssetHubPage() {
         if (!voicePickerCharacterId) return
 
         try {
-            const res = await apiFetch(`/api/asset-hub/characters/${voicePickerCharacterId}`, {
+            const res = await fetch(`/api/asset-hub/characters/${voicePickerCharacterId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -351,7 +338,7 @@ export default function AssetHubPage() {
                     <p className="text-xs text-[var(--glass-text-tertiary)] mt-2 flex items-center gap-1">
                         <AppIcon name="info" className="w-3.5 h-3.5" />
                         {t('modelHint')}
-                        <Link href={{ pathname: '/profile' }} className="text-[var(--glass-tone-info-fg)] hover:underline">{t('modelHintLink')}</Link>
+                        <Link href="/profile" className="text-[var(--glass-tone-info-fg)] hover:underline">{t('modelHintLink')}</Link>
                         {t('modelHintSuffix')}
                     </p>
                 </div>

@@ -57,27 +57,4 @@ describe('task error message normalization', () => {
     expect(summary.cancelled).toBe(true)
     expect(summary.message).toBe('Task cancelled by user')
   })
-
-  it('prefers user-friendly message for MODEL_NOT_OPEN', () => {
-    const summary = resolveTaskErrorSummary({
-      error: {
-        code: 'MODEL_NOT_OPEN',
-        message: 'raw provider message should not be shown',
-      },
-    })
-    expect(summary.code).toBe('MODEL_NOT_OPEN')
-    expect(summary.message).toContain('模型权限未开通')
-    expect(summary.message).toContain('https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&advancedActiveKey=model')
-  })
-
-  it('prefers user-friendly message for EMPTY_RESPONSE', () => {
-    const summary = resolveTaskErrorSummary({
-      error: {
-        code: 'EMPTY_RESPONSE',
-        message: 'raw provider empty response',
-      },
-    })
-    expect(summary.code).toBe('EMPTY_RESPONSE')
-    expect(summary.message).toContain('模型返回空响应')
-  })
 })

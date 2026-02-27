@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
-import { apiFetch } from '@/lib/api-fetch'
 
 export type TaskItem = {
   id: string
@@ -88,7 +87,7 @@ export function useTaskList(params: {
         statuses: (params.statuses || SNAPSHOT_STATUS),
         limit: params.limit,
       })
-      const res = await apiFetch(`/api/tasks?${search}`)
+      const res = await fetch(`/api/tasks?${search}`)
       if (!res.ok) throw new Error('Failed to fetch tasks')
       const data = await res.json()
       return (data.tasks || []) as TaskItem[]
@@ -121,7 +120,7 @@ export function useActiveTasks(params: {
         type: params.type,
         statuses: ACTIVE_STATUS,
       })
-      const res = await apiFetch(`/api/tasks?${search}`)
+      const res = await fetch(`/api/tasks?${search}`)
       if (!res.ok) throw new Error('Failed to fetch active tasks')
       const data = await res.json()
       return (data.tasks || []) as TaskItem[]
@@ -152,7 +151,7 @@ export function useTaskSnapshot(params: {
         statuses: SNAPSHOT_STATUS,
         limit: 1,
       })
-      const res = await apiFetch(`/api/tasks?${search}`)
+      const res = await fetch(`/api/tasks?${search}`)
       if (!res.ok) throw new Error('Failed to fetch task snapshot')
       const data = await res.json()
       const tasks = (data.tasks || []) as TaskItem[]

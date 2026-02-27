@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSignedUrl, toFetchableUrl } from '@/lib/storage'
+import { getSignedUrl, toFetchableUrl } from '@/lib/cos'
 import { getMediaObjectByPublicId } from '@/lib/media/service'
 
 export const runtime = 'nodejs'

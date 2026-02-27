@@ -1,6 +1,8 @@
 import { getStageOutput, toStageViewStatus } from './state-machine'
 import type { RunStageView, RunState, RunStepState } from './types'
 
+const TERMINAL_VISIBLE_MS = 5_000
+
 export type DerivedRunStreamView = {
   orderedSteps: RunStepState[]
   activeStepId: string | null
@@ -25,10 +27,6 @@ export function deriveRunStreamView(args: {
     : []
 
   const activeStepId = runState?.activeStepId || orderedSteps[orderedSteps.length - 1]?.id || null
-  const activeStep =
-    activeStepId && runState?.stepsById[activeStepId]
-      ? runState.stepsById[activeStepId]
-      : orderedSteps[orderedSteps.length - 1] || null
   const selectedStepId = runState?.selectedStepId || activeStepId
   const selectedStep =
     selectedStepId && runState?.stepsById[selectedStepId]
@@ -47,29 +45,11 @@ export function deriveRunStreamView(args: {
   const stages: RunStageView[] = orderedSteps.map((step) => ({
     id: step.id,
     title: step.title,
-    subtitle: (() => {
-      const relationText =
-        step.status === 'blocked' && step.blockedBy.length > 0
-          ? `等待: ${step.blockedBy.join(', ')}`
-          : step.dependsOn.length > 0
-            ? `依赖: ${step.dependsOn.join(', ')}`
-            : ''
-      const parallelText = step.groupId && step.parallelKey
-        ? `并行组: ${step.groupId}/${step.parallelKey}`
-        : ''
-      const parts = [relationText, parallelText, step.message || ''].filter(Boolean)
-      return parts.length > 0 ? parts.join(' | ') : undefined
-    })(),
+    subtitle: step.message || undefined,
     status: toStageViewStatus(step.status),
-    attempt: step.attempt,
-    retryable: step.retryable,
     progress:
       step.status === 'completed'
         ? 100
-        : step.status === 'stale'
-          ? 100
-          : step.status === 'blocked'
-            ? 0
         : step.status === 'running'
           ? Math.max(2, Math.min(99, step.textLength > 0 || step.reasoningLength > 0 ? 15 : 2))
           : 0,
@@ -80,36 +60,29 @@ export function deriveRunStreamView(args: {
       ? 0
       : stages.reduce((sum, stage) => {
           if (stage.status === 'completed') return sum + 100
-          if (stage.status === 'stale') return sum + 100
-          if (stage.status === 'blocked') return sum
           if (stage.status === 'failed') return sum
           return sum + (stage.progress || 0)
         }, 0) / stages.length
 
-  const activeMessage = !activeStep
+  const activeMessage = !selectedStep
     ? runState?.status === 'failed'
       ? runState.errorMessage
       : 'progress.runtime.waitingExecution'
-    : activeStep.errorMessage
-      ? activeStep.errorMessage
-      : activeStep.status === 'completed'
+    : selectedStep.errorMessage
+      ? selectedStep.errorMessage
+      : selectedStep.status === 'completed'
         ? 'progress.runtime.llm.completed'
-        : activeStep.status === 'failed'
+        : selectedStep.status === 'failed'
           ? 'progress.runtime.llm.failed'
-          : activeStep.status === 'blocked'
-            ? activeStep.blockedBy.length > 0
-              ? `等待依赖步骤: ${activeStep.blockedBy.join(', ')}`
-              : 'progress.runtime.waitingExecution'
-            : activeStep.status === 'stale'
-              ? '结果已过期，请按需重试'
-          : activeStep.message || 'progress.runtime.llm.processing'
+          : selectedStep.message || 'progress.runtime.llm.processing'
 
-  void clock
-  const isVisible = !!runState && (
-    isLiveRunning ||
-    runState.status === 'running' ||
-    runState.status === 'failed'
-  )
+  const isVisible =
+    !!runState &&
+    (
+      isLiveRunning ||
+      runState.status === 'running' ||
+      (runState.terminalAt !== null && clock - runState.terminalAt <= TERMINAL_VISIBLE_MS)
+    )
 
   return {
     orderedSteps,

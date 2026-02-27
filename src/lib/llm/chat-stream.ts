@@ -1,12 +1,7 @@
 import OpenAI from 'openai'
-import { generateText, streamText, type ModelMessage } from 'ai'
+import { streamText } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { GoogleGenAI } from '@google/genai'
-import {
-  resolveModelGatewayRoute,
-  runOpenAICompatChatCompletion,
-  runOpenAICompatResponsesCompletion,
-} from '@/lib/model-gateway'
 import {
   getProviderConfig,
   getProviderKey,
@@ -36,11 +31,6 @@ import {
 } from './runtime-shared'
 import { getCompletionParts } from './completion-parts'
 import { withStreamChunkTimeout } from './stream-timeout'
-import { shouldUseOpenAIReasoningProviderOptions } from './reasoning-capability'
-import { completeBailianLlm } from '@/lib/providers/bailian'
-import { completeSiliconFlowLlm } from '@/lib/providers/siliconflow'
-
-const OFFICIAL_ONLY_PROVIDER_KEYS = new Set(['bailian', 'siliconflow'])
 
 type GoogleModelClient = {
   generateContentStream?: (params: unknown) => Promise<unknown>
@@ -59,7 +49,9 @@ type OpenAIStreamWithFinal = AsyncIterable<unknown> & {
   finalChatCompletion?: () => Promise<OpenAI.Chat.Completions.ChatCompletion>
 }
 
-
+function supportsArkReasoningEffort(modelId: string): boolean {
+  return modelId === 'doubao-seed-1-8-251228' || modelId.startsWith('doubao-seed-2-0-')
+}
 
 export async function chatCompletionStream(
   userId: string,
@@ -80,10 +72,6 @@ export async function chatCompletionStream(
   const resolvedModelId = selection.modelId
   const provider = selection.provider
   const providerKey = getProviderKey(provider).toLowerCase()
-  const providerConfig = await getProviderConfig(userId, provider)
-  const gatewayRoute = OFFICIAL_ONLY_PROVIDER_KEYS.has(providerKey)
-    ? 'official'
-    : (providerConfig.gatewayRoute || resolveModelGatewayRoute(provider))
   const temperature = options.temperature ?? 0.7
   const reasoning = options.reasoning ?? true
   const reasoningEffort = options.reasoningEffort || 'high'
@@ -106,75 +94,12 @@ export async function chatCompletionStream(
   })
 
   try {
-    if (gatewayRoute === 'openai-compat') {
-      // openai-compatible protocol probing only applies to openai-compatible + llm.
-      // gemini-compatible is explicitly excluded and must not enter this branch.
-      if (providerKey !== 'openai-compatible') {
-        throw new Error(`OPENAI_COMPAT_PROVIDER_UNSUPPORTED: ${provider}`)
-      }
-      if (!selection.llmProtocol) {
-        throw new Error(`MODEL_LLM_PROTOCOL_REQUIRED: ${selection.modelKey}`)
-      }
-      const compatEngine = selection.llmProtocol === 'responses'
-        ? 'openai_compat_responses'
-        : 'openai_compat_chat_completions'
-      emitStreamStage(callbacks, streamStep, 'streaming', 'openai-compat')
-      const completion = selection.llmProtocol === 'responses'
-        ? await runOpenAICompatResponsesCompletion({
-          userId,
-          providerId: provider,
-          modelId: resolvedModelId,
-          messages,
-          temperature,
-        })
-        : await runOpenAICompatChatCompletion({
-          userId,
-          providerId: provider,
-          modelId: resolvedModelId,
-          messages,
-          temperature,
-        })
-      const completionParts = getCompletionParts(completion)
-      let seq = 1
-      if (completionParts.reasoning) {
-        emitStreamChunk(callbacks, streamStep, {
-          kind: 'reasoning',
-          delta: completionParts.reasoning,
-          seq,
-          lane: 'reasoning',
-        })
-        seq += 1
-      }
-      if (completionParts.text) {
-        emitStreamChunk(callbacks, streamStep, {
-          kind: 'text',
-          delta: completionParts.text,
-          seq,
-          lane: 'main',
-        })
-      }
-      logLlmRawOutput({
-        userId,
-        projectId,
-        provider: compatEngine,
-        modelId: resolvedModelId,
-        modelKey: selection.modelKey,
-        stream: true,
-        action: options.action,
-        text: completionParts.text,
-        reasoning: completionParts.reasoning,
-        usage: completionUsageSummary(completion),
-      })
-      recordCompletionUsage(resolvedModelId, completion)
-      emitStreamStage(callbacks, streamStep, 'completed', compatEngine)
-      callbacks?.onComplete?.(completionParts.text, streamStep)
-      return completion
-    }
-
     if (providerKey === 'google' || providerKey === 'gemini-compatible') {
-      const googleAiOptions = providerConfig.baseUrl
-        ? { apiKey: providerConfig.apiKey, httpOptions: { baseUrl: providerConfig.baseUrl } }
-        : { apiKey: providerConfig.apiKey }
+      const config = await getProviderConfig(userId, provider)
+      // gemini-compatible 可能有自定义 baseUrl（指向第三方兼容服务）
+      const googleAiOptions = config.baseUrl
+        ? { apiKey: config.apiKey, httpOptions: { baseUrl: config.baseUrl } }
+        : { apiKey: config.apiKey }
       const ai = new GoogleGenAI(googleAiOptions)
       const modelClient = (ai as unknown as { models?: GoogleModelClient }).models
       if (!modelClient || typeof modelClient.generateContentStream !== 'function') {
@@ -279,129 +204,52 @@ export async function chatCompletionStream(
       return completion
     }
 
-    if (providerKey === 'bailian') {
-      emitStreamStage(callbacks, streamStep, 'streaming', providerKey)
-      const completion = await completeBailianLlm({
-        modelId: resolvedModelId,
-        messages,
-        apiKey: providerConfig.apiKey,
-        baseUrl: providerConfig.baseUrl,
-        temperature: options.temperature ?? 0.7,
-      })
-      const completionParts = getCompletionParts(completion)
-      let seq = 1
-      if (completionParts.reasoning) {
-        emitStreamChunk(callbacks, streamStep, {
-          kind: 'reasoning',
-          delta: completionParts.reasoning,
-          seq,
-          lane: 'reasoning',
-        })
-        seq += 1
-      }
-      if (completionParts.text) {
-        emitStreamChunk(callbacks, streamStep, {
-          kind: 'text',
-          delta: completionParts.text,
-          seq,
-          lane: 'main',
-        })
-      }
-      logLlmRawOutput({
-        userId,
-        projectId,
-        provider: providerKey,
-        modelId: resolvedModelId,
-        modelKey: selection.modelKey,
-        stream: true,
-        action: options.action,
-        text: completionParts.text,
-        reasoning: completionParts.reasoning,
-        usage: completionUsageSummary(completion),
-      })
-      recordCompletionUsage(resolvedModelId, completion)
-      emitStreamStage(callbacks, streamStep, 'completed', providerKey)
-      callbacks?.onComplete?.(completionParts.text, streamStep)
-      return completion
-    }
-
-    if (providerKey === 'siliconflow') {
-      emitStreamStage(callbacks, streamStep, 'streaming', providerKey)
-      const completion = await completeSiliconFlowLlm({
-        modelId: resolvedModelId,
-        messages,
-        apiKey: providerConfig.apiKey,
-        baseUrl: providerConfig.baseUrl,
-        temperature: options.temperature ?? 0.7,
-      })
-      const completionParts = getCompletionParts(completion)
-      let seq = 1
-      if (completionParts.reasoning) {
-        emitStreamChunk(callbacks, streamStep, {
-          kind: 'reasoning',
-          delta: completionParts.reasoning,
-          seq,
-          lane: 'reasoning',
-        })
-        seq += 1
-      }
-      if (completionParts.text) {
-        emitStreamChunk(callbacks, streamStep, {
-          kind: 'text',
-          delta: completionParts.text,
-          seq,
-          lane: 'main',
-        })
-      }
-      logLlmRawOutput({
-        userId,
-        projectId,
-        provider: providerKey,
-        modelId: resolvedModelId,
-        modelKey: selection.modelKey,
-        stream: true,
-        action: options.action,
-        text: completionParts.text,
-        reasoning: completionParts.reasoning,
-        usage: completionUsageSummary(completion),
-      })
-      recordCompletionUsage(resolvedModelId, completion)
-      emitStreamStage(callbacks, streamStep, 'completed', providerKey)
-      callbacks?.onComplete?.(completionParts.text, streamStep)
-      return completion
-    }
-
 
     if (providerKey === 'ark') {
-      const { arkResponsesStream, convertChatMessagesToArkInput, buildArkThinkingParam } = await import('@/lib/ark-llm')
-      const useReasoning = options.reasoning ?? true
-      const arkThinkingParams = buildArkThinkingParam(resolvedModelId, useReasoning)
-
-      const { stream: arkStream, result: getResult } = arkResponsesStream({
-        apiKey: providerConfig.apiKey,
-        model: resolvedModelId,
-        input: convertChatMessagesToArkInput(messages),
-        temperature: options.temperature ?? 0.7,
-        thinking: arkThinkingParams.thinking,
+      const { apiKey } = await getProviderConfig(userId, provider)
+      const client = new OpenAI({
+        baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+        apiKey,
       })
+      const useReasoning = options.reasoning ?? true
+      const extraParams: Record<string, unknown> = {}
+      if (supportsArkReasoningEffort(resolvedModelId)) {
+        extraParams.reasoning_effort = useReasoning ? (options.reasoningEffort || 'high') : 'minimal'
+      } else {
+        extraParams.thinking = { type: useReasoning ? 'enabled' : 'disabled' }
+      }
 
       emitStreamStage(callbacks, streamStep, 'streaming', provider)
+      const stream = await client.chat.completions.create({
+        model: resolvedModelId,
+        messages,
+        temperature: options.temperature ?? 0.7,
+        max_completion_tokens: 65535,
+        stream: true,
+        ...extraParams,
+      } as unknown as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming)
+
+      let text = ''
+      let reasoning = ''
       let seq = 1
-      for await (const chunk of withStreamChunkTimeout(arkStream as AsyncIterable<unknown>)) {
-        const arkChunk = chunk as { kind: 'reasoning' | 'text'; delta: string }
-        if (arkChunk.kind === 'reasoning' && arkChunk.delta) {
+      let finalCompletion: OpenAI.Chat.Completions.ChatCompletion | null = null
+      for await (const part of withStreamChunkTimeout(stream as AsyncIterable<unknown>)) {
+        const { textDelta, reasoningDelta } = extractStreamDeltaParts(part)
+        if (reasoningDelta) {
+          reasoning += reasoningDelta
           emitStreamChunk(callbacks, streamStep, {
             kind: 'reasoning',
-            delta: arkChunk.delta,
+            delta: reasoningDelta,
             seq,
             lane: 'reasoning',
           })
           seq += 1
         }
-        if (arkChunk.kind === 'text' && arkChunk.delta) {
+        if (textDelta) {
+          text += textDelta
           emitStreamChunk(callbacks, streamStep, {
             kind: 'text',
-            delta: arkChunk.delta,
+            delta: textDelta,
             seq,
             lane: 'main',
           })
@@ -409,11 +257,55 @@ export async function chatCompletionStream(
         }
       }
 
-      const arkResult = await getResult()
+      const finalChatCompletionFn = (stream as OpenAIStreamWithFinal)?.finalChatCompletion
+      if (typeof finalChatCompletionFn === 'function') {
+        try {
+          finalCompletion = await finalChatCompletionFn.call(stream)
+          const finalParts = getCompletionParts(finalCompletion)
+          if (finalParts.reasoning && finalParts.reasoning !== reasoning) {
+            const reasoningDelta = finalParts.reasoning.startsWith(reasoning)
+              ? finalParts.reasoning.slice(reasoning.length)
+              : finalParts.reasoning
+            if (reasoningDelta) {
+              emitStreamChunk(callbacks, streamStep, {
+                kind: 'reasoning',
+                delta: reasoningDelta,
+                seq,
+                lane: 'reasoning',
+              })
+              seq += 1
+            }
+            reasoning = finalParts.reasoning
+          }
+          if (finalParts.text && finalParts.text !== text) {
+            const textDelta = finalParts.text.startsWith(text)
+              ? finalParts.text.slice(text.length)
+              : finalParts.text
+            if (textDelta) {
+              emitStreamChunk(callbacks, streamStep, {
+                kind: 'text',
+                delta: textDelta,
+                seq,
+                lane: 'main',
+              })
+              seq += 1
+            }
+            text = finalParts.text
+          }
+        } catch {
+          // Ignore final aggregation errors and keep streamed content.
+        }
+      }
+
       const completion = buildOpenAIChatCompletion(
         resolvedModelId,
-        buildReasoningAwareContent(arkResult.text, arkResult.reasoning),
-        arkResult.usage,
+        buildReasoningAwareContent(text, reasoning),
+        finalCompletion
+          ? {
+            promptTokens: Number(finalCompletion.usage?.prompt_tokens ?? 0),
+            completionTokens: Number(finalCompletion.usage?.completion_tokens ?? 0),
+          }
+          : undefined,
       )
       logLlmRawOutput({
         userId,
@@ -423,37 +315,40 @@ export async function chatCompletionStream(
         modelKey: selection.modelKey,
         stream: true,
         action: options.action,
-        text: arkResult.text,
-        reasoning: arkResult.reasoning,
-        usage: arkResult.usage,
+        text,
+        reasoning,
+        usage: completionUsageSummary(finalCompletion),
       })
       recordCompletionUsage(resolvedModelId, completion)
       emitStreamStage(callbacks, streamStep, 'completed', provider)
-      callbacks?.onComplete?.(arkResult.text, streamStep)
+      callbacks?.onComplete?.(text, streamStep)
       return completion
     }
 
     if (providerKey !== 'ark') {
-      if (!providerConfig.baseUrl) {
+      const config = await getProviderConfig(userId, provider)
+      if (!config.baseUrl) {
         throw new Error(`PROVIDER_BASE_URL_MISSING: ${provider} (llm)`)
       }
 
-      const isOpenRouter = !!providerConfig.baseUrl?.includes('openrouter')
+      const isOpenRouter = !!config.baseUrl?.includes('openrouter')
       const providerName = isOpenRouter ? 'openrouter' : provider
       const shouldUseAiSdk = !isOpenRouter
       if (shouldUseAiSdk) {
         const aiOpenAI = createOpenAI({
-          baseURL: providerConfig.baseUrl,
-          apiKey: providerConfig.apiKey,
+          baseURL: config.baseUrl,
+          apiKey: config.apiKey,
           name: providerName,
         })
         // 只有确定是支持 OpenAI 推理参数的提供商（如 OpenAI 官方、deepseek-r1 等）才传 reasoning provider options
         // gemini-compatible / 其他 OAI-compat 提供商不支持 forceReasoning/reasoningEffort，会导致空响应
-        const isNativeOpenAIReasoning = shouldUseOpenAIReasoningProviderOptions({
-          providerKey,
-          providerApiMode: providerConfig.apiMode,
-          modelId: resolvedModelId,
-        })
+        const isNativeOpenAIReasoning =
+          providerName === 'openai' ||
+          providerName.startsWith('openai-') ||
+          resolvedModelId.startsWith('o1') ||
+          resolvedModelId.startsWith('o3') ||
+          resolvedModelId.includes('deepseek-r') ||
+          resolvedModelId.includes('deepseek-reasoner')
         const aiSdkProviderOptions = (options.reasoning ?? true) && isNativeOpenAIReasoning
           ? {
             openai: {
@@ -595,74 +490,7 @@ export async function chatCompletionStream(
           }
         } catch { }
 
-        let usage = await Promise.resolve(aiStreamResult.usage).catch(() => null)
-
-        // 显式回退：仅当“强制推理参数”模式返回空文本时，重试一次无推理 provider options 请求。
-        if (!finalText && aiSdkProviderOptions) {
-          llmLogger.warn({
-            audit: false,
-            action: 'llm.stream.reasoning_fallback',
-            message: '[LLM] empty stream with reasoning options, retrying once without provider reasoning options',
-            userId,
-            projectId,
-            provider: providerName,
-            details: {
-              model: { id: resolvedModelId, key: selection.modelKey },
-              action: options.action ?? null,
-              finishReason: sdkFinishReason ?? streamFinishReason ?? 'unknown',
-            },
-          })
-
-          try {
-            const fallbackResult = await generateText({
-              model: aiOpenAI.chat(resolvedModelId),
-              system: getSystemPrompt(messages),
-              messages: getConversationMessages(messages) as ModelMessage[],
-              temperature: options.temperature ?? 0.7,
-              maxRetries: options.maxRetries ?? 2,
-            })
-            const fallbackReasoning = fallbackResult.reasoningText || ''
-            const fallbackText = fallbackResult.text || ''
-            const fallbackUsage = fallbackResult.usage || fallbackResult.totalUsage
-
-            if (fallbackReasoning) {
-              emitStreamChunk(callbacks, streamStep, {
-                kind: 'reasoning',
-                delta: fallbackReasoning,
-                seq,
-                lane: 'reasoning',
-              })
-              seq += 1
-            }
-            if (fallbackText) {
-              emitStreamChunk(callbacks, streamStep, {
-                kind: 'text',
-                delta: fallbackText,
-                seq,
-                lane: 'main',
-              })
-              seq += 1
-            }
-
-            if (fallbackReasoning) finalReasoning = fallbackReasoning
-            if (fallbackText) finalText = fallbackText
-            if (fallbackUsage) usage = fallbackUsage
-          } catch (fallbackError) {
-            llmLogger.warn({
-              audit: false,
-              action: 'llm.stream.reasoning_fallback_failed',
-              message: '[LLM] fallback without reasoning options failed',
-              userId,
-              projectId,
-              provider: providerName,
-              details: {
-                model: { id: resolvedModelId, key: selection.modelKey },
-                action: options.action ?? null,
-                error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
-              },
-            })
-          }
-        }
+        const usage = await Promise.resolve(aiStreamResult.usage).catch(() => null)
 
         // 空响应诊断日志：当文本为空时记录详细信息并抛出可重试错误
         if (!finalText) {
@@ -743,8 +571,8 @@ export async function chatCompletionStream(
       }
 
       const client = new OpenAI({
-        baseURL: providerConfig.baseUrl,
-        apiKey: providerConfig.apiKey,
+        baseURL: config.baseUrl,
+        apiKey: config.apiKey,
       })
 
       const extraParams: Record<string, unknown> = {}

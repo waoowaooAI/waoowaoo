@@ -9,7 +9,6 @@ import type { ProviderCardProps } from './provider-card/types'
 
 export function ProviderCard({
   provider,
-  dragHandle,
   models,
   allModels,
   defaultModels,
@@ -19,11 +18,7 @@ export function ProviderCard({
   onDeleteModel,
   onUpdateModel,
   onDeleteProvider,
-  onToggleProviderHidden,
   onAddModel,
-  onFlushConfig,
-  hideProviderLabel,
-  showProviderLabel,
 }: ProviderCardProps) {
   const t = useTranslations('apiConfig')
 
@@ -36,21 +31,11 @@ export function ProviderCard({
     onUpdateBaseUrl,
     onUpdateModel,
     onAddModel,
-    onFlushConfig,
     t,
   })
 
   return (
-    <ProviderCardShell
-      provider={provider}
-      dragHandle={dragHandle}
-      onDeleteProvider={onDeleteProvider}
-      onToggleProviderHidden={onToggleProviderHidden}
-      hideProviderLabel={hideProviderLabel}
-      showProviderLabel={showProviderLabel}
-      t={t}
-      state={state}
-    >
+    <ProviderCardShell provider={provider} onDeleteProvider={onDeleteProvider} t={t} state={state}>
       <ProviderBaseFields provider={provider} t={t} state={state} />
       <ProviderAdvancedFields
         provider={provider}

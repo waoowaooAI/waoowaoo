@@ -44,6 +44,16 @@ const mustIncludeRules: Rule[] = [
     message: 'outbound-image.ts must fail explicitly when all references fail to normalize',
   },
   {
+    file: 'src/lib/cos.ts',
+    pattern: /import\s+\{\s*normalizeToBase64ForGeneration\s*\}\s+from\s+'@\/lib\/media\/outbound-image'/,
+    message: 'cos.ts must import normalizeToBase64ForGeneration',
+  },
+  {
+    file: 'src/lib/cos.ts',
+    pattern: /return\s+await\s+normalizeToBase64ForGeneration\(keyOrUrl\)/,
+    message: 'imageUrlToBase64 must delegate to normalizeToBase64ForGeneration',
+  },
+  {
     file: 'src/lib/workers/handlers/image-task-handlers-core.ts',
     pattern: /normalizeToBase64ForGeneration\(currentUrl\)/,
     message: 'image-task-handlers-core.ts must convert currentUrl to base64 before outbound',
@@ -115,11 +125,6 @@ const mustNotIncludeRules: Rule[] = [
     file: 'src/lib/media/outbound-image.ts',
     pattern: /return\s+await\s+toFetchableAbsoluteUrl\(mediaPath\)/,
     message: 'outbound-image.ts must not silently fallback when /m route cannot resolve storage key',
-  },
-  {
-    file: 'src/lib/media/outbound-image.ts',
-    pattern: /export\s+async\s+function\s+imageUrlToBase64\s*\(/,
-    message: 'outbound-image.ts must not keep legacy imageUrlToBase64 alias after phase 2 migration',
   },
   {
     file: 'src/lib/media/outbound-image.ts',

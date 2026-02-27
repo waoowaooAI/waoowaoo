@@ -14,15 +14,6 @@ import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import TaskStatusOverlay from '@/components/task/TaskStatusOverlay'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
-import ImageGenerationInlineCountButton from '@/components/image-generation/ImageGenerationInlineCountButton'
-import ImageGenerationSlotOverlay from '@/components/image-generation/ImageGenerationSlotOverlay'
-import { getImageGenerationCountOptions } from '@/lib/image-generation/count'
-import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
-import {
-  countGeneratedImageSlots,
-  resolveGroupedImageSlotPhase,
-  resolveDisplayImageSlots,
-} from '@/lib/image-generation/slot-state'
 import { AppIcon } from '@/components/ui/icons'
 
 interface LocationImage {
@@ -33,7 +24,6 @@ interface LocationImage {
   previousImageUrl: string | null
   isSelected: boolean
   imageTaskRunning: boolean
-  imageErrorMessage?: string | null
   lastError?: { code: string; message: string } | null
 }
 
@@ -41,7 +31,6 @@ interface Location {
   id: string
   name: string
   summary: string | null
-  artStyle?: string | null
   folderId: string | null
   images: LocationImage[]
 }
@@ -63,17 +52,15 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
 
   const t = useTranslations('assetHub')
   const tAssets = useTranslations('assets')
-  const { count: generationCount, setCount: setGenerationCount } = useImageGenerationCount('location')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const latestSelectRequestRef = useRef(0)
 
   // 解析图片
-  const orderedImages = [...(location.images || [])].sort((left, right) => left.imageIndex - right.imageIndex)
-  const imagesWithUrl = orderedImages.filter((img) => img.imageUrl)
-  const generatedImageCount = countGeneratedImageSlots(orderedImages)
-  const selectedImage = orderedImages.find((img) => img.isSelected)
+  const imagesWithUrl = location.images?.filter(img => img.imageUrl) || []
+  const hasMultipleImages = imagesWithUrl.length > 1
+  const selectedImage = location.images?.find(img => img.isSelected)
   const serverSelectedIndex = selectedImage?.imageIndex ?? null
   const effectiveSelectedIndex = serverSelectedIndex
   const currentImageUrl = selectedImage?.imageUrl || imagesWithUrl[0]?.imageUrl || null
@@ -90,12 +77,6 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
   const serverTaskRunning = (location.images || []).some((image) => image.imageTaskRunning)
   const transientSubmitting = generateImage.isPending
   const isTaskRunning = serverTaskRunning || transientSubmitting
-  const displaySelectionImages = resolveDisplayImageSlots(orderedImages, {
-    hasRunningTask: isTaskRunning,
-    requestedCount: generationCount,
-  })
-  const displaySlotCount = displaySelectionImages.length
-  const hasMultipleImages = generatedImageCount > 1
   const displayTaskPresentation = isTaskRunning
     ? resolveTaskPresentationState({
       phase: 'processing',
@@ -119,12 +100,8 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
     : null
 
   // 生成图片
-  const handleGenerate = (count = generationCount) => {
-    generateImage.mutate({
-      locationId: location.id,
-      artStyle: location.artStyle || undefined,
-      count,
-    }, {
+  const handleGenerate = () => {
+    generateImage.mutate(location.id, {
       onError: (error) => alert(error.message || t('generateFailed'))
     })
   }
@@ -197,15 +174,9 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
   }
 
   // 多图选择模式
-  if (displaySlotCount > 1) {
-    const selectionStatusText = isTaskRunning || generatedImageCount < displaySlotCount
-      ? tAssets('image.generatedProgress', { generated: generatedImageCount, total: displaySlotCount })
-      : effectiveSelectedIndex !== null
-        ? tAssets('image.optionSelected', { number: effectiveSelectedIndex + 1 })
-        : tAssets('image.selectFirst')
-
+  if (hasMultipleImages) {
     return (
-      <div className="col-span-3 glass-surface p-4 relative">
+      <div className="col-span-3 glass-surface p-4">
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
 
         {/* 顶部：名字 + 操作 */}
@@ -219,25 +190,18 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
                 {location.summary}
               </div>
             )}
-          <div className="text-xs text-[var(--glass-text-tertiary)]">{selectionStatusText}</div>
-        </div>
+            <div className="text-xs text-[var(--glass-text-tertiary)]">
+              {effectiveSelectedIndex !== null ? tAssets('image.optionNumber', { number: effectiveSelectedIndex + 1 }) : tAssets('image.selectFirst')}
+            </div>
+          </div>
           <div className="flex items-center gap-1 ml-2">
-            <ImageGenerationInlineCountButton
-              prefix={isTaskRunning ? (
+            <button onClick={handleGenerate} disabled={isTaskRunning} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md" title={t('regenerate')}>
+              {isTaskRunning ? (
                 <TaskStatusInline state={displayTaskPresentation} className="[&_span]:sr-only [&_svg]:text-[var(--glass-tone-info-fg)]" />
               ) : (
                 <AppIcon name="refresh" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
               )}
-              suffix={null}
-              value={generationCount}
-              options={getImageGenerationCountOptions('location')}
-              onValueChange={setGenerationCount}
-              onClick={() => handleGenerate(generationCount)}
-              disabled={isTaskRunning}
-              ariaLabel={tAssets('image.selectCount')}
-              className="inline-flex h-6 items-center gap-0.5 rounded px-1 hover:bg-[var(--glass-tone-info-bg)] transition-colors disabled:opacity-50"
-              selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-[10px] font-semibold text-[var(--glass-tone-info-fg)] outline-none cursor-pointer leading-none transition-colors"
-            />
+            </button>
             {hasPreviousVersion && (
               <button onClick={handleUndo} className="glass-btn-base glass-btn-soft h-6 w-6 rounded-md" title={tAssets('image.undo')}>
                 <AppIcon name="sparkles" className="w-4 h-4 text-[var(--glass-tone-warning-fg)]" />
@@ -259,74 +223,27 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
 
         {/* 图片列表 */}
         <div className="grid grid-cols-3 gap-3">
-          {displaySelectionImages.map((img) => {
+          {imagesWithUrl.map((img) => {
             const isThisSelected = img.isSelected
-            const hasPendingEmptySlots = isTaskRunning && generatedImageCount < displaySlotCount
-            const slotTaskRunning = hasPendingEmptySlots
-              ? !img.imageUrl && isTaskRunning
-              : !!img.imageTaskRunning
-            const phase = resolveGroupedImageSlotPhase(
-              { imageUrl: img.imageUrl },
-              {
-                isGroupRunning: isTaskRunning,
-                isSlotRunning: slotTaskRunning,
-                hasPendingEmptySlots,
-              },
-            )
-            const imageError = resolveErrorDisplay(img.lastError || {
-              code: img.imageErrorMessage || null,
-              message: img.imageErrorMessage || null,
-            })
             return (
               <div key={img.id} className="relative group/thumb">
                 <div
-                  onClick={() => {
-                    if (img.imageUrl) {
-                      onImageClick?.(img.imageUrl)
-                    }
-                  }}
-                  className={`rounded-lg overflow-hidden border-2 transition-all ${img.imageUrl ? 'cursor-zoom-in' : 'cursor-default'} ${isThisSelected ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-success-ring)]' : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'}`}
+                  onClick={() => onImageClick?.(img.imageUrl!)}
+                  className={`rounded-lg overflow-hidden border-2 cursor-zoom-in transition-all ${isThisSelected ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-success-ring)]' : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'}`}
                 >
-                  {img.imageUrl ? (
-                    <MediaImageWithLoading
-                      src={img.imageUrl}
-                      alt={`${location.name} ${img.imageIndex + 1}`}
-                      containerClassName="w-full min-h-[88px]"
-                      className="w-full h-auto object-contain"
-                    />
-                  ) : (
-                    <div className="flex min-h-[88px] items-center justify-center bg-[var(--glass-bg-muted)]">
-                      {imageError && !isTaskRunning ? (
-                        <div className="flex flex-col items-center justify-center px-3 py-6 text-center">
-                          <AppIcon name="alert" className="mb-2 h-6 w-6 text-[var(--glass-tone-danger-fg)]" />
-                          <span className="text-xs font-medium text-[var(--glass-tone-danger-fg)]">{tAssets('common.generateFailed')}</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center gap-2 px-3 py-6 text-[var(--glass-text-tertiary)]">
-                          <div className="h-12 w-12 animate-pulse rounded-xl bg-[var(--glass-bg-surface-strong)]" />
-                          <span className="text-xs">{tAssets('image.generatingPlaceholder')}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {phase === 'generating' && (
-                    <ImageGenerationSlotOverlay label={tAssets('image.generating')} />
-                  )}
-                  {phase === 'regenerating' && (
-                    <ImageGenerationSlotOverlay label={tAssets('image.regenerating')} />
-                  )}
+                  <MediaImageWithLoading
+                    src={img.imageUrl!}
+                    alt={`${location.name} ${img.imageIndex + 1}`}
+                    containerClassName="w-full min-h-[88px]"
+                    className="w-full h-auto object-contain"
+                  />
                   <div className={`absolute bottom-2 left-2 text-xs px-2 py-0.5 rounded ${isThisSelected ? 'glass-chip glass-chip-success' : 'glass-chip glass-chip-neutral'}`}>
                     {tAssets('image.optionNumber', { number: img.imageIndex + 1 })}
                   </div>
                 </div>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (!img.imageUrl || phase === 'generating' || phase === 'regenerating') return
-                    handleSelectImage(isThisSelected ? null : img.imageIndex)
-                  }}
-                  disabled={!img.imageUrl || phase === 'generating' || phase === 'regenerating'}
-                  className={`absolute top-2 right-2 glass-btn-base h-7 w-7 rounded-full ${isThisSelected ? 'glass-btn-tone-success' : 'glass-btn-secondary'} disabled:opacity-50`}
+                  onClick={(e) => { e.stopPropagation(); handleSelectImage(isThisSelected ? null : img.imageIndex) }}
+                  className={`absolute top-2 right-2 glass-btn-base h-7 w-7 rounded-full ${isThisSelected ? 'glass-btn-tone-success' : 'glass-btn-secondary'}`}
                 >
                   <AppIcon name="check" className="w-4 h-4" />
                 </button>
@@ -390,7 +307,7 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
                 <button onClick={() => onImageEdit?.('location', location.id, location.name, currentImageIndex)} className="glass-btn-base glass-btn-tone-info h-7 w-7 rounded-full">
                   <AppIcon name="edit" className="w-4 h-4" />
                 </button>
-                <button onClick={() => handleGenerate()} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
+                <button onClick={handleGenerate} className="glass-btn-base glass-btn-secondary h-7 w-7 rounded-full">
                   <AppIcon name="refresh" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />
                 </button>
                 {hasPreviousVersion && (
@@ -404,17 +321,10 @@ export function LocationCard({ location, onImageClick, onImageEdit, onEdit }: Lo
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-[var(--glass-text-tertiary)]">
             <AppIcon name="globe2" className="w-12 h-12 mb-3" />
-            <ImageGenerationInlineCountButton
-              prefix={<span>{tAssets('image.generateCountPrefix')}</span>}
-              suffix={<span>{tAssets('image.generateCountSuffix')}</span>}
-              value={generationCount}
-              options={getImageGenerationCountOptions('location')}
-              onValueChange={setGenerationCount}
-              onClick={() => handleGenerate(generationCount)}
-              ariaLabel={tAssets('image.selectCount')}
-              className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg"
-              selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-sm font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
-            />
+            <button onClick={handleGenerate} className="glass-btn-base glass-btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg">
+              <AppIcon name="sparklesAlt" className="w-4 h-4" />
+              {t('generate')}
+            </button>
           </div>
         )}
         {isTaskRunning && (

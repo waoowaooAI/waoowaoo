@@ -5,7 +5,7 @@
 import { GoogleGenAI } from '@google/genai'
 import { BaseVideoGenerator, VideoGenerateParams, GenerateResult } from '../base'
 import { getProviderConfig } from '@/lib/api-config'
-import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { imageUrlToBase64 } from '@/lib/cos'
 
 interface GoogleVeoOptions {
     modelId?: string
@@ -90,7 +90,7 @@ export class GoogleVeoVideoGenerator extends BaseVideoGenerator {
         let hasImageInput = false
         // 添加首帧图片（图生视频）
         if (imageUrl) {
-            const dataUrl = imageUrl.startsWith('data:') ? imageUrl : await normalizeToBase64ForGeneration(imageUrl)
+            const dataUrl = imageUrl.startsWith('data:') ? imageUrl : await imageUrlToBase64(imageUrl)
             const inlineData = dataUrlToInlineData(dataUrl)
             if (inlineData) {
                 request.image = inlineData
@@ -105,7 +105,7 @@ export class GoogleVeoVideoGenerator extends BaseVideoGenerator {
             }
             const dataUrl = lastFrameImageUrl.startsWith('data:')
                 ? lastFrameImageUrl
-                : await normalizeToBase64ForGeneration(lastFrameImageUrl)
+                : await imageUrlToBase64(lastFrameImageUrl)
             const inlineData = dataUrlToInlineData(dataUrl)
             if (!inlineData) {
                 throw new Error('Veo lastFrame image is invalid')

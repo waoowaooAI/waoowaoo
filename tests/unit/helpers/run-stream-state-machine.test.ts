@@ -59,11 +59,6 @@ describe('run stream state-machine', () => {
       stepIndex: 1,
       stepTotal: 1,
       status: 'failed',
-      dependsOn: [],
-      blockedBy: [],
-      groupId: null,
-      parallelKey: null,
-      retryable: true,
       textOutput: '',
       reasoningOutput: '',
       textLength: 0,
@@ -275,96 +270,5 @@ describe('run stream state-machine', () => {
     ])
 
     expect(state?.activeStepId).toBe('step-2')
-  })
-
-  it('marks step as blocked when blockedBy is present', () => {
-    const runId = 'run-6'
-    const state = applySequence([
-      { runId, event: 'run.start', ts: '2026-02-26T23:00:00.000Z', status: 'running' },
-      {
-        runId,
-        event: 'step.start',
-        ts: '2026-02-26T23:00:01.000Z',
-        status: 'running',
-        stepId: 'step-b',
-        stepTitle: 'B',
-        stepIndex: 2,
-        stepTotal: 2,
-        blockedBy: ['step-a'],
-      },
-    ])
-
-    expect(state?.stepsById['step-b']?.status).toBe('blocked')
-    expect(state?.stepsById['step-b']?.blockedBy).toEqual(['step-a'])
-  })
-
-  it('auto-follows active step when selected step was not manually pinned', () => {
-    const runId = 'run-7'
-    const state = applySequence([
-      { runId, event: 'run.start', ts: '2026-02-26T23:00:00.000Z', status: 'running' },
-      {
-        runId,
-        event: 'step.start',
-        ts: '2026-02-26T23:00:01.000Z',
-        status: 'running',
-        stepId: 'step-1',
-        stepTitle: 'step 1',
-        stepIndex: 1,
-        stepTotal: 2,
-      },
-      {
-        runId,
-        event: 'step.complete',
-        ts: '2026-02-26T23:00:02.000Z',
-        status: 'completed',
-        stepId: 'step-1',
-        stepTitle: 'step 1',
-        stepIndex: 1,
-        stepTotal: 2,
-      },
-      {
-        runId,
-        event: 'step.start',
-        ts: '2026-02-26T23:00:03.000Z',
-        status: 'running',
-        stepId: 'step-2',
-        stepTitle: 'step 2',
-        stepIndex: 2,
-        stepTotal: 2,
-      },
-    ])
-
-    expect(state?.activeStepId).toBe('step-2')
-    expect(state?.selectedStepId).toBe('step-2')
-  })
-
-  it('moves think-tagged text chunks into reasoning output', () => {
-    const runId = 'run-8'
-    const state = applySequence([
-      { runId, event: 'run.start', ts: '2026-02-26T23:00:00.000Z', status: 'running' },
-      {
-        runId,
-        event: 'step.start',
-        ts: '2026-02-26T23:00:01.000Z',
-        status: 'running',
-        stepId: 'analyze_locations',
-        stepTitle: 'locations',
-        stepIndex: 2,
-        stepTotal: 2,
-      },
-      {
-        runId,
-        event: 'step.chunk',
-        ts: '2026-02-26T23:00:01.200Z',
-        status: 'running',
-        stepId: 'analyze_locations',
-        lane: 'text',
-        seq: 1,
-        textDelta: '<think>先分析文本</think>{"locations":[]}',
-      },
-    ])
-
-    expect(state?.stepsById['analyze_locations']?.reasoningOutput).toBe('先分析文本')
-    expect(state?.stepsById['analyze_locations']?.textOutput).toBe('{"locations":[]}')
   })
 })

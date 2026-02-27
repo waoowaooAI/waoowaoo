@@ -15,7 +15,7 @@ const CONTRACT_TEST_BY_GROUP: Record<RouteCatalogEntry['contractGroup'], string>
   'task-infra-routes': 'tests/integration/api/contract/task-infra-routes.test.ts',
   'user-project-routes': 'tests/integration/api/contract/crud-routes.test.ts',
   'auth-routes': 'tests/integration/api/contract/crud-routes.test.ts',
-  'infra-routes': 'tests/integration/api/contract/infra-routes.test.ts',
+  'infra-routes': 'tests/integration/api/contract/crud-routes.test.ts',
 }
 
 function resolveChainTest(routeFile: string): string {

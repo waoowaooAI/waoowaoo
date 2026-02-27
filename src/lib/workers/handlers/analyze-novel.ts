@@ -1,7 +1,6 @@
 import type { Job } from 'bullmq'
-import { safeParseJsonObject } from '@/lib/json-repair'
 import { prisma } from '@/lib/prisma'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { chatCompletion, getCompletionContent } from '@/lib/llm-client'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { getArtStylePrompt, removeLocationPromptSuffix } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'
@@ -9,7 +8,6 @@ import { assertTaskActive } from '@/lib/workers/utils'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
-import { resolveAnalysisModel } from './resolve-analysis-model'
 
 function readText(value: unknown): string {
   return typeof value === 'string' ? value : ''
@@ -33,11 +31,17 @@ function nameMatchesWithAlias(existingName: string, newName: string): boolean {
 }
 
 function parseJsonResponse(responseText: string): Record<string, unknown> {
-  return safeParseJsonObject(responseText)
+  let cleanedText = responseText.trim()
+  cleanedText = cleanedText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '')
+  const firstBrace = cleanedText.indexOf('{')
+  const lastBrace = cleanedText.lastIndexOf('}')
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleanedText = cleanedText.substring(firstBrace, lastBrace + 1)
+  }
+  return JSON.parse(cleanedText) as Record<string, unknown>
 }
 
 export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
-  const payload = (job.data.payload || {}) as Record<string, unknown>
   const projectId = job.data.projectId
 
   const project = await prisma.project.findUnique({
@@ -64,11 +68,9 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
   if (!novelData) {
     throw new Error('Novel promotion data not found')
   }
-  const analysisModel = await resolveAnalysisModel({
-    userId: job.data.userId,
-    inputModel: payload.model,
-    projectAnalysisModel: novelData.analysisModel,
-  })
+  if (!novelData.analysisModel) {
+    throw new Error('analysisModel is not configured')
+  }
 
   const firstEpisode = await prisma.novelPromotionEpisode.findFirst({
     where: { novelPromotionProjectId: novelData.id },
@@ -122,34 +124,34 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
         streamCallbacks,
         async () =>
           await Promise.all([
-            executeAiTextStep({
-              userId: job.data.userId,
-              model: analysisModel,
-              messages: [{ role: 'user', content: characterPromptTemplate }],
-              temperature: 0.7,
-              projectId,
-              action: 'analyze_characters',
-              meta: {
-                stepId: 'analyze_characters',
-                stepTitle: '角色分析',
-                stepIndex: 1,
-                stepTotal: 2,
+            chatCompletion(
+              job.data.userId,
+              novelData.analysisModel!,
+              [{ role: 'user', content: characterPromptTemplate }],
+              {
+                temperature: 0.7,
+                projectId,
+                action: 'analyze_characters',
+                streamStepId: 'analyze_characters',
+                streamStepTitle: '角色分析',
+                streamStepIndex: 1,
+                streamStepTotal: 2,
               },
-            }),
-            executeAiTextStep({
-              userId: job.data.userId,
-              model: analysisModel,
-              messages: [{ role: 'user', content: locationPromptTemplate }],
-              temperature: 0.7,
-              projectId,
-              action: 'analyze_locations',
-              meta: {
-                stepId: 'analyze_locations',
-                stepTitle: '场景分析',
-                stepIndex: 2,
-                stepTotal: 2,
+            ),
+            chatCompletion(
+              job.data.userId,
+              novelData.analysisModel!,
+              [{ role: 'user', content: locationPromptTemplate }],
+              {
+                temperature: 0.7,
+                projectId,
+                action: 'analyze_locations',
+                streamStepId: 'analyze_locations',
+                streamStepTitle: '场景分析',
+                streamStepIndex: 2,
+                streamStepTotal: 2,
               },
-            }),
+            ),
           ]),
       )
     } finally {
@@ -157,8 +159,8 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     }
   })()
 
-  const characterResponseText = characterCompletion.text
-  const locationResponseText = locationCompletion.text
+  const characterResponseText = getCompletionContent(characterCompletion)
+  const locationResponseText = getCompletionContent(locationCompletion)
 
   await reportTaskProgress(job, 60, {
     stage: 'analyze_novel_characters_done',

@@ -29,7 +29,6 @@ interface UserModelsPayload {
   llm: UserModelOption[]
   image: UserModelOption[]
   video: UserModelOption[]
-  audio: UserModelOption[]
 }
 
 interface WorkspaceHeaderShellProps {
@@ -46,7 +45,6 @@ interface WorkspaceHeaderShellProps {
   storyboardModel: string | null | undefined
   editModel: string | null | undefined
   videoModel: string | null | undefined
-  audioModel: string | null | undefined
   capabilityOverrides: CapabilitySelections
   videoRatio: string | null | undefined
   ttsRate: string | null | undefined
@@ -93,7 +91,6 @@ export default function WorkspaceHeaderShell({
   storyboardModel,
   editModel,
   videoModel,
-  audioModel,
   capabilityOverrides,
   videoRatio,
   ttsRate,
@@ -132,7 +129,6 @@ export default function WorkspaceHeaderShell({
         imageModel={storyboardModel ?? undefined}
         editModel={editModel ?? undefined}
         videoModel={videoModel ?? undefined}
-        audioModel={audioModel ?? undefined}
         videoRatio={videoRatio ?? undefined}
         capabilityOverrides={capabilityOverrides}
         ttsRate={ttsRate ?? undefined}
@@ -143,7 +139,6 @@ export default function WorkspaceHeaderShell({
         onImageModelChange={(value) => { onUpdateConfig('storyboardModel', value) }}
         onEditModelChange={(value) => { onUpdateConfig('editModel', value) }}
         onVideoModelChange={(value) => { onUpdateConfig('videoModel', value) }}
-        onAudioModelChange={(value) => { onUpdateConfig('audioModel', value) }}
         onVideoRatioChange={(value) => { onUpdateConfig('videoRatio', value) }}
         onCapabilityOverridesChange={(value) => { onUpdateConfig('capabilityOverrides', value) }}
         onTTSRateChange={(value) => { onUpdateConfig('ttsRate', value) }}

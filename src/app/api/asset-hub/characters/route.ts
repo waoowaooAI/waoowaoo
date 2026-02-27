@@ -5,10 +5,9 @@ import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { ApiError, apiHandler } from '@/lib/api-errors'
 import { attachMediaFieldsToGlobalCharacter } from '@/lib/media/attach'
 import { resolveMediaRefFromLegacyValue } from '@/lib/media/service'
-import { PRIMARY_APPEARANCE_INDEX, isArtStyleValue } from '@/lib/constants'
+import { PRIMARY_APPEARANCE_INDEX } from '@/lib/constants'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { resolveTaskLocale } from '@/lib/task/resolve-locale'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 
 function toObject(value: unknown): Record<string, unknown> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -67,17 +66,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
         artStyle,
         customDescription
     } = body
-    const count = normalizeImageGenerationCount('reference-to-character', (body as Record<string, unknown>).count)
 
     if (!name) {
         throw new ApiError('INVALID_PARAMS')
-    }
-    const normalizedArtStyle = typeof artStyle === 'string' ? artStyle.trim() : ''
-    if (!isArtStyleValue(normalizedArtStyle)) {
-        throw new ApiError('INVALID_PARAMS', {
-            code: 'INVALID_ART_STYLE',
-            message: 'artStyle is required and must be a supported value',
-        })
     }
 
     let allReferenceImages: string[] = []
@@ -112,7 +103,6 @@ export const POST = apiHandler(async (request: NextRequest) => {
             characterId: character.id,
             appearanceIndex: PRIMARY_APPEARANCE_INDEX,
             changeReason: '初始形象',
-            artStyle: normalizedArtStyle,
             description: descText,
             descriptions: JSON.stringify([descText]),
             imageUrl: initialImageUrl || null,
@@ -136,9 +126,8 @@ export const POST = apiHandler(async (request: NextRequest) => {
                 characterName: name.trim(),
                 characterId: character.id,
                 appearanceId: appearance.id,
-                count,
                 isBackgroundJob: true,
-                artStyle: normalizedArtStyle,
+                artStyle: artStyle || 'american-comic',
                 customDescription: customDescription || undefined,
                 locale: taskLocale || undefined,
                 meta: {

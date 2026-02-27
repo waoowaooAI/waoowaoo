@@ -11,7 +11,6 @@ import {
   resolveEffectiveVideoCapabilityDefinitions,
   resolveEffectiveVideoCapabilityFields,
 } from '@/lib/model-capabilities/video-effective'
-import { supportsFirstLastFrame } from '@/lib/model-capabilities/video-model-options'
 import { projectVideoPricingTiersByFixedSelections } from '@/lib/model-pricing/video-tier'
 
 interface FirstLastFrameCapabilityField {
@@ -65,7 +64,7 @@ export function useVideoFirstLastFrameFlow({
   t,
 }: UseVideoFirstLastFrameFlowParams) {
   const firstLastFrameModelOptions = useMemo(
-    () => videoModelOptions.filter((option) => supportsFirstLastFrame(option)),
+    () => videoModelOptions.filter((option) => option.capabilities?.video?.firstlastframe === true),
     [videoModelOptions],
   )
   const [flModel, setFlModel] = useState(firstLastFrameModelOptions[0]?.value || '')

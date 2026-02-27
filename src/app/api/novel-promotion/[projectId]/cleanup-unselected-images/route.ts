@@ -1,7 +1,7 @@
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { deleteObject } from '@/lib/storage'
+import { deleteCOSObject } from '@/lib/cos'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuth, isErrorResponse } from '@/lib/api-auth'
@@ -43,7 +43,7 @@ export const POST = apiHandler(async (
           try {
             const key = await resolveStorageKeyFromMediaValue(imageUrls[i]!)
             if (key) {
-              await deleteObject(key)
+              await deleteCOSObject(key)
               _ulogInfo(`✓ Deleted: ${key}`)
               deletedCount++
             }
@@ -82,7 +82,7 @@ export const POST = apiHandler(async (
         try {
           const key = await resolveStorageKeyFromMediaValue(img.imageUrl)
           if (key) {
-            await deleteObject(key)
+            await deleteCOSObject(key)
             _ulogInfo(`✓ Deleted: ${key}`)
             deletedCount++
           }

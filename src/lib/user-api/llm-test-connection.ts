@@ -6,10 +6,6 @@ type SupportedProvider =
   | 'google'
   | 'anthropic'
   | 'openai'
-  | 'bailian'
-  | 'siliconflow'
-  | 'openai-compatible'
-  | 'gemini-compatible'
   | 'custom'
 
 type TestConnectionPayload = {
@@ -39,10 +35,6 @@ function normalizeProvider(payload: TestConnectionPayload): SupportedProvider {
     case 'google':
     case 'anthropic':
     case 'openai':
-    case 'openai-compatible':
-    case 'gemini-compatible':
-    case 'bailian':
-    case 'siliconflow':
     case 'custom':
       return provider
     default:
@@ -108,55 +100,6 @@ async function testOpenAICompatibleConnection(params: {
   return {}
 }
 
-async function testBailianProbe(apiKey: string): Promise<{ model?: string }> {
-  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/models', {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${apiKey}` },
-  })
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Bailian probe failed (${response.status}): ${error}`)
-  }
-  const data = await response.json() as { data?: Array<{ id?: string }> }
-  const firstModel = Array.isArray(data.data) ? data.data.find((item) => typeof item.id === 'string')?.id : undefined
-  return { model: firstModel }
-}
-
-async function testSiliconFlowProbe(apiKey: string): Promise<{ model?: string; answer?: string }> {
-  const modelsResponse = await fetch('https://api.siliconflow.cn/v1/models', {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${apiKey}` },
-  })
-  if (!modelsResponse.ok) {
-    const error = await modelsResponse.text()
-    throw new Error(`SiliconFlow models probe failed (${modelsResponse.status}): ${error}`)
-  }
-
-  const modelData = await modelsResponse.json() as { data?: Array<{ id?: string }> }
-  const firstModel = Array.isArray(modelData.data) ? modelData.data.find((item) => typeof item.id === 'string')?.id : undefined
-
-  const userInfoResponse = await fetch('https://api.siliconflow.cn/v1/user/info', {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${apiKey}` },
-  })
-  if (!userInfoResponse.ok) {
-    const error = await userInfoResponse.text()
-    throw new Error(`SiliconFlow user info probe failed (${userInfoResponse.status}): ${error}`)
-  }
-  const info = await userInfoResponse.json() as { balance?: unknown; data?: { balance?: unknown } }
-  const rawBalance = info.balance ?? info.data?.balance
-  const balance = typeof rawBalance === 'number'
-    ? String(rawBalance)
-    : typeof rawBalance === 'string' && rawBalance.trim()
-      ? rawBalance.trim()
-      : undefined
-
-  return {
-    model: firstModel,
-    answer: typeof balance === 'string' ? `balance=${balance}` : 'userinfo_ok',
-  }
-}
-
 export async function testLlmConnection(payload: TestConnectionPayload): Promise<LlmConnectionTestResult> {
   const provider = normalizeProvider(payload)
   const apiKey = requireApiKey(payload)
@@ -189,30 +132,6 @@ export async function testLlmConnection(payload: TestConnectionPayload): Promise
         model: requestedModel || undefined,
       })
       return { provider, message: 'openai 连接成功', ...tested }
-    }
-    case 'bailian': {
-      const tested = await testBailianProbe(apiKey)
-      return { provider, message: 'bailian 连接成功', ...tested }
-    }
-    case 'siliconflow': {
-      const tested = await testSiliconFlowProbe(apiKey)
-      return { provider, message: 'siliconflow 连接成功', ...tested }
-    }
-    case 'openai-compatible': {
-      const tested = await testOpenAICompatibleConnection({
-        apiKey,
-        baseURL: requireBaseUrl(payload),
-        model: requestedModel || undefined,
-      })
-      return { provider, message: 'openai-compatible 连接成功', ...tested }
-    }
-    case 'gemini-compatible': {
-      const tested = await testOpenAICompatibleConnection({
-        apiKey,
-        baseURL: requireBaseUrl(payload),
-        model: requestedModel || undefined,
-      })
-      return { provider, message: 'gemini-compatible 连接成功', ...tested }
     }
     case 'custom': {
       const tested = await testOpenAICompatibleConnection({

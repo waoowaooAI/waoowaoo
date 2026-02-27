@@ -3,7 +3,6 @@ import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { TASK_TYPE } from '@/lib/task/types'
 import { maybeSubmitLLMTask } from '@/lib/llm-observe/route-task'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 
 function parseReferenceImages(body: Record<string, unknown>): string[] {
   const list = Array.isArray(body.referenceImageUrls)
@@ -27,8 +26,6 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (referenceImages.length === 0) {
     throw new ApiError('INVALID_PARAMS')
   }
-  const count = normalizeImageGenerationCount('reference-to-character', body.count)
-  body.count = count
 
   const isBackgroundJob = body.isBackgroundJob === true || body.isBackgroundJob === 1 || body.isBackgroundJob === '1'
   const characterId = typeof body.characterId === 'string' ? body.characterId : ''
@@ -46,7 +43,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     targetId: appearanceId || characterId || session.user.id,
     routePath: '/api/asset-hub/reference-to-character',
     body,
-    dedupeKey: `asset_hub_reference_to_character:${appearanceId || characterId || session.user.id}:${count}`})
+    dedupeKey: `asset_hub_reference_to_character:${appearanceId || characterId || session.user.id}`})
   if (asyncTaskResponse) return asyncTaskResponse
 
   throw new ApiError('INVALID_PARAMS')

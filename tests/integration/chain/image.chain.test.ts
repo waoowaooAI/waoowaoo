@@ -167,13 +167,13 @@ describe('chain contract - image queue behavior', () => {
     expect(result).toEqual({
       type: 'character',
       appearanceId: 'appearance-1',
-      imageCount: 3,
+      imageCount: 1,
     })
 
     expect(prismaMock.globalCharacterAppearance.update).toHaveBeenCalledWith({
       where: { id: 'appearance-1' },
       data: {
-        imageUrls: JSON.stringify(['cos/global-character-generated.png', 'cos/global-character-generated.png', 'cos/global-character-generated.png']),
+        imageUrls: JSON.stringify(['cos/global-character-generated.png']),
         imageUrl: 'cos/global-character-generated.png',
         selectedIndex: null,
       },

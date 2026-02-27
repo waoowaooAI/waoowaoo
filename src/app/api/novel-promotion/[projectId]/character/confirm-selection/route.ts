@@ -1,7 +1,7 @@
 import { logInfo as _ulogInfo, logWarn as _ulogWarn } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { deleteObject } from '@/lib/storage'
+import { deleteCOSObject } from '@/lib/cos'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
@@ -74,7 +74,7 @@ export const POST = apiHandler(async (
       const key = await resolveStorageKeyFromMediaValue(imageUrls[i]!)
       if (key) {
         try {
-          await deleteObject(key)
+          await deleteCOSObject(key)
           deletedImages.push(key)
         } catch {
           _ulogWarn('Failed to delete COS image:', key)

@@ -3,9 +3,9 @@ import { type Job } from 'bullmq'
 import { createScopedLogger } from '@/lib/logging/core'
 import { withLogContext } from '@/lib/logging/context'
 import { generateImage, generateVideo } from '@/lib/generator-api'
-import { generateLipSync } from '@/lib/lipsync'
+import { generateLipSync } from '@/lib/kling'
 import { pollAsyncTask } from '@/lib/async-poll'
-import { getSignedUrl, toFetchableUrl } from '@/lib/storage'
+import { getSignedUrl, toFetchableUrl } from '@/lib/cos'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { processMediaResult } from '@/lib/media-process'
 import {
@@ -123,7 +123,7 @@ export async function waitExternalResult(
           externalId,
         },
       })
-      return { url, status, ...(status.downloadHeaders ? { downloadHeaders: status.downloadHeaders } : {}) }
+      return { url, status }
     }
 
     if (status.status === 'failed') {
@@ -173,28 +173,24 @@ export async function resolveImageSourceFromGeneration(
       size?: string
       provider?: string
     }
-    allowTaskExternalIdResume?: boolean
     pollProgress?: { start?: number; end?: number }
   },
 ): Promise<string> {
   const logger = scopedWorkerUtilLogger(job, 'worker.image.generate_source')
   const startedAt = Date.now()
-  const allowTaskExternalIdResume = params.allowTaskExternalIdResume !== false
 
   // 服务重启续接：若 DB 中已有 externalId，直接恢复轮询，不重新提交外部 API
-  if (allowTaskExternalIdResume) {
-    const resumeExternalId = await getTaskExistingExternalId(job.data.taskId)
-    if (resumeExternalId) {
-      logger.info({
-        message: 'image source generation resumed from existing external id',
-        details: { externalId: resumeExternalId },
-      })
-      const polled = await waitExternalResult(job, resumeExternalId, params.userId, {
-        progressStart: params.pollProgress?.start ?? 40,
-        progressEnd: params.pollProgress?.end ?? 92,
-      })
-      return polled.url
-    }
+  const resumeExternalId = await getTaskExistingExternalId(job.data.taskId)
+  if (resumeExternalId) {
+    logger.info({
+      message: 'image source generation resumed from existing external id',
+      details: { externalId: resumeExternalId },
+    })
+    const polled = await waitExternalResult(job, resumeExternalId, params.userId, {
+      progressStart: params.pollProgress?.start ?? 40,
+      progressEnd: params.pollProgress?.end ?? 92,
+    })
+    return polled.url
   }
 
   logger.info({
@@ -295,7 +291,7 @@ export async function resolveVideoSourceFromGeneration(
     }
     pollProgress?: { start?: number; end?: number }
   },
-): Promise<{ url: string; downloadHeaders?: Record<string, string> }> {
+): Promise<string> {
   const logger = scopedWorkerUtilLogger(job, 'worker.video.generate_source')
   const startedAt = Date.now()
 
@@ -315,10 +311,7 @@ export async function resolveVideoSourceFromGeneration(
       durationMs: Date.now() - startedAt,
       details: { externalId: resumeExternalId },
     })
-    return {
-      url: polled.url,
-      ...(polled.downloadHeaders ? { downloadHeaders: polled.downloadHeaders } : {}),
-    }
+    return polled.url
   }
 
   logger.info({
@@ -377,7 +370,7 @@ export async function resolveVideoSourceFromGeneration(
       message: 'video source generation completed',
       durationMs: Date.now() - startedAt,
     })
-    return { url: result.videoUrl }
+    return result.videoUrl
   }
 
   const externalId = normalizeExternalId(result, 'VIDEO')
@@ -396,10 +389,7 @@ export async function resolveVideoSourceFromGeneration(
       externalId,
     },
   })
-  return {
-    url: polled.url,
-    ...(polled.downloadHeaders ? { downloadHeaders: polled.downloadHeaders } : {}),
-  }
+  return polled.url
 }
 
 export async function resolveLipSyncVideoSource(
@@ -408,8 +398,6 @@ export async function resolveLipSyncVideoSource(
     userId: string
     videoUrl: string
     audioUrl: string
-    audioDurationMs?: number | null
-    videoDurationMs?: number | null
     modelKey?: string
     pollProgress?: { start?: number; end?: number }
   },
@@ -444,8 +432,6 @@ export async function resolveLipSyncVideoSource(
     {
       videoUrl: params.videoUrl,
       audioUrl: params.audioUrl,
-      audioDurationMs: params.audioDurationMs,
-      videoDurationMs: params.videoDurationMs,
     },
     params.userId,
     params.modelKey,

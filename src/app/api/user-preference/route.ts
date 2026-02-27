@@ -2,26 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { ApiError, apiHandler } from '@/lib/api-errors'
-import { isArtStyleValue } from '@/lib/constants'
-
-function validateArtStyleField(value: unknown): string {
-  if (typeof value !== 'string') {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'INVALID_ART_STYLE',
-      field: 'artStyle',
-      message: 'artStyle must be a supported value',
-    })
-  }
-  const artStyle = value.trim()
-  if (!isArtStyleValue(artStyle)) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'INVALID_ART_STYLE',
-      field: 'artStyle',
-      message: 'artStyle must be a supported value',
-    })
-  }
-  return artStyle
-}
 
 // GET - 获取用户偏好配置
 export const GET = apiHandler(async () => {
@@ -57,7 +37,6 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
     'storyboardModel',
     'editModel',
     'videoModel',
-    'audioModel',
     'lipSyncModel',
     'videoRatio',
     'artStyle',
@@ -67,10 +46,6 @@ export const PATCH = apiHandler(async (request: NextRequest) => {
   const updateData: Record<string, unknown> = {}
   for (const field of allowedFields) {
     if (body[field] !== undefined) {
-      if (field === 'artStyle') {
-        updateData[field] = validateArtStyleField(body[field])
-        continue
-      }
       updateData[field] = body[field]
     }
   }

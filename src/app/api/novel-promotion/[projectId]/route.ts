@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { logProjectAction } from '@/lib/logging/semantic'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
-import { isArtStyleValue } from '@/lib/constants'
 import { attachMediaFieldsToProject } from '@/lib/media/attach'
 import {
   parseModelKeyStrict,
@@ -22,7 +21,6 @@ const MODEL_FIELDS = [
   'storyboardModel',
   'editModel',
   'videoModel',
-  'audioModel',
 ] as const
 
 const MODEL_FIELD_TO_TYPE: Record<typeof MODEL_FIELDS[number], UnifiedModelType> = {
@@ -31,9 +29,7 @@ const MODEL_FIELD_TO_TYPE: Record<typeof MODEL_FIELDS[number], UnifiedModelType>
   locationModel: 'image',
   storyboardModel: 'image',
   editModel: 'image',
-  videoModel: 'video',
-  audioModel: 'audio',
-}
+  videoModel: 'video'}
 
 const CAPABILITY_MODEL_TYPES: readonly UnifiedModelType[] = ['image', 'video', 'llm', 'audio', 'lipsync']
 
@@ -113,25 +109,6 @@ function validateModelKeyField(field: typeof MODEL_FIELDS[number], value: unknow
   }
 }
 
-function validateArtStyleField(value: unknown): string {
-  if (typeof value !== 'string') {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'INVALID_ART_STYLE',
-      field: 'artStyle',
-      message: 'artStyle must be a supported value',
-    })
-  }
-  const artStyle = value.trim()
-  if (!isArtStyleValue(artStyle)) {
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'INVALID_ART_STYLE',
-      field: 'artStyle',
-      message: 'artStyle must be a supported value',
-    })
-  }
-  return artStyle
-}
-
 function getNextProjectModelMap(
   current: {
     analysisModel: string | null
@@ -140,7 +117,6 @@ function getNextProjectModelMap(
     storyboardModel: string | null
     editModel: string | null
     videoModel: string | null
-    audioModel: string | null
   },
   updates: Record<string, unknown>,
 ): Record<string, CapabilityModelContext> {
@@ -240,9 +216,7 @@ export const GET = apiHandler(async (
       locationModel: true,
       storyboardModel: true,
       editModel: true,
-      videoModel: true,
-      audioModel: true,
-    }})
+      videoModel: true}})
 
   const storedOverrides = parseStoredCapabilitySelections(projectData?.capabilityOverrides)
   const modelContextMap = projectData
@@ -253,7 +227,6 @@ export const GET = apiHandler(async (
       storyboardModel: projectData.storyboardModel,
       editModel: projectData.editModel,
       videoModel: projectData.videoModel,
-      audioModel: projectData.audioModel,
     }, {})
     : {}
   const cleanedOverrides = sanitizeCapabilityOverrides(storedOverrides, modelContextMap)
@@ -288,16 +261,14 @@ export const PATCH = apiHandler(async (
       locationModel: true,
       storyboardModel: true,
       editModel: true,
-      videoModel: true,
-      audioModel: true,
-    }})
+      videoModel: true}})
   if (!currentProjectConfig) {
     throw new ApiError('NOT_FOUND')
   }
 
   const allowedProjectFields = [
     'analysisModel', 'characterModel', 'locationModel', 'storyboardModel',
-    'editModel', 'videoModel', 'audioModel', 'videoRatio', 'artStyle',
+    'editModel', 'videoModel', 'videoRatio', 'artStyle',
     'ttsRate', 'lipSyncEnabled', 'lipSyncMode', 'capabilityOverrides',
   ] as const
 
@@ -307,11 +278,6 @@ export const PATCH = apiHandler(async (
 
     if ((MODEL_FIELDS as readonly string[]).includes(field)) {
       validateModelKeyField(field as typeof MODEL_FIELDS[number], body[field])
-    }
-
-    if (field === 'artStyle') {
-      updateData[field] = validateArtStyleField(body[field])
-      continue
     }
 
     if (field === 'capabilityOverrides') {
@@ -333,17 +299,13 @@ export const PATCH = apiHandler(async (
   // 同步更新用户偏好配置（配置字段）
   const preferenceFields = [
     'analysisModel', 'characterModel', 'locationModel', 'storyboardModel',
-    'editModel', 'videoModel', 'audioModel', 'videoRatio', 'artStyle', 'ttsRate',
+    'editModel', 'videoModel', 'videoRatio', 'artStyle', 'ttsRate',
   ] as const
   const preferenceUpdate: Record<string, unknown> = {}
   for (const field of preferenceFields) {
     if (body[field] !== undefined) {
       if ((MODEL_FIELDS as readonly string[]).includes(field)) {
         validateModelKeyField(field as typeof MODEL_FIELDS[number], body[field])
-      }
-      if (field === 'artStyle') {
-        preferenceUpdate[field] = validateArtStyleField(body[field])
-        continue
       }
       preferenceUpdate[field] = body[field]
     }

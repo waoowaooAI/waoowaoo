@@ -14,21 +14,20 @@ const utilsMock = vi.hoisted(() => ({
 }))
 
 const outboundImageMock = vi.hoisted(() => ({
-  normalizeReferenceImagesForGeneration: vi.fn(async (input?: string[]) => input?.map((item) => item.trim()) || []),
+  normalizeReferenceImagesForGeneration: vi.fn(async () => ['normalized-reference-image']),
   normalizeToBase64ForGeneration: vi.fn(async () => 'base64-reference'),
 }))
 
-const aiRuntimeMock = vi.hoisted(() => ({
-  executeAiTextStep: vi.fn(async () => ({ text: '{"prompt":"TEXT_UPDATED_DESCRIPTION"}' })),
-  executeAiVisionStep: vi.fn(async () => ({ text: '{"prompt":"VISION_UPDATED_DESCRIPTION"}' })),
+const llmClientMock = vi.hoisted(() => ({
+  chatCompletionWithVision: vi.fn(async () => ({ output_text: 'AI_EXTRACTED_DESCRIPTION' })),
+  getCompletionContent: vi.fn(() => 'AI_EXTRACTED_DESCRIPTION'),
 }))
 
 const promptMock = vi.hoisted(() => ({
   PROMPT_IDS: {
-    NP_CHARACTER_DESCRIPTION_UPDATE: 'np_character_description_update',
-    NP_LOCATION_DESCRIPTION_UPDATE: 'np_location_description_update',
+    CHARACTER_IMAGE_TO_DESCRIPTION: 'character_image_to_description',
   },
-  buildPrompt: vi.fn(({ promptId }: { promptId: string }) => `${promptId}-prompt`),
+  buildPrompt: vi.fn(() => 'vision-prompt-template'),
 }))
 
 const loggerWarnMock = vi.hoisted(() => vi.fn())
@@ -72,7 +71,7 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/workers/utils', () => utilsMock)
 vi.mock('@/lib/media/outbound-image', () => outboundImageMock)
-vi.mock('@/lib/ai-runtime', () => aiRuntimeMock)
+vi.mock('@/lib/llm-client', () => llmClientMock)
 vi.mock('@/lib/prompt-i18n', () => promptMock)
 vi.mock('@/lib/logging/core', () => loggingMock)
 vi.mock('@/lib/prisma', () => ({
@@ -104,28 +103,18 @@ function getUpdateData(callArg: unknown): Record<string, unknown> {
   return maybeData as Record<string, unknown>
 }
 
-describe('modify image syncs descriptions after edit', () => {
+describe('modify image with references writes real description', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
     prismaMock.characterAppearance.findUnique.mockResolvedValue({
       id: 'appearance-1',
-      imageUrls: JSON.stringify(['cos/original-image.png', 'cos/original-image-2.png']),
+      imageUrls: JSON.stringify(['cos/original-image.png']),
       imageUrl: 'cos/original-image.png',
-      selectedIndex: 1,
+      selectedIndex: 0,
       changeReason: 'base',
-      description: 'old primary description',
-      descriptions: JSON.stringify(['old primary description', 'old variant description']),
+      description: 'old description',
       character: { name: 'Hero' },
-    })
-
-    prismaMock.locationImage.findFirst.mockResolvedValue({
-      id: 'location-image-1',
-      locationId: 'location-1',
-      description: 'old location description',
-      imageUrl: 'cos/original-location.png',
-      previousDescription: null,
-      location: { name: 'Old Town' },
     })
 
     prismaMock.globalCharacter.findFirst.mockResolvedValue({
@@ -136,121 +125,59 @@ describe('modify image syncs descriptions after edit', () => {
           id: 'global-appearance-1',
           appearanceIndex: 0,
           changeReason: 'base',
-          description: 'global primary description',
-          descriptions: JSON.stringify(['global primary description', 'global variant description']),
           imageUrl: 'cos/original-global.png',
-          imageUrls: JSON.stringify(['cos/original-global.png', 'cos/original-global-2.png']),
-          selectedIndex: 1,
-          previousDescription: null,
-          previousDescriptions: null,
-        },
-      ],
-    })
-
-    prismaMock.globalLocation.findFirst.mockResolvedValue({
-      id: 'global-location-1',
-      name: 'Old Town',
-      images: [
-        {
-          id: 'global-location-image-1',
-          imageIndex: 0,
-          description: 'global location description',
-          imageUrl: 'cos/original-global-location.png',
-          previousDescription: null,
+          imageUrls: JSON.stringify(['cos/original-global.png']),
+          selectedIndex: 0,
         },
       ],
     })
   })
 
-  it('syncs project character descriptions for pure text edits', async () => {
+  it('updates character appearance description from vision output in project modify handler', async () => {
     const job = buildJob(TASK_TYPE.MODIFY_ASSET_IMAGE, {
       type: 'character',
       appearanceId: 'appearance-1',
-      imageIndex: 1,
-      modifyPrompt: '给角色增加更复杂的甲胄细节',
+      modifyPrompt: 'enhance details',
+      extraImageUrls: [' https://ref.example/a.png '],
     })
 
     await handleModifyAssetImageTask(job)
 
-    expect(aiRuntimeMock.executeAiTextStep).toHaveBeenCalledTimes(1)
-    expect(aiRuntimeMock.executeAiVisionStep).not.toHaveBeenCalled()
+    expect(utilsMock.resolveImageSourceFromGeneration).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        options: expect.objectContaining({
+          aspectRatio: '3:2',
+          referenceImages: ['required-reference-image', 'normalized-reference-image'],
+        }),
+      }),
+    )
 
-    const characterUpdateCall = prismaMock.characterAppearance.update.mock.calls.at(-1) as [unknown] | undefined
-    const updateArg = characterUpdateCall?.[0]
+    const updateArg = prismaMock.characterAppearance.update.mock.calls.at(-1)?.[0]
     const updateData = getUpdateData(updateArg)
-    expect(updateData.previousDescription).toBe('old primary description')
-    expect(updateData.previousDescriptions).toBe(JSON.stringify(['old primary description', 'old variant description']))
-    expect(updateData.description).toBe('old primary description')
-    expect(updateData.descriptions).toBe(JSON.stringify(['old primary description', 'TEXT_UPDATED_DESCRIPTION']))
+    expect(updateData.description).toBe('AI_EXTRACTED_DESCRIPTION')
+    expect(updateData.previousDescription).toBe('old description')
     expect(updateData.imageUrl).toBe('cos/new-image.png')
   })
 
-  it('syncs asset-hub character descriptions for reference-image edits and preserves sibling variants', async () => {
+  it('updates asset-hub character description from vision output when reference image exists', async () => {
     utilsMock.uploadImageSourceToCos.mockResolvedValueOnce('cos/new-global-image.png')
 
     const job = buildJob(TASK_TYPE.ASSET_HUB_MODIFY, {
       type: 'character',
       id: 'global-character-1',
       appearanceIndex: 0,
-      imageIndex: 1,
-      modifyPrompt: '把服装改成更锐利的深色铠甲',
+      imageIndex: 0,
+      modifyPrompt: 'make it sharper',
       extraImageUrls: ['https://ref.example/b.png'],
     })
 
     await handleAssetHubModifyTask(job)
 
-    expect(aiRuntimeMock.executeAiVisionStep).toHaveBeenCalledTimes(1)
-
-    const globalCharacterUpdateCall = prismaMock.globalCharacterAppearance.update.mock.calls.at(-1) as [unknown] | undefined
-    const updateArg = globalCharacterUpdateCall?.[0]
+    const updateArg = prismaMock.globalCharacterAppearance.update.mock.calls.at(-1)?.[0]
     const updateData = getUpdateData(updateArg)
-    expect(updateData.previousDescription).toBe('global primary description')
-    expect(updateData.previousDescriptions).toBe(JSON.stringify(['global primary description', 'global variant description']))
-    expect(updateData.description).toBe('global primary description')
-    expect(updateData.descriptions).toBe(JSON.stringify(['global primary description', 'VISION_UPDATED_DESCRIPTION']))
+    expect(updateData.description).toBe('AI_EXTRACTED_DESCRIPTION')
     expect(updateData.imageUrl).toBe('cos/new-global-image.png')
-    expect(updateData.imageUrls).toBe(JSON.stringify(['cos/original-global.png', 'cos/new-global-image.png']))
-  })
-
-  it('syncs project location descriptions for pure text edits', async () => {
-    aiRuntimeMock.executeAiTextStep.mockResolvedValueOnce({ text: '{"prompt":"TEXT_UPDATED_LOCATION"}' })
-
-    const job = buildJob(TASK_TYPE.MODIFY_ASSET_IMAGE, {
-      type: 'location',
-      locationId: 'location-1',
-      imageIndex: 0,
-      modifyPrompt: '增加更浓的晨雾和老城石墙细节',
-    })
-
-    await handleModifyAssetImageTask(job)
-
-    const locationUpdateCall = prismaMock.locationImage.update.mock.calls.at(-1) as [unknown] | undefined
-    const updateArg = locationUpdateCall?.[0]
-    const updateData = getUpdateData(updateArg)
-    expect(updateData.previousDescription).toBe('old location description')
-    expect(updateData.description).toBe('TEXT_UPDATED_LOCATION')
-    expect(updateData.imageUrl).toBe('cos/new-image.png')
-  })
-
-  it('syncs asset-hub location descriptions for reference-image edits', async () => {
-    utilsMock.uploadImageSourceToCos.mockResolvedValueOnce('cos/new-global-location-image.png')
-    aiRuntimeMock.executeAiVisionStep.mockResolvedValueOnce({ text: '{"prompt":"VISION_UPDATED_LOCATION"}' })
-
-    const job = buildJob(TASK_TYPE.ASSET_HUB_MODIFY, {
-      type: 'location',
-      id: 'global-location-1',
-      imageIndex: 0,
-      modifyPrompt: '改成潮湿阴冷的石砌街道',
-      extraImageUrls: ['https://ref.example/location.png'],
-    })
-
-    await handleAssetHubModifyTask(job)
-
-    const globalLocationUpdateCall = prismaMock.globalLocationImage.update.mock.calls.at(-1) as [unknown] | undefined
-    const updateArg = globalLocationUpdateCall?.[0]
-    const updateData = getUpdateData(updateArg)
-    expect(updateData.previousDescription).toBe('global location description')
-    expect(updateData.description).toBe('VISION_UPDATED_LOCATION')
-    expect(updateData.imageUrl).toBe('cos/new-global-location-image.png')
+    expect(updateData.imageUrls).toBe(JSON.stringify(['cos/new-global-image.png']))
   })
 })

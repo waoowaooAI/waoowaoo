@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import type { ModelCapabilities } from '@/lib/model-config-contract'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 import { queryKeys } from '../keys'
-import { apiFetch } from '@/lib/api-fetch'
 
 export interface UserModelOption {
     value: string
@@ -27,7 +26,7 @@ export function useUserModels() {
     return useQuery({
         queryKey: queryKeys.userModels.all(),
         queryFn: async () => {
-            const response = await apiFetch('/api/user/models')
+            const response = await fetch('/api/user/models')
             if (!response.ok) {
                 throw new Error('Failed to fetch user models')
             }

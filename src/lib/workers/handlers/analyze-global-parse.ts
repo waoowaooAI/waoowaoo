@@ -1,5 +1,3 @@
-import { safeParseJsonObject } from '@/lib/json-repair'
-
 export const CHUNK_SIZE = 3000
 const INVALID_LOCATION_KEYWORDS = ['幻想', '抽象', '无明确', '空间锚点', '未说明', '不明确']
 
@@ -38,7 +36,17 @@ export function chunkContent(text: string, maxSize = CHUNK_SIZE): string[] {
 }
 
 export function parseJsonResponse(responseText: string): Record<string, unknown> {
-  return safeParseJsonObject(responseText)
+  let cleanedText = responseText.trim()
+  cleanedText = cleanedText.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '')
+  const firstBrace = cleanedText.indexOf('{')
+  const lastBrace = cleanedText.lastIndexOf('}')
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleanedText = cleanedText.substring(firstBrace, lastBrace + 1)
+  }
+  cleanedText = cleanedText.replace(/,\s*([}\]])/g, '$1')
+  cleanedText = cleanedText.replace(/[""]/g, '"')
+  cleanedText = cleanedText.replace(/[\x00-\x1F\x7F]/g, '')
+  return JSON.parse(cleanedText) as Record<string, unknown>
 }
 
 export function readText(value: unknown): string {

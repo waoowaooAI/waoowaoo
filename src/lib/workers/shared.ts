@@ -53,15 +53,12 @@ function extractFlowFields(jobData: TaskJobData): Record<string, unknown> {
   const flowStageTitle = readStringField(payload, 'flowStageTitle')
   const flowStageIndex = readPositiveIntField(payload, 'flowStageIndex')
   const flowStageTotal = readPositiveIntField(payload, 'flowStageTotal')
-  const payloadMeta = toObject(payload.meta)
-  const runId = readStringField(payload, 'runId') || readStringField(payloadMeta, 'runId')
 
   return {
     ...(flowId ? { flowId } : {}),
     ...(flowStageTitle ? { flowStageTitle } : {}),
     ...(flowStageIndex ? { flowStageIndex } : {}),
     ...(flowStageTotal ? { flowStageTotal } : {}),
-    ...(runId ? { runId } : {}),
   }
 }
 

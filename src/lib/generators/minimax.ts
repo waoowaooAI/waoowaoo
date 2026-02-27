@@ -8,7 +8,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 
 import { BaseVideoGenerator, VideoGenerateParams, GenerateResult } from './base'
 import { getProviderConfig } from '@/lib/api-config'
-import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { imageUrlToBase64 } from '@/lib/cos'
 
 const MINIMAX_BASE_URL = 'https://api.minimaxi.com/v1'
 type MinimaxVideoGenerationMode = 'normal' | 'firstlastframe'
@@ -255,12 +255,12 @@ export class MinimaxVideoGenerator extends BaseVideoGenerator {
         }
 
         if (modelSpec.supportsImageInput && hasFirstFrameImage) {
-            const firstFrameDataUrl = imageUrl.startsWith('data:') ? imageUrl : await normalizeToBase64ForGeneration(imageUrl)
+            const firstFrameDataUrl = imageUrl.startsWith('data:') ? imageUrl : await imageUrlToBase64(imageUrl)
             requestBody.first_frame_image = firstFrameDataUrl
             if (generationMode === 'firstlastframe' && isNonEmptyString(lastFrameImageUrl)) {
                 const lastFrameDataUrl = lastFrameImageUrl.startsWith('data:')
                     ? lastFrameImageUrl
-                    : await normalizeToBase64ForGeneration(lastFrameImageUrl)
+                    : await imageUrlToBase64(lastFrameImageUrl)
                 requestBody.last_frame_image = lastFrameDataUrl
                 _ulogInfo(`${logPrefix} 使用首尾帧图片 (已转Data URL)`)
             } else {

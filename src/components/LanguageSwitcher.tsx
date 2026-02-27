@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useLocale } from 'next-intl'
+import { useParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { type Locale } from '@/i18n/routing'
 import ConfirmDialog from './ConfirmDialog'
 import { AppIcon } from '@/components/ui/icons'
-import { usePathname, useRouter } from '@/i18n/navigation'
 
 const LANGUAGE_LABELS: Record<Locale, string> = {
     zh: '简体中文',
@@ -38,16 +38,19 @@ function isSupportedLocale(locale?: string): locale is Locale {
 export default function LanguageSwitcher() {
     const router = useRouter()
     const pathname = usePathname()
-    const locale = useLocale()
+    const params = useParams<{ locale?: string }>()
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [pendingLocale, setPendingLocale] = useState<Locale | null>(null)
 
-    if (!isSupportedLocale(locale)) {
-        throw new Error('LanguageSwitcher requires locale to be zh or en')
+    if (!pathname) {
+        throw new Error('LanguageSwitcher requires a non-null pathname')
     }
-    const currentLocale: Locale = locale
+    if (!isSupportedLocale(params?.locale)) {
+        throw new Error('LanguageSwitcher requires locale param to be zh or en')
+    }
+    const currentLocale: Locale = params.locale
     const targetLocale: Locale = currentLocale === 'zh' ? 'en' : 'zh'
     const activeLocaleForCopy: Locale = pendingLocale ?? targetLocale
     const confirmCopy = SWITCH_CONFIRM_COPY[activeLocaleForCopy]
@@ -78,9 +81,10 @@ export default function LanguageSwitcher() {
         if (!pendingLocale) {
             throw new Error('LanguageSwitcher confirm requires a pending locale')
         }
+        const newPathname = pathname.replace(`/${currentLocale}`, `/${pendingLocale}`)
         setShowConfirm(false)
         setPendingLocale(null)
-        router.replace(pathname, { locale: pendingLocale })
+        router.push(newPathname)
     }
 
     const cancelLanguageSwitch = () => {

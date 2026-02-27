@@ -1,10 +1,15 @@
+import { logError as _ulogError } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { ApiError, apiHandler } from '@/lib/api-errors'
 import { attachMediaFieldsToGlobalLocation } from '@/lib/media/attach'
-import { isArtStyleValue } from '@/lib/constants'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
+import { resolveTaskLocale } from '@/lib/task/resolve-locale'
+
+function toObject(value: unknown): Record<string, unknown> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+    return value as Record<string, unknown>
+}
 
 // 获取用户所有场景（支持 folderId 筛选）
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -44,20 +49,13 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const { session } = authResult
 
     const body = await request.json()
+    const taskLocale = resolveTaskLocale(request, body)
+    const bodyMeta = toObject((body as Record<string, unknown>).meta)
+    const acceptLanguage = request.headers.get('accept-language') || ''
     const { name, summary, folderId, artStyle } = body
-    const count = Object.prototype.hasOwnProperty.call(body as Record<string, unknown>, 'count')
-        ? normalizeImageGenerationCount('location', (body as Record<string, unknown>).count)
-        : 1
 
     if (!name) {
         throw new ApiError('INVALID_PARAMS')
-    }
-    const normalizedArtStyle = typeof artStyle === 'string' ? artStyle.trim() : ''
-    if (!isArtStyleValue(normalizedArtStyle)) {
-        throw new ApiError('INVALID_PARAMS', {
-            code: 'INVALID_ART_STYLE',
-            message: 'artStyle is required and must be a supported value',
-        })
     }
 
     if (folderId) {
@@ -74,23 +72,47 @@ export const POST = apiHandler(async (request: NextRequest) => {
             userId: session.user.id,
             folderId: folderId || null,
             name: name.trim(),
-            artStyle: normalizedArtStyle,
             summary: summary?.trim() || null
         }
     })
 
     await prisma.globalLocationImage.createMany({
-        data: Array.from({ length: count }, (_value, imageIndex) => ({
-            locationId: location.id,
-            imageIndex,
-            description: summary?.trim() || name.trim(),
-        }))
+        data: [
+            { locationId: location.id, imageIndex: 0, description: summary?.trim() || name.trim() },
+            { locationId: location.id, imageIndex: 1, description: summary?.trim() || name.trim() },
+            { locationId: location.id, imageIndex: 2, description: summary?.trim() || name.trim() }
+        ]
     })
 
     const locationWithImages = await prisma.globalLocation.findUnique({
         where: { id: location.id },
         include: { images: true }
     })
+
+    if (summary?.trim()) {
+        const { getBaseUrl } = await import('@/lib/env')
+        const baseUrl = getBaseUrl()
+        fetch(`${baseUrl}/api/asset-hub/generate-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': request.headers.get('cookie') || '',
+                ...(acceptLanguage ? { 'Accept-Language': acceptLanguage } : {})
+            },
+            body: JSON.stringify({
+                type: 'location',
+                id: location.id,
+                artStyle: artStyle || 'american-comic',
+                locale: taskLocale || undefined,
+                meta: {
+                    ...bodyMeta,
+                    locale: taskLocale || bodyMeta.locale || undefined,
+                },
+            })
+        }).catch(err => {
+            _ulogError('[Locations API] 后台生成任务触发失败:', err)
+        })
+    }
 
     const withMedia = locationWithImages
         ? await attachMediaFieldsToGlobalLocation(locationWithImages)

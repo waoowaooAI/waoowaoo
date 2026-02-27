@@ -8,15 +8,12 @@ import {
   useAiDesignCharacter,
   useCreateAssetHubCharacter,
   useCreateProjectCharacter,
-  useGenerateCharacterImage,
-  useGenerateProjectCharacterImage,
   useCreateProjectCharacterAppearance,
   useExtractAssetHubReferenceCharacterDescription,
   useExtractProjectReferenceCharacterDescription,
   useUploadAssetHubTempMedia,
   useUploadProjectTempMedia,
 } from '@/lib/query/hooks'
-import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
 
 type Mode = 'asset-hub' | 'project'
 
@@ -75,27 +72,7 @@ export function useCharacterCreationSubmit({
   const extractProjectDescription = useExtractProjectReferenceCharacterDescription(projectId ?? '')
   const createAssetHubCharacter = useCreateAssetHubCharacter()
   const createProjectCharacter = useCreateProjectCharacter(projectId ?? '')
-  const generateAssetHubCharacterImage = useGenerateCharacterImage()
-  const generateProjectCharacterImage = useGenerateProjectCharacterImage(projectId ?? '')
   const createProjectAppearance = useCreateProjectCharacterAppearance(projectId ?? '')
-  const {
-    count: characterGenerationCount,
-    setCount: setCharacterGenerationCount,
-  } = useImageGenerationCount('character')
-  const {
-    count: referenceCharacterGenerationCount,
-    setCount: setReferenceCharacterGenerationCount,
-  } = useImageGenerationCount('reference-to-character')
-
-  type CreatedCharacterResponse = {
-    character?: {
-      id: string
-      appearances?: Array<{
-        id: string
-        appearanceIndex: number
-      }>
-    }
-  }
 
   const uploadReferenceImages = useCallback(async () => {
     const uploadMutation = mode === 'asset-hub' ? uploadAssetHubTemp : uploadProjectTemp
@@ -161,16 +138,15 @@ export function useCharacterCreationSubmit({
           generateFromReference: true,
           referenceImageUrls,
           customDescription: referenceSubMode === 'extract' ? finalDescription : undefined,
-          count: referenceCharacterGenerationCount,
         })
       } else {
         await createProjectCharacter.mutateAsync({
           name: name.trim(),
           description: finalDescription || t('character.defaultDescription', { name: name.trim() }),
+          artStyle,
           generateFromReference: true,
           referenceImageUrls,
           customDescription: referenceSubMode === 'extract' ? finalDescription : undefined,
-          count: referenceCharacterGenerationCount,
         })
       }
 
@@ -259,6 +235,7 @@ export function useCharacterCreationSubmit({
         await createProjectCharacter.mutateAsync({
           name: name.trim(),
           description: description.trim(),
+          artStyle,
         })
       }
       onSuccess()
@@ -287,91 +264,13 @@ export function useCharacterCreationSubmit({
     t,
   ])
 
-  const handleSubmitAndGenerate = useCallback(async () => {
-    if (isSubAppearance) {
-      await handleSubmit()
-      return
-    }
-
-    if (!name.trim() || !description.trim()) return
-
-    try {
-      setIsSubmitting(true)
-
-      if (mode === 'asset-hub') {
-        const result = await createAssetHubCharacter.mutateAsync({
-          name: name.trim(),
-          description: description.trim(),
-          folderId: folderId ?? null,
-          artStyle,
-        }) as CreatedCharacterResponse
-        const createdCharacterId = result.character?.id
-        const createdAppearanceIndex = result.character?.appearances?.[0]?.appearanceIndex
-        if (!createdCharacterId || createdAppearanceIndex === undefined) {
-          throw new Error(t('errors.createFailed'))
-        }
-        await generateAssetHubCharacterImage.mutateAsync({
-          characterId: createdCharacterId,
-          appearanceIndex: createdAppearanceIndex,
-          artStyle,
-          count: characterGenerationCount,
-        })
-      } else {
-        const result = await createProjectCharacter.mutateAsync({
-          name: name.trim(),
-          description: description.trim(),
-        }) as CreatedCharacterResponse
-        const createdCharacterId = result.character?.id
-        const createdAppearanceId = result.character?.appearances?.[0]?.id
-        if (!createdCharacterId || !createdAppearanceId) {
-          throw new Error(t('errors.createFailed'))
-        }
-        await generateProjectCharacterImage.mutateAsync({
-          characterId: createdCharacterId,
-          appearanceId: createdAppearanceId,
-          count: characterGenerationCount,
-        })
-      }
-
-      onSuccess()
-      onClose()
-    } catch (error: unknown) {
-      if (shouldShowError(error)) {
-        alert(getErrorMessage(error, t('errors.createFailed')))
-      }
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [
-    artStyle,
-    characterGenerationCount,
-    createAssetHubCharacter,
-    createProjectCharacter,
-    description,
-    folderId,
-    generateAssetHubCharacterImage,
-    generateProjectCharacterImage,
-    handleSubmit,
-    isSubAppearance,
-    mode,
-    name,
-    onClose,
-    onSuccess,
-    t,
-  ])
-
   return {
     isSubmitting,
     isAiDesigning,
     isExtracting,
-    characterGenerationCount,
-    setCharacterGenerationCount,
-    referenceCharacterGenerationCount,
-    setReferenceCharacterGenerationCount,
     handleExtractDescription,
     handleCreateWithReference,
     handleAiDesign,
     handleSubmit,
-    handleSubmitAndGenerate,
   }
 }

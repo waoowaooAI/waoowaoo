@@ -13,7 +13,7 @@ export default function ConfigStage() {
       novelText={novelText}
       episodeName={episodeName}
       onNovelTextChange={runtime.onNovelTextChange}
-      isSubmittingTask={runtime.isSubmittingTTS || runtime.isStartingStoryToScript}
+      isSubmittingTask={runtime.isSubmittingTTS}
       isSwitchingStage={runtime.isTransitioning}
       videoRatio={runtime.videoRatio ?? undefined}
       artStyle={runtime.artStyle ?? undefined}

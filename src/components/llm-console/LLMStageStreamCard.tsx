@@ -9,8 +9,6 @@ export type LLMStageViewStatus =
   | 'processing'
   | 'completed'
   | 'failed'
-  | 'blocked'
-  | 'stale'
 
 export type LLMStageViewItem = {
   id: string
@@ -18,8 +16,6 @@ export type LLMStageViewItem = {
   subtitle?: string
   status: LLMStageViewStatus
   progress?: number
-  attempt?: number
-  retryable?: boolean
 }
 
 export type LLMStageStreamCardProps = {
@@ -29,7 +25,6 @@ export type LLMStageStreamCardProps = {
   activeStageId: string
   selectedStageId?: string
   onSelectStage?: (stageId: string) => void
-  onRetryStage?: (stageId: string) => void
   outputText: string
   placeholderText?: string
   activeMessage?: string
@@ -47,8 +42,6 @@ const FINAL_HEADER = '【最终结果】'
 
 function statusClass(status: LLMStageViewStatus): string {
   if (status === 'completed') return 'glass-chip glass-chip-success'
-  if (status === 'stale') return 'glass-chip glass-chip-warning'
-  if (status === 'blocked') return 'glass-chip glass-chip-warning'
   if (status === 'failed') return 'glass-chip glass-chip-danger'
   if (status === 'processing') return 'glass-chip glass-chip-info'
   if (status === 'queued') return 'glass-chip glass-chip-warning'
@@ -60,55 +53,7 @@ function clampProgress(value: number): number {
   return Math.max(0, Math.min(100, value))
 }
 
-function splitThinkTaggedContent(input: string): { text: string; reasoning: string } {
-  const thinkTagPattern = /<(think|thinking)\b[^>]*>([\s\S]*?)<\/\1>/gi
-  const reasoningParts: string[] = []
-  let hadTag = false
-
-  let stripped = input.replace(thinkTagPattern, (_fullMatch, _tagName: string, inner: string) => {
-    hadTag = true
-    const trimmed = inner.trim()
-    if (trimmed) reasoningParts.push(trimmed)
-    return ''
-  })
-
-  const openTagMatch = stripped.match(/<(think|thinking)\b[^>]*>/i)
-  if (openTagMatch && typeof openTagMatch.index === 'number') {
-    hadTag = true
-    const start = openTagMatch.index
-    const openTag = openTagMatch[0]
-    const tail = stripped
-      .slice(start + openTag.length)
-      .replace(/<\/(think|thinking)\s*>/gi, '')
-      .trim()
-    if (tail) reasoningParts.push(tail)
-    stripped = stripped.slice(0, start)
-  }
-
-  if (!hadTag) {
-    return {
-      text: input,
-      reasoning: '',
-    }
-  }
-
-  return {
-    text: stripped.trim(),
-    reasoning: reasoningParts.join('\n\n').trim(),
-  }
-}
-
-function mergeReasoning(base: string, incoming: string): string {
-  const next = incoming.trim()
-  if (!next) return base
-  const prev = base.trim()
-  if (!prev) return next
-  if (next.startsWith(prev)) return next
-  if (prev.includes(next)) return base
-  return `${prev}\n\n${next}`
-}
-
-export function splitStructuredOutput(raw: string): {
+function splitStructuredOutput(raw: string): {
   hasStructured: boolean
   showReasoning: boolean
   showFinal: boolean
@@ -128,19 +73,18 @@ export function splitStructuredOutput(raw: string): {
 
   const finalIndex = normalized.indexOf(FINAL_HEADER)
   if (normalized.startsWith(REASONING_HEADER) && finalIndex >= 0) {
-    const reasoningRaw = normalized
+    const reasoning = normalized
       .slice(REASONING_HEADER.length, finalIndex)
       .trim()
-    const finalRaw = normalized
+    const finalText = normalized
       .slice(finalIndex + FINAL_HEADER.length)
       .trim()
-    const parsedFinal = splitThinkTaggedContent(finalRaw)
     return {
       hasStructured: true,
       showReasoning: true,
       showFinal: true,
-      reasoning: mergeReasoning(reasoningRaw, parsedFinal.reasoning),
-      finalText: parsedFinal.text,
+      reasoning,
+      finalText,
     }
   }
 
@@ -154,14 +98,12 @@ export function splitStructuredOutput(raw: string): {
     }
   }
 
-  const finalRaw = normalized.slice(FINAL_HEADER.length).trim()
-  const parsedFinal = splitThinkTaggedContent(finalRaw)
   return {
     hasStructured: true,
     showReasoning: true,
     showFinal: true,
-    reasoning: parsedFinal.reasoning,
-    finalText: parsedFinal.text,
+    reasoning: '',
+    finalText: normalized.slice(FINAL_HEADER.length).trim(),
   }
 }
 
@@ -172,7 +114,6 @@ export default function LLMStageStreamCard({
   activeStageId,
   selectedStageId,
   onSelectStage,
-  onRetryStage,
   outputText,
   placeholderText,
   activeMessage,
@@ -199,8 +140,6 @@ export default function LLMStageStreamCard({
 
   const statusLabel = useCallback((status: LLMStageViewStatus): string => {
     if (status === 'completed') return t('status.completed')
-    if (status === 'stale') return 'Stale'
-    if (status === 'blocked') return 'Blocked'
     if (status === 'failed') return t('status.failed')
     if (status === 'processing') return t('status.processing')
     if (status === 'queued') return t('status.queued')
@@ -223,18 +162,7 @@ export default function LLMStageStreamCard({
   const activeStage = stages[activeIndex] || stages[0]
   const outputStage = stages.find((stage) => stage.id === outputStageId) || activeStage
   const stageCount = stages.length
-  const completedCount = stages.filter((stage) => stage.status === 'completed' || stage.status === 'stale').length
-  const hasPendingWork = stages.some((stage) =>
-    stage.status === 'processing' ||
-    stage.status === 'queued' ||
-    stage.status === 'pending' ||
-    stage.status === 'blocked',
-  )
-  const currentStep = stageCount === 0
-    ? 0
-    : hasPendingWork
-      ? Math.min(stageCount, Math.max(1, completedCount))
-      : stageCount
+  const currentStep = Math.min(stageCount, activeIndex + 1)
   const normalizedOverallProgress =
     typeof overallProgress === 'number'
       ? clampProgress(overallProgress)
@@ -383,11 +311,9 @@ export default function LLMStageStreamCard({
         </div>
 
         {errorMessage && (
-          <div className="mt-3 flex flex-col gap-2 rounded-lg bg-[var(--glass-tone-danger-bg)] px-4 py-2.5 text-[var(--glass-tone-danger-fg)]">
-            <div className="flex items-center gap-2">
-              <span className="text-base">⚠️</span>
-              <span className="text-sm font-medium">{errorMessage}</span>
-            </div>
+          <div className="mt-3 flex items-center gap-2 rounded-lg bg-[var(--glass-tone-danger-bg)] px-4 py-2.5 text-[var(--glass-tone-danger-fg)]">
+            <span className="text-base">⚠️</span>
+            <span className="text-sm font-medium">{errorMessage}</span>
           </div>
         )}
       </header>
@@ -395,67 +321,32 @@ export default function LLMStageStreamCard({
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-5 md:grid-cols-[17rem_1fr] md:gap-5 md:p-6">
         <aside className="glass-surface-soft min-h-0 rounded-xl border border-[var(--glass-stroke-base)] p-3">
           <ul className="max-h-[40vh] space-y-2 overflow-y-auto pr-1 md:h-full md:max-h-none">
-            {stages.map((stage, index) => {
+            {stages.map((stage) => {
               const isActive = stage.id === outputStageId
               const progress = clampProgress(stage.progress || 0)
-              const attempt =
-                typeof stage.attempt === 'number' && Number.isFinite(stage.attempt)
-                  ? Math.max(1, Math.floor(stage.attempt))
-                  : 1
-              const showRetryButton =
-                stage.status === 'failed'
-                && stage.retryable !== false
-                && typeof onRetryStage === 'function'
               return (
                 <li key={stage.id}>
-                  <div
-                    className={`rounded-lg border p-2.5 ${isActive
-                      ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)]'
-                      : 'border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]'
-                      }`}
+                  <button
+                    type="button"
+                    onClick={() => onSelectStage?.(stage.id)}
+                    className={`w-full rounded-lg border p-2.5 text-left ${isActive
+                        ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)]'
+                        : 'border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]'
+                      } ${onSelectStage ? 'cursor-pointer hover:border-[var(--glass-stroke-focus)]' : 'cursor-default'}`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => onSelectStage?.(stage.id)}
-                      className={`w-full text-left ${onSelectStage ? 'cursor-pointer' : 'cursor-default'}`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span className="glass-chip glass-chip-neutral min-w-6 justify-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-none">
-                            {index + 1}
-                          </span>
-                          {attempt > 1 && (
-                            <span className="glass-chip glass-chip-warning min-w-6 justify-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-none">
-                              ×{attempt}
-                            </span>
-                          )}
-                          <p className="truncate text-sm font-medium text-[var(--glass-text-primary)]">
-                            {resolveProgressText(stage.title, 'stageCard.currentStage')}
-                          </p>
-                        </div>
-                        <span className={statusClass(stage.status)}>{statusLabel(stage.status)}</span>
-                      </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--glass-bg-muted)]">
-                        <div
-                          className="h-full rounded-full bg-[var(--glass-accent-from)] transition-[width] duration-200"
-                          style={{ width: `${Math.max(progress, stage.status === 'completed' ? 100 : 2)}%` }}
-                        />
-                      </div>
-                    </button>
-                    {showRetryButton && (
-                      <div className="mt-2 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void onRetryStage(stage.id)
-                          }}
-                          className="glass-btn-base glass-btn-primary rounded-md px-2.5 py-1 text-[11px]"
-                        >
-                          重试
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-medium text-[var(--glass-text-primary)]">
+                        {resolveProgressText(stage.title, 'stageCard.currentStage')}
+                      </p>
+                      <span className={statusClass(stage.status)}>{statusLabel(stage.status)}</span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--glass-bg-muted)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--glass-accent-from)] transition-[width] duration-200"
+                        style={{ width: `${Math.max(progress, stage.status === 'completed' ? 100 : 2)}%` }}
+                      />
+                    </div>
+                  </button>
                 </li>
               )
             })}

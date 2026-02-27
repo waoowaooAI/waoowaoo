@@ -24,7 +24,7 @@ import {
 } from './base'
 import { getProviderConfig } from '@/lib/api-config'
 import { arkImageGeneration, arkCreateVideoTask } from '@/lib/ark-api'
-import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { imageUrlToBase64 } from '@/lib/cos'
 
 interface ArkImageOptions {
     aspectRatio?: string
@@ -117,7 +117,7 @@ function isInteger(value: unknown): value is number {
 // 图像尺寸映射表
 // ============================================================
 
-// 4K 分辨率映射表（Seedream 4.x，上限 4096x4096 ≈ 16.7M 像素）
+// 4K 分辨率映射表（火山引擎 Seedream 只支持 4K）
 const SIZE_MAP_4K: Record<string, string> = {
     '1:1': '4096x4096',
     '16:9': '5456x3072',
@@ -128,28 +128,6 @@ const SIZE_MAP_4K: Record<string, string> = {
     '2:3': '3344x5016',
     '21:9': '6256x2680',
     '9:21': '2680x6256',
-}
-
-// 3K 分辨率映射表（Seedream 5.0，上限 ≈ 10,404,496 像素）
-const SIZE_MAP_3K: Record<string, string> = {
-    '1:1': '3072x3072',
-    '16:9': '4096x2304',
-    '9:16': '2304x4096',
-    '4:3': '3648x2736',
-    '3:4': '2736x3648',
-    '3:2': '3888x2592',
-    '2:3': '2592x3888',
-    '21:9': '4704x2016',
-    '9:21': '2016x4704',
-}
-
-/** Seedream 5.0 系列使用 3K 尺寸映射 */
-function isSeedream5Model(modelId: string): boolean {
-    return modelId.includes('seedream-5')
-}
-
-function getSizeMapForModel(modelId: string): Record<string, string> {
-    return isSeedream5Model(modelId) ? SIZE_MAP_3K : SIZE_MAP_4K
 }
 
 // ============================================================
@@ -183,12 +161,11 @@ export class ArkImageGenerator extends BaseImageGenerator {
         }
 
         const resolution = (options as ArkImageOptions).resolution
-        if (resolution !== undefined && resolution !== '4K' && resolution !== '3K') {
+        if (resolution !== undefined && resolution !== '4K') {
             throw new Error(`ARK_IMAGE_OPTION_VALUE_UNSUPPORTED: resolution=${resolution}`)
         }
 
-        // 决定最终 size：根据模型选择合适的尺寸映射表
-        const sizeMap = getSizeMapForModel(modelId)
+        // 决定最终 size
         let size: string | undefined
         if (directSize) {
             size = directSize
@@ -196,7 +173,7 @@ export class ArkImageGenerator extends BaseImageGenerator {
             if (!aspectRatio) {
                 throw new Error('ARK_IMAGE_OPTION_REQUIRED: aspectRatio or size must be provided')
             }
-            size = sizeMap[aspectRatio]
+            size = SIZE_MAP_4K[aspectRatio]
             if (!size) {
                 throw new Error(`ARK_IMAGE_OPTION_VALUE_UNSUPPORTED: aspectRatio=${aspectRatio}`)
             }
@@ -208,7 +185,7 @@ export class ArkImageGenerator extends BaseImageGenerator {
         const base64Images: string[] = []
         for (const imageUrl of referenceImages) {
             try {
-                const base64 = await normalizeToBase64ForGeneration(imageUrl)
+                const base64 = await imageUrlToBase64(imageUrl)
                 base64Images.push(base64)
             } catch {
                 _ulogInfo(`[ARK Image] 参考图片转换失败: ${imageUrl}`)
@@ -392,7 +369,7 @@ export class ArkVideoGenerator extends BaseVideoGenerator {
         _ulogInfo(`[ARK Video] 模型: ${realModel}, 批量: ${isBatchMode}, 分辨率: ${resolution || '(默认)'}, 时长: ${duration ?? '(默认)'}`)
 
         // 转换图片为 base64
-        const imageBase64 = await normalizeToBase64ForGeneration(imageUrl)
+        const imageBase64 = await imageUrlToBase64(imageUrl)
 
         // 构建请求体 content
         const content: ArkVideoContentItem[] = []
@@ -402,7 +379,7 @@ export class ArkVideoGenerator extends BaseVideoGenerator {
 
         if (lastFrameImageUrl) {
             // 首尾帧模式
-            const lastImageBase64 = await normalizeToBase64ForGeneration(lastFrameImageUrl)
+            const lastImageBase64 = await imageUrlToBase64(lastFrameImageUrl)
             content.push({
                 type: 'image_url',
                 image_url: { url: imageBase64 },

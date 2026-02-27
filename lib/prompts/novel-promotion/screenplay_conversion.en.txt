@@ -57,4 +57,3 @@ Rules:
 3. Resolve character aliases to canonical names when possible.
 4. Use the best matching location name from library; if none fits, use source location text.
 5. Return strict JSON only.
-6. ⚠️ JSON SAFETY: All quotation marks in dialogue (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values—they break JSON structure.

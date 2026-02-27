@@ -11,8 +11,8 @@ export default createMiddleware({
     // URL 路径策略: 始终显示语言前缀
     localePrefix: 'always',
 
-    // 关闭自动语言检测，避免无前缀跳转触发语言漂移
-    localeDetection: false
+    // 语言检测: 根据 Accept-Language header 自动检测
+    localeDetection: true
 });
 
 export const config = {

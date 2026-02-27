@@ -17,11 +17,7 @@ const sharpMock = vi.hoisted(() =>
 )
 
 const generatorApiMock = vi.hoisted(() => ({
-  generateImage: vi.fn<(userId: string, modelId: string, prompt: string, options?: Record<string, unknown>) => Promise<{
-    success: boolean
-    imageUrl: string
-    async: boolean
-  }>>(async () => ({
+  generateImage: vi.fn(async () => ({
     success: true,
     imageUrl: 'https://example.com/generated.jpg',
     async: false,
@@ -59,7 +55,7 @@ const cosMock = vi.hoisted(() => {
   return {
     generateUniqueKey: vi.fn(() => `reference-key-${++keyIndex}.jpg`),
     getSignedUrl: vi.fn((key: string) => `https://signed.example/${key}`),
-    uploadObject: vi.fn(async (_buffer: Buffer, key: string) => `cos/${key}`),
+    uploadToCOS: vi.fn(async (_buffer: Buffer, key: string) => `cos/${key}`),
   }
 })
 
@@ -90,9 +86,7 @@ const promptI18nMock = vi.hoisted(() => ({
 
 const prismaMock = vi.hoisted(() => ({
   globalCharacterAppearance: {
-    update: vi.fn<(input: { data?: Record<string, unknown>; where?: Record<string, unknown> }) => Promise<Record<string, never>>>(
-      async () => ({}),
-    ),
+    update: vi.fn(async () => ({})),
   },
   characterAppearance: {
     update: vi.fn(async () => ({})),
@@ -109,7 +103,7 @@ vi.mock('@/lib/ark-api', () => arkApiMock)
 vi.mock('@/lib/api-config', () => apiConfigMock)
 vi.mock('@/lib/config-service', () => configServiceMock)
 vi.mock('@/lib/llm-client', () => llmClientMock)
-vi.mock('@/lib/storage', () => cosMock)
+vi.mock('@/lib/cos', () => cosMock)
 vi.mock('@/lib/fonts', () => fontsMock)
 vi.mock('@/lib/workers/shared', () => workersSharedMock)
 vi.mock('@/lib/workers/utils', () => workersUtilsMock)
@@ -199,7 +193,7 @@ describe('worker reference-to-character', () => {
 
     const result = await handleReferenceToCharacterTask(job)
 
-    expect(result).toEqual(expect.objectContaining({ success: true }))
+    expect(result).toEqual({ success: true })
     expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(3)
 
     const { prompt, options } = readGenerateCall(0)
@@ -217,24 +211,5 @@ describe('worker reference-to-character', () => {
     expect(updateData.description).toBe('AI_EXTRACTED_DESCRIPTION')
     expect(typeof updateData.imageUrls).toBe('string')
     expect(updateData.imageUrl).toMatch(/^cos\/reference-key-\d+\.jpg$/)
-  })
-
-  it('uses requested count when generating reference character sheets', async () => {
-    const job = buildJob(
-      {
-        referenceImageUrls: ['https://example.com/ref-a.png'],
-        characterName: 'Hero',
-        count: 5,
-      },
-      TASK_TYPE.REFERENCE_TO_CHARACTER,
-    )
-
-    const result = await handleReferenceToCharacterTask(job)
-
-    expect(result).toEqual(expect.objectContaining({ success: true }))
-    expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(5)
-    const cosKeys = (result as { cosKeys?: string[] }).cosKeys
-    expect(cosKeys).toHaveLength(5)
-    expect(cosKeys?.every((item) => item.startsWith('cos/reference-key-'))).toBe(true)
   })
 })

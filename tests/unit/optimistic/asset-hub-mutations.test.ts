@@ -71,7 +71,6 @@ function buildGlobalCharacter(selectedIndex: number | null): GlobalCharacter {
       id: 'appearance-1',
       appearanceIndex: 0,
       changeReason: 'default',
-      artStyle: 'realistic',
       description: null,
       descriptionSource: null,
       imageUrl: selectedIndex === null ? null : `img-${selectedIndex}`,
@@ -90,7 +89,6 @@ function buildGlobalLocation(id: string): GlobalLocation {
     name: `Location ${id}`,
     summary: null,
     folderId: 'folder-1',
-    artStyle: 'realistic',
     images: [{
       id: `${id}-img-0`,
       imageIndex: 0,

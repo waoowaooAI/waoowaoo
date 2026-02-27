@@ -1,10 +1,49 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { subscribeRecoveredRun } from '@/lib/query/hooks/run-stream/recovered-run-subscription'
 
-function jsonResponse(payload: unknown, status = 200) {
+type MockEvent = {
+  id: string
+  type: string
+  taskId: string
+  projectId: string
+  userId: string
+  ts: string
+  taskType: string
+  targetType: string
+  targetId: string
+  episodeId: string | null
+  payload: Record<string, unknown>
+}
+
+function buildLifecycleEvent(payload: Record<string, unknown>): MockEvent {
   return {
-    ok: status >= 200 && status < 300,
-    json: async () => payload,
+    id: '1',
+    type: 'task.lifecycle',
+    taskId: 'task-1',
+    projectId: 'project-1',
+    userId: 'user-1',
+    ts: new Date().toISOString(),
+    taskType: 'script_to_storyboard_run',
+    targetType: 'episode',
+    targetId: 'episode-1',
+    episodeId: 'episode-1',
+    payload,
+  }
+}
+
+function buildStreamEvent(payload: Record<string, unknown>): MockEvent {
+  return {
+    id: 'stream-1',
+    type: 'task.stream',
+    taskId: 'task-1',
+    projectId: 'project-1',
+    userId: 'user-1',
+    ts: new Date().toISOString(),
+    taskType: 'script_to_storyboard_run',
+    targetType: 'episode',
+    targetId: 'episode-1',
+    episodeId: 'episode-1',
+    payload,
   }
 }
 
@@ -23,7 +62,6 @@ describe('recovered run subscription', () => {
   afterEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
-    vi.useRealTimers()
     if (originalFetch) {
       globalThis.fetch = originalFetch
     } else {
@@ -31,76 +69,82 @@ describe('recovered run subscription', () => {
     }
   })
 
-  it('replays run events and keeps recovering when no terminal event is present', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({
+  it('replays task lifecycle events for external mode to recover stage steps', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
         events: [
-          {
-            seq: 1,
-            eventType: 'step.start',
-            stepKey: 'clip_1_phase1',
-            attempt: 1,
-            payload: {
-              stepTitle: '分镜规划',
-              stepIndex: 1,
-              stepTotal: 4,
-              message: 'running',
-            },
-            createdAt: '2026-02-28T00:00:01.000Z',
-          },
+          buildLifecycleEvent({
+            lifecycleType: 'task.processing',
+            stepId: 'clip_1_phase1',
+            stepTitle: '分镜规划',
+            stepIndex: 1,
+            stepTotal: 4,
+            message: 'running',
+          }),
         ],
       }),
-    )
+    })
     globalThis.fetch = fetchMock as unknown as typeof fetch
 
     const applyAndCapture = vi.fn()
+    const pollTaskTerminalState = vi.fn(async () => null)
     const onSettled = vi.fn()
 
     const cleanup = subscribeRecoveredRun({
-      runId: 'run-1',
+      projectId: 'project-1',
+      storageScopeKey: 'episode-1',
+      taskId: 'task-1',
+      eventSourceMode: 'external',
       taskStreamTimeoutMs: 10_000,
       applyAndCapture,
+      pollTaskTerminalState,
       onSettled,
     })
 
     await waitForCondition(() => fetchMock.mock.calls.length > 0 && applyAndCapture.mock.calls.length > 0)
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/runs/run-1/events?afterSeq=0&limit=500',
-      expect.objectContaining({ method: 'GET', cache: 'no-store' }),
+      '/api/tasks/task-1?includeEvents=1&eventsLimit=5000',
+      expect.objectContaining({
+        method: 'GET',
+        cache: 'no-store',
+      }),
     )
     expect(applyAndCapture).toHaveBeenCalledWith(expect.objectContaining({
       event: 'step.start',
-      runId: 'run-1',
+      runId: 'task-1',
       stepId: 'clip_1_phase1',
     }))
     expect(onSettled).not.toHaveBeenCalled()
     cleanup()
   })
 
-  it('settles recovery when replay hits terminal run event', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({
+  it('settles external recovery when replay hits terminal lifecycle event', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
         events: [
-          {
-            seq: 1,
-            eventType: 'run.error',
-            payload: {
-              message: 'exception TypeError: fetch failed sending request',
-            },
-            createdAt: '2026-02-28T00:00:02.000Z',
-          },
+          buildLifecycleEvent({
+            lifecycleType: 'task.failed',
+            message: 'exception TypeError: fetch failed sending request',
+          }),
         ],
       }),
-    )
+    })
     globalThis.fetch = fetchMock as unknown as typeof fetch
 
     const applyAndCapture = vi.fn()
+    const pollTaskTerminalState = vi.fn(async () => null)
     const onSettled = vi.fn()
 
     subscribeRecoveredRun({
-      runId: 'run-1',
+      projectId: 'project-1',
+      storageScopeKey: 'episode-1',
+      taskId: 'task-1',
+      eventSourceMode: 'external',
       taskStreamTimeoutMs: 10_000,
       applyAndCapture,
+      pollTaskTerminalState,
       onSettled,
     })
 
@@ -108,171 +152,59 @@ describe('recovered run subscription', () => {
     expect(onSettled).toHaveBeenCalledTimes(1)
     expect(applyAndCapture).toHaveBeenCalledWith(expect.objectContaining({
       event: 'run.error',
-      runId: 'run-1',
+      runId: 'task-1',
     }))
   })
 
-  it('replays step.chunk output so refresh keeps prior text', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({
+  it('replays persisted stream events so refresh keeps prior output', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
         events: [
-          {
-            seq: 1,
-            eventType: 'step.chunk',
-            stepKey: 'clip_1_phase1',
-            payload: {
-              stream: {
-                kind: 'text',
-                lane: 'main',
-                seq: 1,
-                delta: '旧输出',
-              },
+          buildLifecycleEvent({
+            lifecycleType: 'task.processing',
+            stepId: 'clip_1_phase1',
+            stepTitle: '分镜规划',
+            stepIndex: 1,
+            stepTotal: 1,
+            message: 'running',
+          }),
+          buildStreamEvent({
+            stepId: 'clip_1_phase1',
+            stream: {
+              kind: 'text',
+              lane: 'main',
+              seq: 1,
+              delta: '旧输出',
             },
-            createdAt: '2026-02-28T00:00:03.000Z',
-          },
+          }),
         ],
       }),
-    )
+    })
     globalThis.fetch = fetchMock as unknown as typeof fetch
 
     const applyAndCapture = vi.fn()
+    const pollTaskTerminalState = vi.fn(async () => null)
     const onSettled = vi.fn()
 
     const cleanup = subscribeRecoveredRun({
-      runId: 'run-1',
+      projectId: 'project-1',
+      storageScopeKey: 'episode-1',
+      taskId: 'task-1',
+      eventSourceMode: 'external',
       taskStreamTimeoutMs: 10_000,
       applyAndCapture,
+      pollTaskTerminalState,
       onSettled,
     })
 
     await waitForCondition(() => applyAndCapture.mock.calls.some((call) => call[0]?.event === 'step.chunk'))
     expect(applyAndCapture).toHaveBeenCalledWith(expect.objectContaining({
       event: 'step.chunk',
-      runId: 'run-1',
+      runId: 'task-1',
       stepId: 'clip_1_phase1',
       textDelta: '旧输出',
     }))
     cleanup()
-  })
-
-  it('emits run.error and settles when idle timeout is reached', async () => {
-    vi.useFakeTimers()
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({
-        events: [],
-      }),
-    )
-    globalThis.fetch = fetchMock as unknown as typeof fetch
-
-    const applyAndCapture = vi.fn()
-    const onSettled = vi.fn()
-
-    subscribeRecoveredRun({
-      runId: 'run-timeout',
-      taskStreamTimeoutMs: 3_000,
-      applyAndCapture,
-      onSettled,
-    })
-
-    await vi.advanceTimersByTimeAsync(3_200)
-
-    expect(onSettled).toHaveBeenCalledTimes(1)
-    expect(applyAndCapture).toHaveBeenCalledWith(expect.objectContaining({
-      event: 'run.error',
-      runId: 'run-timeout',
-      message: 'run stream timeout: run-timeout',
-    }))
-
-    vi.useRealTimers()
-  })
-
-  it('resets idle timeout when a new event arrives during recovery', async () => {
-    vi.useFakeTimers()
-    let eventFetchCount = 0
-    const fetchMock = vi.fn().mockImplementation(async () => {
-      eventFetchCount += 1
-      if (eventFetchCount === 2) {
-        return jsonResponse({
-          events: [
-            {
-              seq: 1,
-              eventType: 'run.start',
-              payload: { message: 'resumed' },
-              createdAt: '2026-02-28T00:00:01.500Z',
-            },
-          ],
-        })
-      }
-      return jsonResponse({ events: [] })
-    })
-    globalThis.fetch = fetchMock as unknown as typeof fetch
-
-    const applyAndCapture = vi.fn()
-    const onSettled = vi.fn()
-
-    subscribeRecoveredRun({
-      runId: 'run-recover',
-      taskStreamTimeoutMs: 3_000,
-      applyAndCapture,
-      onSettled,
-    })
-
-    await vi.advanceTimersByTimeAsync(3_200)
-    expect(onSettled).not.toHaveBeenCalled()
-
-    await vi.advanceTimersByTimeAsync(2_000)
-    expect(onSettled).toHaveBeenCalledTimes(1)
-    expect(applyAndCapture).toHaveBeenCalledWith(expect.objectContaining({
-      event: 'run.start',
-      runId: 'run-recover',
-    }))
-
-    vi.useRealTimers()
-  })
-
-  it('reconciles run snapshot to failed when event polling stays empty', async () => {
-    vi.useFakeTimers()
-    const fetchMock = vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
-      const url = String(input)
-      if (url.includes('/api/runs/run-reconcile/events')) {
-        return jsonResponse({ events: [] })
-      }
-      if (url === '/api/runs/run-reconcile') {
-        return jsonResponse({
-          run: {
-            id: 'run-reconcile',
-            status: 'failed',
-            errorMessage: 'Ark Responses 调用失败',
-          },
-        })
-      }
-      return jsonResponse({ events: [] })
-    })
-    globalThis.fetch = fetchMock as unknown as typeof fetch
-
-    const applyAndCapture = vi.fn()
-    const onSettled = vi.fn()
-
-    subscribeRecoveredRun({
-      runId: 'run-reconcile',
-      taskStreamTimeoutMs: 20_000,
-      applyAndCapture,
-      onSettled,
-    })
-
-    await vi.advanceTimersByTimeAsync(3_500)
-
-    expect(onSettled).toHaveBeenCalledTimes(1)
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/runs/run-reconcile',
-      expect.objectContaining({ method: 'GET', cache: 'no-store' }),
-    )
-    expect(applyAndCapture).toHaveBeenCalledWith(expect.objectContaining({
-      event: 'run.error',
-      runId: 'run-reconcile',
-      message: 'Ark Responses 调用失败',
-    }))
-
-    vi.useRealTimers()
   })
 })

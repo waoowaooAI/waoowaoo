@@ -1,70 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError, getRequestId } from '@/lib/api-errors'
-import { buildDefaultTaskBillingInfo } from '@/lib/billing'
-import { getProjectModelConfig, buildImageBillingPayload } from '@/lib/config-service'
-import { prisma } from '@/lib/prisma'
 import { submitTask } from '@/lib/task/submitter'
 import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { TASK_TYPE } from '@/lib/task/types'
-
-function createPanelVariantId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return `panel-variant-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
-}
-
-async function rollbackCreatedVariantPanel(params: {
-  panelId: string
-  storyboardId: string
-  panelIndex: number
-}) {
-  await prisma.$transaction(async (tx) => {
-    await tx.novelPromotionPanel.delete({
-      where: { id: params.panelId },
-    })
-
-    const maxPanel = await tx.novelPromotionPanel.findFirst({
-      where: { storyboardId: params.storyboardId },
-      orderBy: { panelIndex: 'desc' },
-      select: { panelIndex: true },
-    })
-    const maxPanelIndex = maxPanel?.panelIndex ?? -1
-    const offset = maxPanelIndex + 1000
-
-    await tx.novelPromotionPanel.updateMany({
-      where: {
-        storyboardId: params.storyboardId,
-        panelIndex: { gt: params.panelIndex },
-      },
-      data: {
-        panelIndex: { increment: offset },
-        panelNumber: { increment: offset },
-      },
-    })
-
-    await tx.novelPromotionPanel.updateMany({
-      where: {
-        storyboardId: params.storyboardId,
-        panelIndex: { gt: params.panelIndex + offset },
-      },
-      data: {
-        panelIndex: { decrement: offset + 1 },
-        panelNumber: { decrement: offset + 1 },
-      },
-    })
-
-    const panelCount = await tx.novelPromotionPanel.count({
-      where: { storyboardId: params.storyboardId },
-    })
-
-    await tx.novelPromotionStoryboard.update({
-      where: { id: params.storyboardId },
-      data: { panelCount },
-    })
-  })
-}
+import { buildDefaultTaskBillingInfo } from '@/lib/billing'
+import { getProjectModelConfig, buildImageBillingPayload } from '@/lib/config-service'
+import { prisma } from '@/lib/prisma'
 
 export const POST = apiHandler(async (
   request: NextRequest,
@@ -91,79 +33,42 @@ export const POST = apiHandler(async (
     throw new ApiError('INVALID_PARAMS')
   }
 
-  const storyboard = await prisma.novelPromotionStoryboard.findUnique({
-    where: { id: storyboardId },
-    select: {
-      id: true,
-      episode: {
-        select: {
-          novelPromotionProject: {
-            select: {
-              projectId: true,
-            },
-          },
-        },
-      },
-    },
-  })
-  if (!storyboard || storyboard.episode.novelPromotionProject.projectId !== projectId) {
+  // 在 API route 中同步创建 panel（无图片），确保新 panel 立即存在于数据库，
+  // 避免乐观更新与 worker 之间的状态真空期
+  const sourcePanel = await prisma.novelPromotionPanel.findUnique({ where: { id: sourcePanelId } })
+  if (!sourcePanel) {
     throw new ApiError('NOT_FOUND')
   }
 
-  const sourcePanel = await prisma.novelPromotionPanel.findUnique({ where: { id: sourcePanelId } })
-  if (!sourcePanel || sourcePanel.storyboardId !== storyboardId) {
-    throw new ApiError('INVALID_PARAMS')
-  }
-
   const insertAfter = await prisma.novelPromotionPanel.findUnique({ where: { id: insertAfterPanelId } })
-  if (!insertAfter || insertAfter.storyboardId !== storyboardId) {
-    throw new ApiError('INVALID_PARAMS')
-  }
-
-  const projectModelConfig = await getProjectModelConfig(projectId, session.user.id)
-  const imageModel = projectModelConfig.storyboardModel
-  const createdPanelId = createPanelVariantId()
-
-  let billingPayload: Record<string, unknown>
-  try {
-    billingPayload = await buildImageBillingPayload({
-      projectId,
-      userId: session.user.id,
-      imageModel,
-      basePayload: { ...body, newPanelId: createdPanelId },
-    })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Image model capability not configured'
-    throw new ApiError('INVALID_PARAMS', {
-      code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED',
-      message,
-    })
+  if (!insertAfter) {
+    throw new ApiError('NOT_FOUND')
   }
 
   const createdPanel = await prisma.$transaction(async (tx) => {
+    // Two-phase reindexing to avoid unique constraint collision on (storyboardId, panelIndex)
     const affectedPanels = await tx.novelPromotionPanel.findMany({
       where: { storyboardId, panelIndex: { gt: insertAfter.panelIndex } },
       select: { id: true, panelIndex: true },
-      orderBy: { panelIndex: 'asc' },
+      orderBy: { panelIndex: 'asc' }
     })
-
-    for (const panel of affectedPanels) {
+    // Phase A: shift to negative indices
+    for (const p of affectedPanels) {
       await tx.novelPromotionPanel.update({
-        where: { id: panel.id },
-        data: { panelIndex: -(panel.panelIndex + 1) },
+        where: { id: p.id },
+        data: { panelIndex: -(p.panelIndex + 1) }
+      })
+    }
+    // Phase B: set final positive indices
+    for (const p of affectedPanels) {
+      await tx.novelPromotionPanel.update({
+        where: { id: p.id },
+        data: { panelIndex: p.panelIndex + 1 }
       })
     }
 
-    for (const panel of affectedPanels) {
-      await tx.novelPromotionPanel.update({
-        where: { id: panel.id },
-        data: { panelIndex: panel.panelIndex + 1 },
-      })
-    }
-
-    const created = await tx.novelPromotionPanel.create({
+    return tx.novelPromotionPanel.create({
       data: {
-        id: createdPanelId,
         storyboardId,
         panelIndex: insertAfter.panelIndex + 1,
         panelNumber: insertAfter.panelIndex + 2,
@@ -174,44 +79,39 @@ export const POST = apiHandler(async (
         location: variant.location || sourcePanel.location,
         characters: variant.characters ? JSON.stringify(variant.characters) : sourcePanel.characters,
         srtSegment: sourcePanel.srtSegment,
-        duration: sourcePanel.duration,
-      },
+        duration: sourcePanel.duration
+      }
     })
-
-    const panelCount = await tx.novelPromotionPanel.count({
-      where: { storyboardId },
-    })
-
-    await tx.novelPromotionStoryboard.update({
-      where: { id: storyboardId },
-      data: { panelCount },
-    })
-
-    return created
   })
 
-  let result: Awaited<ReturnType<typeof submitTask>>
+  const projectModelConfig = await getProjectModelConfig(projectId, session.user.id)
+  const imageModel = projectModelConfig.storyboardModel
+
+  let billingPayload: Record<string, unknown>
   try {
-    result = await submitTask({
-      userId: session.user.id,
-      locale,
-      requestId: getRequestId(request),
+    billingPayload = await buildImageBillingPayload({
       projectId,
-      type: TASK_TYPE.PANEL_VARIANT,
-      targetType: 'NovelPromotionPanel',
-      targetId: createdPanel.id,
-      payload: billingPayload,
-      dedupeKey: `panel_variant:${storyboardId}:${insertAfterPanelId}:${sourcePanelId}`,
-      billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.PANEL_VARIANT, billingPayload),
+      userId: session.user.id,
+      imageModel,
+      basePayload: { ...body, newPanelId: createdPanel.id },
     })
-  } catch (error) {
-    await rollbackCreatedVariantPanel({
-      panelId: createdPanel.id,
-      storyboardId,
-      panelIndex: createdPanel.panelIndex,
-    })
-    throw error
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Image model capability not configured'
+    throw new ApiError('INVALID_PARAMS', { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
   }
+  // Task target 指向新创建的 panel，使 task state 监控系统正确追踪
+  const result = await submitTask({
+    userId: session.user.id,
+    locale,
+    requestId: getRequestId(request),
+    projectId,
+    type: TASK_TYPE.PANEL_VARIANT,
+    targetType: 'NovelPromotionPanel',
+    targetId: createdPanel.id,
+    payload: billingPayload,
+    dedupeKey: `panel_variant:${storyboardId}:${insertAfterPanelId}:${sourcePanelId}`,
+    billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.PANEL_VARIANT, billingPayload)
+  })
 
   return NextResponse.json({ ...result, panelId: createdPanel.id })
 })

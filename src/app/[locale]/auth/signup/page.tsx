@@ -1,11 +1,10 @@
 'use client'
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useTranslations } from 'next-intl'
 import Navbar from "@/components/Navbar"
-import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator"
-import { apiFetch } from '@/lib/api-fetch'
-import { Link, useRouter } from '@/i18n/navigation'
 
 export default function SignUp() {
   const [name, setName] = useState("")
@@ -36,7 +35,7 @@ export default function SignUp() {
     }
 
     try {
-      const response = await apiFetch("/api/auth/register", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,7 +51,7 @@ export default function SignUp() {
       if (response.ok) {
         setSuccess(t('signupSuccess'))
         setTimeout(() => {
-          router.push({ pathname: '/auth/signin' })
+          router.push("/auth/signin")
         }, 2000)
       } else {
         setError(data.message || t('signupFailed'))
@@ -84,9 +83,7 @@ export default function SignUp() {
                 </label>
                 <input
                   id="name"
-                  name="username"
                   type="text"
-                  autoComplete="username"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -101,16 +98,13 @@ export default function SignUp() {
                 </label>
                 <input
                   id="password"
-                  name="password"
                   type="password"
-                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="glass-input-base w-full px-4 py-3"
                   placeholder={t('passwordMinPlaceholder')}
                 />
-                <PasswordStrengthIndicator password={password} />
               </div>
 
               <div>
@@ -119,9 +113,7 @@ export default function SignUp() {
                 </label>
                 <input
                   id="confirmPassword"
-                  name="confirmPassword"
                   type="password"
-                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -154,14 +146,14 @@ export default function SignUp() {
             <div className="mt-6 text-center">
               <p className="text-[var(--glass-text-secondary)]">
                 {t('hasAccount')}{" "}
-                <Link href={{ pathname: '/auth/signin' }} className="text-[var(--glass-tone-info-fg)] hover:underline font-medium">
+                <Link href="/auth/signin" className="text-[var(--glass-tone-info-fg)] hover:underline font-medium">
                   {t('signinNow')}
                 </Link>
               </p>
             </div>
 
             <div className="mt-6 text-center">
-              <Link href={{ pathname: '/' }} className="text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)] text-sm">
+              <Link href="/" className="text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)] text-sm">
                 {t('backToHome')}
               </Link>
             </div>

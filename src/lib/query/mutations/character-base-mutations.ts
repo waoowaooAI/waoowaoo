@@ -4,7 +4,6 @@ import { useRef } from 'react'
 import type { Character, Project } from '@/types/project'
 import { queryKeys } from '../keys'
 import type { ProjectAssetsData } from '../hooks/useProjectAssets'
-import { apiFetch } from '@/lib/api-fetch'
 import {
     clearTaskTargetOverlay,
     upsertTaskTargetOverlay,
@@ -115,23 +114,14 @@ export function useGenerateProjectCharacterImage(projectId: string) {
         invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
 
     return useMutation({
-        mutationFn: async ({
-            characterId,
-            appearanceId,
-            count,
-        }: {
-            characterId: string
-            appearanceId: string
-            count?: number
-        }) => {
+        mutationFn: async ({ characterId, appearanceId }: { characterId: string; appearanceId: string }) => {
             return await requestJsonWithError(`/api/novel-promotion/${projectId}/generate-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: 'character',
                     id: characterId,
-                    appearanceId,
-                    count,
+                    appearanceId
                 })
             }, 'Failed to generate image')
         },
@@ -375,7 +365,7 @@ export function useUpdateProjectCharacterName(projectId: string) {
 
             // 等待图片标签更新完成，确保 onSuccess invalidate 后前端能立即看到新标签
             try {
-                await apiFetch(`/api/novel-promotion/${projectId}/update-asset-label`, {
+                await fetch(`/api/novel-promotion/${projectId}/update-asset-label`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

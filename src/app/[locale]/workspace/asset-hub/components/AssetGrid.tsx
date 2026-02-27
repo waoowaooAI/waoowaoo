@@ -8,7 +8,6 @@ import { VoiceCard } from './VoiceCard'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
 
 interface Character {
     id: string
@@ -183,12 +182,30 @@ export function AssetGrid({
             <div className="flex items-center justify-between mb-6">
                 {/* 左侧筛选 */}
                 {(() => {
+                    const tabIds = tabs.map(t => t.id)
+                    const activeIdx = tabIds.indexOf(filter)
                     return (
-                        <SegmentedControl
-                            options={tabs.map(tab => ({ value: tab.id, label: tab.label }))}
-                            value={filter}
-                            onChange={(val) => setFilter(val as 'all' | 'character' | 'location' | 'voice')}
-                        />
+                        <div className="rounded-lg p-0.5" style={{ background: 'rgba(0,0,0,0.04)' }}>
+                            <div className="relative grid gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+                                <div
+                                    className="absolute bottom-0.5 top-0.5 rounded-md bg-white transition-transform duration-200"
+                                    style={{
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.06)',
+                                        width: `calc(100% / ${tabs.length})`,
+                                        transform: `translateX(${Math.max(0, activeIdx) * 100}%)`,
+                                    }}
+                                />
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setFilter(tab.id as 'all' | 'character' | 'location' | 'voice')}
+                                        className={`relative z-[1] px-4 py-1.5 text-sm rounded-md transition-colors cursor-pointer ${filter === tab.id ? 'text-[var(--glass-text-primary)] font-medium' : 'text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)]'}`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     )
                 })()}
 

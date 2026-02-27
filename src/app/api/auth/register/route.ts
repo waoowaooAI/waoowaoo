@@ -3,23 +3,8 @@ import bcrypt from "bcryptjs"
 import { logAuthAction } from '@/lib/logging/semantic'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { prisma } from '@/lib/prisma'
-import { checkRateLimit, getClientIp, AUTH_REGISTER_LIMIT } from '@/lib/rate-limit'
 
 export const POST = apiHandler(async (request: NextRequest) => {
-  // 🛡️ IP 限流
-  const ip = getClientIp(request)
-  const rateResult = await checkRateLimit('auth:register', ip, AUTH_REGISTER_LIMIT)
-  if (rateResult.limited) {
-    logAuthAction('REGISTER', 'unknown', { error: 'Rate limited', ip })
-    return NextResponse.json(
-      { success: false, message: `请求过于频繁，请 ${rateResult.retryAfterSeconds} 秒后再试` },
-      {
-        status: 429,
-        headers: { 'Retry-After': String(rateResult.retryAfterSeconds) },
-      },
-    )
-  }
-
   let name = 'unknown'
   const body = await request.json()
   name = body.name || 'unknown'
@@ -55,8 +40,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const newUser = await tx.user.create({
       data: {
         name,
-        password: hashedPassword
-      }
+        password: hashedPassword}
     })
 
     // 💰 创建用户余额记录（初始余额为0）

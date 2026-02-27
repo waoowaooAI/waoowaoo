@@ -1,7 +1,7 @@
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSignedUrl, generateUniqueKey, downloadAndUploadImage, toFetchableUrl } from '@/lib/storage'
+import { getSignedUrl, generateUniqueKey, downloadAndUploadToCOS, toFetchableUrl } from '@/lib/cos'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
@@ -111,7 +111,7 @@ export const POST = apiHandler(async (
   if (!isReusableKey) {
     const sourceUrl = toFetchableUrl(selectedImageUrl)
     const cosKey = generateUniqueKey(`panel-${panelId}-selected`, 'png')
-    finalImageKey = await downloadAndUploadImage(sourceUrl, cosKey)
+    finalImageKey = await downloadAndUploadToCOS(sourceUrl, cosKey)
   }
 
   const signedUrl = getSignedUrl(finalImageKey, 7 * 24 * 3600)

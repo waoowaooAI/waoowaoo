@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { uploadObject, generateUniqueKey, getSignedUrl } from '@/lib/storage'
+import { uploadToCOS, generateUniqueKey, getSignedUrl } from '@/lib/cos'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 
@@ -61,12 +61,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
         const audioBuffer = Buffer.from(audioBase64, 'base64')
         const key = generateUniqueKey(`global-voice/${session.user.id}/${characterId}`, 'wav')
-        const cosUrl = await uploadObject(audioBuffer, key)
+        const cosUrl = await uploadToCOS(audioBuffer, key)
 
         await db.globalCharacter.update({
             where: { id: characterId },
             data: {
-                voiceType: 'qwen-designed',
+                voiceType: 'custom',
                 voiceId: voiceId,
                 customVoiceUrl: cosUrl
             }
@@ -107,13 +107,13 @@ export const POST = apiHandler(async (request: NextRequest) => {
     const buffer = Buffer.from(arrayBuffer)
     const ext = file.name.split('.').pop()?.toLowerCase() || 'mp3'
     const key = generateUniqueKey(`global-voice/${session.user.id}/${characterId}`, ext)
-    const audioUrl = await uploadObject(buffer, key)
+    const audioUrl = await uploadToCOS(buffer, key)
 
     await db.globalCharacter.update({
         where: { id: characterId },
         data: {
-            voiceType: 'uploaded',
-            voiceId: null,
+            voiceType: 'custom',
+            voiceId: characterId,
             customVoiceUrl: audioUrl
         }
     })

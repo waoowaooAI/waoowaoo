@@ -127,35 +127,35 @@ export function useCharacterActions({
     }, [confirmCharacterSelectionMutation, showToast, t])
 
     // 单张重新生成角色图片 - 🔥 V6.7: 使用mutation hook
-    const handleRegenerateSingleCharacter = useCallback(async (
+    const handleRegenerateSingleCharacter = useCallback((
         characterId: string,
         appearanceId: string,
         imageIndex: number
     ) => {
-        try {
-            await regenerateSingleImage.mutateAsync({ characterId, appearanceId, imageIndex })
-        } catch (error: unknown) {
-            if (!isAbortError(error)) {
-                alert(t('image.regenerateFailed', { error: getErrorMessage(error, t('common.unknownError')) }))
+        regenerateSingleImage.mutate(
+            { characterId, appearanceId, imageIndex },
+            {
+                onError: (error) => {
+                    if (!isAbortError(error)) {
+                        alert(t('image.regenerateFailed', { error: error.message }))
+                    }
+                }
             }
-            throw error
-        }
+        )
     }, [regenerateSingleImage, t])
 
     // 整组重新生成角色图片 - 🔥 V6.7: 使用mutation hook
-    const handleRegenerateCharacterGroup = useCallback(async (
-        characterId: string,
-        appearanceId: string,
-        count?: number,
-    ) => {
-        try {
-            await regenerateGroup.mutateAsync({ characterId, appearanceId, count })
-        } catch (error: unknown) {
-            if (!isAbortError(error)) {
-                alert(t('image.regenerateFailed', { error: getErrorMessage(error, t('common.unknownError')) }))
+    const handleRegenerateCharacterGroup = useCallback((characterId: string, appearanceId: string) => {
+        regenerateGroup.mutate(
+            { characterId, appearanceId },
+            {
+                onError: (error) => {
+                    if (!isAbortError(error)) {
+                        alert(t('image.regenerateFailed', { error: error.message }))
+                    }
+                }
             }
-            throw error
-        }
+        )
     }, [regenerateGroup, t])
 
     // 更新形象描述 - 🔥 仍需保存到服务器

@@ -53,10 +53,6 @@ interface UserModelsPayload {
   lipsync: UserModelOption[]
 }
 
-const AUDIO_MODEL_EXCLUDED_IDS = new Set([
-  'qwen-voice-design',
-])
-
 function isUnifiedModelType(type: unknown): type is UnifiedModelType {
   return (
     type === 'llm'
@@ -157,12 +153,6 @@ function hasStoredProviderApiKey(provider: StoredProvider): boolean {
   return typeof provider.apiKey === 'string' && provider.apiKey.trim().length > 0
 }
 
-function isUserSelectableModel(model: StoredModel): boolean {
-  if (model.type !== 'audio') return true
-  const modelId = toModelId(model)
-  return !AUDIO_MODEL_EXCLUDED_IDS.has(modelId)
-}
-
 export const GET = apiHandler(async () => {
   const authResult = await requireUserAuth()
   if (isErrorResponse(authResult)) return authResult
@@ -199,7 +189,6 @@ export const GET = apiHandler(async () => {
 
   for (const model of modelsRaw) {
     if (!isUnifiedModelType(model.type)) continue
-    if (!isUserSelectableModel(model)) continue
 
     const modelType = model.type
     const modelKey = toModelKey(model)

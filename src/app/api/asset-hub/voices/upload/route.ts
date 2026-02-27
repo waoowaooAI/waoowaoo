@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { uploadObject, generateUniqueKey, getSignedUrl } from '@/lib/storage'
+import { uploadToCOS, generateUniqueKey, getSignedUrl } from '@/lib/cos'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 
@@ -52,7 +52,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
 
     // 上传到 COS
     const key = generateUniqueKey(`voices/${session.user.id}/${Date.now()}`, audioExt)
-    const cosUrl = await uploadObject(buffer, key)
+    const cosUrl = await uploadToCOS(buffer, key)
 
     // 创建音色记录
     const voice = await prisma.globalVoice.create({

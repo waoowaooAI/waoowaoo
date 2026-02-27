@@ -42,20 +42,4 @@ describe('api specific - characters POST', () => {
     expect(res.status).toBe(400)
     expect(body.error.code).toBe('INVALID_PARAMS')
   })
-
-  it('returns invalid params when artStyle is missing', async () => {
-    installAuthMocks()
-    mockAuthenticated('user-a')
-    const mod = await import('@/app/api/asset-hub/characters/route')
-    const req = buildMockRequest({
-      path: '/api/asset-hub/characters',
-      method: 'POST',
-      body: { name: 'Hero' },
-    })
-
-    const res = await mod.POST(req, { params: Promise.resolve({}) })
-    const body = await res.json()
-    expect(res.status).toBe(400)
-    expect(body.error.code).toBe('INVALID_PARAMS')
-  })
 })

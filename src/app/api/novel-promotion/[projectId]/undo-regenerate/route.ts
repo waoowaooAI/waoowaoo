@@ -6,7 +6,7 @@ import { logError as _ulogError } from '@/lib/logging/core'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { deleteObject } from '@/lib/storage'
+import { deleteCOSObject } from '@/lib/cos'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
@@ -130,7 +130,7 @@ async function undoCharacterRegenerate(db: UndoRegenerateDb, appearanceId: strin
         if (key) {
             try {
                 const storageKey = await resolveStorageKeyFromMediaValue(key)
-                if (storageKey) await deleteObject(storageKey)
+                if (storageKey) await deleteCOSObject(storageKey)
             } catch { }
         }
     }
@@ -188,7 +188,7 @@ async function undoLocationRegenerate(db: UndoRegenerateDb, locationId: string) 
                 if (img.imageUrl) {
                     try {
                         const storageKey = await resolveStorageKeyFromMediaValue(img.imageUrl)
-                        if (storageKey) await deleteObject(storageKey)
+                        if (storageKey) await deleteCOSObject(storageKey)
                     } catch { }
                 }
                 // 恢复上一版本（图片 + 描述词）
@@ -234,7 +234,7 @@ async function undoPanelRegenerate(db: UndoRegenerateDb, panelId: string) {
     if (panel.imageUrl) {
         try {
             const storageKey = await resolveStorageKeyFromMediaValue(panel.imageUrl)
-            if (storageKey) await deleteObject(storageKey)
+            if (storageKey) await deleteCOSObject(storageKey)
         } catch { }
     }
 

@@ -147,7 +147,6 @@
         "selectCount": "选择生成数量",
         "generateMultiple": "生成多张候选",
         "generateCount": "生成 {count} 张",
-        "generateCountSuffix": "张",
         "undoShort": "返回"
     },
     "candidate": {

@@ -363,15 +363,6 @@ export async function updateTaskBillingInfo(taskId: string, billingInfo: TaskBil
   })
 }
 
-export async function updateTaskPayload(taskId: string, payload: Record<string, unknown> | null) {
-  return await taskModel.update({
-    where: { id: taskId },
-    data: {
-      payload: toNullableJson(payload as unknown as Prisma.InputJsonValue),
-    },
-  })
-}
-
 function activeTaskWhere(taskId: string) {
   return {
     id: taskId,

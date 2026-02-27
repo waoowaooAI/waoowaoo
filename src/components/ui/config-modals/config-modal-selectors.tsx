@@ -18,16 +18,15 @@ interface RatioSelectorProps {
 interface StyleSelectorProps {
   value: string
   onChange: (value: string) => void
-  options: Array<{ value: string; label: string }>
+  options: Array<{ value: string; label: string; preview: string }>
 }
 
 function RatioIcon({ ratio, size = 24, selected = false }: RatioIconProps) {
-  // 始终以选中态渲染图标，保证所有比例选项的图标统一为蓝色
   return (
     <RatioPreviewIcon
       ratio={ratio}
       size={size}
-      selected={selected || true}
+      selected={selected}
       variant="surface"
     />
   )
@@ -54,7 +53,7 @@ export function RatioSelector({ value, onChange, options }: RatioSelectorProps) 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base h-11 px-3 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+        className="glass-input-base px-3 py-2.5 flex items-center justify-between gap-2 cursor-pointer transition-colors"
       >
         <div className="flex items-center gap-3">
           <RatioIcon ratio={value} size={20} selected />
@@ -125,9 +124,10 @@ export function StyleSelector({ value, onChange, options }: StyleSelectorProps) 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base h-11 px-3 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+        className="glass-input-base px-3 py-2.5 flex items-center justify-between gap-2 cursor-pointer transition-colors"
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">{selectedOption.preview}</span>
           <span className="text-sm text-[var(--glass-text-primary)] font-medium">{selectedOption.label}</span>
         </div>
         <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -144,12 +144,13 @@ export function StyleSelector({ value, onChange, options }: StyleSelectorProps) 
                   onChange(option.value)
                   setIsOpen(false)
                 }}
-                className={`flex items-center p-3 rounded-lg text-left transition-all ${
+                className={`flex items-center gap-2 p-3 rounded-lg text-left transition-all ${
                   value === option.value
                     ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
                     : 'hover:bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
                 }`}
               >
+                <span className="text-lg">{option.preview}</span>
                 <span className="font-medium text-sm">{option.label}</span>
               </button>
             ))}

@@ -6,7 +6,6 @@ import { checkApiResponse } from '@/lib/error-handler'
 import { resolveTaskErrorMessage } from '@/lib/task/error-message'
 import { clearTaskTargetOverlay, upsertTaskTargetOverlay } from '../task-target-overlay'
 import type { MediaRef } from '@/types/project'
-import { apiFetch } from '@/lib/api-fetch'
 
 // ============ 类型定义 ============
 export interface PanelCandidate {
@@ -67,7 +66,7 @@ export function useStoryboards(episodeId: string | null) {
         queryKey: queryKeys.storyboards.all(episodeId || ''),
         queryFn: async () => {
             if (!episodeId) throw new Error('Episode ID is required')
-            const res = await apiFetch(`/api/novel-promotion/episodes/${episodeId}/storyboards`)
+            const res = await fetch(`/api/novel-promotion/episodes/${episodeId}/storyboards`)
             if (!res.ok) throw new Error('Failed to fetch storyboards')
             const data = await res.json()
             return data as StoryboardData
@@ -87,7 +86,7 @@ export function useRegeneratePanelImage(projectId: string | null, episodeId: str
     return useMutation({
         mutationFn: async ({ panelId }: { panelId: string }) => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
+            const res = await fetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ panelId }),
@@ -123,7 +122,7 @@ export function useModifyPanelImage(projectId: string | null, episodeId: string 
             extraImageUrls?: string[]
         }) => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/modify-panel-image`, {
+            const res = await fetch(`/api/novel-promotion/${projectId}/modify-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(params),
@@ -195,7 +194,7 @@ export function useGenerateVideo(projectId: string | null, episodeId: string | n
                 requestBody.generationOptions = params.generationOptions
             }
 
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/generate-video`, {
+            const res = await fetch(`/api/novel-promotion/${projectId}/generate-video`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
@@ -260,7 +259,7 @@ export function useBatchGenerateVideos(projectId: string | null, episodeId: stri
                 requestBody.generationOptions = params.generationOptions
             }
 
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/generate-video`, {
+            const res = await fetch(`/api/novel-promotion/${projectId}/generate-video`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
@@ -290,7 +289,7 @@ export function useSelectPanelCandidate(episodeId: string | null) {
 
     return useMutation({
         mutationFn: async ({ panelId, candidateId }: { panelId: string; candidateId: string }) => {
-            const res = await apiFetch(`/api/novel-promotion/panels/${panelId}/select-candidate`, {
+            const res = await fetch(`/api/novel-promotion/panels/${panelId}/select-candidate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ candidateId }),
@@ -335,7 +334,7 @@ export function useLipSync(projectId: string | null, episodeId: string | null) {
             voiceLineId: string
             panelId?: string
         }) => {
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/lip-sync`, {
+            const res = await fetch(`/api/novel-promotion/${projectId}/lip-sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

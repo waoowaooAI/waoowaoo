@@ -17,9 +17,9 @@ export function toTimestamp(ts: string | undefined, fallback: number): number {
 }
 
 function rankStepStatus(status: RunStepStatus): number {
-  if (status === 'pending' || status === 'blocked') return 0
+  if (status === 'pending') return 0
   if (status === 'running') return 1
-  if (status === 'completed' || status === 'stale') return 2
+  if (status === 'completed') return 2
   return 3
 }
 
@@ -31,9 +31,7 @@ function rankRunStatus(status: RunStreamStatus): number {
 }
 
 function lockForwardStepStatus(prev: RunStepStatus, next: RunStepStatus): RunStepStatus {
-  if (prev === 'failed') return prev
-  if (prev === 'completed' && next !== 'stale') return prev
-  if (prev === 'stale' && next !== 'failed') return prev
+  if (prev === 'completed' || prev === 'failed') return prev
   return rankStepStatus(next) >= rankStepStatus(prev) ? next : prev
 }
 
@@ -44,48 +42,6 @@ function lockForwardRunStatus(prev: RunStreamStatus, next: RunStreamStatus): Run
 
 function normalizeLane(value: unknown): RunStreamLane {
   return value === 'reasoning' ? 'reasoning' : 'text'
-}
-
-function splitThinkTaggedContent(input: string): { text: string; reasoning: string } {
-  const thinkTagPattern = /<(think|thinking)\b[^>]*>([\s\S]*?)<\/\1>/gi
-  const reasoningParts: string[] = []
-  let matched = false
-
-  const stripped = input.replace(thinkTagPattern, (_fullMatch, _tagName: string, inner: string) => {
-    matched = true
-    const trimmed = inner.trim()
-    if (trimmed) reasoningParts.push(trimmed)
-    return ''
-  })
-
-  if (!matched) {
-    return {
-      text: input,
-      reasoning: '',
-    }
-  }
-
-  return {
-    text: stripped.trim(),
-    reasoning: reasoningParts.join('\n\n').trim(),
-  }
-}
-
-function mergeReasoningText(current: string, incoming: string): string {
-  const next = incoming.trim()
-  if (!next) return current
-  const prev = current.trim()
-  if (!prev) return next
-  if (prev.includes(next)) return current
-  return `${prev}\n\n${next}`
-}
-
-function normalizeThinkTaggedStepOutput(step: RunStepState) {
-  if (!step.textOutput) return
-  const parsed = splitThinkTaggedContent(step.textOutput)
-  if (!parsed.reasoning) return
-  step.textOutput = parsed.text
-  step.reasoningOutput = mergeReasoningText(step.reasoningOutput, parsed.reasoning)
 }
 
 function parseStepIdentity(rawStepId: string): {
@@ -114,15 +70,7 @@ function parseStepIdentity(rawStepId: string): {
 }
 
 function normalizeStepStatus(value: unknown): RunStepStatus {
-  if (
-    value === 'running' ||
-    value === 'completed' ||
-    value === 'failed' ||
-    value === 'blocked' ||
-    value === 'stale'
-  ) {
-    return value
-  }
+  if (value === 'running' || value === 'completed' || value === 'failed') return value
   return 'pending'
 }
 
@@ -134,40 +82,8 @@ function normalizeRunStatus(value: unknown): RunStreamStatus {
 export function toStageViewStatus(status: RunStepStatus): StageViewStatus {
   if (status === 'running') return 'processing'
   if (status === 'pending') return 'pending'
-  if (status === 'blocked') return 'blocked'
-  if (status === 'stale') return 'stale'
   if (status === 'completed') return 'completed'
   return 'failed'
-}
-
-function readStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) return []
-  const rows: string[] = []
-  for (const item of value) {
-    if (typeof item !== 'string') continue
-    const trimmed = item.trim()
-    if (!trimmed) continue
-    rows.push(trimmed)
-  }
-  return rows
-}
-
-function mergeStringArray(base: string[], incoming: string[]): string[] {
-  if (incoming.length === 0) return base
-  const seen = new Set<string>()
-  const next: string[] = []
-  for (const item of incoming) {
-    if (seen.has(item)) continue
-    seen.add(item)
-    next.push(item)
-  }
-  return next
-}
-
-function readBool(value: unknown): boolean | null {
-  if (value === true) return true
-  if (value === false) return false
-  return null
 }
 
 function buildDefaultStep(event: RunStreamEvent, now: number): RunStepState {
@@ -193,11 +109,6 @@ function buildDefaultStep(event: RunStreamEvent, now: number): RunStepState {
     stepIndex,
     stepTotal,
     status: 'pending',
-    dependsOn: [],
-    blockedBy: [],
-    groupId: null,
-    parallelKey: null,
-    retryable: true,
     textOutput: '',
     reasoningOutput: '',
     textLength: 0,
@@ -221,7 +132,6 @@ function resetStepForRetry(step: RunStepState, attempt: number) {
   step.reasoningLength = 0
   step.message = ''
   step.errorMessage = ''
-  step.blockedBy = []
   step.seqByLane = {
     text: 0,
     reasoning: 0,
@@ -245,37 +155,6 @@ function createInitialRunState(runId: string, now: number): RunState {
   }
 }
 
-function computeStepDependencyLevel(params: {
-  stepId: string
-  stepsById: Record<string, RunStepState>
-  memo: Map<string, number>
-  visiting: Set<string>
-}): number {
-  const { stepId, stepsById, memo, visiting } = params
-  const cached = memo.get(stepId)
-  if (typeof cached === 'number') return cached
-  const step = stepsById[stepId]
-  if (!step) return 0
-  if (visiting.has(stepId)) {
-    // Unexpected cycle: keep deterministic order without recursion loop.
-    return Math.max(0, step.stepIndex - 1)
-  }
-  visiting.add(stepId)
-  let level = 0
-  for (const dep of step.dependsOn) {
-    const depLevel = computeStepDependencyLevel({
-      stepId: dep,
-      stepsById,
-      memo,
-      visiting,
-    })
-    level = Math.max(level, depLevel + 1)
-  }
-  visiting.delete(stepId)
-  memo.set(stepId, level)
-  return level
-}
-
 export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent): RunState | null {
   const now = toTimestamp(event.ts, Date.now())
   const runId = event.runId || prev?.runId || ''
@@ -285,16 +164,12 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
     prev && prev.runId === runId
       ? { ...prev }
       : createInitialRunState(runId, now)
-  const prevActiveStepId = base.activeStepId
 
   base.updatedAt = now
 
   if (event.event === 'run.start') {
     const nextStatus = normalizeRunStatus(event.status)
     base.status = lockForwardRunStatus(base.status, nextStatus === 'idle' ? 'running' : nextStatus)
-    if (event.payload && typeof event.payload === 'object') {
-      base.payload = event.payload
-    }
     return base
   }
 
@@ -309,7 +184,7 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
     for (const stepId of base.stepOrder) {
       const currentStep = finalizedSteps[stepId]
       if (!currentStep) continue
-      if (currentStep.status === 'completed' || currentStep.status === 'failed' || currentStep.status === 'stale') continue
+      if (currentStep.status === 'completed' || currentStep.status === 'failed') continue
       finalizedSteps[stepId] = {
         ...currentStep,
         status: 'completed',
@@ -379,30 +254,10 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
   if (typeof event.stepTotal === 'number' && Number.isFinite(event.stepTotal)) {
     step.stepTotal = Math.max(step.stepIndex, Math.floor(event.stepTotal))
   }
-  if (Array.isArray(event.dependsOn)) {
-    step.dependsOn = mergeStringArray(step.dependsOn, readStringArray(event.dependsOn))
-  }
-  if (Array.isArray(event.blockedBy)) {
-    step.blockedBy = mergeStringArray(step.blockedBy, readStringArray(event.blockedBy))
-  }
-  if (typeof event.groupId === 'string' && event.groupId.trim()) {
-    step.groupId = event.groupId.trim()
-  }
-  if (typeof event.parallelKey === 'string' && event.parallelKey.trim()) {
-    step.parallelKey = event.parallelKey.trim()
-  }
-  if (typeof event.retryable === 'boolean') {
-    step.retryable = event.retryable
-  }
 
   if (event.event === 'step.start') {
-    if (event.blockedBy && event.blockedBy.length > 0) {
-      step.status = lockForwardStepStatus(step.status, 'blocked')
-    } else {
-      step.blockedBy = []
-      step.status = lockForwardStepStatus(step.status, 'running')
-      base.status = lockForwardRunStatus(base.status, 'running')
-    }
+    step.status = lockForwardStepStatus(step.status, 'running')
+    base.status = lockForwardRunStatus(base.status, 'running')
   }
 
   if (event.event === 'step.chunk') {
@@ -440,43 +295,29 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
             : typeof event.reasoningDelta === 'string'
               ? event.reasoningDelta
               : ''
-        if (delta) {
-          step.textOutput += delta
-          normalizeThinkTaggedStepOutput(step)
-        }
+        if (delta) step.textOutput += delta
       }
     }
 
-    if (event.blockedBy && event.blockedBy.length > 0) {
-      step.status = lockForwardStepStatus(step.status, 'blocked')
-    } else {
-      step.blockedBy = []
-      step.status = lockForwardStepStatus(step.status, 'running')
-      base.status = lockForwardRunStatus(base.status, 'running')
-    }
+    step.status = lockForwardStepStatus(step.status, 'running')
     step.textLength = step.textOutput.length
     step.reasoningLength = step.reasoningOutput.length
+    base.status = lockForwardRunStatus(base.status, 'running')
   }
 
   if (event.event === 'step.complete') {
     if (typeof event.text === 'string' && event.text.length >= step.textOutput.length) {
       step.textOutput = event.text
-      normalizeThinkTaggedStepOutput(step)
     }
     if (typeof event.reasoning === 'string' && event.reasoning.length >= step.reasoningOutput.length) {
       step.reasoningOutput = event.reasoning
     }
     step.textLength = step.textOutput.length
     step.reasoningLength = step.reasoningOutput.length
-    const normalizedStatus = normalizeStepStatus(event.status)
-    if (normalizedStatus === 'stale') {
-      step.status = lockForwardStepStatus(step.status, 'stale')
-    } else {
-      step.status = lockForwardStepStatus(
-        step.status,
-        normalizedStatus === 'failed' ? 'failed' : 'completed',
-      )
-    }
+    step.status = lockForwardStepStatus(
+      step.status,
+      normalizeStepStatus(event.status) === 'failed' ? 'failed' : 'completed',
+    )
   }
 
   if (event.event === 'step.error') {
@@ -488,21 +329,6 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
   if (typeof event.message === 'string' && event.message) {
     step.message = event.message
   }
-  const staleByPayload = readBool(event.payload?.stale)
-  if (staleByPayload === true) {
-    step.status = 'stale'
-  }
-  const blockedByFromEvent = Array.isArray(event.blockedBy) ? readStringArray(event.blockedBy) : []
-  const blockedByPayload = readStringArray(event.payload?.blockedBy)
-  const blockedBy = blockedByPayload.length > 0 ? blockedByPayload : blockedByFromEvent
-  if (blockedBy.length > 0) {
-    step.blockedBy = blockedBy
-    if (step.status !== 'failed' && step.status !== 'completed') {
-      step.status = 'blocked'
-    }
-  } else if (event.event === 'step.start' || event.event === 'step.chunk') {
-    step.blockedBy = []
-  }
 
   base.stepsById = {
     ...base.stepsById,
@@ -511,25 +337,12 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
   if (!base.stepOrder.includes(stepId)) {
     base.stepOrder = [...base.stepOrder, stepId]
   }
-  const levelMemo = new Map<string, number>()
   base.stepOrder = [...base.stepOrder].sort((a, b) => {
     const sa = base.stepsById[a]
     const sb = base.stepsById[b]
     if (!sa || !sb) return 0
-    const levelA = computeStepDependencyLevel({
-      stepId: a,
-      stepsById: base.stepsById,
-      memo: levelMemo,
-      visiting: new Set<string>(),
-    })
-    const levelB = computeStepDependencyLevel({
-      stepId: b,
-      stepsById: base.stepsById,
-      memo: levelMemo,
-      visiting: new Set<string>(),
-    })
-    if (levelA !== levelB) return levelA - levelB
     if (sa.stepIndex !== sb.stepIndex) return sa.stepIndex - sb.stepIndex
+    if (sa.updatedAt !== sb.updatedAt) return sa.updatedAt - sb.updatedAt
     return sa.id.localeCompare(sb.id)
   })
 
@@ -563,11 +376,7 @@ export function applyRunStreamEvent(prev: RunState | null, event: RunStreamEvent
     }
   }
 
-  if (
-    !base.selectedStepId ||
-    !base.stepsById[base.selectedStepId] ||
-    base.selectedStepId === prevActiveStepId
-  ) {
+  if (!base.selectedStepId || !base.stepsById[base.selectedStepId]) {
     base.selectedStepId = base.activeStepId
   }
 

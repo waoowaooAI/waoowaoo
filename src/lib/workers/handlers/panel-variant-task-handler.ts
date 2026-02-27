@@ -13,8 +13,8 @@ import {
 import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
+  collectPanelReferenceImages,
   findCharacterByName,
-  parseImageUrls,
   parsePanelCharacterReferences,
   pickFirstString,
   resolveNovelData,
@@ -94,72 +94,6 @@ function buildCharacterAssetsDescription(
   }).join('\n')
 }
 
-function buildLocationAssetDescription(params: {
-  includeLocationAsset: boolean
-  locationName: string
-  locale: TaskJobData['locale']
-}): string {
-  if (params.locationName) {
-    if (params.includeLocationAsset) return `场景：${params.locationName}`
-    return params.locale === 'en' ? 'Location reference disabled' : '未使用场景参考图'
-  }
-  return params.locale === 'en' ? 'No location reference' : '无场景参考'
-}
-
-function buildVariantReferenceImages(params: {
-  includeCharacterAssets: boolean
-  includeLocationAsset: boolean
-  newPanel: {
-    characters: string | null
-    location: string | null
-  }
-  sourcePanelImageUrl: string | null
-  projectData: Awaited<ReturnType<typeof resolveNovelData>>
-}): string[] {
-  const refs: string[] = []
-  if (params.sourcePanelImageUrl) refs.push(params.sourcePanelImageUrl)
-
-  if (params.includeCharacterAssets) {
-    const panelCharacters = parsePanelCharacterReferences(params.newPanel.characters)
-    for (const item of panelCharacters) {
-      const character = findCharacterByName(params.projectData.characters || [], item.name)
-      if (!character) continue
-
-      const appearances = character.appearances || []
-      let appearance = appearances[0]
-      if (item.appearance) {
-        const matched = appearances.find((candidate) => (candidate.changeReason || '').toLowerCase() === item.appearance!.toLowerCase())
-        if (matched) appearance = matched
-      }
-
-      if (!appearance) continue
-      const imageUrls = parseImageUrls((appearance as { imageUrls?: string | null }).imageUrls || null, 'characterAppearance.imageUrls')
-      const selectedIndex = typeof (appearance as { selectedIndex?: number | null }).selectedIndex === 'number'
-        ? (appearance as { selectedIndex?: number | null }).selectedIndex
-        : null
-      const selectedUrl = (selectedIndex !== null && selectedIndex !== undefined ? imageUrls[selectedIndex] : null)
-        || imageUrls[0]
-        || appearance.imageUrl
-        || null
-      const signed = toSignedUrlIfCos(selectedUrl, 3600)
-      if (signed) refs.push(signed)
-    }
-  }
-
-  if (params.includeLocationAsset && params.newPanel.location) {
-    const location = (params.projectData.locations || []).find(
-      (item) => item.name.toLowerCase() === params.newPanel.location!.toLowerCase(),
-    )
-    if (location) {
-      const selected = (location.images || []).find((image) => image.isSelected) || location.images?.[0]
-      const signed = toSignedUrlIfCos(selected?.imageUrl, 3600)
-      if (signed) refs.push(signed)
-    }
-  }
-
-  return refs
-}
-
 interface PanelVariantPayload {
   shot_type?: string
   camera_move?: string
@@ -174,8 +108,6 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
   const payload = (job.data.payload || {}) as AnyObj
   const newPanelId = pickFirstString(payload.newPanelId)
   const sourcePanelId = pickFirstString(payload.sourcePanelId)
-  const includeCharacterAssets = payload.includeCharacterAssets !== false
-  const includeLocationAsset = payload.includeLocationAsset !== false
   const variant: PanelVariantPayload = payload.variant && typeof payload.variant === 'object'
     ? (payload.variant as PanelVariantPayload)
     : {}
@@ -200,22 +132,16 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
   if (!storyboardModel) throw new Error('Storyboard model not configured')
 
   // 收集参考图（与 panel-image-task-handler 共用同一链路）
+  const refs = await collectPanelReferenceImages(projectData, newPanel)
+  // 额外加入源镜头图片作为参考
   const sourcePanelImageUrl = toSignedUrlIfCos(sourcePanel.imageUrl, 3600)
-  const refs = buildVariantReferenceImages({
-    includeCharacterAssets,
-    includeLocationAsset,
-    newPanel,
-    sourcePanelImageUrl,
-    projectData,
-  })
+  if (sourcePanelImageUrl) refs.unshift(sourcePanelImageUrl)
   const normalizedRefs = await normalizeReferenceImagesForGeneration(refs)
 
   // 使用 agent_shot_variant_generate.txt 提示词模板
   const artStyle = getArtStylePrompt(modelConfig.artStyle, job.data.locale)
   const charactersInfo = buildCharactersInfo(newPanel, projectData)
-  const characterAssetsDesc = includeCharacterAssets
-    ? buildCharacterAssetsDescription(newPanel, projectData)
-    : (job.data.locale === 'en' ? 'Character reference images disabled' : '未使用角色参考图')
+  const characterAssetsDesc = buildCharacterAssetsDescription(newPanel, projectData)
   const locationName = newPanel.location || sourcePanel.location || ''
 
   const prompt = buildVariantPrompt({
@@ -231,11 +157,7 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
     targetCameraMove: variant.camera_move || sourcePanel.cameraMove || '',
     videoPrompt: pickFirstString(variant.video_prompt, variant.description) || '',
     characterAssets: characterAssetsDesc,
-    locationAsset: buildLocationAssetDescription({
-      includeLocationAsset,
-      locationName,
-      locale: job.data.locale,
-    }),
+    locationAsset: locationName ? `场景：${locationName}` : '无场景参考',
     aspectRatio,
     style: artStyle || '与参考图风格一致',
   })

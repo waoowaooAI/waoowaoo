@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { useTranslations } from 'next-intl'
 import Navbar from "@/components/Navbar"
-import { Link, useRouter } from '@/i18n/navigation'
 
 export default function SignIn() {
   const [username, setUsername] = useState("")
@@ -26,12 +27,10 @@ export default function SignIn() {
         redirect: false,
       })
 
-      if (result?.error === 'RateLimited') {
-        setError(t('rateLimited'))
-      } else if (result?.error) {
+      if (result?.error) {
         setError(t('loginFailed'))
       } else {
-        router.push({ pathname: '/' })
+        router.push("/")
         router.refresh()
       }
     } catch {
@@ -61,9 +60,7 @@ export default function SignIn() {
                 </label>
                 <input
                   id="username"
-                  name="username"
                   type="text"
-                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -78,9 +75,7 @@ export default function SignIn() {
                 </label>
                 <input
                   id="password"
-                  name="password"
                   type="password"
-                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -107,14 +102,14 @@ export default function SignIn() {
             <div className="mt-6 text-center">
               <p className="text-[var(--glass-text-secondary)]">
                 {t('noAccount')}{" "}
-                <Link href={{ pathname: '/auth/signup' }} className="text-[var(--glass-tone-info-fg)] hover:underline font-medium">
+                <Link href="/auth/signup" className="text-[var(--glass-tone-info-fg)] hover:underline font-medium">
                   {t('signupNow')}
                 </Link>
               </p>
             </div>
 
             <div className="mt-6 text-center">
-              <Link href={{ pathname: '/' }} className="text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)] text-sm">
+              <Link href="/" className="text-[var(--glass-text-tertiary)] hover:text-[var(--glass-text-secondary)] text-sm">
                 {t('backToHome')}
               </Link>
             </div>

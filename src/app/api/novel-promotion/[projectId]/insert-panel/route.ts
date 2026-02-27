@@ -6,7 +6,6 @@ import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { TASK_TYPE } from '@/lib/task/types'
 import { buildDefaultTaskBillingInfo } from '@/lib/billing'
 import { getProjectModelConfig } from '@/lib/config-service'
-import { resolveInsertPanelUserInput } from '@/lib/novel-promotion/insert-panel'
 
 export const POST = apiHandler(async (
   request: NextRequest,
@@ -22,7 +21,6 @@ export const POST = apiHandler(async (
   const locale = resolveRequiredTaskLocale(request, body)
   const storyboardId = body?.storyboardId
   const insertAfterPanelId = body?.insertAfterPanelId
-  const userInput = resolveInsertPanelUserInput((body || {}) as Record<string, unknown>, locale)
 
   if (!storyboardId || !insertAfterPanelId) {
     throw new ApiError('INVALID_PARAMS', {
@@ -30,11 +28,7 @@ export const POST = apiHandler(async (
   }
 
   const projectModelConfig = await getProjectModelConfig(projectId, session.user.id)
-  const billingPayload = {
-    ...body,
-    userInput,
-    ...(projectModelConfig.analysisModel ? { analysisModel: projectModelConfig.analysisModel } : {}),
-  }
+  const billingPayload = { ...body, ...(projectModelConfig.analysisModel ? { analysisModel: projectModelConfig.analysisModel } : {}) }
 
   const result = await submitTask({
     userId: session.user.id,

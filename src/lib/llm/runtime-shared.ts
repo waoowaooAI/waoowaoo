@@ -141,7 +141,6 @@ export interface ResolvedLlmRuntimeModel {
   provider: string
   modelId: string
   modelKey: string
-  llmProtocol?: 'responses' | 'chat-completions'
 }
 
 export async function resolveLlmRuntimeModel(
@@ -153,6 +152,5 @@ export async function resolveLlmRuntimeModel(
     provider: selection.provider,
     modelId: selection.modelId,
     modelKey: selection.modelKey,
-    llmProtocol: selection.llmProtocol,
   }
 }

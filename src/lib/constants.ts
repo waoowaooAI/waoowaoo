@@ -31,9 +31,8 @@ export function getAspectRatioConfig(ratio: string) {
 }
 
 export const ANALYSIS_MODELS = [
-  { value: 'google/gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro' },
+  { value: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro' },
   { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash' },
-  { value: 'google/gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash-Lite' },
   { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
   { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' }
 ]
@@ -154,12 +153,6 @@ export const ART_STYLES = [
     promptEn: 'Realistic cinematic look, real-world scene fidelity, rich transparent colors, clean and refined image quality.'
   }
 ]
-
-export type ArtStyleValue = (typeof ART_STYLES)[number]['value']
-
-export function isArtStyleValue(value: unknown): value is ArtStyleValue {
-  return typeof value === 'string' && ART_STYLES.some((style) => style.value === value)
-}
 
 /**
  * 🔥 实时从 ART_STYLES 常量获取风格 prompt

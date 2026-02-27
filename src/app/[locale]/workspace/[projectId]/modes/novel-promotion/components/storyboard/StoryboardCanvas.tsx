@@ -8,7 +8,6 @@ import { PanelEditData } from '../PanelEditForm'
 import { VariantData, VariantOptions } from './hooks/usePanelVariant'
 import type { PanelSaveState } from './hooks/usePanelCrudActions'
 import { AppIcon } from '@/components/ui/icons'
-import { GlassButton } from '@/components/ui/primitives'
 
 interface StoryboardCanvasProps {
   sortedStoryboards: NovelPromotionStoryboard[]
@@ -201,16 +200,14 @@ export default function StoryboardCanvas({
             />
 
             <div className="flex justify-center py-2">
-              <GlassButton
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => addStoryboardGroup(sbIndex + 1)}
                 disabled={addingStoryboardGroup}
-                className="opacity-60 hover:opacity-100"
+                className="glass-btn-base glass-btn-tone-success group flex items-center gap-1 rounded px-3 py-1.5 text-xs transition-all disabled:opacity-50"
               >
-                <AppIcon name="plusAlt" className="h-3 w-3" />
-                <span>{t('group.insertHere')}</span>
-              </GlassButton>
+                <AppIcon name="plusAlt" className="h-3 w-3 opacity-70 transition-opacity group-hover:opacity-100" />
+                <span className="opacity-80 group-hover:opacity-100 transition-opacity">{t('group.insertHere')}</span>
+              </button>
             </div>
           </div>
         )

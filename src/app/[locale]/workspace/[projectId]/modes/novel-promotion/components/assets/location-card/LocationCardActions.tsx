@@ -4,8 +4,6 @@ import { useTranslations } from 'next-intl'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import type { TaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
-import ImageGenerationInlineCountButton from '@/components/image-generation/ImageGenerationInlineCountButton'
-import { getImageGenerationCountOptions } from '@/lib/image-generation/count'
 
 type LocationCardActionsProps =
   | {
@@ -20,9 +18,7 @@ type LocationCardActionsProps =
     currentImageUrl: string | null | undefined
     isTaskRunning: boolean
     hasDescription: boolean
-    generationCount: number
-    onGenerationCountChange: (value: number) => void
-    onGenerate: (count?: number) => void
+    onGenerate: () => void
   }
 
 export default function LocationCardActions(props: LocationCardActionsProps) {
@@ -60,18 +56,14 @@ export default function LocationCardActions(props: LocationCardActionsProps) {
 
   return (
     !props.currentImageUrl && !props.isTaskRunning && (
-      <ImageGenerationInlineCountButton
-        prefix={<span>{t('image.generateCountPrefix')}</span>}
-        suffix={<span>{t('image.generateCountSuffix')}</span>}
-        value={props.generationCount}
-        options={getImageGenerationCountOptions('location')}
-        onValueChange={props.onGenerationCountChange}
-        onClick={() => props.onGenerate(props.generationCount)}
+      <button
+        type="button"
+        onClick={props.onGenerate}
         disabled={!props.hasDescription}
-        ariaLabel={t('image.selectCount')}
-        className="glass-btn-base glass-btn-primary flex w-full items-center justify-center gap-1 py-1 text-xs disabled:opacity-50"
-        selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-xs font-semibold text-current outline-none cursor-pointer leading-none transition-colors"
-      />
+        className="glass-btn-base glass-btn-primary w-full py-1 text-xs disabled:opacity-50"
+      >
+        {t('common.generate')}
+      </button>
     )
   )
 }

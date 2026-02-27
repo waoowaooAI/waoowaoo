@@ -37,4 +37,3 @@ Rules:
 2. Keep each variant practically producible.
 3. creative_score range: 0-10.
 4. Keep JSON strict and valid.
-5. ⚠️ JSON SAFETY: All quotation marks in text MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

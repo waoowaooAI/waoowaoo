@@ -1,10 +1,5 @@
 'use client'
 
-import type {
-  SpeakerVoiceEntry as ProviderSpeakerVoiceEntry,
-  SpeakerVoicePatch,
-} from '@/lib/voice/provider-voice-binding'
-
 export interface VoiceLine {
   id: string
   lineIndex: number
@@ -13,30 +8,16 @@ export interface VoiceLine {
   emotionPrompt: string | null
   emotionStrength: number | null
   audioUrl: string | null
-  updatedAt: string | null
   lineTaskRunning: boolean
   matchedPanelId?: string | null
   matchedStoryboardId?: string | null
   matchedPanelIndex?: number | null
 }
 
-export type PendingVoiceTaskStatus = 'queued' | 'processing' | 'completed' | 'failed' | null
-
-export interface PendingVoiceGenerationState {
-  submittedUpdatedAt: string | null
-  startedAt: string
-  taskId: string | null
-  taskStatus: PendingVoiceTaskStatus
-  taskErrorMessage: string | null
-}
-
-export type PendingVoiceGenerationMap = Record<string, PendingVoiceGenerationState>
-
 export interface Character {
   id: string
   name: string
   customVoiceUrl?: string | null
-  voiceId?: string | null
 }
 
 export interface BindablePanelOption {
@@ -61,8 +42,11 @@ export interface EpisodeClip {
   id: string
 }
 
-export type SpeakerVoiceEntry = ProviderSpeakerVoiceEntry
-export type InlineSpeakerVoiceBinding = SpeakerVoicePatch
+export interface SpeakerVoiceEntry {
+  voiceType: string
+  voiceId?: string
+  audioUrl: string
+}
 
 export interface VoiceStageShellProps {
   projectId: string

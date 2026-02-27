@@ -2,9 +2,9 @@
  * 小说推文模式 - 阶段导航组件
  */
 
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import { AppIcon } from '@/components/ui/icons'
-import { Link } from '@/i18n/navigation'
 
 interface StageNavigationProps {
   projectId: string  // 用于构建链接
@@ -96,3 +96,4 @@ export function StageNavigation({
     </div>
   )
 }
+

@@ -34,19 +34,4 @@ describe('api-config preset coming soon', () => {
     expect(isPresetComingSoonModel('ark', 'doubao-seedance-1-5-pro-251215')).toBe(false)
     expect(isPresetComingSoonModelKey(modelKey)).toBe(false)
   })
-
-  it('registers Bailian Wan i2v preset models', () => {
-    const modelIds = PRESET_MODELS
-      .filter((entry) => entry.provider === 'bailian' && entry.type === 'video')
-      .map((entry) => entry.modelId)
-
-    expect(modelIds).toEqual(expect.arrayContaining([
-      'wan2.6-i2v-flash',
-      'wan2.6-i2v',
-      'wan2.5-i2v-preview',
-      'wan2.2-i2v-plus',
-      'wan2.2-kf2v-flash',
-      'wanx2.1-kf2v-plus',
-    ]))
-  })
 })

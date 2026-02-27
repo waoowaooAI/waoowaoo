@@ -144,10 +144,10 @@ export function useCreateProjectCharacter(projectId: string) {
         mutationFn: async (payload: {
             name: string
             description: string
+            artStyle?: string
             generateFromReference?: boolean
             referenceImageUrls?: string[]
             customDescription?: string
-            count?: number
         }) =>
             await requestJsonWithError(
                 `/api/novel-promotion/${projectId}/character`,
