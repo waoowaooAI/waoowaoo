@@ -7,6 +7,7 @@ import {
     upsertTaskTargetOverlay,
 } from '../task-target-overlay'
 import {
+    getPageLocale,
     invalidateQueryTemplates,
     requestJsonWithError,
     requestTaskResponseWithError,
@@ -18,7 +19,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
         mutationFn: async ({ panelId, count }: { panelId: string; count?: number }) => {
             const res = await fetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
                 body: JSON.stringify({ panelId, count: count ?? 1 }),
             })
             if (!res.ok) {
@@ -96,7 +97,9 @@ export function useModifyProjectStoryboardImage(projectId: string) {
 export function useDownloadProjectImages(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
-            const response = await fetch(`/api/novel-promotion/${projectId}/download-images?episodeId=${episodeId}`)
+            const response = await fetch(`/api/novel-promotion/${projectId}/download-images?episodeId=${episodeId}`, {
+                headers: { 'Accept-Language': getPageLocale() },
+            })
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}))
                 throw new Error(resolveTaskErrorMessage(error, '下载失败'))

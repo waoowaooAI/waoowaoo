@@ -110,6 +110,22 @@ After launching, go to **Settings** to configure your AI service API keys. A bui
 
 ---
 
+## 🤝 参与方式 / Contributing
+
+本项目由核心团队独立维护。欢迎你通过以下方式参与：
+
+- 🐛 提交 [Issue](https://github.com/waoowaooAI/waoowaoo/issues) 反馈 Bug
+- 💡 提交 [Issue](https://github.com/waoowaooAI/waoowaoo/issues) 提出功能建议
+- 🔧 提交 Pull Request 供参考 — 我们会认真审阅每一个 PR 的思路，但最终由团队自行实现修复，不会直接合并外部 PR
+
+This project is maintained by the core team. You're welcome to contribute by:
+
+- 🐛 Filing [Issues](https://github.com/waoowaooAI/waoowaoo/issues) — report bugs
+- 💡 Filing [Issues](https://github.com/waoowaooAI/waoowaoo/issues) — propose features
+- 🔧 Submitting Pull Requests as references — we review every PR carefully for ideas, but the team implements fixes internally rather than merging external PRs directly
+
+---
+
 **Made with ❤️ by waoowaoo team**
 
 ## Star History

@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
 import {
-  clearTaskTargetOverlay,
-  upsertTaskTargetOverlay,
+    clearTaskTargetOverlay,
+    upsertTaskTargetOverlay,
 } from '../task-target-overlay'
 import {
-  invalidateQueryTemplates,
-  requestJsonWithError,
+    getPageLocale,
+    invalidateQueryTemplates,
+    requestJsonWithError,
 } from './mutation-shared'
 
 export function useModifyProjectCharacterImage(projectId: string) {
@@ -187,7 +188,7 @@ export function useBatchGenerateCharacterImages(projectId: string) {
                 items.map(item =>
                     fetch(`/api/novel-promotion/${projectId}/generate-image`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
                         body: JSON.stringify({
                             type: 'character',
                             id: item.characterId,

@@ -9,6 +9,7 @@ import {
     upsertTaskTargetOverlay,
 } from '../task-target-overlay'
 import {
+    getPageLocale,
     invalidateQueryTemplates,
     requestJsonWithError,
     requestVoidWithError,
@@ -367,7 +368,7 @@ export function useUpdateProjectCharacterName(projectId: string) {
             try {
                 await fetch(`/api/novel-promotion/${projectId}/update-asset-label`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Accept-Language': getPageLocale() },
                     body: JSON.stringify({
                         type: 'character',
                         id: characterId,
