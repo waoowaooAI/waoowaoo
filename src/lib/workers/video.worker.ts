@@ -12,10 +12,63 @@ import {
   toSignedUrlIfCos,
   uploadVideoSourceToCos,
 } from './utils'
+import sharp from 'sharp'
+import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
 import { parseModelKeyStrict } from '@/lib/model-config-contract'
 import { getProviderConfig } from '@/lib/api-config'
+
+/**
+ * 根据目标视频分辨率确定输入图片的最大像素尺寸。
+ *
+ * 图像生成模型（ARK Seedream、FAL Banana、Google Imagen 等）均可能输出
+ * 4K 级别的图片（例如 Seedream 9:16 → 3072×5456），远超视频生成模型的
+ * 实际需求。将超大图片作为 base64 传给视频 API 会导致请求体过大，
+ * 频繁触发 400 "Error when parsing request"。
+ *
+ * 规则：
+ *  - 1080p → 最长边 2048px（略高于 1920，保留余量）
+ *  - 720p  → 最长边 1920px（即 1080p 级别，给 720p 输出足够细节）
+ *  - 480p  → 最长边 1280px（即 720p 级别）
+ *  - 4k    → 不缩放
+ *  - 未指定 → 按 1080p 处理
+ */
+const VIDEO_RESOLUTION_TO_MAX_PX: Record<string, number> = {
+  '480p': 1280,
+  '720p': 1920,
+  '1080p': 2048,
+}
+const VIDEO_DEFAULT_MAX_PX = 2048
+
+function resolveVideoImageMaxDimension(resolution: string | undefined): number | null {
+  if (!resolution) return VIDEO_DEFAULT_MAX_PX
+  const normalized = resolution.toLowerCase()
+  if (normalized.includes('4k') || normalized.includes('2160')) return null // 不缩放
+  return VIDEO_RESOLUTION_TO_MAX_PX[normalized] ?? VIDEO_DEFAULT_MAX_PX
+}
+
+async function downsizeBase64ForVideo(dataUrl: string, maxDimension: number | null): Promise<string> {
+  if (maxDimension === null) return dataUrl
+
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/)
+  if (!match) return dataUrl
+
+  const buffer = Buffer.from(match[2], 'base64')
+  const meta = await sharp(buffer).metadata()
+  const w = meta.width || 0
+  const h = meta.height || 0
+
+  if (w <= maxDimension && h <= maxDimension) return dataUrl
+
+  const resized = await sharp(buffer)
+    .resize({ width: maxDimension, height: maxDimension, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 90, mozjpeg: true })
+    .toBuffer()
+
+  _ulogInfo(`[Video] 输入图片缩放: ${w}x${h} → max ${maxDimension}px, ${(buffer.length / 1024).toFixed(0)}KB → ${(resized.length / 1024).toFixed(0)}KB`)
+  return `data:image/jpeg;base64,${resized.toString('base64')}`
+}
 
 type AnyObj = Record<string, unknown>
 type VideoOptionValue = string | number | boolean
@@ -98,7 +151,12 @@ async function generateVideoForPanel(
   if (!sourceImageUrl) {
     throw new Error(`Panel ${panel.id} image url invalid`)
   }
-  const sourceImageBase64 = await normalizeToBase64ForGeneration(sourceImageUrl)
+  const videoResolution = typeof generationOptions.resolution === 'string' ? generationOptions.resolution : undefined
+  const maxPx = resolveVideoImageMaxDimension(videoResolution)
+  const sourceImageBase64 = await downsizeBase64ForVideo(
+    await normalizeToBase64ForGeneration(sourceImageUrl),
+    maxPx,
+  )
 
   let lastFrameImageBase64: string | undefined
   const generationMode: VideoGenerationMode = firstLastFramePayload ? 'firstlastframe' : 'normal'
@@ -128,7 +186,10 @@ async function generateVideoForPanel(
       if (lastPanel?.imageUrl) {
         const lastFrameUrl = toSignedUrlIfCos(lastPanel.imageUrl, 3600)
         if (lastFrameUrl) {
-          lastFrameImageBase64 = await normalizeToBase64ForGeneration(lastFrameUrl)
+          lastFrameImageBase64 = await downsizeBase64ForVideo(
+            await normalizeToBase64ForGeneration(lastFrameUrl),
+            maxPx,
+          )
         }
       }
     }
