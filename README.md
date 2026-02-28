@@ -1,3 +1,4 @@
+
 <p align="center">
   <img src="public/banner.png" alt="waoowaoo" width="600">
 </p>
@@ -8,9 +9,9 @@
 
 # waoowaoo AI 影视 Studio
 
-> ⚠️ **测试版声明**：本项目目前处于测试初期阶段，由于暂时只有我一个人开发，存在部分 bug 和不完善之处。我们正在快速迭代更新中，欢迎进群反馈问题和需求！
->
-> ⚠️ **Beta Notice**: This project is in early beta. It's currently solo-developed, so bugs and rough edges exist. We're iterating fast — feel free to open an Issue!
+> ⚠️ **测试版声明**：本项目目前处于测试初期阶段，由于暂时只有我一个人开发，存在部分 bug 和不完善之处。我们正在快速迭代更新中，欢迎进群反馈问题和需求**请及时关注项目更新！目前更新会非常频繁，后续会增加大量新功能以及优化效果，我们的目标是成为行业最强AI工具！**！
+> 
+> ⚠️ **Beta Notice**: This project is currently in its early beta stage. As it is currently a solo-developed project, some bugs and imperfections are to be expected. We are iterating rapidly—please stay tuned for frequent updates! We are committed to rolling out a massive roadmap of new features and optimizations, with the ultimate goal of becoming the top-tier solution in the industry. Your feedback and feature requests are highly welcome!
 
 <img width="1676" height="540" alt="chat" src="https://github.com/user-attachments/assets/30c6fcf6-b605-48da-a571-7b7aead3df8d" />
 <img width="1676" height="540" alt="chat1" src="https://github.com/user-attachments/assets/40d583a2-223a-46d9-b96b-a966390d44f8" />
@@ -134,4 +135,6 @@ This project is maintained by the core team. You're welcome to contribute by:
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=waoowaooAI/waoowaoo&type=Date)](https://star-history.com/#waoowaooAI/waoowaoo&Date)
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=waoowaooAI/waoowaoo&type=date&legend=top-left)](https://www.star-history.com/#waoowaooAI/waoowaoo&type=date&legend=top-left)
