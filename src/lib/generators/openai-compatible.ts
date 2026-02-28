@@ -125,6 +125,8 @@ function mapAspectRatioToImageSize(aspectRatio: string): string {
             return '1024x1024'
         case '3:4':
             return '1024x1536'
+        case '3:2':
+            return '1792x1024'
         case '4:3':
             return '1536x1024'
         default:
@@ -148,6 +150,8 @@ function mapAspectRatioToVideoSize(aspectRatio: string): string {
     switch (aspectRatio.trim()) {
         case '16:9':
             return '1792x1024'
+        case '3:2':
+            return '1536x1024'
         case '9:16':
             return '1024x1792'
         case '1:1':

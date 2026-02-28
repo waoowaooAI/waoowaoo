@@ -76,6 +76,25 @@ describe('openai-compatible media generators via factory', () => {
     }))
 
     imagesGenerateMock.mockResolvedValueOnce({
+      data: [{ url: 'https://cdn.example.com/image-3-2.png' }],
+    })
+
+    const ratioResult = await generator.generate({
+      userId: 'user-1',
+      prompt: 'draw a character portrait',
+      options: { aspectRatio: '3:2' },
+    })
+
+    expect(ratioResult.success).toBe(true)
+    expect(ratioResult.imageUrl).toBe('https://cdn.example.com/image-3-2.png')
+    expect(imagesGenerateMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      model: 'gpt-image-1',
+      prompt: 'draw a character portrait',
+      size: '1792x1024',
+      response_format: 'b64_json',
+    }))
+
+    imagesGenerateMock.mockResolvedValueOnce({
       data: [{ b64_json: 'ZmFrZS1iYXNlNjQ=' }],
     })
 
@@ -131,5 +150,34 @@ describe('openai-compatible media generators via factory', () => {
 
     expect(urlResult.success).toBe(true)
     expect(urlResult.videoUrl).toBe('https://cdn.example.com/video-b.mp4')
+  })
+
+  it('openai-compatible video generator should map 3:2 aspect ratio to video size', async () => {
+    const { OpenAICompatibleVideoGenerator } = await import('@/lib/generators/openai-compatible')
+    const generator = new OpenAICompatibleVideoGenerator('sora-2', 'openai-compatible:custom')
+
+    videosCreateMock.mockResolvedValueOnce({
+      video_url: 'https://cdn.example.com/video-3-2.mp4',
+    })
+
+    const result = await generator.generate({
+      userId: 'user-1',
+      imageUrl: 'https://cdn.example.com/character.png',
+      prompt: 'generate character intro video',
+      options: {
+        aspectRatio: '3:2',
+      },
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.videoUrl).toBe('https://cdn.example.com/video-3-2.mp4')
+    expect(videosCreateMock).toHaveBeenLastCalledWith(expect.objectContaining({
+      model: 'sora-2',
+      prompt: 'generate character intro video',
+      input_reference: 'https://cdn.example.com/character.png',
+      image_url: 'https://cdn.example.com/character.png',
+      size: '1536x1024',
+      aspect_ratio: '3:2',
+    }))
   })
 })
