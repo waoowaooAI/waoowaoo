@@ -32,6 +32,13 @@ function readLocaleFromPayload(body?: unknown): Locale | null {
 }
 
 function readLocaleFromHeader(request: NextRequest): Locale | null {
+  // 优先读取前端显式传递的自定义头，避免浏览器 Accept-Language 干扰
+  const appLocale = request.headers.get('x-app-locale') || ''
+  if (appLocale) {
+    const resolved = normalizeCandidate(appLocale)
+    if (resolved) return resolved
+  }
+
   const raw = request.headers.get('accept-language') || ''
   if (!raw) return null
   const first = raw.split(',')[0]?.trim() || ''
