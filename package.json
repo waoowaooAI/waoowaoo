@@ -94,6 +94,7 @@
     "@bull-board/express": "^6.16.4",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@fal-ai/client": "^1.7.2",
     "@google/genai": "^1.34.0",
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -116,6 +117,7 @@
     "file-saver": "^2.0.5",
     "ioredis": "^5.9.2",
     "jszip": "^3.10.1",
+    "lru-cache": "^11.2.6",
     "lucide-react": "^0.575.0",
     "mammoth": "^1.11.0",
     "mysql2": "^3.15.1",
@@ -147,5 +149,10 @@
     "tsx": "^4.20.5",
     "typescript": "^5",
     "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "overrides": {
+      "ioredis": "5.9.3"
+    }
   }
 }
