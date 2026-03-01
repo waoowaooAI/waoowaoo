@@ -20,11 +20,26 @@ const STORAGE_TYPE = process.env.STORAGE_TYPE || 'cos'
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './data/uploads'
 
 // 日志标识
-const isLocalStorage = STORAGE_TYPE === 'local'
+export const isLocalStorage = STORAGE_TYPE === 'local'
 if (isLocalStorage) {
   _ulogInfo(`[Storage] 使用本地存储模式，目录: ${UPLOAD_DIR}`)
 } else {
   _ulogInfo(`[Storage] 使用COS云存储模式`)
+}
+
+/** 本地存储时的上传目录绝对路径（仅 isLocalStorage 时有意义） */
+export function getLocalUploadDirAbs(): string {
+  return path.join(process.cwd(), UPLOAD_DIR)
+}
+
+/**
+ * 本地存储模式下，根据 storageKey 返回绝对文件路径；非本地模式返回 null。
+ * 供 /m/[publicId] 等路由直接读盘，避免对自身 API 发起 fetch 导致 ECONNREFUSED。
+ * 调用方需对返回值做路径逃逸检查（确保在 getLocalUploadDirAbs() 下）。
+ */
+export function getLocalFilePath(key: string): string | null {
+  if (!isLocalStorage) return null
+  return path.join(process.cwd(), UPLOAD_DIR, key)
 }
 
 // COS 超时和重试配置
