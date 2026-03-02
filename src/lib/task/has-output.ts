@@ -10,7 +10,8 @@ function parseJsonStringArray(raw: string | null | undefined): string[] {
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
     return parsed.filter((item): item is string => isNonEmptyString(item))
-  } catch {
+  } catch (err) {
+    console.warn('[parseJsonStringArray] failed to parse value, data may be corrupt:', err)
     return []
   }
 }

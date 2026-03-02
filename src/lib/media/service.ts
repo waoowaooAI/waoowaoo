@@ -212,7 +212,8 @@ export async function resolveMediaRefsFromLegacyJsonArray(jsonStr: unknown): Pro
     )
 
     return refs.filter((v): v is MediaRef => !!v)
-  } catch {
+  } catch (err) {
+    console.warn('[resolveMediaRefsFromLegacyJsonArray] failed to parse json array, value may be corrupt:', err)
     return []
   }
 }

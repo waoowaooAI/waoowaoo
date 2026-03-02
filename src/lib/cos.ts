@@ -385,7 +385,8 @@ export function extractCOSKey(urlOrKey: string | null | undefined): string | nul
     const url = new URL(urlOrKey)
     // 移除开头的 /
     return url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname
-  } catch {
+  } catch (err) {
+    console.warn('[extractCOSKey] failed to parse url, returning null:', urlOrKey, err)
     return null
   }
 }

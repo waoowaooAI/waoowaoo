@@ -52,7 +52,8 @@ export function parseProfileData(profileDataJson: string | null): CharacterProfi
     if (!profileDataJson) return null
     try {
         return JSON.parse(profileDataJson) as CharacterProfileData
-    } catch {
+    } catch (err) {
+        console.warn('[parseProfileData] failed to parse profileDataJson, data may be corrupt:', err)
         return null
     }
 }

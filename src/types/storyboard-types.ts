@@ -42,7 +42,8 @@ export function getPanelCandidates(panel: NovelPromotionPanel): string[] {
     try {
         const parsed = JSON.parse(panel.imageHistory)
         return Array.isArray(parsed) ? parsed : []
-    } catch {
+    } catch (err) {
+        console.warn('[getPanelCandidates] failed to parse imageHistory, panel id:', (panel as { id?: unknown }).id, err)
         return []
     }
 }

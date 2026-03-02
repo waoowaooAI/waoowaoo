@@ -536,7 +536,8 @@ async function loadUserCustomPricing(
   let models: Array<{ modelKey: string; customPricing?: unknown }>
   try {
     models = JSON.parse(pref.customModels) as typeof models
-  } catch {
+  } catch (err) {
+    console.warn('[getCustomModelPricing] failed to parse customModels for user:', userId, err)
     return null
   }
   if (!Array.isArray(models)) return null

@@ -16,7 +16,8 @@ function parseUnknownArray(jsonValue: string | null): unknown[] {
   try {
     const parsed = JSON.parse(jsonValue)
     return Array.isArray(parsed) ? parsed : []
-  } catch {
+  } catch (err) {
+    console.warn('[parseUnknownArray] failed to parse JSON value:', err)
     return []
   }
 }

@@ -9,7 +9,8 @@ function parseStringArray(value: unknown): string[] {
   try {
     const parsed = JSON.parse(value)
     return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : []
-  } catch {
+  } catch (err) {
+    console.warn('[parseStringArray] failed to parse value as JSON array:', err)
     return []
   }
 }

@@ -84,7 +84,8 @@ function parseStoredCapabilitySelections(raw: string | null | undefined): Capabi
   if (!raw) return {}
   try {
     return normalizeCapabilitySelectionsInput(JSON.parse(raw) as unknown, { allowLegacyAspectRatio: true })
-  } catch {
+  } catch (err) {
+    console.warn('[parseStoredCapabilitySelections] failed to parse capability selections, stored value may be corrupt:', err)
     return {}
   }
 }
