@@ -1,0 +1,14 @@
+{
+  "title": "Biblioteca de assets",
+  "button": "Assets",
+  "characters": "Personajes",
+  "locations": "Localizaciones",
+  "noCharacters": "Sin personajes",
+  "noLocations": "Sin localizaciones",
+  "addCharacter": "Añadir personaje",
+  "addLocation": "Añadir localización",
+  "generateImage": "Generar imagen",
+  "regenerateImage": "Regenerar",
+  "analyzeAssets": "Analizar assets",
+  "analyzing": "Analizando..."
+}

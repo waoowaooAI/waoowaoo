@@ -1,0 +1,139 @@
+{
+  "stages": {
+    "story": "Historia",
+    "script": "Guion",
+    "storyboard": "Storyboard",
+    "video": "Video",
+    "editor": "Editor IA",
+    "editorComingSoon": "Próximamente, síguenos para estar al tanto"
+  },
+  "buttons": {
+    "assetLibrary": "Biblioteca de assets",
+    "settings": "Ajustes",
+    "refreshData": "Actualizar datos",
+    "enterVideoGeneration": "Ir a generación de video →"
+  },
+  "smartImport": {
+    "title": "Empieza tu viaje creativo",
+    "subtitle": "Primero, elige tu método de creación",
+    "manualCreate": {
+      "title": "Crear desde el episodio 1",
+      "description": "Empieza desde el episodio 1, ideal para creación por episodios o videos cortos únicos",
+      "button": "Empezar a crear"
+    },
+    "smartImport": {
+      "title": "Importación inteligente del libro completo",
+      "description": "Sube una novela o guion completo, el motor de IA reconoce automáticamente la estructura de capítulos y los divide en episodios.",
+      "button": "Importar ahora",
+      "recommended": "Recomendado"
+    },
+    "upload": {
+      "title": "Subir material fuente",
+      "subtitle": "Motor de IA listo, división automática en episodios y formato",
+      "maxWords": "(Máx. 30.000 palabras)",
+      "textInput": "Escribe el contenido de texto",
+      "documentUpload": "Subir documento completo",
+      "placeholder": "Pega aquí los capítulos de tu novela o guion...",
+      "filePlaceholder": "Modo de archivo subido",
+      "clickUpload": "Haz clic para subir el documento",
+      "clearTextFirst": "Primero limpia el texto de la izquierda",
+      "supportedFormats": "Compatible con Word, TXT",
+      "preview": "Vista previa",
+      "expandPreview": "Expandir más",
+      "collapsePreview": "Colapsar",
+      "deleteFile": "Eliminar archivo",
+      "startAnalysis": "Empezar análisis inteligente",
+      "back": "Volver",
+      "words": "palabras"
+    },
+    "analyzing": {
+      "title": "La IA está analizando tu historia",
+      "description": "Reconociendo la estructura de capítulos, división inteligente en progreso...",
+      "autoSave": "Se guardará automáticamente al completarse el análisis"
+    },
+    "preview": {
+      "title": "División inteligente completada",
+      "episodeCount": "División automática en {count} episodios",
+      "totalWords": "Total {count} palabras",
+      "autoSaved": "✓ Guardado automáticamente",
+      "reanalyze": "Re-analizar",
+      "confirm": "Confirmar y completar",
+      "saving": "Guardando...",
+      "episodeList": "Lista de episodios",
+      "addEpisode": "Añadir episodio",
+      "averageWords": "Promedio por episodio",
+      "episodeContent": "Contenido del episodio",
+      "episodePlaceholder": "Escribe el título del episodio...",
+      "summaryPlaceholder": "Escribe el resumen de la trama...",
+      "newEpisode": "Nuevo episodio",
+      "deleteEpisode": "Eliminar episodio",
+      "deleteConfirm": {
+        "title": "Confirmar eliminación",
+        "message": "¿Seguro que quieres eliminar \"{title}\"?",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar eliminación"
+      },
+      "tip": {
+        "title": "Consejo",
+        "content": "Puedes editar directamente los títulos, resúmenes y contenidos. Tras hacer clic en [Confirmar y completar], los episodios se importarán oficialmente al proyecto"
+      }
+    },
+    "errors": {
+      "fileTooLarge": "Archivo demasiado grande, sube un archivo menor de 10MB",
+      "docNotSupported": "Formato .doc no compatible, convierte a .docx en Word",
+      "fileEmpty": "El archivo está vacío",
+      "fileReadError": "Error al leer el archivo, inténtalo de nuevo",
+      "uploadFirst": "Primero sube o pega contenido",
+      "analyzeFailed": "Error en el análisis",
+      "saveFailed": "Error al guardar"
+    },
+    "cancelConfirm": "¿Seguro que quieres cancelar? Los episodios analizados se eliminarán."
+  },
+  "storyInput": {
+    "currentEditing": "Editando actualmente: {name}",
+    "editingTip": "El siguiente flujo de trabajo es solo para este episodio. Cambia de episodio en la parte superior izquierda si es necesario",
+    "wordCount": "Palabras:",
+    "assetLibraryTip": {
+      "title": "¿Necesitas personajes y localizaciones personalizados?",
+      "description": "Haz clic en el botón 「Biblioteca de Assets」 en la parte superior derecha para subir documentos de configuración de assets o añadir manualmente personajes y localizaciones. La IA priorizará usar la configuración de la biblioteca para el análisis."
+    },
+    "videoRatio": "Ratio de video",
+    "visualStyle": "Estilo visual",
+    "moreConfig": "Para mas opciones de configuración, haz clic en el botón 「 Ajustes」 en la parte superior derecha",
+    "narration": {
+      "title": "Activar narración en voz en off",
+      "description": "Genera voz TTS para añadir comentarios a tu video"
+    },
+    "creating": "IA creando...",
+    "ready": "✓ Configuración completa, listo para el siguiente paso",
+    "pleaseInput": "Primero escribe el contenido del guion"
+  },
+  "execution": {
+    "selectEpisode": "Primero selecciona un episodio",
+    "fillContentFirst": "Primero escribe el contenido",
+    "requestAborted": "Petición cancelada (posiblemente por actualización de la página)",
+    "analysisFailed": "Error en el análisis de assets",
+    "prepareFailed": "Error en la preparación",
+    "generationFailed": "Error en la generación",
+    "batchVideoFailed": "Error en la generación de video en lote",
+    "updateFailed": "Error al actualizar",
+    "saveFailed": "Error al guardar",
+    "storyToScriptRunning": "Historia→Guion V2 ejecutándose",
+    "scriptToStoryboardRunning": "Guion→Storyboard V2 ejecutándose",
+    "storyToScriptFailed": "Error en historia a guion",
+    "scriptToStoryboardFailed": "Error en guion a storyboard",
+    "taskStreamTimeout": "La tarea ha tardado demasiado. Puede que siga ejecutándose en segundo plano, comprueba su estado o reintenta"
+  },
+  "rebuildConfirm": {
+    "storyToScript": {
+      "title": "Se reconstruirá el flujo del guion",
+      "message": "Se detectaron datos de storyboard previos para este episodio ({storyboardCount} storyboards, {panelCount} paneles). Continuar limpiará y reconstruirá estos datos. ¿Continuar?"
+    },
+    "scriptToStoryboard": {
+      "title": "Se reconstruirán los datos del storyboard",
+      "message": "Se detectaron datos de storyboard existentes para este episodio ({storyboardCount} storyboards, {panelCount} paneles). Continuar limpiará los storyboards actuales y los regenerará. ¿Continuar?"
+    },
+    "confirm": "Continuar y limpiar",
+    "cancel": "Cancelar"
+  }
+}

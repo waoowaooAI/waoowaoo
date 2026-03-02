@@ -1,0 +1,70 @@
+{
+  "title": "Vista del guion",
+  "scriptBreakdown": "Desglose del guion",
+  "splitCount": "{count} clips divididos",
+  "noClips": "Sin clips todavía, genera desde la vista de historia",
+  "segment": {
+    "title": "Clip {index}",
+    "selected": "(Seleccionado)"
+  },
+  "inSceneAssets": "Assets en escena",
+  "currentSelected": "Seleccionado: Clip {number}",
+  "assetView": {
+    "allClips": "Todos los clips",
+    "viewingClip": "Viendo clip {number}"
+  },
+  "asset": {
+    "generateCharacter": "Haz clic para generar el personaje →",
+    "generateLocation": "Haz clic para generar la localización →",
+    "removeCharacterConfirm": "¿Seguro que quieres quitar este personaje del clip actual?",
+    "removeLocationConfirm": "¿Seguro que quieres quitar esta localización del clip actual?",
+    "removeFromClip": "Quitar del clip actual",
+    "noAudio": "Sin audio",
+    "playing": "Reproduciendo",
+    "listen": "Escuchar",
+    "activeCharacters": "Personajes activos",
+    "activeLocations": "Localizaciones activas",
+    "selectCharacter": "Seleccionar personaje/apariencia para añadir",
+    "selectLocation": "Seleccionar localización para añadir",
+    "loadingAssets": "Cargando assets...",
+    "appearanceCount": "{count} apariencias",
+    "added": "Añadido",
+    "primary": "Principal",
+    "subAppearance": "Subapariencia",
+    "defaultAppearance": "Apariencia por defecto",
+    "clickToRemove": "Haz clic para quitar {name}",
+    "clickToAdd": "Haz clic para añadir {name}"
+  },
+  "screenplay": {
+    "scene": "Escena {number}",
+    "location": "Localización:",
+    "locationTime": "Hora:",
+    "day": "Día",
+    "night": "Noche",
+    "dawn": "Amanecer",
+    "dusk": "Atardecer",
+    "dialogue": "Diálogo",
+    "action": "Acción",
+    "narration": "Narración",
+    "content": "Contenido original",
+    "noContent": "Sin contenido todavía",
+    "clickToEdit": "Haz clic para editar",
+    "interior": "INT",
+    "exterior": "EXT",
+    "characters": "Personajes",
+    "noCharacter": "Sin información de personaje",
+    "noLocation": "Sin localizaciones activas",
+    "noCharacterInClip": "Sin personajes activos"
+  },
+  "confirm": {
+    "removeCharacter": "¿Seguro que quieres quitar este personaje del clip actual?",
+    "removeLocation": "¿Seguro que quieres quitar esta localización del clip actual?"
+  },
+  "generate": {
+    "missingAssets": "{count} assets sin imagen",
+    "missingAssetsTip": "Genera imágenes para todos los personajes y localizaciones en",
+    "missingAssetsTipLink": "primero",
+    "generating": "Generando...",
+    "startGenerate": "Confirmar y empezar a dibujar →"
+  }
+}

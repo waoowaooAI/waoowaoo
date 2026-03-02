@@ -1,0 +1,210 @@
+{
+  "panelCard": {
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "retry": "Reintentar",
+    "regenerate": "Regenerar",
+    "download": "Descargar",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "generating": "Generando...",
+    "failed": "Fallido",
+    "lipSync": "Sincronización labial",
+    "lipSyncVideo": "Video con sincronización labial",
+    "lipSyncLabel": "Sincr. labial",
+    "lipSyncTitle": "Sincronización labial",
+    "original": "Original",
+    "synced": "Sincronizado",
+    "videoFixed": "✓ Video",
+    "imagePreview": "Vista previa de imagen",
+    "playVoice": "Reproducir voz",
+    "stopVoice": "Detener",
+    "noVoice": "Sin voz disponible",
+    "forceRegenerate": "Forzar regeneración (usa esto si está bloqueado)",
+    "regenerateVideo": "Regenerar video",
+    "lipSyncStatus": "Sincronizando labialmente...",
+    "lipSyncInProgress": "Sincronización labial en progreso...",
+    "lipSyncMayTakeMinutes": "Esto puede tardar unos minutos",
+    "audioEnabled": "Audio activado",
+    "audioDisabled": "Audio desactivado",
+    "isSynced": "(Sincronizado)",
+    "needVideo": "(Primero genera el video)",
+    "needAudio": "(Primero genera el audio)",
+    "generateAudio": "Generar audio",
+    "regenerateLipSync": "Regenerar sincronización labial",
+    "editPrompt": "Editar prompt",
+    "clickToEditPrompt": "Haz clic para editar el prompt...",
+    "shot": "Plano {number}",
+    "unknownShotType": "Desconocido",
+    "correspondingText": "Texto correspondiente",
+    "generateVideo": "Generar video",
+    "selectModel": "Seleccionar modelo de video",
+    "selectVoice": "Selecciona la voz a usar:",
+    "willAutoPad": "(se añadirá padding automáticamente)",
+    "autoPadding": "Padding",
+    "redo": "Rehacer",
+    "generatingAudio": "Generando...",
+    "error": {
+      "audioFailed": "Error en la generación de audio"
+    },
+    "batchMode": "Modo lote",
+    "batchModeDesc": "Inferencia offline, 50% más barato, se completa en 24 horas",
+    "batchModeEnabled": "Modo lote activado",
+    "batchModeDisabled": "Modo lote desactivado"
+  },
+  "promptModal": {
+    "title": "Editar prompt de video del plano #{number}",
+    "shotType": "Tipo de plano:",
+    "duration": "s",
+    "location": "Localización:",
+    "locationUnknown": "Desconocida",
+    "characters": "Personajes:",
+    "charactersNone": "Ninguno",
+    "description": "Descripción:",
+    "text": "Texto correspondiente:",
+    "promptLabel": "Prompt de video",
+    "placeholder": "Escribe el prompt de video...",
+    "tip": "Nota: Los modelos de video no reconocen nombres de personajes, usa descripciones de apariencia como \"joven con pelo negro y ojos azules\" en lugar de \"Victor\"",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "toolbar": {
+    "title": "Generación de video",
+    "filter": "Filtrar",
+    "viewAll": "Ver todo",
+    "showGenerated": "Generados",
+    "showPending": "Pendientes",
+    "showFailed": "Fallidos",
+    "totalShots": "{count} planos en total",
+    "generatingShots": "{count} generando",
+    "completedShots": "{count} completados",
+    "failedShots": "{count} fallidos",
+    "generateAll": "Generar todos los videos",
+    "batchConfigTitle": "Ajustes de generación en lote",
+    "batchConfigDesc": "Elige el modelo y los parámetros antes de generar todos los videos.",
+    "confirmGenerateAll": "Confirmar y generar todo",
+    "confirming": "Enviando...",
+    "noVideos": "Sin videos para descargar",
+    "downloadCount": "Descargar {count} videos",
+    "packing": "Empaquetando...",
+    "downloadAll": "Descargar todo",
+    "enterEditor": "Ir al editor de video",
+    "enterEdit": "Ir al editor",
+    "back": "Volver"
+  },
+  "stage": {
+    "title": "Generación de video",
+    "generateAll": "Generar todo",
+    "regenerateFailed": "Reintentar fallidos",
+    "downloadAll": "Descargar todos los videos",
+    "enterEditor": "Ir al editor",
+    "lipSyncStatus": "Sincronizando labialmente...",
+    "hasSynced": "✓ Generado",
+    "generating": "Generando...",
+    "downloading": "Descargando...",
+    "downloadProgress": "Preparando archivos de video... {current}/{total}",
+    "noVideos": "Sin videos generados",
+    "scrollTo": "Ir al plano",
+    "error": {
+      "saveFailed": "Error al guardar el prompt de video",
+      "lipSyncFailed": "Error en la sincronización labial",
+      "fetchVideosFailed": "Error al obtener la lista de videos"
+    },
+    "downloadFailed": "Error al descargar",
+    "unknownError": "Error desconocido"
+  },
+  "firstLastFrame": {
+    "title": "Ajustes de primer/último fotograma",
+    "firstFrame": "Primer fotograma",
+    "lastFrame": "Último fotograma",
+    "range": "Plano {from} → Plano {to}",
+    "link": "Vincular",
+    "unlink": "Desvincular",
+    "unlinkAction": "Desvincular",
+    "asLastFrameFor": "Como último fotograma del plano {number}",
+    "asFirstFrameFor": "Como primer fotograma del plano {number}",
+    "customPrompt": "Prompt personalizado",
+    "promptPlaceholder": "Escribe el prompt de video del primer/último fotograma...",
+    "useDefault": "Usar por defecto",
+    "generate": "Generar video con primer/último fotograma",
+    "generated": "Video con primer/último fotograma generado",
+    "model": "Modelo",
+    "withAudio": "Con audio",
+    "audioOn": "Activado",
+    "audioOff": "Desactivado",
+    "linkToNext": "Vincular al siguiente panel (Primer/Último fotograma)",
+    "asLastFrame": "Como último fotograma del panel {number}",
+    "thenTransitionTo": "luego transición a"
+  },
+  "editor": {
+    "alert": {
+      "saveSuccess": "Guardado correctamente",
+      "saveFailed": "Error al guardar",
+      "exportStarted": "Exportación iniciada. Espera...",
+      "exportFailed": "Error al exportar"
+    },
+    "toolbar": {
+      "back": "← Volver",
+      "saveDirty": "Guardar *",
+      "saved": "Guardado",
+      "export": "Exportar video"
+    },
+    "left": {
+      "title": "Biblioteca de medios",
+      "description": "Los clips importados de la fase de video aparecerán aquí"
+    },
+    "right": {
+      "title": "Propiedades",
+      "clipLabel": "Clip:",
+      "clipFallback": "Clip {index}",
+      "durationLabel": "Duración:",
+      "transitionLabel": "Transición al siguiente clip",
+      "deleteConfirm": "¿Eliminar este clip?",
+      "deleteClip": "Eliminar clip",
+      "selectClipHint": "Selecciona un clip para ver sus propiedades"
+    },
+    "preview": {
+      "emptyStartEditing": "Añade medios para empezar a editar"
+    },
+    "timeline": {
+      "zoomLabel": "Zoom:",
+      "videoTrack": "Video",
+      "emptyHint": "Arrastra clips de video desde la biblioteca de medios aquí",
+      "audioTrack": "Voz",
+      "audioBadge": "A"
+    },
+    "transition": {
+      "title": "Transición",
+      "duration": "Duración",
+      "options": {
+        "none": "Ninguna",
+        "dissolve": "Disolvencia",
+        "fade": "Fundido",
+        "slide": "Deslizamiento"
+      }
+    }
+  },
+  "errors": {
+    "unknownError": "Error desconocido"
+  },
+  "capability": {
+    "generationMode": "Modo de generación",
+    "generateAudio": "Generar audio",
+    "duration": "Duración",
+    "fps": "Fotogramas por segundo",
+    "resolution": "Resolución",
+    "aspectRatio": "Relación de aspecto",
+    "reasoningEffort": "Esfuerzo de razonamiento",
+    "voice": "Voz",
+    "rate": "Velocidad",
+    "mode": "Modo"
+  },
+  "unit": {
+    "second": "s",
+    "frame": "fps"
+  },
+  "common": {
+    "generate": "Generar"
+  }
+}

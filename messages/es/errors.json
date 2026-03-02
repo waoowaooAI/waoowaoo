@@ -1,0 +1,19 @@
+{
+  "UNAUTHORIZED": "Necesitas iniciar sesión primero",
+  "FORBIDDEN": "No tienes permisos para esto",
+  "NOT_FOUND": "No se encontró el recurso",
+  "INSUFFICIENT_BALANCE": "Saldo de API insuficiente. Recarga y vuelve a intentarlo",
+  "RATE_LIMIT": "Demasiadas peticiones. Vuelve a intentarlo en {retryAfter} segundos",
+  "QUOTA_EXCEEDED": "Cuota superada. Inténtalo mas tarde",
+  "GENERATION_FAILED": "La generación falló. Vuelve a intentarlo",
+  "GENERATION_TIMEOUT": "La generación tardó demasiado. Inténtalo de nuevo",
+  "SENSITIVE_CONTENT": "El contenido puede tener material sensible",
+  "INVALID_PARAMS": "Parámetros no válidos",
+  "MISSING_CONFIG": "Primero completa la configuración del modelo",
+  "INTERNAL_ERROR": "Error del servidor. Inténtalo más tarde",
+  "NETWORK_ERROR": "Error de red. Comprueba tu conexión",
+  "EXTERNAL_ERROR": "Servicio externo no disponible temporalmente. Vuelve a intentarlo",
+  "TASK_NOT_READY": "La tarea todavía está procesando",
+  "NO_RESULT": "La tarea no tiene resultado",
+  "CONFLICT": "Conflicto de estado del recurso"
+}

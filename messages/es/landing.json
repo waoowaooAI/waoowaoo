@@ -1,0 +1,26 @@
+{
+  "title": "waoowaoo",
+  "subtitle": "Estudio de Cine y TV con IA",
+  "enterWorkspace": "Ir a mis proyectos",
+  "getStarted": "Empezar ya",
+  "learnMore": "Saber más",
+  "features": {
+    "title": "Creatividad sin limites",
+    "subtitle": "IA en todo el proceso, desde el guion hasta el corte final",
+    "character": {
+      "title": "Taller de Personajes",
+      "description": "Crea personajes anime únicos con alta consistencia visual"
+    },
+    "storyboard": {
+      "title": "Storyboard Inteligente",
+      "description": "De texto a storyboard con un click, control preciso de la narrativa"
+    },
+    "world": {
+      "title": "Construcción del Mundo",
+      "description": "Generación de escenas inmersivas para construir fondos épicos"
+    }
+  },
+  "footer": {
+    "copyright": "2026 waoowaoo AI. Todos los derechos reservados."
+  }
+}

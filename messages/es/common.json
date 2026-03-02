@@ -1,0 +1,135 @@
+{
+  "appName": "waoowaoo",
+  "betaVersion": "Beta v0.2",
+  "loading": "Cargando...",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "confirm": "Confirmar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "search": "Buscar",
+  "clear": "Limpiar",
+  "close": "Cerrar",
+  "back": "Volver",
+  "next": "Siguiente",
+  "previous": "Anterior",
+  "submit": "Enviar",
+  "reset": "Resetear",
+  "generate": "Generar",
+  "regenerate": "Regenerar",
+  "preview": "Vista previa",
+  "download": "Descargar",
+  "upload": "Subir",
+  "select": "Seleccionar",
+  "add": "Añadir",
+  "remove": "Quitar",
+  "refresh": "Actualizar",
+  "expand": "Expandir",
+  "collapse": "Colapsar",
+  "all": "Todo",
+  "none": "Ninguno",
+  "success": "Éxito",
+  "error": "Error",
+  "warning": "Aviso",
+  "info": "Info",
+  "copy": "Copiar",
+  "paste": "Pegar",
+  "apply": "Aplicar",
+  "autoSave": "Guardado automático",
+  "saved": "Guardado",
+  "episode": "Episodio",
+  "project": "Proyecto",
+  "editEpisodeName": "Editar nombre del episodio",
+  "deleteEpisode": "Eliminar episodio",
+  "deleteEpisodeConfirm": "Confirmar eliminación",
+  "newEpisode": "Nuevo episodio",
+  "optional": "(Opcional)",
+  "rename": "Renombrar",
+  "dragToReorder": "Arrastra para reordenar",
+  "episodeNamePlaceholder": "Escribe el nombre del episodio...",
+  "cancelSelection": "Cancelar selección",
+  "referenceImage": "Imagen de referencia",
+  "previewLarge": "Vista ampliada",
+  "viewOriginal": "Ver original",
+  "schemeN": "Esquema {n}",
+  "insufficientBalance": "Saldo insuficiente",
+  "insufficientBalanceDetail": "No tienes suficiente saldo, recarga para continuar",
+  "operationFailed": "Operación fallida",
+  "pleaseRetry": "Por favor, inténtalo de nuevo",
+  "recommended": "Recomendado",
+  "language": {
+    "select": "Seleccionar idioma",
+    "zh": "Chino",
+    "en": "Inglés",
+    "es": "Español",
+    "switchConfirmTitle": "¿Cambiar de idioma?",
+    "switchConfirmMessage": "Si cambias a {targetLanguage} no solo cambia el texto de la interfaz, también los prompts de todo el flujo, la generación de guiones y los resultados del workflow. ¿Continuar?",
+    "switchConfirmAction": "Cambiar ahora"
+  },
+  "taskStatus": {
+    "intent": {
+      "generate": {
+        "running": {
+          "image": "Generando",
+          "video": "Generando",
+          "audio": "Generando",
+          "text": "Generando"
+        }
+      },
+      "regenerate": {
+        "running": {
+          "image": "Regenerando",
+          "video": "Regenerando",
+          "audio": "Regenerando",
+          "text": "Regenerando"
+        }
+      },
+      "modify": {
+        "running": {
+          "image": "Modificando",
+          "video": "Modificando",
+          "audio": "Modificando",
+          "text": "Modificando"
+        }
+      },
+      "analyze": {
+        "running": {
+          "image": "Analizando",
+          "video": "Analizando",
+          "audio": "Analizando",
+          "text": "Analizando"
+        }
+      },
+      "build": {
+        "running": {
+          "image": "Construyendo",
+          "video": "Construyendo",
+          "audio": "Construyendo",
+          "text": "Construyendo"
+        }
+      },
+      "convert": {
+        "running": {
+          "image": "Convirtiendo",
+          "video": "Convirtiendo",
+          "audio": "Convirtiendo",
+          "text": "Convirtiendo"
+        }
+      },
+      "process": {
+        "running": {
+          "image": "Procesando",
+          "video": "Procesando",
+          "audio": "Procesando",
+          "text": "Procesando"
+        }
+      }
+    },
+    "failed": {
+      "image": "Fallido",
+      "video": "Fallido",
+      "audio": "Fallido",
+      "text": "Fallido"
+    }
+  }
+}

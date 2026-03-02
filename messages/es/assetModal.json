@@ -1,0 +1,78 @@
+{
+  "character": {
+    "title": "Nuevo personaje",
+    "name": "Nombre del personaje",
+    "namePlaceholder": "Escribe el nombre del personaje",
+    "modeReference": "Imagen de referencia",
+    "modeDescription": "Descripción",
+    "isSubAppearance": "Esta es una subapariencia",
+    "isSubAppearanceHint": "Añade un nuevo estado de apariencia a un personaje existente",
+    "uploadReference": "Subir referencia",
+    "pasteHint": "Ctrl+V para pegar",
+    "dropOrClick": "Haz clic para subir o arrastra la imagen",
+    "supportedFormats": "Compatible con JPG, PNG",
+    "nameRequired": "Primero escribe el nombre del personaje para usar la conversión de referencia",
+    "convertToSheet": "Convertir a hoja de personaje estándar",
+    "referenceTip": "Sube cualquier imagen del personaje, la IA generará una hoja de personaje estándar",
+    "description": "Descripción del personaje",
+    "modifyDescription": "Modificar descripción",
+    "descPlaceholder": "Escribe la descripción del aspecto del personaje...",
+    "modifyDescriptionPlaceholder": "Describe cómo modificar la apariencia principal, ej. traje formal, heridas de batalla, añadir una capa...",
+    "selectMainCharacter": "Seleccionar personaje principal",
+    "selectCharacterPlaceholder": "Selecciona un personaje...",
+    "appearancesCount": "{count} apariencias",
+    "changeReason": "Motivo del cambio de apariencia",
+    "changeReasonPlaceholder": "ej. herido en batalla, cambiado a ropa formal para el banquete...",
+    "defaultDescription": "Perfil de personaje de {name}",
+    "generationMode": "Modo de generación",
+    "directGenerate": "Generar directamente",
+    "extractPrompt": "Extraer prompt",
+    "extractFirst": "Extraer descripción primero",
+    "directGenerateDesc": "Genera la hoja del personaje directamente desde la referencia (img2img)",
+    "extractPromptDesc": "Extrae la descripción de la imagen primero, luego genera (txt2img)",
+    "maxReferenceImages": "Hasta 5 imágenes de referencia",
+    "selectedCount": "Seleccionadas {count}/5 imágenes",
+    "extractDescription": "Extraer descripción",
+    "extracting": "Extrayendo...",
+    "extractedDescription": "Descripción extraída (editable)",
+    "reExtract": "Volver a extraer",
+    "editHint": "Edita la descripción y luego haz clic abajo para generar",
+    "generateFromDescription": "Generar desde descripción",
+    "textToImageTip": "Modo texto a imagen: genera desde la descripción extraída",
+    "pleaseExtractFirst": "Primero extrae la descripción del personaje"
+  },
+  "location": {
+    "title": "Nueva localización",
+    "name": "Nombre de la localización",
+    "namePlaceholder": "Escribe el nombre de la localización",
+    "description": "Descripción de la localización",
+    "descPlaceholder": "Escribe la descripción de la localización..."
+  },
+  "artStyle": {
+    "title": "Estilo artístico"
+  },
+  "aiDesign": {
+    "title": "Diseño IA",
+    "placeholder": "Describe el personaje que quieres...",
+    "placeholderLocation": "Describe la atmósfera de la escena...",
+    "generating": "Diseñando...",
+    "generate": "Generar",
+    "tip": "Escribe una descripción sencilla, la IA generará los detalles"
+  },
+  "common": {
+    "creating": "Creando...",
+    "create": "Crear",
+    "cancel": "Cancelar",
+    "adding": "Añadiendo...",
+    "add": "Añadir",
+    "optional": "(Opcional)"
+  },
+  "errors": {
+    "uploadFailed": "Error al subir",
+    "extractDescriptionFailed": "Error al extraer la descripción",
+    "createFailed": "Error al crear",
+    "aiDesignFailed": "Error en el diseño IA",
+    "addSubAppearanceFailed": "Error al añadir subapariencia",
+    "insufficientBalance": "Saldo insuficiente"
+  }
+}

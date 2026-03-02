@@ -1,0 +1,9 @@
+{
+  "image": "Generación de imagen",
+  "video": "Generación de video",
+  "text": "Análisis de texto",
+  "tts": "Texto a voz",
+  "voice": "Doblaje de voz",
+  "voice_design": "Diseño de voz",
+  "lip_sync": "Sincronización labial"
+}

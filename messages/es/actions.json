@@ -1,0 +1,18 @@
+{
+  "storyboard": "Storyboard",
+  "storyboard_candidate": "Candidato de Storyboard",
+  "character": "Personaje",
+  "location": "Localización",
+  "video": "Video",
+  "analyze": "Analizar",
+  "analyze_character": "Análisis de Personaje",
+  "analyze_location": "Análisis de Localización",
+  "clips": "División en Clips",
+  "storyboard_text_plan": "Planificación del Storyboard",
+  "storyboard_text_detail": "Detalle del Storyboard",
+  "tts": "Texto a Voz",
+  "regenerate": "Regenerar",
+  "voice-generate": "Generar Voz",
+  "voice-design": "Diseño de Voz",
+  "lip-sync": "Sincronización Labial"
+}

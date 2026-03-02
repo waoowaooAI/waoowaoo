@@ -10,6 +10,7 @@ import { AppIcon } from '@/components/ui/icons'
 const LANGUAGE_LABELS: Record<Locale, string> = {
     zh: '简体中文',
     en: 'English',
+    es: 'Español',
 }
 
 const SWITCH_CONFIRM_COPY: Record<Locale, { title: string; message: string; action: string; cancel: string; triggerLabel: string }> = {
@@ -29,10 +30,18 @@ const SWITCH_CONFIRM_COPY: Record<Locale, { title: string; message: string; acti
         cancel: 'Cancel',
         triggerLabel: 'Switch language',
     },
+    es: {
+        title: '¿Cambiar de idioma?',
+        message:
+            'Si cambias a {targetLanguage} no solo cambia el texto de la interfaz, también los prompts de todo el flujo, la generación de guiones y los resultados del workflow. ¿Continuar?',
+        action: 'Cambiar ahora',
+        cancel: 'Cancelar',
+        triggerLabel: 'Cambiar idioma',
+    },
 }
 
 function isSupportedLocale(locale?: string): locale is Locale {
-    return locale === 'zh' || locale === 'en'
+    return locale === 'zh' || locale === 'en' || locale === 'es'
 }
 
 export default function LanguageSwitcher() {
@@ -48,11 +57,10 @@ export default function LanguageSwitcher() {
         throw new Error('LanguageSwitcher requires a non-null pathname')
     }
     if (!isSupportedLocale(params?.locale)) {
-        throw new Error('LanguageSwitcher requires locale param to be zh or en')
+        throw new Error('LanguageSwitcher requires locale param to be zh, en or es')
     }
     const currentLocale: Locale = params.locale
-    const targetLocale: Locale = currentLocale === 'zh' ? 'en' : 'zh'
-    const activeLocaleForCopy: Locale = pendingLocale ?? targetLocale
+    const activeLocaleForCopy: Locale = pendingLocale ?? currentLocale
     const confirmCopy = SWITCH_CONFIRM_COPY[activeLocaleForCopy]
 
     useEffect(() => {
@@ -98,7 +106,7 @@ export default function LanguageSwitcher() {
                 <button
                     type="button"
                     onClick={() => setIsMenuOpen((prev) => !prev)}
-                    aria-label={SWITCH_CONFIRM_COPY[targetLocale].triggerLabel}
+                    aria-label={SWITCH_CONFIRM_COPY[currentLocale].triggerLabel}
                     aria-expanded={isMenuOpen}
                     className="glass-btn-base glass-btn-secondary inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
                 >

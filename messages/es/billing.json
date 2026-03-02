@@ -1,0 +1,15 @@
+{
+  "transactionType": "Tipo de transacción",
+  "startDate": "Fecha de inicio",
+  "endDate": "Fecha de fin",
+  "all": "Todos",
+  "income": "Ingreso",
+  "expense": "Gasto",
+  "reset": "Limpiar",
+  "filter": "Filtrar",
+  "noRecords": "Sin registros",
+  "accountRecharge": "Recarga de cuenta",
+  "serviceConsumption": "Consumo de servicio",
+  "balance": "Saldo",
+  "allTypes": "Todos los tipos"
+}

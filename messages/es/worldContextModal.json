@@ -1,0 +1,6 @@
+{
+  "title": "Ajustes del mundo y personajes",
+  "description": "Define los aspectos visuales globales de los personajes, estilos de escena y descripciones del entorno",
+  "placeholder": "Ejemplo:\n【Protagonista】Juan, 25 años, pelo negro corto, siempre lleva una chaqueta vaquera desgastada, mirada melancólica.\n【Heroína】Ana, 22 años, coletas rojas, personalidad alegre, le gustan los vestidos estilo Lolita.\n【Escena】Ciudad cyberpunk en 2077, luces de neón parpadeando, llueve todo el año...",
+  "hint": "Estos ajustes los heredarán todos los episodios como referencia para los dibujos de IA."
+}

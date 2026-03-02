@@ -1,0 +1,18 @@
+{
+  "selectCharacter": "Seleccionar personaje del Centro de Assets",
+  "selectLocation": "Seleccionar localización del Centro de Assets",
+  "selectVoice": "Seleccionar voz del Centro de Assets",
+  "searchPlaceholder": "Busca por nombre o carpeta...",
+  "noAssets": "Sin assets en el Centro de Assets",
+  "createInAssetHub": "Primero crea personajes, localizaciones o voces en el Centro de Assets",
+  "noSearchResults": "No se encontraron assets",
+  "appearances": "apariencias",
+  "images": "imágenes",
+  "cancel": "Cancelar",
+  "confirmCopy": "Confirmar copia",
+  "copyFromGlobal": "Copiar del Centro de Assets",
+  "copySuccess": "Copia exitosa",
+  "copyFailed": "Error al copiar",
+  "preview": "Vista previa",
+  "stop": "Detener"
+}

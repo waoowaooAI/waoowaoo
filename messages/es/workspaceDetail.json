@@ -1,0 +1,24 @@
+{
+  "globalAssets": "Assets Globales",
+  "createFailed": "Error al crear",
+  "deleteFailed": "Error al eliminar",
+  "renameFailed": "Error al renombrar",
+  "refreshFailed": "Error al actualizar",
+  "projectNotFound": "Proyecto no encontrado",
+  "backToWorkspace": "Volver a mis proyectos",
+  "episode": "Episodio",
+  "sidebar": {
+    "dragToMove": "Arrastra para mover",
+    "listTitle": "Lista de episodios",
+    "episodeCount": "{count} episodios",
+    "empty": "Aun no hay episodios. Crea uno abajo.",
+    "save": "Guardar",
+    "deleteConfirm": "¿Eliminar \"{name}\"?",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "rename": "Renombrar",
+    "newEpisodePlaceholder": "Escribe el nombre del episodio...",
+    "create": "Crear",
+    "addEpisode": "Añadir episodio"
+  }
+}
