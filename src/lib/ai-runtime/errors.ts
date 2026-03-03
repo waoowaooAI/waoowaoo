@@ -13,6 +13,7 @@ function toCode(value: string): AiRuntimeErrorCode {
 function inferEmptyResponse(message: string): boolean {
   const normalized = message.toLowerCase()
   return normalized.includes('stream_empty')
+    || normalized.includes('llm_empty_response')
     || normalized.includes('empty response')
     || normalized.includes('no meaningful content')
     || normalized.includes('channel:empty_response')

@@ -180,6 +180,10 @@ export async function chatCompletionWithVision(
       const client = new OpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
+        // Cloudflare may block requests without a browser-like User-Agent.
+        defaultHeaders: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
       })
 
       const content: OpenAiVisionContentItem[] = []

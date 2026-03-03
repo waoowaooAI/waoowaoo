@@ -1,4 +1,16 @@
 import { logWarn as _ulogWarn } from '@/lib/logging/core'
+
+function isChallenge403Message(message: string): boolean {
+    const normalized = message.trim().toLowerCase()
+    if (!normalized.includes('403')) return false
+    return normalized.includes('just a moment')
+        || normalized.includes('your request was blocked')
+        || normalized.includes('attention required')
+        || normalized.includes('cloudflare')
+        || normalized.includes('<!doctype html')
+        || normalized.includes('<html')
+        || normalized.includes('upload failed: 403')
+}
 /**
  * 生成器基础接口和类型定义
  * 
@@ -107,7 +119,7 @@ export abstract class BaseImageGenerator implements ImageGenerator {
                 _ulogWarn(`[Generator] 尝试 ${attempt}/${maxRetries} 失败: ${message}`)
 
                 // 最后一次尝试，直接抛出
-                if (attempt === maxRetries) {
+                if (attempt === maxRetries || isChallenge403Message(message)) {
                     break
                 }
 
@@ -140,7 +152,7 @@ export abstract class BaseVideoGenerator implements VideoGenerator {
                 lastError = error
                 const message = error instanceof Error ? error.message : String(error)
                 _ulogWarn(`[Video Generator] 尝试 ${attempt}/${maxRetries} 失败: ${message}`)
-                if (attempt === maxRetries) break
+                if (attempt === maxRetries || isChallenge403Message(message)) break
                 await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
             }
         }

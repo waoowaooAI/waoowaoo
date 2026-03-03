@@ -38,6 +38,22 @@ function containsAny(haystack: string, needles: string[]) {
   return false
 }
 
+function isUpstreamBlocked403(message: string): boolean {
+  if (!containsAny(message, ['403', 'forbidden', 'blocked'])) return false
+  return containsAny(message, [
+    'just a moment',
+    'attention required',
+    'cloudflare',
+    'cf-chl',
+    'captcha',
+    'security check',
+    'your request was blocked',
+    'upstream',
+    '<!doctype html',
+    '<html',
+  ])
+}
+
 function buildNormalizedError(
   code: UnifiedErrorCode,
   message?: string,
@@ -63,9 +79,11 @@ function inferCodeFromMessage(message: string): UnifiedErrorCode | null {
   if (explicitMatch && isKnownErrorCode(explicitMatch[1])) {
     return explicitMatch[1]
   }
+  if (containsAny(message, ['llm_empty_response', 'stream_empty', 'empty response', 'no meaningful content', 'channel:empty_response'])) return 'GENERATION_FAILED'
 
   if (containsAny(message, ['task cancelled', 'canceled by user', 'cancelled by user', '任务已取消'])) return 'CONFLICT'
   if (containsAny(message, ['unauthorized', 'not authenticated', 'need login', '401'])) return 'UNAUTHORIZED'
+  if (isUpstreamBlocked403(message)) return 'EXTERNAL_ERROR'
   if (containsAny(message, ['forbidden', 'permission denied', '403'])) return 'FORBIDDEN'
   if (containsAny(message, ['not found', '不存在', 'missing record'])) return 'NOT_FOUND'
   if (containsAny(message, ['invalid', 'missing', 'required', 'bad request', 'fieldinvalid'])) return 'INVALID_PARAMS'
@@ -144,7 +162,12 @@ export function normalizeAnyError(input: unknown, options: NormalizeOptions = {}
 
   if (typeof errorLike.status === 'number') {
     if (errorLike.status === 401) return buildNormalizedError('UNAUTHORIZED', message, options.details, provider)
-    if (errorLike.status === 403) return buildNormalizedError('FORBIDDEN', message, options.details, provider)
+    if (errorLike.status === 403) {
+      if (isUpstreamBlocked403(lowerMessage)) {
+        return buildNormalizedError('EXTERNAL_ERROR', message, options.details, provider)
+      }
+      return buildNormalizedError('FORBIDDEN', message, options.details, provider)
+    }
     if (errorLike.status === 404) return buildNormalizedError('NOT_FOUND', message, options.details, provider)
     if (errorLike.status === 409) return buildNormalizedError('CONFLICT', message, options.details, provider)
     if (errorLike.status === 422) return buildNormalizedError('SENSITIVE_CONTENT', message, options.details, provider)

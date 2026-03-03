@@ -128,6 +128,21 @@ function resolveNextBackoffMs(job: Job<TaskJobData>, failedAttempt: number): num
   return baseDelay
 }
 
+function isUpstreamChallenge403(message: string): boolean {
+  const normalized = message.trim().toLowerCase()
+  if (!normalized) return false
+  if (!normalized.includes('403')) return false
+  return (
+    normalized.includes('just a moment')
+    || normalized.includes('your request was blocked')
+    || normalized.includes('attention required')
+    || normalized.includes('cloudflare')
+    || normalized.includes('<!doctype html')
+    || normalized.includes('<html')
+    || normalized.includes('upload failed: 403')
+  )
+}
+
 function shouldRetryInQueue(params: {
   job: Job<TaskJobData>
   normalizedError: NormalizedError
@@ -139,7 +154,11 @@ function shouldRetryInQueue(params: {
 } {
   const maxAttempts = resolveQueueAttempts(params.job)
   const failedAttempt = resolveAttemptsMade(params.job) + 1
-  const enabled = params.normalizedError.retryable && failedAttempt < maxAttempts
+  const upstreamChallenge403 = params.normalizedError.code === 'EXTERNAL_ERROR'
+    && isUpstreamChallenge403(params.normalizedError.message)
+  const enabled = params.normalizedError.retryable
+    && failedAttempt < maxAttempts
+    && !upstreamChallenge403
   return {
     enabled,
     failedAttempt,

@@ -333,6 +333,7 @@ export async function chatCompletionStream(
       }
 
       const isOpenRouter = !!config.baseUrl?.includes('openrouter')
+      const browserLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       const providerName = isOpenRouter ? 'openrouter' : provider
       const shouldUseAiSdk = !isOpenRouter
       if (shouldUseAiSdk) {
@@ -340,6 +341,9 @@ export async function chatCompletionStream(
           baseURL: config.baseUrl,
           apiKey: config.apiKey,
           name: providerName,
+          headers: {
+            'User-Agent': browserLikeUserAgent,
+          },
         })
         // 只有确定是支持 OpenAI 推理参数的提供商（如 OpenAI 官方、deepseek-r1 等）才传 reasoning provider options
         // gemini-compatible / 其他 OAI-compat 提供商不支持 forceReasoning/reasoningEffort，会导致空响应
@@ -639,6 +643,9 @@ export async function chatCompletionStream(
       const client = new OpenAI({
         baseURL: config.baseUrl,
         apiKey: config.apiKey,
+        defaultHeaders: {
+          'User-Agent': browserLikeUserAgent,
+        },
       })
 
       const extraParams: Record<string, unknown> = {}
