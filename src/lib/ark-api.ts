@@ -5,7 +5,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
  * 解决问题：Vercel（海外）→ 火山引擎（北京）跨境网络超时
  * 
  * 功能：
- * - 60秒超时配置（Vercel Pro 函数限制）
+ * - 300秒超时配置
  * - 自动重试机制（最多3次，指数退避）
  * - 详细的错误日志
  */
@@ -13,7 +13,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'
 
 // 超时配置
-const DEFAULT_TIMEOUT_MS = 60 * 1000  // 60秒
+const DEFAULT_TIMEOUT_MS = 300 * 1000  // 300秒
 const MAX_RETRIES = 3
 const RETRY_DELAY_BASE_MS = 2000  // 2秒起始延迟
 
