@@ -1,0 +1,100 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: waoowaoo-dev-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-waoowaoo123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-waoowaoo}
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "${DEV_MYSQL_PORT:-13306}:3306"
+    volumes:
+      - dev_mysql_data:/var/lib/mysql
+    command:
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--sql_mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD:-waoowaoo123}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  redis:
+    image: redis:7-alpine
+    container_name: waoowaoo-dev-redis
+    restart: unless-stopped
+    ports:
+      - "${DEV_REDIS_PORT:-16379}:6379"
+    volumes:
+      - dev_redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  app:
+    build: .
+    container_name: waoowaoo-dev-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD:-waoowaoo123}@mysql:3306/${MYSQL_DATABASE:-waoowaoo}"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ""
+      REDIS_TLS: ""
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-waoowaoo-dev-secret}
+      CRON_SECRET: ${CRON_SECRET:-waoowaoo-dev-cron-secret}
+      INTERNAL_TASK_TOKEN: ${INTERNAL_TASK_TOKEN:-waoowaoo-dev-task-token}
+      API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY:-waoowaoo-dev-encryption-key}
+      WATCHDOG_INTERVAL_MS: ${WATCHDOG_INTERVAL_MS:-30000}
+      TASK_HEARTBEAT_TIMEOUT_MS: ${TASK_HEARTBEAT_TIMEOUT_MS:-90000}
+      QUEUE_CONCURRENCY_IMAGE: ${QUEUE_CONCURRENCY_IMAGE:-50}
+      QUEUE_CONCURRENCY_VIDEO: ${QUEUE_CONCURRENCY_VIDEO:-50}
+      QUEUE_CONCURRENCY_VOICE: ${QUEUE_CONCURRENCY_VOICE:-20}
+      QUEUE_CONCURRENCY_TEXT: ${QUEUE_CONCURRENCY_TEXT:-50}
+      BULL_BOARD_HOST: "0.0.0.0"
+      BULL_BOARD_PORT: "3010"
+      BULL_BOARD_BASE_PATH: "/admin/queues"
+      BULL_BOARD_USER: ""
+      BULL_BOARD_PASSWORD: ""
+      LOG_UNIFIED_ENABLED: ${LOG_UNIFIED_ENABLED:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      LOG_DEBUG_ENABLED: ${LOG_DEBUG_ENABLED:-false}
+      LOG_AUDIT_ENABLED: ${LOG_AUDIT_ENABLED:-true}
+      LOG_SERVICE: ${LOG_SERVICE:-waoowaoo}
+      LOG_REDACT_KEYS: ${LOG_REDACT_KEYS:-password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token}
+      BILLING_MODE: ${BILLING_MODE:-OFF}
+      LLM_STREAM_EPHEMERAL_ENABLED: ${LLM_STREAM_EPHEMERAL_ENABLED:-true}
+    ports:
+      - "${DEV_APP_PORT:-3000}:3000"
+      - "${DEV_BOARD_PORT:-3010}:3010"
+    volumes:
+      - ./:/app
+      - dev_node_modules:/app/node_modules
+      - ./data:/app/data
+      - ./docker-logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        npm ci &&
+        npx prisma db push --skip-generate &&
+        npm run dev
+      "
+
+volumes:
+  dev_mysql_data:
+  dev_redis_data:
+  dev_node_modules:
