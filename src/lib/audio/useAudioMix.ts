@@ -8,6 +8,7 @@ import type {
   AudioMixState,
   AudioMixAction,
 } from '@/types/audio'
+import { useLocalPersist } from '@/lib/storage/useLocalPersist'
 
 // =====================================================
 // Audio Mix Reducer
@@ -121,6 +122,23 @@ function audioMixReducer(state: AudioMixState, action: AudioMixAction): AudioMix
         sfxTracks: muteOthers(state.sfxTracks),
         voiceTracks: muteOthers(state.voiceTracks),
         ambientTracks: muteOthers(state.ambientTracks),
+        updatedAt: now,
+      }
+    }
+
+    case 'RESTORE_STATE': {
+      const saved = action.payload.state as Partial<AudioMixState>
+      if (!saved || saved.projectId !== state.projectId || saved.episodeId !== state.episodeId) {
+        return state
+      }
+      return {
+        ...state,
+        masterVolume: saved.masterVolume ?? state.masterVolume,
+        bgmTracks: saved.bgmTracks ?? state.bgmTracks,
+        sfxTracks: saved.sfxTracks ?? state.sfxTracks,
+        voiceTracks: saved.voiceTracks ?? state.voiceTracks,
+        ambientTracks: saved.ambientTracks ?? state.ambientTracks,
+        totalDuration: saved.totalDuration ?? state.totalDuration,
         updatedAt: now,
       }
     }
@@ -283,6 +301,17 @@ export function useAudioMix(projectId: string, episodeId: string) {
   const seek = useCallback((time: number) => {
     setPlayback((prev) => ({ ...prev, currentTime: Math.max(0, time) }))
   }, [])
+
+  // Persist to localStorage
+  const restoreAudioState = useCallback((saved: AudioMixState) => {
+    dispatch({ type: 'RESTORE_STATE', payload: { state: saved } })
+  }, [])
+
+  useLocalPersist(
+    `audio-mix:${projectId}:${episodeId}`,
+    state,
+    restoreAudioState,
+  )
 
   // Get all tracks flat (memoized to avoid new array identity on every render)
   const allTracks = useMemo(

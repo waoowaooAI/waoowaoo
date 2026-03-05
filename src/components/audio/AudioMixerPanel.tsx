@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { AppIcon } from '@/components/ui/icons'
 import type { AudioTrack, AudioTrackType, BGMTrack, SFXTrack, BGMGenre, BGMMood, SFXCategory } from '@/types/audio'
 
@@ -24,37 +25,28 @@ const TRACK_TYPE_COLORS: Record<AudioTrackType, string> = {
   ambient: 'glass-chip-neutral',
 }
 
-const TRACK_TYPE_LABELS: Record<AudioTrackType, string> = {
-  bgm: 'BGM',
-  sfx: 'SFX',
-  voice: 'Voice',
-  ambient: 'Ambient',
-}
-
 function TrackRow({ track, onUpdate, onRemove, onMute, onUnmute, onSolo }: TrackRowProps) {
-  return (
-    <div className="glass-list-row group">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Type badge */}
-        <span className={`glass-chip ${TRACK_TYPE_COLORS[track.type]} text-[10px] shrink-0`}>
-          {TRACK_TYPE_LABELS[track.type]}
-        </span>
+  const t = useTranslations('audioMixer')
 
-        {/* Name */}
+  const typeLabel = t(`trackType.${track.type}`)
+
+  return (
+    <div className="glass-list-row group" role="listitem" aria-label={`${typeLabel}: ${track.name}`}>
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <span className={`glass-chip ${TRACK_TYPE_COLORS[track.type]} text-[10px] shrink-0`}>
+          {typeLabel}
+        </span>
         <span className="text-sm font-medium text-[var(--glass-text-primary)] truncate">
           {track.name}
         </span>
-
-        {/* Duration */}
         <span className="text-[11px] text-[var(--glass-text-tertiary)] shrink-0">
           {formatDuration(track.duration)}
         </span>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        {/* Volume slider */}
         <div className="flex items-center gap-1.5 w-24">
-          <AppIcon name="audioWave" className="w-3 h-3 text-[var(--glass-text-tertiary)]" />
+          <AppIcon name="audioWave" className="w-3 h-3 text-[var(--glass-text-tertiary)]" aria-hidden="true" />
           <input
             type="range"
             min="0"
@@ -62,50 +54,49 @@ function TrackRow({ track, onUpdate, onRemove, onMute, onUnmute, onSolo }: Track
             value={Math.round(track.volume * 100)}
             onChange={(e) => onUpdate(track.id, { volume: parseInt(e.target.value) / 100 })}
             className="w-full h-1 bg-[var(--glass-stroke-base)] rounded-full appearance-none cursor-pointer accent-[var(--glass-accent-from)]"
+            aria-label={t('volumeFor', { name: track.name })}
           />
-          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-7 text-right">
+          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-7 text-right" aria-hidden="true">
             {Math.round(track.volume * 100)}%
           </span>
         </div>
 
-        {/* Mute */}
         <button
           type="button"
           onClick={() => track.muted ? onUnmute(track.id) : onMute(track.id)}
           className={`glass-icon-btn-sm ${track.muted ? 'text-[var(--glass-tone-danger-fg)]' : ''}`}
-          title={track.muted ? 'Unmute' : 'Mute'}
+          aria-label={track.muted ? t('unmute') : t('mute')}
+          aria-pressed={track.muted}
         >
-          <AppIcon name={track.muted ? 'volumeOff' : 'audioWave'} className="w-3.5 h-3.5" />
+          <AppIcon name={track.muted ? 'volumeOff' : 'audioWave'} className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
 
-        {/* Solo */}
         <button
           type="button"
           onClick={() => onSolo(track.id)}
           className="glass-icon-btn-sm"
-          title="Solo"
+          aria-label={t('solo')}
         >
           S
         </button>
 
-        {/* Loop toggle */}
         <button
           type="button"
           onClick={() => onUpdate(track.id, { loop: !track.loop })}
           className={`glass-icon-btn-sm text-[11px] font-bold ${track.loop ? 'text-[var(--glass-tone-info-fg)]' : ''}`}
-          title={track.loop ? 'Disable loop' : 'Enable loop'}
+          aria-label={track.loop ? t('disableLoop') : t('enableLoop')}
+          aria-pressed={track.loop}
         >
-          <AppIcon name="refresh" className="w-3 h-3" />
+          <AppIcon name="refresh" className="w-3 h-3" aria-hidden="true" />
         </button>
 
-        {/* Delete */}
         <button
           type="button"
           onClick={() => onRemove(track.id)}
-          className="glass-icon-btn-sm opacity-0 group-hover:opacity-100 transition-opacity text-[var(--glass-tone-danger-fg)]"
-          title="Remove track"
+          className="glass-icon-btn-sm opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-[var(--glass-tone-danger-fg)]"
+          aria-label={t('removeTrack')}
         >
-          <AppIcon name="trash" className="w-3.5 h-3.5" />
+          <AppIcon name="trash" className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -125,6 +116,7 @@ function AddTrackForm({
   onAddSFX: (sfx: Omit<SFXTrack, 'id' | 'type' | 'muted'>) => void
   onClose: () => void
 }) {
+  const t = useTranslations('audioMixer')
   const [tab, setTab] = useState<'bgm' | 'sfx'>('bgm')
   const [name, setName] = useState('')
   const [genre, setGenre] = useState<BGMGenre>('dramatic')
@@ -172,23 +164,34 @@ function AddTrackForm({
     onClose()
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && name.trim()) {
+      handleAdd()
+    } else if (e.key === 'Escape') {
+      onClose()
+    }
+  }
+
   return (
-    <div className="glass-surface-soft rounded-xl border border-[var(--glass-stroke-base)] p-4">
-      {/* Tab switcher */}
-      <div className="glass-segmented mb-4">
+    <div className="glass-surface-soft rounded-xl border border-[var(--glass-stroke-base)] p-4" role="form" aria-label={t('addTrackForm')}>
+      <div className="glass-segmented mb-4" role="tablist" aria-label={t('trackTypeSelect')}>
         <button
           type="button"
+          role="tab"
           className="glass-segmented-item"
           data-active={tab === 'bgm'}
           onClick={() => setTab('bgm')}
+          aria-selected={tab === 'bgm'}
         >
           BGM
         </button>
         <button
           type="button"
+          role="tab"
           className="glass-segmented-item"
           data-active={tab === 'sfx'}
           onClick={() => setTab('sfx')}
+          aria-selected={tab === 'sfx'}
         >
           SFX
         </button>
@@ -199,8 +202,10 @@ function AddTrackForm({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={tab === 'bgm' ? 'BGM track name...' : 'SFX name...'}
+          onKeyDown={handleKeyDown}
+          placeholder={tab === 'bgm' ? t('bgmNamePlaceholder') : t('sfxNamePlaceholder')}
           className="glass-input-base px-3 py-2 text-sm"
+          aria-label={t('trackName')}
         />
 
         {tab === 'bgm' ? (
@@ -209,18 +214,20 @@ function AddTrackForm({
               value={genre}
               onChange={(e) => setGenre(e.target.value as BGMGenre)}
               className="glass-select-base px-3 py-2 text-sm"
+              aria-label={t('genre')}
             >
               {(['dramatic', 'romantic', 'action', 'mysterious', 'comedy', 'sad', 'epic', 'calm', 'horror', 'fantasy'] as BGMGenre[]).map((g) => (
-                <option key={g} value={g}>{g}</option>
+                <option key={g} value={g}>{t(`genres.${g}`)}</option>
               ))}
             </select>
             <select
               value={mood}
               onChange={(e) => setMood(e.target.value as BGMMood)}
               className="glass-select-base px-3 py-2 text-sm"
+              aria-label={t('mood')}
             >
               {(['happy', 'sad', 'tense', 'peaceful', 'exciting', 'melancholic', 'dark', 'uplifting'] as BGMMood[]).map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>{t(`moods.${m}`)}</option>
               ))}
             </select>
           </div>
@@ -229,15 +236,16 @@ function AddTrackForm({
             value={category}
             onChange={(e) => setCategory(e.target.value as SFXCategory)}
             className="glass-select-base px-3 py-2 text-sm"
+            aria-label={t('category')}
           >
             {(['nature', 'urban', 'action', 'emotion', 'transition', 'environment', 'magic', 'ui'] as SFXCategory[]).map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>{t(`categories.${c}`)}</option>
             ))}
           </select>
         )}
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--glass-text-tertiary)]">Volume</span>
+          <span className="text-xs text-[var(--glass-text-tertiary)]">{t('volume')}</span>
           <input
             type="range"
             min="0"
@@ -245,6 +253,7 @@ function AddTrackForm({
             value={volume}
             onChange={(e) => setVolume(parseInt(e.target.value))}
             className="flex-1 h-1 bg-[var(--glass-stroke-base)] rounded-full appearance-none cursor-pointer accent-[var(--glass-accent-from)]"
+            aria-label={t('volume')}
           />
           <span className="text-xs text-[var(--glass-text-tertiary)] w-8 text-right">{volume}%</span>
         </div>
@@ -255,7 +264,7 @@ function AddTrackForm({
             onClick={onClose}
             className="glass-btn-base glass-btn-ghost rounded-lg px-3 py-1.5 text-xs"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             type="button"
@@ -263,7 +272,7 @@ function AddTrackForm({
             disabled={!name.trim()}
             className="glass-btn-base glass-btn-primary rounded-lg px-4 py-1.5 text-xs"
           >
-            Add {tab === 'bgm' ? 'BGM' : 'SFX'}
+            {t('addType', { type: tab === 'bgm' ? 'BGM' : 'SFX' })}
           </button>
         </div>
       </div>
@@ -316,47 +325,52 @@ export default function AudioMixerPanel({
   onStop,
   onSeek,
 }: AudioMixerPanelProps) {
+  const t = useTranslations('audioMixer')
   const [showAddForm, setShowAddForm] = useState(false)
 
   return (
-    <div className="glass-surface rounded-2xl p-5">
+    <div className="glass-surface rounded-2xl p-5" role="region" aria-label={t('title')}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <AppIcon name="audioWave" className="w-5 h-5 text-[var(--glass-accent-from)]" />
-          <h3 className="text-sm font-semibold text-[var(--glass-text-primary)]">Audio Mixer</h3>
-          <span className="glass-chip glass-chip-neutral text-[10px]">{trackCount} tracks</span>
+          <AppIcon name="audioWave" className="w-5 h-5 text-[var(--glass-accent-from)]" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-[var(--glass-text-primary)]">{t('title')}</h3>
+          <span className="glass-chip glass-chip-neutral text-[10px]">{t('trackCount', { count: trackCount })}</span>
         </div>
         <button
           type="button"
           onClick={() => setShowAddForm(!showAddForm)}
           className="glass-btn-base glass-btn-soft rounded-lg px-3 py-1.5 text-xs"
+          aria-expanded={showAddForm}
+          aria-label={t('addTrack')}
         >
-          <AppIcon name="plus" className="w-3.5 h-3.5" />
-          Add Track
+          <AppIcon name="plus" className="w-3.5 h-3.5" aria-hidden="true" />
+          {t('addTrack')}
         </button>
       </div>
 
       {/* Playback Controls */}
-      <div className="flex items-center gap-3 mb-4 p-3 glass-surface-soft rounded-xl border border-[var(--glass-stroke-base)]">
+      <div className="flex items-center gap-3 mb-4 p-3 glass-surface-soft rounded-xl border border-[var(--glass-stroke-base)]" role="toolbar" aria-label={t('playbackControls')}>
         <button
           type="button"
           onClick={isPlaying ? onPause : onPlay}
           className="glass-btn-base glass-btn-primary rounded-full w-8 h-8 p-0"
+          aria-label={isPlaying ? t('pause') : t('play')}
         >
-          <AppIcon name={isPlaying ? 'pause' : 'play'} className="w-4 h-4" />
+          <AppIcon name={isPlaying ? 'pause' : 'play'} className="w-4 h-4" aria-hidden="true" />
         </button>
         <button
           type="button"
           onClick={onStop}
           className="glass-btn-base glass-btn-ghost rounded-full w-8 h-8 p-0"
+          aria-label={t('stop')}
         >
-          <AppIcon name="pauseSolid" className="w-4 h-4" />
+          <AppIcon name="pauseSolid" className="w-4 h-4" aria-hidden="true" />
         </button>
 
         {/* Timeline scrubber */}
         <div className="flex-1 flex items-center gap-2">
-          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-10 text-right font-mono">
+          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-10 text-right font-mono" aria-hidden="true">
             {formatDuration(currentTime)}
           </span>
           <input
@@ -366,15 +380,17 @@ export default function AudioMixerPanel({
             value={currentTime * 1000}
             onChange={(e) => onSeek(parseInt(e.target.value) / 1000)}
             className="flex-1 h-1 bg-[var(--glass-stroke-base)] rounded-full appearance-none cursor-pointer accent-[var(--glass-accent-from)]"
+            aria-label={t('seekPosition')}
+            aria-valuetext={`${formatDuration(currentTime)} / ${formatDuration(totalDuration)}`}
           />
-          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-10 font-mono">
+          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-10 font-mono" aria-hidden="true">
             {formatDuration(totalDuration)}
           </span>
         </div>
 
         {/* Master volume */}
         <div className="flex items-center gap-1.5 w-20">
-          <AppIcon name="audioWave" className="w-3 h-3 text-[var(--glass-text-tertiary)]" />
+          <AppIcon name="audioWave" className="w-3 h-3 text-[var(--glass-text-tertiary)]" aria-hidden="true" />
           <input
             type="range"
             min="0"
@@ -382,6 +398,7 @@ export default function AudioMixerPanel({
             value={Math.round(masterVolume * 100)}
             onChange={(e) => onSetMasterVolume(parseInt(e.target.value) / 100)}
             className="flex-1 h-1 bg-[var(--glass-stroke-base)] rounded-full appearance-none cursor-pointer accent-[var(--glass-accent-from)]"
+            aria-label={t('masterVolume')}
           />
         </div>
       </div>
@@ -398,10 +415,10 @@ export default function AudioMixerPanel({
       )}
 
       {/* Track List */}
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" role="list" aria-label={t('trackList')}>
         {allTracks.length === 0 ? (
           <div className="text-center py-8 text-sm text-[var(--glass-text-tertiary)]">
-            No audio tracks yet. Add BGM or SFX to get started.
+            {t('emptyState')}
           </div>
         ) : (
           allTracks.map((track) => (

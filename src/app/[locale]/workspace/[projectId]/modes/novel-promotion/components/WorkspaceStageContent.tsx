@@ -5,9 +5,19 @@ import ScriptStage from './ScriptStage'
 import StoryboardStage from './StoryboardStage'
 import VideoStageRoute from './VideoStageRoute'
 import VoiceStageRoute from './VoiceStageRoute'
+import { StageErrorBoundary } from '@/components/ui/StageErrorBoundary'
 
 interface WorkspaceStageContentProps {
   currentStage: string
+}
+
+const STAGE_NAMES: Record<string, string> = {
+  config: 'Cấu hình',
+  script: 'Kịch bản',
+  assets: 'Tài nguyên',
+  storyboard: 'Storyboard',
+  videos: 'Video',
+  voice: 'Giọng nói',
 }
 
 export default function WorkspaceStageContent({
@@ -15,15 +25,17 @@ export default function WorkspaceStageContent({
 }: WorkspaceStageContentProps) {
   return (
     <div key={currentStage} className="animate-page-enter">
-      {currentStage === 'config' && <ConfigStage />}
+      <StageErrorBoundary stageName={STAGE_NAMES[currentStage] || currentStage}>
+        {currentStage === 'config' && <ConfigStage />}
 
-      {(currentStage === 'script' || currentStage === 'assets') && <ScriptStage />}
+        {(currentStage === 'script' || currentStage === 'assets') && <ScriptStage />}
 
-      {currentStage === 'storyboard' && <StoryboardStage />}
+        {currentStage === 'storyboard' && <StoryboardStage />}
 
-      {currentStage === 'videos' && <VideoStageRoute />}
+        {currentStage === 'videos' && <VideoStageRoute />}
 
-      {currentStage === 'voice' && <VoiceStageRoute />}
+        {currentStage === 'voice' && <VoiceStageRoute />}
+      </StageErrorBoundary>
     </div>
   )
 }

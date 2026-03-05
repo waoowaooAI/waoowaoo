@@ -99,6 +99,7 @@ export type TimelineAction =
   | { type: 'UNLOCK_TRACK'; trackId: string }
   | { type: 'MUTE_TRACK'; trackId: string }
   | { type: 'UNMUTE_TRACK'; trackId: string }
+  | { type: 'RESTORE_STATE'; state: Partial<TimelineState> }
 
 // =====================================================
 // Timeline Interaction Types

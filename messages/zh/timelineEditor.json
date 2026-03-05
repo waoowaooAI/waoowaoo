@@ -1,0 +1,19 @@
+{
+  "title": "时间线",
+  "toolbar": "时间线工具栏",
+  "tracks": "时间线轨道",
+  "play": "播放",
+  "pause": "暂停",
+  "zoomIn": "放大",
+  "zoomOut": "缩小",
+  "zoomToFit": "适应窗口",
+  "snap": "吸附",
+  "enableSnap": "启用吸附",
+  "disableSnap": "禁用吸附",
+  "seekPosition": "播放位置",
+  "muteTrack": "静音轨道",
+  "unmuteTrack": "取消静音轨道",
+  "lockTrack": "锁定轨道",
+  "unlockTrack": "解锁轨道",
+  "emptyState": "暂无轨道。添加视频片段、音频或语音开始编辑。"
+}

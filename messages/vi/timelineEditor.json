@@ -1,0 +1,19 @@
+{
+  "title": "Dòng thời gian",
+  "toolbar": "Thanh công cụ dòng thời gian",
+  "tracks": "Các bản nhạc",
+  "play": "Phát",
+  "pause": "Tạm dừng",
+  "zoomIn": "Phóng to",
+  "zoomOut": "Thu nhỏ",
+  "zoomToFit": "Vừa khung",
+  "snap": "Bám lưới",
+  "enableSnap": "Bật bám lưới",
+  "disableSnap": "Tắt bám lưới",
+  "seekPosition": "Vị trí phát",
+  "muteTrack": "Tắt tiếng bản nhạc",
+  "unmuteTrack": "Bật tiếng bản nhạc",
+  "lockTrack": "Khóa bản nhạc",
+  "unlockTrack": "Mở khóa bản nhạc",
+  "emptyState": "Chưa có bản nhạc. Thêm video clip, âm thanh hoặc giọng nói để bắt đầu chỉnh sửa."
+}

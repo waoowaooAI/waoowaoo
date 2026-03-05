@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { AppIcon } from '@/components/ui/icons'
 import type { TimelineTrack, TimelineItem, TimelineDragState } from '@/types/timeline'
 import { TRACK_TYPE_COLORS } from '@/types/timeline'
@@ -15,12 +16,14 @@ function TimelineRuler({
   scrollLeft,
   currentTime,
   onSeek,
+  seekLabel,
 }: {
   totalDuration: number
   zoom: number
   scrollLeft: number
   currentTime: number
   onSeek: (time: number) => void
+  seekLabel: string
 }) {
   const rulerRef = useRef<HTMLDivElement>(null)
 
@@ -32,7 +35,6 @@ function TimelineRuler({
     onSeek(Math.max(0, time))
   }
 
-  // Generate time markers
   const interval = getTimeInterval(zoom)
   const markers: { time: number; label: string; isMajor: boolean }[] = []
   const visibleEnd = (scrollLeft + 2000) / zoom
@@ -50,6 +52,18 @@ function TimelineRuler({
       ref={rulerRef}
       className="relative h-6 border-b border-[var(--glass-stroke-base)] cursor-pointer select-none overflow-hidden"
       onClick={handleClick}
+      role="slider"
+      aria-label={seekLabel}
+      aria-valuemin={0}
+      aria-valuemax={totalDuration}
+      aria-valuenow={currentTime}
+      aria-valuetext={formatTime(currentTime)}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        const step = e.shiftKey ? 5 : 1
+        if (e.key === 'ArrowRight') onSeek(Math.min(totalDuration, currentTime + step))
+        else if (e.key === 'ArrowLeft') onSeek(Math.max(0, currentTime - step))
+      }}
     >
       <div
         className="relative h-full"
@@ -65,7 +79,7 @@ function TimelineRuler({
               className={`w-px ${m.isMajor ? 'h-4 bg-[var(--glass-stroke-strong)]' : 'h-2 bg-[var(--glass-stroke-base)]'}`}
             />
             {m.isMajor && (
-              <span className="text-[9px] text-[var(--glass-text-tertiary)] mt-0.5 font-mono">
+              <span className="text-[9px] text-[var(--glass-text-tertiary)] mt-0.5 font-mono" aria-hidden="true">
                 {m.label}
               </span>
             )}
@@ -76,6 +90,7 @@ function TimelineRuler({
         <div
           className="absolute top-0 h-full w-0.5 bg-[var(--glass-tone-danger-fg)] z-10"
           style={{ left: `${currentTime * zoom}px` }}
+          aria-hidden="true"
         >
           <div className="absolute -top-0.5 -left-1.5 w-3.5 h-3 bg-[var(--glass-tone-danger-fg)] rounded-b-sm" />
         </div>
@@ -92,16 +107,21 @@ function TrackHeader({
   track,
   onToggleLock,
   onToggleMute,
+  muteLabel,
+  lockLabel,
 }: {
   track: TimelineTrack
   onToggleLock: () => void
   onToggleMute: () => void
+  muteLabel: string
+  lockLabel: string
 }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--glass-stroke-base)] h-12 bg-[var(--glass-bg-surface)]">
       <div
         className="w-2 h-2 rounded-full shrink-0"
         style={{ backgroundColor: TRACK_TYPE_COLORS[track.type] }}
+        aria-hidden="true"
       />
       <span className="text-xs font-medium text-[var(--glass-text-primary)] truncate flex-1">
         {track.name}
@@ -110,15 +130,19 @@ function TrackHeader({
         type="button"
         onClick={onToggleMute}
         className={`glass-icon-btn-sm ${track.muted ? 'text-[var(--glass-tone-danger-fg)]' : ''}`}
+        aria-label={muteLabel}
+        aria-pressed={track.muted}
       >
-        <AppIcon name={track.muted ? 'volumeOff' : 'audioWave'} className="w-3 h-3" />
+        <AppIcon name={track.muted ? 'volumeOff' : 'audioWave'} className="w-3 h-3" aria-hidden="true" />
       </button>
       <button
         type="button"
         onClick={onToggleLock}
         className={`glass-icon-btn-sm ${track.locked ? 'text-[var(--glass-tone-warning-fg)]' : ''}`}
+        aria-label={lockLabel}
+        aria-pressed={track.locked}
       >
-        <AppIcon name={track.locked ? 'lock' : 'eye'} className="w-3 h-3" />
+        <AppIcon name={track.locked ? 'lock' : 'eye'} className="w-3 h-3" aria-hidden="true" />
       </button>
     </div>
   )
@@ -170,18 +194,27 @@ function TimelineItemBlock({
         backgroundColor: `${color}cc`,
       }}
       onMouseDown={handleMouseDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`${item.name} — ${formatTime(item.startTime)} → ${formatTime(item.startTime + item.duration)}`}
+      aria-selected={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect(item.id)
+        }
+      }}
     >
-      {/* Item label */}
       <div className="px-1.5 py-1 overflow-hidden h-full flex items-center">
         <span className="text-[10px] font-medium text-white truncate">
           {item.name}
         </span>
       </div>
 
-      {/* Resize handle (right edge) */}
       <div
         className="absolute right-0 top-0 w-1.5 h-full cursor-col-resize hover:bg-white/30 rounded-r-md"
         onMouseDown={handleResizeMouseDown}
+        aria-hidden="true"
       />
     </div>
   )
@@ -191,7 +224,7 @@ function TimelineItemBlock({
 // Timeline Track Row
 // =====================================================
 
-function TrackRow({
+function TimelineTrackRow({
   track,
   zoom,
   scrollLeft,
@@ -212,6 +245,8 @@ function TrackRow({
     <div
       className="relative h-12 border-b border-[var(--glass-stroke-base)] overflow-hidden"
       style={{ background: track.locked ? 'var(--glass-bg-muted)' : undefined }}
+      role="row"
+      aria-label={track.name}
     >
       <div
         className="relative h-full"
@@ -282,18 +317,17 @@ export default function TimelineEditor({
   onMuteTrack,
   onUnmuteTrack,
 }: TimelineEditorProps) {
+  const t = useTranslations('timelineEditor')
   const containerRef = useRef<HTMLDivElement>(null)
   const [scrollLeft, setScrollLeft] = useState(0)
   const dragCleanupRef = useRef<(() => void) | null>(null)
 
-  // Cleanup drag listeners on unmount
   useEffect(() => {
     return () => {
       dragCleanupRef.current?.()
     }
   }, [])
 
-  // Drag state
   const [, setDragState] = useState<TimelineDragState>({
     isDragging: false,
     dragType: null,
@@ -336,7 +370,6 @@ export default function TimelineEditor({
         dragCleanupRef.current = null
       }
 
-      // Store cleanup function so we can call it on unmount
       dragCleanupRef.current = () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
@@ -361,14 +394,32 @@ export default function TimelineEditor({
     setScrollLeft(e.currentTarget.scrollLeft)
   }
 
+  // Keyboard shortcuts for the timeline
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === ' ') {
+        e.preventDefault()
+        onTogglePlay()
+      } else if (e.key === 'Escape') {
+        onSelectItems([])
+      }
+    },
+    [onTogglePlay, onSelectItems],
+  )
+
   return (
-    <div className="glass-surface rounded-2xl overflow-hidden flex flex-col">
+    <div
+      className="glass-surface rounded-2xl overflow-hidden flex flex-col"
+      role="region"
+      aria-label={t('title')}
+      onKeyDown={handleKeyDown}
+    >
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--glass-stroke-base)]">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--glass-stroke-base)]" role="toolbar" aria-label={t('toolbar')}>
         <div className="flex items-center gap-2">
-          <AppIcon name="film" className="w-4 h-4 text-[var(--glass-accent-from)]" />
-          <span className="text-sm font-semibold text-[var(--glass-text-primary)]">Timeline</span>
-          <span className="text-[10px] text-[var(--glass-text-tertiary)] font-mono">
+          <AppIcon name="film" className="w-4 h-4 text-[var(--glass-accent-from)]" aria-hidden="true" />
+          <span className="text-sm font-semibold text-[var(--glass-text-primary)]">{t('title')}</span>
+          <span className="text-[10px] text-[var(--glass-text-tertiary)] font-mono" aria-live="polite">
             {formatTime(currentTime)} / {formatTime(totalDuration)}
           </span>
         </div>
@@ -377,30 +428,32 @@ export default function TimelineEditor({
             type="button"
             onClick={onTogglePlay}
             className="glass-btn-base glass-btn-primary rounded-lg w-7 h-7 p-0"
+            aria-label={isPlaying ? t('pause') : t('play')}
           >
-            <AppIcon name={isPlaying ? 'pause' : 'play'} className="w-3.5 h-3.5" />
+            <AppIcon name={isPlaying ? 'pause' : 'play'} className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <div className="w-px h-5 bg-[var(--glass-stroke-base)] mx-1" />
-          <button type="button" onClick={onZoomOut} className="glass-icon-btn-sm" title="Zoom out">
-            <AppIcon name="minus" className="w-3.5 h-3.5" />
+          <div className="w-px h-5 bg-[var(--glass-stroke-base)] mx-1" aria-hidden="true" />
+          <button type="button" onClick={onZoomOut} className="glass-icon-btn-sm" aria-label={t('zoomOut')}>
+            <AppIcon name="minus" className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-8 text-center font-mono">
+          <span className="text-[10px] text-[var(--glass-text-tertiary)] w-8 text-center font-mono" aria-hidden="true">
             {Math.round(zoom)}x
           </span>
-          <button type="button" onClick={onZoomIn} className="glass-icon-btn-sm" title="Zoom in">
-            <AppIcon name="plus" className="w-3.5 h-3.5" />
+          <button type="button" onClick={onZoomIn} className="glass-icon-btn-sm" aria-label={t('zoomIn')}>
+            <AppIcon name="plus" className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <button type="button" onClick={onZoomToFit} className="glass-icon-btn-sm" title="Zoom to fit">
-            <AppIcon name="monitor" className="w-3.5 h-3.5" />
+          <button type="button" onClick={onZoomToFit} className="glass-icon-btn-sm" aria-label={t('zoomToFit')}>
+            <AppIcon name="monitor" className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
-          <div className="w-px h-5 bg-[var(--glass-stroke-base)] mx-1" />
+          <div className="w-px h-5 bg-[var(--glass-stroke-base)] mx-1" aria-hidden="true" />
           <button
             type="button"
             onClick={onToggleSnap}
             className={`glass-icon-btn-sm text-[10px] font-bold ${snapEnabled ? 'text-[var(--glass-tone-info-fg)]' : ''}`}
-            title={snapEnabled ? 'Disable snap' : 'Enable snap'}
+            aria-label={snapEnabled ? t('disableSnap') : t('enableSnap')}
+            aria-pressed={snapEnabled}
           >
-            Snap
+            {t('snap')}
           </button>
         </div>
       </div>
@@ -420,6 +473,8 @@ export default function TimelineEditor({
               onToggleMute={() =>
                 track.muted ? onUnmuteTrack(track.id) : onMuteTrack(track.id)
               }
+              muteLabel={track.muted ? t('unmuteTrack') : t('muteTrack')}
+              lockLabel={track.locked ? t('unlockTrack') : t('lockTrack')}
             />
           ))}
         </div>
@@ -429,19 +484,20 @@ export default function TimelineEditor({
           ref={containerRef}
           className="flex-1 overflow-x-auto overflow-y-hidden"
           onScroll={handleScroll}
+          role="grid"
+          aria-label={t('tracks')}
         >
-          {/* Ruler */}
           <TimelineRuler
             totalDuration={totalDuration}
             zoom={zoom}
             scrollLeft={scrollLeft}
             currentTime={currentTime}
             onSeek={onSeek}
+            seekLabel={t('seekPosition')}
           />
 
-          {/* Track rows */}
           {tracks.map((track) => (
-            <TrackRow
+            <TimelineTrackRow
               key={track.id}
               track={track}
               zoom={zoom}
@@ -453,10 +509,9 @@ export default function TimelineEditor({
             />
           ))}
 
-          {/* Empty state */}
           {tracks.length === 0 && (
             <div className="flex items-center justify-center h-32 text-sm text-[var(--glass-text-tertiary)]">
-              No tracks. Add video clips, audio, or voice to begin editing.
+              {t('emptyState')}
             </div>
           )}
         </div>

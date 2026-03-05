@@ -8,6 +8,7 @@ import type {
   TimelineItem,
   TimelineViewport,
 } from '@/types/timeline'
+import { useLocalPersist } from '@/lib/storage/useLocalPersist'
 
 // =====================================================
 // Timeline Reducer
@@ -218,6 +219,21 @@ function timelineReducer(state: TimelineState, action: TimelineAction): Timeline
         tracks: state.tracks.map((t) => (t.id === action.trackId ? { ...t, muted: false } : t)),
       }
 
+    case 'RESTORE_STATE': {
+      const saved = action.state
+      if (!saved || saved.projectId !== state.projectId || saved.episodeId !== state.episodeId) {
+        return state
+      }
+      return {
+        ...state,
+        tracks: saved.tracks ?? state.tracks,
+        totalDuration: saved.totalDuration ?? state.totalDuration,
+        zoom: saved.zoom ?? state.zoom,
+        snapEnabled: saved.snapEnabled ?? state.snapEnabled,
+        snapInterval: saved.snapInterval ?? state.snapInterval,
+      }
+    }
+
     default:
       return state
   }
@@ -240,6 +256,17 @@ export function useTimeline(projectId: string, episodeId: string) {
   )
 
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Persist to localStorage
+  const restoreTimelineState = useCallback((saved: TimelineState) => {
+    dispatch({ type: 'RESTORE_STATE', state: saved })
+  }, [])
+
+  useLocalPersist(
+    `timeline:${projectId}:${episodeId}`,
+    state,
+    restoreTimelineState,
+  )
 
   // Viewport computation
   const getViewport = useCallback((): TimelineViewport => {

@@ -1,0 +1,19 @@
+{
+  "title": "Timeline",
+  "toolbar": "Timeline toolbar",
+  "tracks": "Timeline tracks",
+  "play": "Play",
+  "pause": "Pause",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "zoomToFit": "Zoom to fit",
+  "snap": "Snap",
+  "enableSnap": "Enable snap",
+  "disableSnap": "Disable snap",
+  "seekPosition": "Seek position",
+  "muteTrack": "Mute track",
+  "unmuteTrack": "Unmute track",
+  "lockTrack": "Lock track",
+  "unlockTrack": "Unlock track",
+  "emptyState": "No tracks. Add video clips, audio, or voice to begin editing."
+}

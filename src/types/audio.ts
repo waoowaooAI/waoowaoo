@@ -130,6 +130,7 @@ export interface AudioMixAction {
     | 'MUTE_TRACK'
     | 'UNMUTE_TRACK'
     | 'SOLO_TRACK'
+    | 'RESTORE_STATE'
   payload: Record<string, unknown>
 }
 
