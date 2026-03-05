@@ -1,6 +1,6 @@
 import { resolveTaskErrorMessage } from './error-message'
 
-type TaskStatus = 'queued' | 'processing' | 'completed' | 'failed'
+type TaskStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled'
 
 type TaskSnapshot = {
   id: string
@@ -65,7 +65,7 @@ export async function waitForTaskResult(taskId: string, options: WaitTaskOptions
     if (task.status === 'completed') {
       return task.result || { success: true }
     }
-    if (task.status === 'failed') {
+    if (task.status === 'failed' || task.status === 'cancelled') {
       throw new Error(resolveTaskErrorMessage(task, `Task ${task.status}`))
     }
     if (task.status === 'queued') {

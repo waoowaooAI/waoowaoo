@@ -1,6 +1,5 @@
 import { Worker, type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { queueRedis } from '@/lib/redis'
 import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks, type InternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import type { LLMStreamKind } from '@/lib/llm-observe/types'
@@ -33,6 +32,7 @@ import { handleAssetHubAIModifyTask } from './handlers/asset-hub-ai-modify'
 import { handleReferenceToCharacterTask } from './handlers/reference-to-character'
 import { handleShotAITask } from './handlers/shot-ai-tasks'
 import { handleCharacterProfileTask } from './handlers/character-profile'
+import { handleExtractAssetsTask } from './handlers/extract-assets'
 
 type AnyObj = Record<string, unknown>
 type JsonRecord = Record<string, unknown>
@@ -619,6 +619,7 @@ async function processTextTask(job: Job<TaskJobData>) {
     case TASK_TYPE.ANALYZE_NOVEL:
       return await handleAnalyzeNovelTask(job)
     case TASK_TYPE.CLIPS_BUILD:
+    case TASK_TYPE.SEGMENT_SPLIT_LLM:
       return await handleClipsBuildTask(job)
     case TASK_TYPE.SCREENPLAY_CONVERT:
       return await handleScreenplayConvertTask(job)
@@ -626,6 +627,10 @@ async function processTextTask(job: Job<TaskJobData>) {
       return await handleEpisodeSplitTask(job)
     case TASK_TYPE.ANALYZE_GLOBAL:
       return await handleAnalyzeGlobalTask(job)
+    case TASK_TYPE.EXTRACT_CHARACTERS_LLM:
+    case TASK_TYPE.EXTRACT_LOCATIONS_LLM:
+    case TASK_TYPE.EXTRACT_PROPS_LLM:
+      return await handleExtractAssetsTask(job)
     case TASK_TYPE.AI_CREATE_CHARACTER:
     case TASK_TYPE.AI_CREATE_LOCATION:
     case TASK_TYPE.ASSET_HUB_AI_DESIGN_CHARACTER:
@@ -659,7 +664,6 @@ export function createTextWorker() {
     QUEUE_NAME.TEXT,
     async (job) => await withTaskLifecycle(job, processTextTask),
     {
-      connection: queueRedis,
       concurrency: Number.parseInt(process.env.QUEUE_CONCURRENCY_TEXT || '10', 10) || 10,
     },
   )

@@ -122,9 +122,22 @@ export async function submitTask(params: {
   const resolvedBillingInfo = computedBillingInfo || params.billingInfo || null
   const shouldCheckWorkerAvailability =
     process.env.NODE_ENV !== 'test'
-    && process.env.TASK_REQUIRE_ACTIVE_WORKER !== 'false'
+    && process.env.TASK_REQUIRE_ACTIVE_WORKER === 'true'
+  const queueType = getQueueTypeByTaskType(params.type)
+
+  if (!shouldCheckWorkerAvailability) {
+    logger.info({
+      action: 'task.submit.worker_check.skipped',
+      message: 'worker availability check skipped by env',
+      details: {
+        queueType,
+        taskType: params.type,
+        requireActiveWorker: process.env.TASK_REQUIRE_ACTIVE_WORKER || 'false',
+      },
+    })
+  }
+
   if (shouldCheckWorkerAvailability) {
-    const queueType = getQueueTypeByTaskType(params.type)
     const queue = getQueueByType(queueType)
     const workers = await queue.getWorkers()
     if (workers.length <= 0) {
@@ -147,6 +160,15 @@ export async function submitTask(params: {
         },
       })
     }
+    logger.info({
+      action: 'task.submit.worker_check.passed',
+      message: 'active queue workers found',
+      details: {
+        queueType,
+        taskType: params.type,
+        workerCount: workers.length,
+      },
+    })
   }
 
   const { task, deduped } = await createTask({
@@ -263,6 +285,17 @@ export async function submitTask(params: {
 
   if (!deduped) {
     try {
+      const enqueueStartedAt = Date.now()
+      logger.info({
+        action: 'task.submit.enqueue.begin',
+        message: 'enqueue task started',
+        taskId: task.id,
+        details: {
+          queueType,
+          taskType: params.type,
+          priority: typeof task.priority === 'number' ? task.priority : 0,
+        },
+      })
       await addTaskJob({
         taskId: task.id,
         type: params.type,
@@ -294,6 +327,11 @@ export async function submitTask(params: {
         action: 'task.submit.enqueued',
         message: 'task enqueued',
         taskId: task.id,
+        durationMs: Date.now() - enqueueStartedAt,
+        details: {
+          queueType,
+          taskType: params.type,
+        },
       })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
@@ -334,6 +372,8 @@ export async function submitTask(params: {
         retryable: false,
         details: {
           compensationFailed,
+          queueType,
+          taskType: params.type,
         },
         error:
           error instanceof Error

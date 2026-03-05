@@ -1,44 +1,20 @@
-import { NextRequest } from 'next/server'
-import { requireProjectAuth, isErrorResponse } from '@/lib/api-auth'
-import { apiHandler, ApiError } from '@/lib/api-errors'
-import { TASK_TYPE } from '@/lib/task/types'
-import { maybeSubmitLLMTask } from '@/lib/llm-observe/route-task'
+import { NextResponse } from 'next/server'
 
-export const POST = apiHandler(async (
-  request: NextRequest,
-  context: { params: Promise<{ projectId: string }> },
-) => {
-  const { projectId } = await context.params
-  const body = await request.json().catch(() => ({}))
-  const episodeId = typeof body?.episodeId === 'string' ? body.episodeId : null
-
-  const authResult = await requireProjectAuth(projectId, {
-    include: { characters: true, locations: true },
-  })
-  if (isErrorResponse(authResult)) return authResult
-  const { session, project } = authResult
-
-  if (project.mode !== 'novel-promotion') {
-    throw new ApiError('INVALID_PARAMS')
-  }
-
-  const asyncTaskResponse = await maybeSubmitLLMTask({
-    request,
-    userId: session.user.id,
-    projectId,
-    episodeId,
-    type: TASK_TYPE.ANALYZE_NOVEL,
-    targetType: 'NovelPromotionProject',
-    targetId: projectId,
-    routePath: `/api/novel-promotion/${projectId}/analyze`,
-    body: {
-      ...body,
-      displayMode: 'detail',
+function gone() {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'ENDPOINT_REMOVED',
+        message: 'legacy endpoint removed, use /api/v2 routes',
+      },
     },
-    dedupeKey: `analyze_novel:${projectId}:${episodeId || 'global'}`,
-    priority: 1,
-  })
-  if (asyncTaskResponse) return asyncTaskResponse
+    { status: 410 },
+  )
+}
 
-  throw new ApiError('INVALID_PARAMS')
-})
+export const GET = gone
+export const POST = gone
+export const PUT = gone
+export const PATCH = gone
+export const DELETE = gone
+export const OPTIONS = gone

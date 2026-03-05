@@ -165,6 +165,7 @@ const ClipRenderer: React.FC<ClipRendererProps> = ({
             <Video
                 src={clip.src}
                 startFrom={clip.trim?.from || 0}
+                endAt={clip.trim?.to}
                 style={{
                     width: '100%',
                     height: '100%',

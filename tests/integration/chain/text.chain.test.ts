@@ -66,7 +66,6 @@ vi.mock('bullmq', () => ({
   },
 }))
 
-vi.mock('@/lib/redis', () => ({ queueRedis: {} }))
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => llmMock)
 vi.mock('@/lib/config-service', () => configMock)

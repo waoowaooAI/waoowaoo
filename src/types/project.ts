@@ -18,6 +18,82 @@ export interface BaseProject {
   updatedAt: Date
 }
 
+// v2 项目创建输入模型（Stage 1）
+export interface ProjectInputConfig {
+  name?: string
+  description: string
+  novelScript?: string | null
+  videoModel?: string
+  segmentDurationSec: number
+  segmentsPerEpisode: number
+  episodeCount: number
+  episodeDurationSec?: number
+  totalDurationSec?: number
+}
+
+// 时长修正建议（超模型上限时返回）
+export interface ProjectDurationCorrectionSuggestion {
+  segmentDurationSec: number
+  segmentsPerEpisode: number
+  episodeDurationSec: number
+  totalDurationSec: number
+}
+
+export interface ClipPlanBoundaryMarkers {
+  startMarker: string
+  endMarker: string
+}
+
+export interface ClipPlanEntry {
+  index: number
+  summary: string
+  splitReason: string
+  boundaryMarkers: ClipPlanBoundaryMarkers
+  targetDurationSec: number
+  estimatedDurationSec: number
+  durationDeltaSec: number
+}
+
+export interface ClipPlan {
+  schema: 'clip_plan'
+  version: string
+  versionHash: string
+  generatedAt: string
+  targetDurationSec: number
+  maxDurationDeltaSec: number
+  toleranceSec: number
+  alignmentWithinTolerance: boolean
+}
+
+export interface GlobalContextRelationNode {
+  id: string
+  name: string
+}
+
+export interface GlobalContextRelationEdge {
+  from: string
+  to: string
+  relation: string
+  coOccurrenceCount: number
+}
+
+export interface GlobalContextSnapshot {
+  schema: 'global_context'
+  version: string
+  versionHash: string
+  generatedAt: string
+  worldRules: string[]
+  characterRelations: {
+    nodes: GlobalContextRelationNode[]
+    edges: GlobalContextRelationEdge[]
+  }
+  styleConstraints: string[]
+  sourceCoverage: {
+    totalChunks: number
+    processedChunks: number
+  }
+}
+
 // ============================================
 // 通用资产类型
 // ============================================

@@ -27,7 +27,7 @@ export type TaskItem = {
 }
 
 const ACTIVE_STATUS = ['queued', 'processing'] as const
-const SNAPSHOT_STATUS = ['queued', 'processing', 'completed', 'failed'] as const
+const SNAPSHOT_STATUS = ['queued', 'processing', 'completed', 'failed', 'cancelled'] as const
 
 function buildTaskSearch(params: {
   projectId: string
@@ -185,7 +185,9 @@ export function useTaskStatus(params: {
   const data = useMemo(() => {
     const tasks = query.data || []
     const latest = snapshotQuery.data || tasks[0] || null
-    const lastFailed = latest?.status === 'failed' ? (latest.error || null) : null
+    const lastFailed = latest?.status === 'failed' || latest?.status === 'cancelled'
+      ? (latest.error || null)
+      : null
     return {
       active: tasks,
       hasActive: tasks.length > 0,

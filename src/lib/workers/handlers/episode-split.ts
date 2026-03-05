@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { executeAiTextStep } from '@/lib/ai-runtime'
@@ -15,6 +16,14 @@ type EpisodeSplit = {
   number?: number
   title?: string
   summary?: string
+  hook?: string
+  twist?: string
+  conflict?: string
+  rhythmAnchors?: {
+    hook?: string
+    twist?: string
+    conflict?: string
+  }
   startMarker?: string
   endMarker?: string
   startIndex?: number
@@ -67,6 +76,42 @@ function toValidBoundaryIndex(value: unknown, textLength: number): number | null
   const idx = Math.floor(value)
   if (idx < 0 || idx > textLength) return null
   return idx
+}
+
+function readAnchorText(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function pickAnchorFallback(input: string): string | null {
+  const trimmed = input.trim()
+  if (!trimmed) return null
+  const sentence = trimmed
+    .split(/[\n。！？!?]/)
+    .map((item) => item.trim())
+    .find((item) => item.length > 0)
+  return sentence || trimmed.slice(0, 48)
+}
+
+function resolveRhythmAnchors(episode: EpisodeSplit): {
+  hook: string
+  twist: string
+  conflict: string
+} {
+  const summary = typeof episode.summary === 'string' ? episode.summary.trim() : ''
+  const title = typeof episode.title === 'string' ? episode.title.trim() : ''
+  const nested = episode.rhythmAnchors
+
+  const fallback = pickAnchorFallback(summary || title || '剧情推进')
+  const hook = readAnchorText(episode.hook) || readAnchorText(nested?.hook) || fallback
+  const twist = readAnchorText(episode.twist) || readAnchorText(nested?.twist) || fallback
+  const conflict = readAnchorText(episode.conflict) || readAnchorText(nested?.conflict) || fallback
+
+  if (!hook || !twist || !conflict) {
+    throw new Error('节奏锚点缺失，必须包含 hook/twist/conflict')
+  }
+  return { hook, twist, conflict }
 }
 
 export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
@@ -127,6 +172,11 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
     number: number
     title: string
     summary: string
+    rhythmAnchors: {
+      hook: string
+      twist: string
+      conflict: string
+    }
     content: string
     wordCount: number
   }
@@ -236,11 +286,13 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
           if (!episodeContent) {
             throw new Error(`episode_${idx + 1} 匹配内容为空`)
           }
+          const rhythmAnchors = resolveRhythmAnchors(ep)
 
           resolved.push({
             number: episodeNumber,
             title,
             summary: typeof ep.summary === 'string' ? ep.summary : '',
+            rhythmAnchors,
             content: episodeContent,
             wordCount: countWords(episodeContent),
           })
@@ -267,8 +319,21 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
     displayMode: 'detail',
   })
 
+  const versionHash = createHash('sha256')
+    .update(JSON.stringify(episodes))
+    .digest('hex')
+    .slice(0, 16)
+
   return {
     success: true,
+    episodePlan: {
+      schema: 'episode_plan',
+      version: 'v2',
+      versionHash,
+      generatedAt: new Date().toISOString(),
+      episodeCount: episodes.length,
+      rhythmAnchorFields: ['hook', 'twist', 'conflict'],
+    },
     episodes,
   }
 }

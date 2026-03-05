@@ -59,6 +59,12 @@ export const DELETE = apiHandler(async (
   }
 
   if (cancelled) {
+    if (!updatedTask.projectId) {
+      throw new ApiError('INTERNAL_ERROR', {
+        message: 'task project_id is required when publishing task events',
+        taskId: updatedTask.id,
+      })
+    }
     // Best effort: remove queued job to avoid worker picking it up after cancellation.
     await removeTaskJob(taskId).catch(() => false)
     await publishTaskEvent({

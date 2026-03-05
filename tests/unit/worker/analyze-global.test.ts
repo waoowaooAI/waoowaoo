@@ -78,7 +78,7 @@ vi.mock('@/lib/workers/handlers/analyze-global-persist', () => ({
 
 import { handleAnalyzeGlobalTask } from '@/lib/workers/handlers/analyze-global'
 
-function buildJob(): Job<TaskJobData> {
+function buildJob(payload: Record<string, unknown> = {}): Job<TaskJobData> {
   return {
     data: {
       taskId: 'task-analyze-global-1',
@@ -88,7 +88,7 @@ function buildJob(): Job<TaskJobData> {
       episodeId: null,
       targetType: 'NovelPromotionProject',
       targetId: 'np-project-1',
-      payload: {},
+      payload,
       userId: 'user-1',
     },
   } as unknown as Job<TaskJobData>
@@ -124,13 +124,21 @@ describe('worker analyze-global behavior', () => {
   })
 
   it('success path -> persists every chunk and returns stats summary', async () => {
-    const result = await handleAnalyzeGlobalTask(buildJob())
+    const result = await handleAnalyzeGlobalTask(buildJob({ promptAppend: '强调古风语气' }))
 
     expect(parseMock.chunkContent).toHaveBeenCalled()
     expect(persistMock.persistAnalyzeGlobalChunk).toHaveBeenCalledTimes(2)
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
+      globalContext: {
+        schema: 'global_context',
+        version: 'v2',
+        styleConstraints: expect.arrayContaining(['附加约束: 强调古风语气']),
+        characterRelations: {
+          nodes: [{ id: 'char-1', name: 'Hero' }],
+        },
+      },
       stats: {
         totalChunks: 2,
         newCharacters: 2,
@@ -142,5 +150,6 @@ describe('worker analyze-global behavior', () => {
         totalLocations: 1,
       },
     })
+    expect(result.globalContext.versionHash).toMatch(/^[a-f0-9]{16}$/)
   })
 })

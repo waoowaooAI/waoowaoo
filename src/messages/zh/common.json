@@ -1,0 +1,56 @@
+{
+  "app": {
+    "name": "iVibeMovie",
+    "tagline": "AI 短剧创作平台"
+  },
+  "nav": {
+    "dashboard": "工作台",
+    "projects": "项目",
+    "settings": "设置",
+    "admin": "管理"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "username": "用户名",
+    "password": "密码",
+    "confirmPassword": "确认密码"
+  },
+  "project": {
+    "create": "创建项目",
+    "name": "项目名称",
+    "description": "描述",
+    "episodes": "剧集",
+    "characters": "角色",
+    "locations": "场景",
+    "storyboard": "分镜",
+    "video": "视频",
+    "timeline": "时间轴",
+    "settings": "设置"
+  },
+  "actions": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "generate": "生成",
+    "regenerate": "重新生成",
+    "upload": "上传",
+    "download": "下载",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步"
+  },
+  "status": {
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "generating": "生成中...",
+    "success": "成功",
+    "error": "错误",
+    "pending": "等待中",
+    "processing": "处理中",
+    "completed": "已完成",
+    "failed": "失败"
+  }
+}

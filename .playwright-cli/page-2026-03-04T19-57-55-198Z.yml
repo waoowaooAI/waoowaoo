@@ -1,0 +1,21 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "iVibeMovie" [ref=e7] [cursor=pointer]:
+            - /url: /
+            - img "iVibeMovie" [ref=e8]
+          - generic [ref=e9]: Beta v0.2 (测试版)
+        - generic [ref=e10]:
+          - link "登录" [ref=e11] [cursor=pointer]:
+            - /url: /auth/signin
+          - link "注册" [ref=e12] [cursor=pointer]:
+            - /url: /auth/signup
+          - button "Switch language" [ref=e14]:
+            - img [ref=e15]
+            - generic [ref=e18]: 简体中文
+            - img [ref=e19]
+    - main [ref=e21]:
+      - generic [ref=e22]: 加载中...
+  - alert [ref=e23]

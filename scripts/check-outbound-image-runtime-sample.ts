@@ -140,7 +140,7 @@ async function main() {
   const tasks = await prisma.task.findMany({
     where: {
       type: { in: monitoredTypes },
-      createdAt: { gte: since },
+      queuedAt: { gte: since },
       ...(options.projectId ? { projectId: options.projectId } : {}),
     },
     select: {
@@ -150,13 +150,13 @@ async function main() {
       projectId: true,
       targetType: true,
       targetId: true,
-      createdAt: true,
+      queuedAt: true,
       errorCode: true,
       errorMessage: true,
       payload: true,
       result: true,
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { queuedAt: 'desc' },
     take: options.limit,
   })
 

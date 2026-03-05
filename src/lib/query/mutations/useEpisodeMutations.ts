@@ -22,7 +22,7 @@ export function useListProjectEpisodes(projectId: string) {
           description?: string
           novelText?: string
         }>
-      }>(`/api/novel-promotion/${projectId}/episodes`, { method: 'GET' }, '获取剧集失败'),
+      }>(`/api/v2/projects/${projectId}/episodes`, { method: 'GET' }, '获取剧集失败'),
   })
 }
 
@@ -33,7 +33,7 @@ export function useSplitProjectEpisodes(projectId: string) {
   return useMutation({
     mutationFn: async (payload: { content: string; async?: boolean }) => {
       const response = await requestTaskResponseWithError(
-        `/api/novel-promotion/${projectId}/episodes/split`,
+        `/api/v2/projects/${projectId}/episodes/split`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -71,7 +71,7 @@ export function useSplitProjectEpisodesByMarkers(projectId: string) {
           wordCount: number
         }>
       }>(
-        `/api/novel-promotion/${projectId}/episodes/split-by-markers`,
+        `/api/v2/projects/${projectId}/episodes/split-by-markers`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -98,7 +98,7 @@ export function useSaveProjectEpisodesBatch(projectId: string) {
       triggerGlobalAnalysis?: boolean
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/episodes/batch`,
+        `/api/v2/projects/${projectId}/episodes/batch`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -126,7 +126,7 @@ export function useUpdateProjectEpisodeField(projectId: string) {
       value: unknown
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/episodes/${episodeId}`,
+        `/api/v2/projects/${projectId}/episodes/${episodeId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

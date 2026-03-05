@@ -32,10 +32,10 @@ async function recoverQueuedTasks() {
   const rows = await prisma.task.findMany({
     where: {
       status: 'queued',
-      enqueuedAt: null,
+      startedAt: null,
     },
     take: 100,
-    orderBy: { createdAt: 'asc' },
+    orderBy: { queuedAt: 'asc' },
   })
 
   for (const task of rows) {
@@ -86,9 +86,6 @@ async function recoverQueuedTasks() {
       await prisma.task.update({
         where: { id: task.id },
         data: {
-          enqueuedAt: new Date(),
-          enqueueAttempts: { increment: 1 },
-          lastEnqueueError: null,
           payload: normalizedPayload,
         },
       })
@@ -106,13 +103,6 @@ async function recoverQueuedTasks() {
       })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 're-enqueue failed'
-      await prisma.task.update({
-        where: { id: task.id },
-        data: {
-          enqueueAttempts: { increment: 1 },
-          lastEnqueueError: message,
-        },
-      })
       logger.error({
         action: 'watchdog.reenqueue_failed',
         message,
@@ -162,9 +152,9 @@ async function cleanupZombieProcessingTasks() {
       where: { id: task.id },
       data: {
         status: 'queued',
-        enqueuedAt: null,
         heartbeatAt: null,
         startedAt: null,
+        queuedAt: new Date(),
       },
     })
     await publishTaskEvent({

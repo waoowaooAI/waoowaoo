@@ -27,7 +27,7 @@ export const LOG_CONFIG = {
   debugEnabled: parseBoolean(process.env.LOG_DEBUG_ENABLED, false),
   auditEnabled: parseBoolean(process.env.LOG_AUDIT_ENABLED, true),
   format: (process.env.LOG_FORMAT || 'json').trim().toLowerCase(),
-  service: (process.env.LOG_SERVICE || 'waoowaoo').trim(),
+  service: (process.env.LOG_SERVICE || 'ivibemovie').trim(),
   redactKeys: (process.env.LOG_REDACT_KEYS || 'password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token')
     .split(',')
     .map((k) => k.trim().toLowerCase())

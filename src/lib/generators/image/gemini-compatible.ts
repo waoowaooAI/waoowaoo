@@ -96,7 +96,7 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
                     // 🔧 本地模式修复：相对路径需要补全完整 URL
                     let fullUrl = imageData
                     if (imageData.startsWith('/')) {
-                        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+                        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3533'
                         fullUrl = `${baseUrl}${imageData}`
                     }
                     const base64DataUrl = await getImageBase64Cached(fullUrl)

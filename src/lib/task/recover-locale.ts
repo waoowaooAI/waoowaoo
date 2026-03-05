@@ -33,8 +33,9 @@ function withLocaleInPayload(payload: unknown, locale: Locale): Record<string, u
 }
 
 async function resolveLocaleFromGraphRunTaskId(taskId: string): Promise<Locale | null> {
-  const run = await prisma.graphRun.findUnique({
+  const run = await prisma.graphRun.findFirst({
     where: { taskId },
+    orderBy: { createdAt: 'desc' },
     select: { input: true },
   })
   if (!run) return null
@@ -53,7 +54,7 @@ async function resolveLocaleFromGraphRunId(runId: string): Promise<Locale | null
 async function resolveLocaleFromTaskEvents(taskId: string): Promise<Locale | null> {
   const events = await prisma.taskEvent.findMany({
     where: { taskId },
-    orderBy: { id: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: 10,
     select: { payload: true },
   })
@@ -86,4 +87,3 @@ export async function resolveRecoverableTaskLocale(params: {
 export function normalizeTaskPayloadLocale(payload: unknown, locale: Locale): Record<string, unknown> {
   return withLocaleInPayload(payload, locale)
 }
-

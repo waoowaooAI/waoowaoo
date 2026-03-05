@@ -1,0 +1,28 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - link "iVibeMovie" [ref=e8] [cursor=pointer]:
+            - /url: /
+            - img "iVibeMovie" [ref=e9]
+          - generic [ref=e10]: Beta v0.2 (测试版)
+        - generic [ref=e11]:
+          - link "登录" [ref=e12] [cursor=pointer]:
+            - /url: /auth/signin
+          - link "注册" [ref=e13] [cursor=pointer]:
+            - /url: /auth/signup
+          - button "Switch language" [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e19]: 简体中文
+            - img [ref=e20]
+    - main [ref=e22]:
+      - generic [ref=e25]:
+        - heading "iVibeMovie AI影视Studio" [level=1] [ref=e26]:
+          - generic [ref=e27]: iVibeMovie
+          - text: AI影视Studio
+        - link "立即体验" [ref=e29] [cursor=pointer]:
+          - /url: /auth/signup
+  - button "Open Next.js Dev Tools" [ref=e52] [cursor=pointer]:
+    - img [ref=e53]
+  - alert [ref=e56]

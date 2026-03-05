@@ -21,10 +21,11 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link href={session ? "/workspace" : "/"} className="group">
               <Image
-                src="/logo-small.png?v=1"
+                src="/logo-small.png"
                 alt={tc('appName')}
                 width={80}
                 height={80}
+                priority
                 className="object-contain transition-transform group-hover:scale-110"
               />
             </Link>

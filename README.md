@@ -1,140 +1,156 @@
-# **🚀 探索 AI 影视的下一代创作流 | [立即加入 waoowaoo在线网页版内测候补](https://www.waoowaoo.com/)**
-<p align="center">
-  <img src="public/banner.png" alt="waoowaoo" width="600">
-</p>
+# iVibeMovie
 
-<p align="center">
-  <a href="#-quick-start">English</a> | <a href="#-快速开始">中文</a>
-</p>
+iVibeMovie 是面向个人创作者的 AI 短剧创作平台，聚焦“从文本到分镜到时间轴导出”的可控生产链路。
 
-# waoowaoo AI 影视 Studio
->[!IMPORTANT]
->⚠️ **测试版声明**：本项目目前处于测试初期阶段，由于暂时只有我一个人开发，存在部分 bug 和不完善之处。我们正在快速迭代更新中，欢迎进群反馈问题和需求**请及时关注项目更新！目前更新会非常频繁，后续会增加大量新功能以及优化效果，我们的目标是成为行业最强AI工具！**！
-> 
-> ⚠️ **Beta Notice**: This project is currently in its early beta stage. As it is currently a solo-developed project, some bugs and imperfections are to be expected. We are iterating rapidly—please stay tuned for frequent updates! We are committed to rolling out a massive roadmap of new features and optimizations, with the ultimate goal of becoming the top-tier solution in the industry. Your feedback and feature requests are highly welcome!
+## 产品目标
 
-<img width="1676" height="540" alt="chat" src="https://github.com/user-attachments/assets/30c6fcf6-b605-48da-a571-7b7aead3df8d" />
-<img width="1676" height="540" alt="chat1" src="https://github.com/user-attachments/assets/40d583a2-223a-46d9-b96b-a966390d44f8" />
+- 可控：流程状态可追踪，失败可重试，任务可回放。
+- 可编辑：脚本、分镜、资产、时间轴均支持局部修改。
+- 可量化：用统一指标评估生成质量与系统稳定性。
 
-一款基于 AI 技术的短剧/漫画视频制作工具，支持从小说文本自动生成分镜、角色、场景，并制作成完整视频。
+## Agent Team（9 角色）
 
-An AI-powered tool for creating short drama / comic videos — automatically generates storyboards, characters, and scenes from novel text, then assembles them into complete videos.
+- PM/Owner：冻结目标用户、MVP 边界、验收门槛。
+- AI Architect：模型路由、置信度、成本/时延预算。
+- Prompt/Workflow：模板化 + 参数化 + Schema + Validator。
+- Backend：PG 数据层、任务编排、状态机、审计。
+- Frontend：创作工作台、局部重生成、对比与回滚。
+- QA：功能回归、合约回归、内容质量回归。
+- Head Writer：题材与节奏规则、台词规范、连载一致性。
+- Storyboard Director：镜头语言与可拍性约束。
+- Delivery Captain：节奏控制、风险闸门、发布准入。
 
----
+## 核心流程（11 Stage）
 
-## ✨ 功能特性 / Features
+1. 项目输入与时长约束：描述 + 可选小说 + 时长公式校验。
+2. AI 剧集拆分（大纲 -> 分集）。
+3. AI 片段拆分（分集 -> 片段）。
+4. 统一上下文生成（世界观/关系网/风格约束）。
+5. 角色/场景/道具全量提取。
+6. 资产生成工作台（上传/重做/重生成）。
+7. 角色三视图与场景多视图（4/9/16 宫格）。
+8. 分镜脚本（秒级区间 + 台词 + 音效 + 语气）。
+9. 分镜图（默认 9 宫格，可替换/重做）。
+10. 片段视频（生成/重生成/上传/下载）。
+11. 时间轴剪辑与导出（拼接/裁剪/拖动/预览/导出）。
 
-| | 中文 | English |
-|---|---|---|
-| 🎬 | AI 剧本分析 - 自动解析小说，提取角色、场景、剧情 | AI Script Analysis - parse novels, extract characters, scenes & plot |
-| 🎨 | 角色 & 场景生成 - AI 生成一致性人物和场景图片 | Character & Scene Generation - consistent AI-generated images |
-| 📽️ | 分镜视频制作 - 自动生成分镜头并合成视频 | Storyboard Video - auto-generate shots and compose videos |
-| 🎙️ | AI 配音 - 多角色语音合成 | AI Voiceover - multi-character voice synthesis |
-| 🌐 | 多语言支持 - 中文 / 英文界面，右上角一键切换 | Bilingual UI - Chinese / English, switch in the top-right corner |
+## API v2（当前主链路）
 
-## 🚀 快速开始
+- 项目与拆分：
+  - `POST /api/v2/projects`
+  - `POST /api/v2/projects/{projectId}/episodes/split`
+  - `POST /api/v2/projects/{projectId}/segments/split`
+  - `POST /api/v2/projects/{projectId}/context/build`
+- 资产：
+  - `POST /api/v2/projects/{projectId}/assets/extract`
+  - `POST /api/v2/projects/{projectId}/assets/generate`
+  - `POST /api/v2/projects/{projectId}/assets/views/generate`
+- 分镜：
+  - `POST /api/v2/projects/{projectId}/storyboards/generate`
+  - `PATCH /api/v2/projects/{projectId}/storyboards/entries/{entryId}`
+  - `POST /api/v2/projects/{projectId}/storyboards/entries/{entryId}/regenerate`
+  - `POST /api/v2/projects/{projectId}/storyboards/entries/{entryId}/images`
+- 视频与时间轴：
+  - `POST /api/v2/projects/{projectId}/segments/{segmentId}/video`
+  - `GET /api/v2/projects/{projectId}/segments/{segmentId}/video/download`
+  - `GET|PATCH /api/v2/projects/{projectId}/timeline`
+  - `POST|GET /api/v2/projects/{projectId}/timeline/export`
+  - `POST /api/v2/projects/{projectId}/exports`
+- 运维：
+  - `GET /api/ops/queue/summary`
 
-**前提条件**：安装 [Docker Desktop](https://docs.docker.com/get-docker/)
+## 技术架构
+
+- Framework：Next.js 15 + React 19
+- UI：shadcn/ui + Tailwind CSS
+- Database：PostgreSQL + Prisma
+- Queue：PostgreSQL 队列兼容层（替代 Redis/BullMQ）
+- Event：`task_event` 持久化 + SSE 回放/轮询
+- Auth：NextAuth
+
+## 重构约束（强制）
+
+- 不保留旧接口兼容层。
+- 不迁移历史 MySQL 数据。
+- 移除 Redis、BullMQ、bull-board、3010 端口监控服务。
+- 数据命名统一 `snake_case`。
+- 数据库表与字段需中文注释（迁移脚本层落实）。
+- 错误处理遵循“显式失败、零隐式回退”。
+
+## 快速开始
+
+### 环境要求
+
+- Node.js >= 18.18
+- npm >= 9
+- 可访问 PostgreSQL 实例
+
+### 安装
 
 ```bash
-git clone https://github.com/saturndec/waoowaoo.git
-cd waoowaoo
-docker compose up -d
+npm install
 ```
 
-访问 [http://localhost:13000](http://localhost:13000) 开始使用！
+### 环境变量
 
-> 首次启动会自动完成数据库初始化，无需任何额外配置。
-
-> ⚠️ **如果遇到网页卡顿**：HTTP 模式下浏览器可能限制并发连接。可安装 [Caddy](https://caddyserver.com/docs/install) 启用 HTTPS：
-> ```bash
-> caddy run --config Caddyfile
-> ```
-> 然后访问 [https://localhost:1443](https://localhost:1443)
-
-### 🔄 更新到最新版本
+参考 `.env.example`，最少配置：
 
 ```bash
-git pull
-docker compose down && docker compose up -d --build
+DATABASE_URL=postgresql://postgres:***@<host>:<port>/ivibemovie?schema=public
+PG_BOSS_SCHEMA=pgboss
 ```
 
----
-
-## 🚀 Quick Start
-
-**Prerequisites**: Install [Docker Desktop](https://docs.docker.com/get-docker/)
+### 初始化数据库
 
 ```bash
-git clone https://github.com/saturndec/waoowaoo.git
-cd waoowaoo
-docker compose up -d
+npx prisma db push --skip-generate
+npx prisma generate
 ```
 
-Visit [http://localhost:13000](http://localhost:13000) to get started!
-
-> The database is initialized automatically on first launch — no extra configuration needed.
-
-> ⚠️ **If you experience lag**: HTTP mode may limit browser connections. Install [Caddy](https://caddyserver.com/docs/install) for HTTPS:
-> ```bash
-> caddy run --config Caddyfile
-> ```
-> Then visit [https://localhost:1443](https://localhost:1443)
-
-### 🔄 Updating to the Latest Version
+### 启动开发
 
 ```bash
-git pull
-docker compose down && docker compose up -d --build
+npm run dev
 ```
 
----
+默认地址：`http://localhost:3533`
 
-## 🔧 API 配置 / API Configuration
+## 测试与验收
 
-启动后进入**设置中心**配置 AI 服务的 API Key，内置配置教程。
+### 核心回归（建议）
 
-After launching, go to **Settings** to configure your AI service API keys. A built-in guide is provided.
+```bash
+npx vitest run \
+  tests/integration/api/contract/v2-project-create.test.ts \
+  tests/integration/api/contract/v2-split-chain-routes.test.ts \
+  tests/integration/api/contract/v2-assets-routes.test.ts \
+  tests/integration/api/contract/v2-storyboard-routes.test.ts \
+  tests/integration/api/contract/v2-storyboard-images-route.test.ts \
+  tests/integration/api/contract/v2-segment-video-routes.test.ts \
+  tests/integration/api/contract/v2-timeline-route.test.ts \
+  tests/integration/api/contract/v2-timeline-export-route.test.ts \
+  tests/integration/api/contract/v2-exports-route.test.ts
+```
 
-> 💡 **推荐 / Recommended**: Tested with ByteDance Volcano Engine (Seedance, Seedream) and Google AI Studio (Banana). Text models currently require OpenRouter API.
+### 构建验证
 
----
+```bash
+npm run build
+```
 
-## 📦 技术栈 / Tech Stack
+### 发布门槛
 
-- **Framework**: Next.js 15 + React 19
-- **Database**: MySQL + Prisma ORM
-- **Queue**: Redis + BullMQ
-- **Styling**: Tailwind CSS v4
-- **Auth**: NextAuth.js
+- 结构化输出合规率 >= 95%
+- 核心流程成功率 >= 90%
+- 任务恢复成功率 >= 99%
 
-## 📦 页面功能预览 / preview
-![4f7b913264f7f26438c12560340e958c67fa833a](https://github.com/user-attachments/assets/fa0e9c57-9ea0-4df3-893e-b76c4c9d304b)
-![67509361cbe6809d2496a550de5733b9f99a9702](https://github.com/user-attachments/assets/f2fb6a64-5ba8-4896-a064-be0ded213e42)
-![466e13c8fd1fc799d8f588c367ebfa24e1e99bf7](https://github.com/user-attachments/assets/09bbff39-e535-4c67-80a9-69421c3b05ee)
-![c067c197c20b0f1de456357c49cdf0b0973c9b31](https://github.com/user-attachments/assets/688e3147-6e95-43b0-b9e7-dd9af40db8a0)
+## 文档索引
 
+- `docs/ivibemovie-prd-v1.md`
+- `docs/ivibemovie-api-v2-contract.md`
+- `docs/ivibemovie-task-state-machine.md`
+- `docs/ivibemovie-refactor-task-backlog.md`
 
-## 🤝 参与方式 / Contributing
+## License
 
-本项目由核心团队独立维护。欢迎你通过以下方式参与：
-
-- 🐛 提交 [Issue](https://github.com/waoowaooAI/waoowaoo/issues) 反馈 Bug
-- 💡 提交 [Issue](https://github.com/waoowaooAI/waoowaoo/issues) 提出功能建议
-- 🔧 提交 Pull Request 供参考 — 我们会认真审阅每一个 PR 的思路，但最终由团队自行实现修复，不会直接合并外部 PR
-
-This project is maintained by the core team. You're welcome to contribute by:
-
-- 🐛 Filing [Issues](https://github.com/waoowaooAI/waoowaoo/issues) — report bugs
-- 💡 Filing [Issues](https://github.com/waoowaooAI/waoowaoo/issues) — propose features
-- 🔧 Submitting Pull Requests as references — we review every PR carefully for ideas, but the team implements fixes internally rather than merging external PRs directly
-
----
-
-**Made with ❤️ by waoowaoo team**
-
-## Star History
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=waoowaooAI/waoowaoo&type=date&legend=top-left)](https://www.star-history.com/#waoowaooAI/waoowaoo&type=date&legend=top-left)
+MIT

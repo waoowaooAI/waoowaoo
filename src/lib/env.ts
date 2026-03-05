@@ -8,7 +8,7 @@
  * 用于内部 API 调用、webhook 回调等场景
  */
 export function getBaseUrl(): string {
-    return process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    return process.env.NEXTAUTH_URL || 'http://localhost:3533'
 }
 
 /**

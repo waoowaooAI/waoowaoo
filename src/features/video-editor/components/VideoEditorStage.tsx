@@ -2,7 +2,7 @@
 import { logError as _ulogError } from '@/lib/logging/core'
 import { useTranslations } from 'next-intl'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { AppIcon } from '@/components/ui/icons'
 import { useEditorState } from '../hooks/useEditorState'
 import { useEditorActions } from '../hooks/useEditorActions'
@@ -84,6 +84,37 @@ export function VideoEditorStage({
     }
 
     const selectedClip = project.timeline.find(c => c.id === timelineState.selectedClipId)
+    const selectedClipId = selectedClip?.id || null
+    const selectedClipTrimFrom = selectedClip?.trim?.from || 0
+    const selectedClipTrimTo = selectedClip?.trim?.to || selectedClip?.durationInFrames || 0
+    const [trimFromInput, setTrimFromInput] = useState(0)
+    const [trimToInput, setTrimToInput] = useState(0)
+
+    useEffect(() => {
+        if (!selectedClipId) return
+        setTrimFromInput(selectedClipTrimFrom)
+        setTrimToInput(selectedClipTrimTo)
+    }, [selectedClipId, selectedClipTrimFrom, selectedClipTrimTo])
+
+    const applyTrim = () => {
+        if (!selectedClip) return
+        const safeFrom = Math.max(0, Math.floor(trimFromInput))
+        const safeTo = Math.max(safeFrom + 1, Math.floor(trimToInput))
+        updateClip(selectedClip.id, {
+            trim: {
+                from: safeFrom,
+                to: safeTo
+            },
+            durationInFrames: safeTo - safeFrom
+        })
+    }
+
+    const clearTrim = () => {
+        if (!selectedClip) return
+        updateClip(selectedClip.id, {
+            trim: undefined
+        })
+    }
 
     return (
         <div className="video-editor-stage" style={{
@@ -250,6 +281,48 @@ export function VideoEditorStage({
                                         })
                                     }}
                                 />
+                            </div>
+
+                            <div>
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', color: 'var(--muted-foreground)' }}>
+                                    Trim
+                                </h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                                        <span style={{ color: 'var(--muted-foreground)' }}>From (frame)</span>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={trimFromInput}
+                                            onChange={(event) => setTrimFromInput(Number(event.target.value || 0))}
+                                            className="border border-input bg-background px-2 py-1 text-xs"
+                                        />
+                                    </label>
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                                        <span style={{ color: 'var(--muted-foreground)' }}>To (frame)</span>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            value={trimToInput}
+                                            onChange={(event) => setTrimToInput(Number(event.target.value || 1))}
+                                            className="border border-input bg-background px-2 py-1 text-xs"
+                                        />
+                                    </label>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                    <button
+                                        onClick={applyTrim}
+                                        className="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 text-xs"
+                                    >
+                                        Apply
+                                    </button>
+                                    <button
+                                        onClick={clearTrim}
+                                        className="inline-flex items-center justify-center border border-input bg-background hover:bg-accent hover:text-accent-foreground px-3 py-1.5 text-xs"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
                             </div>
 
                             {/* 删除按钮 */}

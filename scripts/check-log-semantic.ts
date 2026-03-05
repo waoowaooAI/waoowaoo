@@ -23,10 +23,6 @@ const RULES: Rule[] = [
     patterns: ['watchdog.started', 'watchdog.tick.ok', 'watchdog.tick.failed'],
   },
   {
-    file: 'scripts/bull-board.ts',
-    patterns: ['bull_board.started', 'bull_board.shutdown'],
-  },
-  {
     file: 'src/lib/task/submitter.ts',
     patterns: ['requestId', 'task.submit.created', 'task.submit.enqueued'],
   },

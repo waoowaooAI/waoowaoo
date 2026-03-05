@@ -36,7 +36,7 @@ const mediaServiceMock = vi.hoisted(() => ({
 }))
 
 const envMock = vi.hoisted(() => ({
-  getBaseUrl: vi.fn(() => 'http://localhost:3000'),
+  getBaseUrl: vi.fn(() => 'http://localhost:3533'),
 }))
 
 vi.mock('@/lib/api-auth', () => authMock)

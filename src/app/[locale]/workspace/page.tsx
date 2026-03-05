@@ -13,7 +13,7 @@ import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon, IconGradientDefs } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -101,7 +101,7 @@ export default function WorkspacePage() {
         params.set('search', search.trim())
       }
 
-      const response = await fetch(`/api/projects?${params}`)
+      const response = await fetch(`/api/v2/projects?${params}`)
       if (response.ok) {
         const data = await response.json()
         setProjects(data.projects)
@@ -138,14 +138,18 @@ export default function WorkspacePage() {
 
     setCreateLoading(true)
     try {
-      const response = await fetch('/api/projects', {
+      const response = await fetch('/api/v2/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          ...formData,
-          mode: 'novel-promotion' // 固定为 novel-promotion
+          name: formData.name.trim(),
+          description: formData.description.trim() || formData.name.trim(),
+          segmentDurationSec: 5,
+          segmentsPerEpisode: 2,
+          episodeCount: 20,
+          videoModel: 'ark::doubao-seedance-1-0-pro-fast-251015',
         })
       })
 
@@ -188,7 +192,7 @@ export default function WorkspacePage() {
 
     setCreateLoading(true)
     try {
-      const response = await fetch(`/api/projects/${editingProject.id}`, {
+      const response = await fetch(`/api/v2/projects/${editingProject.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -219,7 +223,7 @@ export default function WorkspacePage() {
     setShowDeleteConfirm(false)
 
     try {
-      const response = await fetch(`/api/projects/${projectToDelete.id}`, {
+      const response = await fetch(`/api/v2/projects/${projectToDelete.id}`, {
         method: 'DELETE'
       })
 
@@ -538,6 +542,7 @@ export default function WorkspacePage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t('createProject')}</DialogTitle>
+            <DialogDescription>{t('createProjectDialogDescription')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateProject} className="space-y-4">
             <div className="space-y-2">
@@ -605,6 +610,7 @@ export default function WorkspacePage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t('editProject')}</DialogTitle>
+            <DialogDescription>{t('editProjectDialogDescription')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditProject} className="space-y-4">
             <div className="space-y-2">

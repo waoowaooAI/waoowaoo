@@ -82,10 +82,13 @@ export function useEditorActions({ projectId, episodeId }: UseEditorActionsProps
      * 保存项目到服务器
      */
     const saveProject = useCallback(async (project: VideoEditorProject) => {
-        const response = await fetch(`/api/novel-promotion/${projectId}/editor`, {
-            method: 'PUT',
+        const response = await fetch(`/api/v2/projects/${projectId}/timeline`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ projectData: project })
+            body: JSON.stringify({
+                episodeId,
+                projectData: project
+            })
         })
 
         if (!response.ok) {
@@ -93,13 +96,13 @@ export function useEditorActions({ projectId, episodeId }: UseEditorActionsProps
         }
 
         return response.json()
-    }, [projectId])
+    }, [episodeId, projectId])
 
     /**
      * 加载项目
      */
     const loadProject = useCallback(async (): Promise<VideoEditorProject | null> => {
-        const response = await fetch(`/api/novel-promotion/${projectId}/editor?episodeId=${episodeId}`)
+        const response = await fetch(`/api/v2/projects/${projectId}/timeline?episodeId=${episodeId}`)
 
         if (!response.ok) {
             if (response.status === 404) return null
@@ -107,14 +110,14 @@ export function useEditorActions({ projectId, episodeId }: UseEditorActionsProps
         }
 
         const data = await response.json()
-        return data.projectData
+        return data.timeline?.projectData || null
     }, [projectId, episodeId])
 
     /**
      * 发起渲染导出
      */
     const startRender = useCallback(async (editorProjectId: string) => {
-        const response = await fetch(`/api/novel-promotion/${projectId}/editor/render`, {
+        const response = await fetch(`/api/v2/projects/${projectId}/timeline/export`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -136,7 +139,7 @@ export function useEditorActions({ projectId, episodeId }: UseEditorActionsProps
      */
     const getRenderStatus = useCallback(async (editorProjectId: string) => {
         const response = await fetch(
-            `/api/novel-promotion/${projectId}/editor/render?id=${editorProjectId}`
+            `/api/v2/projects/${projectId}/timeline/export?id=${editorProjectId}`
         )
 
         if (!response.ok) {

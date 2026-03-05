@@ -20,7 +20,7 @@ type ApiHandler<TParams extends RouteParams = RouteParams> = (
   ctx: { params: Promise<TParams> }
 ) => Promise<Response | NextResponse>
 
-const REQUEST_ID_SYMBOL = Symbol.for('waoowaoo.request_id')
+const REQUEST_ID_SYMBOL = Symbol.for('ivibemovie.request_id')
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const GENERATION_OPERATION_PATTERNS = [
   /\/generate(?:-|\/|$)/,
@@ -527,10 +527,17 @@ export function apiHandler<TParams extends RouteParams>(handler: ApiHandler<TPar
           })
 
           const rawDetails = (apiError.details || {}) as Record<string, unknown>
+          const request_id = requestId
+          const details = {
+            ...rawDetails,
+            request_id,
+            requestId,
+          }
 
           const response = NextResponse.json(
             {
               success: false,
+              request_id,
               requestId,
               error: {
                 code: apiError.code,
@@ -538,14 +545,13 @@ export function apiHandler<TParams extends RouteParams>(handler: ApiHandler<TPar
                 retryable: apiError.retryable,
                 category: apiError.category,
                 userMessageKey: apiError.userMessageKey,
-                details: {
-                  ...rawDetails,
-                  requestId,
-                },
+                request_id,
+                details,
               },
-              // Backward-compatible flattened fields.
               code: apiError.code,
               message: apiError.message,
+              details,
+              // Backward-compatible flattened fields.
               ...rawDetails,
             },
             { status: apiError.status }

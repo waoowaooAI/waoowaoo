@@ -95,7 +95,7 @@ export function useGlobalCharacters(folderId?: string | null) {
         queryFn: async () => {
             const params = new URLSearchParams()
             if (folderId) params.set('folderId', folderId)
-            const res = await fetch(`/api/asset-hub/characters?${params}`)
+            const res = await fetch(`/api/v2/asset-hub/characters?${params}`)
             if (!res.ok) throw new Error('Failed to fetch characters')
             const data = await res.json()
             return data.characters as GlobalCharacter[]
@@ -191,7 +191,7 @@ export function useGlobalLocations(folderId?: string | null) {
         queryFn: async () => {
             const params = new URLSearchParams()
             if (folderId) params.set('folderId', folderId)
-            const res = await fetch(`/api/asset-hub/locations?${params}`)
+            const res = await fetch(`/api/v2/asset-hub/locations?${params}`)
             if (!res.ok) throw new Error('Failed to fetch locations')
             const data = await res.json()
             return data.locations as GlobalLocation[]
@@ -271,7 +271,7 @@ export function useGlobalVoices(folderId?: string | null) {
         queryFn: async () => {
             const params = new URLSearchParams()
             if (folderId) params.set('folderId', folderId)
-            const res = await fetch(`/api/asset-hub/voices?${params}`)
+            const res = await fetch(`/api/v2/asset-hub/voices?${params}`)
             if (!res.ok) throw new Error('Failed to fetch voices')
             const data = await res.json()
             return data.voices as GlobalVoice[]
@@ -286,7 +286,7 @@ export function useGlobalFolders() {
     return useQuery({
         queryKey: queryKeys.globalAssets.folders(),
         queryFn: async () => {
-            const res = await fetch('/api/asset-hub/folders')
+            const res = await fetch('/api/v2/asset-hub/folders')
             if (!res.ok) throw new Error('Failed to fetch folders')
             const data = await res.json()
             return data.folders as GlobalFolder[]

@@ -2,7 +2,7 @@
 
 # 全系统真实行为级测试替换执行主计划
 版本: v1.0  
-仓库: /Users/earth/Desktop/waoowaoo  
+仓库: /Users/earth/Desktop/ivibemovie  
 最后更新: 2026-02-25  
 定位: 用真实“行为结果断言”替换结构级/字符串级测试，覆盖全系统功能回归链路  
 
@@ -84,18 +84,18 @@
 
 ✅ Phase 1.1: 盘点路由、task type、worker 入口并建立 catalog。  
 修改位置:
-- `/Users/earth/Desktop/waoowaoo/tests/contracts/route-catalog.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/contracts/task-type-catalog.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/contracts/route-catalog.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/contracts/task-type-catalog.ts`
 
 ✅ Phase 1.2: requirements matrix 存在性校验落地，阻断“文档写了但文件不存在”。  
 修改位置:
-- `/Users/earth/Desktop/waoowaoo/tests/contracts/requirements-matrix.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/contracts/requirements-matrix.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/contracts/requirements-matrix.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/contracts/requirements-matrix.test.ts`
 
 ✅ Phase 1.3: 定义“行为级测试判定标准”并加入守卫。  
 要改内容:
-- 新增 `/Users/earth/Desktop/waoowaoo/tests/contracts/behavior-test-standard.md`
-- 新增 `/Users/earth/Desktop/waoowaoo/scripts/guards/test-behavior-quality-guard.mjs`
+- 新增 `/Users/earth/Desktop/ivibemovie/tests/contracts/behavior-test-standard.md`
+- 新增 `/Users/earth/Desktop/ivibemovie/scripts/guards/test-behavior-quality-guard.mjs`
 硬性规则:
 - 禁止只断言 `toHaveBeenCalled()`
 - 必须断言具体 payload/data 字段值或返回值
@@ -120,7 +120,7 @@
 
 ✅ Phase 2.1: 重写 direct-submit contract 为真实调用断言。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/contract/direct-submit-routes.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/contract/direct-submit-routes.test.ts`
 必须断言:
 - 未登录 401
 - 参数缺失 400（错误码一致）
@@ -129,7 +129,7 @@
 
 ✅ Phase 2.2: 重写 llm-observe contract 为真实调用断言。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/contract/llm-observe-routes.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/contract/llm-observe-routes.test.ts`
 必须断言:
 - `maybeSubmitLLMTask` 入参正确透传
 - `displayMode/flow/meta` 不丢失
@@ -137,7 +137,7 @@
 
 ✅ Phase 2.3: 重写 crud contract 为真实行为断言（已补齐 asset-hub + novel-promotion 写回断言）。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/contract/crud-routes.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/contract/crud-routes.test.ts`
 必须断言:
 - PATCH 后数据库字段值确实变化
 - DELETE 后实体不存在
@@ -145,7 +145,7 @@
 
 ✅ Phase 2.4: 重写 task-infra contract 为真实行为断言（已补 SSE 终态事件序列断言）。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/contract/task-infra-routes.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/contract/task-infra-routes.test.ts`
 必须断言:
 - dismiss 后任务状态变化
 - task-target-state 与任务终态一致
@@ -153,9 +153,9 @@
 
 ⏸ Phase 2.5: 扩展 route specific 测试，补关键历史回归点。  
 新增/扩展:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/specific/reference-to-character-api.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/specific/characters-post-reference-forwarding.test.ts`（已完成，继续扩展）
-- `/Users/earth/Desktop/waoowaoo/tests/integration/api/specific/characters-post.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/specific/reference-to-character-api.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/specific/characters-post-reference-forwarding.test.ts`（已完成，继续扩展）
+- `/Users/earth/Desktop/ivibemovie/tests/integration/api/specific/characters-post.test.ts`
 
 ---
 
@@ -166,15 +166,15 @@
 
 ✅ Phase 3.1: 关键历史 bug 已有行为级样板落地。  
 已完成文件:
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/reference-to-character.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/asset-hub-image-suffix.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/modify-image-reference-description.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/reference-to-character.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/asset-hub-image-suffix.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/modify-image-reference-description.test.ts`
 
 ✅ Phase 3.2: 把“失败快照类”worker 测试升级为“结果断言类”。  
 优先重写:
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/image-task-handlers-core.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/script-to-storyboard.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/episode-split.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/image-task-handlers-core.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/script-to-storyboard.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/episode-split.test.ts`
 必须断言:
 - 具体生成参数（referenceImages/aspectRatio/resolution）
 - 具体写库字段值（description/imageUrl/imageUrls/selectedIndex）
@@ -182,26 +182,26 @@
 
 ✅ Phase 3.3: 新增核心 handler 行为测试文件（按模块拆分，已全部落地）。  
 新增文件:
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/character-image-task-handler.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/location-image-task-handler.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/panel-image-task-handler.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/panel-variant-task-handler.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/story-to-script.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/screenplay-convert.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/voice-design.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/voice-analyze.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/analyze-novel.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/analyze-global.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/character-profile.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/clips-build.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/asset-hub-ai-design.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/asset-hub-ai-modify.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/llm-proxy.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-tasks.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-variants.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-prompt-appearance.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-prompt-location.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-prompt-shot.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/character-image-task-handler.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/location-image-task-handler.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/panel-image-task-handler.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/panel-variant-task-handler.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/story-to-script.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/screenplay-convert.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/voice-design.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/voice-analyze.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/analyze-novel.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/analyze-global.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/character-profile.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/clips-build.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/asset-hub-ai-design.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/asset-hub-ai-modify.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/llm-proxy.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-tasks.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-variants.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-prompt-appearance.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-prompt-location.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-prompt-shot.test.ts`
 当前进度:
 - 已完成: `character-image-task-handler`、`location-image-task-handler`、`panel-image-task-handler`、`panel-variant-task-handler`、`story-to-script`、`screenplay-convert`、`voice-design`、`voice-analyze`、`analyze-novel`、`analyze-global`、`character-profile`、`clips-build`、`asset-hub-ai-design`、`asset-hub-ai-modify`、`llm-proxy`、`shot-ai-tasks`、`shot-ai-variants`、`shot-ai-prompt-appearance`、`shot-ai-prompt-location`、`shot-ai-prompt-shot`
 - 待完成: 无（Phase 3.3 范围内）
@@ -214,8 +214,8 @@
 
 ✅ Phase 3.4: worker 入口层行为测试替换 routing-only 断言。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/video-worker.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/worker/voice-worker.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/video-worker.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/worker/voice-worker.test.ts`
 必须断言:
 - 任务类型分发到正确 handler
 - handler 结果被正确回传与封装
@@ -235,7 +235,7 @@
 
 ✅ Phase 4.1: 重写 image chain（enqueue + worker 消费 + 持久化写回断言已落地）。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/chain/image.chain.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/chain/image.chain.test.ts`
 覆盖链路:
 - route -> submitTask -> queue -> image worker -> DB 回写
 示例断言:
@@ -244,27 +244,27 @@
 
 ✅ Phase 4.2: 重写 text chain（enqueue + worker 消费 + 结果级边界断言已落地）。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/chain/text.chain.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/chain/text.chain.test.ts`
 覆盖链路:
 - analyze/story/script/reference-to-character 全链路关键节点
 
 ✅ Phase 4.3: 重写 video chain（enqueue + video worker 消费 + lip-sync 持久化断言已落地）。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/chain/video.chain.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/chain/video.chain.test.ts`
 覆盖链路:
 - generate-video/lip-sync 任务执行结果与状态持久化
 
 ✅ Phase 4.4: 重写 voice chain（enqueue + voice worker 消费 + 关键参数透传断言已落地）。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/integration/chain/voice.chain.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/integration/chain/voice.chain.test.ts`
 覆盖链路:
 - voice-design/voice-generate 的实体写回与任务状态
 
 ⏸ Phase 4.5: 固化外部 fake 层，保证零真实外网请求。  
 使用/扩展:
-- `/Users/earth/Desktop/waoowaoo/tests/helpers/fakes/llm.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/helpers/fakes/media.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/helpers/fakes/providers.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/helpers/fakes/llm.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/helpers/fakes/media.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/helpers/fakes/providers.ts`
 
 ---
 
@@ -272,16 +272,16 @@
 
 ✅ Phase 5.1: 替换源码字符串检查为 hook 真实行为测试。  
 重写文件:
-- `/Users/earth/Desktop/waoowaoo/tests/unit/optimistic/sse-invalidation.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/optimistic/task-target-state-map.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/optimistic/sse-invalidation.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/optimistic/task-target-state-map.test.ts`
 必须断言:
 - 给定事件序列时 query invalidation 实际触发条件正确
 - target state map 在 queued/processing/completed/failed 下输出正确
 
 ✅ Phase 5.2: 现有 optimistic mutation 行为测试保留并扩展。  
 文件:
-- `/Users/earth/Desktop/waoowaoo/tests/unit/optimistic/asset-hub-mutations.test.ts`
-- `/Users/earth/Desktop/waoowaoo/tests/unit/optimistic/project-asset-mutations.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/optimistic/asset-hub-mutations.test.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/unit/optimistic/project-asset-mutations.test.ts`
 
 ---
 
@@ -289,20 +289,20 @@
 
 ✅ Phase 6.1: 新增 route 行为覆盖矩阵。  
 新增:
-- `/Users/earth/Desktop/waoowaoo/tests/contracts/route-behavior-matrix.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/contracts/route-behavior-matrix.ts`
 要求:
 - 117 个 route 每个都映射到至少 1 条行为级 caseId + test 文件
 
 ✅ Phase 6.2: 新增 task type 行为覆盖矩阵。  
 新增:
-- `/Users/earth/Desktop/waoowaoo/tests/contracts/tasktype-behavior-matrix.ts`
+- `/Users/earth/Desktop/ivibemovie/tests/contracts/tasktype-behavior-matrix.ts`
 要求:
 - 37 个 TASK_TYPE 每个都映射 worker 行为测试 + chain 行为测试
 
 ✅ Phase 6.3: 新增矩阵守卫脚本。  
 新增:
-- `/Users/earth/Desktop/waoowaoo/scripts/guards/test-behavior-route-coverage-guard.mjs`
-- `/Users/earth/Desktop/waoowaoo/scripts/guards/test-behavior-tasktype-coverage-guard.mjs`
+- `/Users/earth/Desktop/ivibemovie/scripts/guards/test-behavior-route-coverage-guard.mjs`
+- `/Users/earth/Desktop/ivibemovie/scripts/guards/test-behavior-tasktype-coverage-guard.mjs`
 
 ⚠️ Phase 6.4: 矩阵维护成本高。  
 策略:
@@ -315,7 +315,7 @@
 
 ✅ Phase 7.1: 新增行为级门禁命令。  
 修改:
-- `/Users/earth/Desktop/waoowaoo/package.json`
+- `/Users/earth/Desktop/ivibemovie/package.json`
 新增脚本:
 - `test:behavior:unit`
 - `test:behavior:api`
@@ -325,11 +325,11 @@
 
 ⏸ Phase 7.2: PR workflow 强制执行行为级全量门禁。  
 修改:
-- `/Users/earth/Desktop/waoowaoo/.github/workflows/test-regression-pr.yml`
+- `/Users/earth/Desktop/ivibemovie/.github/workflows/test-regression-pr.yml`
 
 ✅ Phase 7.3: 失败诊断脚本已接入（保留）。  
 文件:
-- `/Users/earth/Desktop/waoowaoo/scripts/test-regression-runner.sh`
+- `/Users/earth/Desktop/ivibemovie/scripts/test-regression-runner.sh`
 
 ---
 
@@ -346,7 +346,7 @@
 
 ✅ Phase 8.3: 冻结基线并发布“行为级测试开发规范”。  
 新增:
-- `/Users/earth/Desktop/waoowaoo/docs/testing/behavior-test-guideline.md`
+- `/Users/earth/Desktop/ivibemovie/docs/testing/behavior-test-guideline.md`
 
 ⚠️ Phase 8.4: 不可达目标声明。  
 说明:
@@ -453,49 +453,49 @@ it('[条件] -> [预期结果]', async () => {
 - [YYYY-MM-DD HH:mm] 问题: <若有>
 
 - [2026-02-25 21:59] 状态变更: Phase 3.1 ⏸ -> ✅
-- [2026-02-25 21:59] 修改文件: /Users/earth/Desktop/waoowaoo/tests/unit/worker/reference-to-character.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/asset-hub-image-suffix.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/modify-image-reference-description.test.ts, /Users/earth/Desktop/waoowaoo/src/lib/workers/handlers/reference-to-character.ts
+- [2026-02-25 21:59] 修改文件: /Users/earth/Desktop/ivibemovie/tests/unit/worker/reference-to-character.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/asset-hub-image-suffix.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/modify-image-reference-description.test.ts, /Users/earth/Desktop/ivibemovie/src/lib/workers/handlers/reference-to-character.ts
 - [2026-02-25 21:59] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/worker/reference-to-character.test.ts tests/unit/worker/asset-hub-image-suffix.test.ts tests/unit/worker/modify-image-reference-description.test.ts
 - [2026-02-25 21:59] 结果: 关键历史回归点（后缀失效/参考图描述不更新）已行为级可测
 - [2026-02-25 21:59] 问题: 无
 
 - [2026-02-25 22:00] 状态变更: Phase 1.2 ⏸ -> ✅
-- [2026-02-25 22:00] 修改文件: /Users/earth/Desktop/waoowaoo/tests/contracts/requirements-matrix.ts, /Users/earth/Desktop/waoowaoo/tests/contracts/requirements-matrix.test.ts
+- [2026-02-25 22:00] 修改文件: /Users/earth/Desktop/ivibemovie/tests/contracts/requirements-matrix.ts, /Users/earth/Desktop/ivibemovie/tests/contracts/requirements-matrix.test.ts
 - [2026-02-25 22:00] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/contracts/requirements-matrix.test.ts
 - [2026-02-25 22:00] 结果: 阻断不存在测试路径引用（已修复 `crud-asset-hub-routes.test.ts` 错误引用）
 - [2026-02-25 22:00] 问题: 无
 
 - [2026-02-25 22:10] 状态变更: Phase 1.3.a ⏸ -> ✅
-- [2026-02-25 22:10] 修改文件: /Users/earth/Desktop/waoowaoo/SYSTEM_BEHAVIOR_LEVEL_TEST_MASTER_PLAN.md
+- [2026-02-25 22:10] 修改文件: /Users/earth/Desktop/ivibemovie/SYSTEM_BEHAVIOR_LEVEL_TEST_MASTER_PLAN.md
 - [2026-02-25 22:10] 运行命令: 文档更新（无测试执行）
 - [2026-02-25 22:10] 结果: 已将后端 Worker 单元测试硬规范（覆盖/Mock/断言/命名/一 bug 一测试）固化为主计划强制章节
 - [2026-02-25 22:10] 问题: 自动化守卫脚本仍待实现（Phase 1.3）
 
 - [2026-02-25 22:20] 状态变更: 文档校正（扫描计数与范围修正）
-- [2026-02-25 22:20] 修改文件: /Users/earth/Desktop/waoowaoo/SYSTEM_BEHAVIOR_LEVEL_TEST_MASTER_PLAN.md
+- [2026-02-25 22:20] 修改文件: /Users/earth/Desktop/ivibemovie/SYSTEM_BEHAVIOR_LEVEL_TEST_MASTER_PLAN.md
 - [2026-02-25 22:20] 运行命令: rg --files/rg -n 扫描 tests 与 handlers
 - [2026-02-25 22:20] 结果: 已修正 test 文件数=51、handlers 文件数=43、handler 入口数=26；补齐 Phase 3.3 遗漏 handler；新增 Phase 依赖关系与 Phase 9（billing/concurrency）
 - [2026-02-25 22:20] 问题: Phase 1.3 自动守卫脚本尚未实现
 
 - [2026-02-25 23:05] 状态变更: Phase 2.1 🔄 -> ✅, Phase 2.2 ⏸ -> ✅
-- [2026-02-25 23:05] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/direct-submit-routes.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/llm-observe-routes.test.ts
+- [2026-02-25 23:05] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/direct-submit-routes.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/llm-observe-routes.test.ts
 - [2026-02-25 23:05] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract/direct-submit-routes.test.ts tests/integration/api/contract/llm-observe-routes.test.ts
 - [2026-02-25 23:05] 结果: 两类 contract 测试已由结构级改为行为级并通过，覆盖 16 个 direct-submit routes 与 22 个 llm-observe routes
 - [2026-02-25 23:05] 问题: 无
 
 - [2026-02-25 23:06] 状态变更: Phase 2.3 ⏸ -> 🔄, Phase 2.4 ⏸ -> 🔄
-- [2026-02-25 23:06] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/crud-routes.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/task-infra-routes.test.ts
+- [2026-02-25 23:06] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/crud-routes.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/task-infra-routes.test.ts
 - [2026-02-25 23:06] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract/crud-routes.test.ts tests/integration/api/contract/task-infra-routes.test.ts
 - [2026-02-25 23:06] 结果: 已替换为真实 route 调用断言；crud 完成鉴权行为覆盖，task-infra 完成鉴权/参数/核心成功路径，后续补 DB 写回与 SSE 终态序列
 - [2026-02-25 23:06] 问题: 无
 
 - [2026-02-25 23:06] 状态变更: Phase 3.2 🔄 -> ✅, Phase 3.4 ⏸ -> ✅
-- [2026-02-25 23:06] 修改文件: /Users/earth/Desktop/waoowaoo/tests/unit/worker/image-task-handlers-core.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/episode-split.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/script-to-storyboard.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/video-worker.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/voice-worker.test.ts
+- [2026-02-25 23:06] 修改文件: /Users/earth/Desktop/ivibemovie/tests/unit/worker/image-task-handlers-core.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/episode-split.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/script-to-storyboard.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/video-worker.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/voice-worker.test.ts
 - [2026-02-25 23:06] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/worker/script-to-storyboard.test.ts tests/unit/worker/video-worker.test.ts tests/unit/worker/voice-worker.test.ts tests/unit/worker/image-task-handlers-core.test.ts tests/unit/worker/episode-split.test.ts
 - [2026-02-25 23:06] 结果: worker 测试已升级为结果级断言，覆盖失败路径、成功路径、关键分支与关键写库字段
 - [2026-02-25 23:06] 问题: 无
 
 - [2026-02-25 23:07] 状态变更: Phase 4.2 ⏸ -> 🔄, Phase 4.3 ⏸ -> 🔄, Phase 4.4 ⏸ -> 🔄
-- [2026-02-25 23:07] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/chain/image.chain.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/chain/text.chain.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/chain/video.chain.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/chain/voice.chain.test.ts
+- [2026-02-25 23:07] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/chain/image.chain.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/chain/text.chain.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/chain/video.chain.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/chain/voice.chain.test.ts
 - [2026-02-25 23:07] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/chain/image.chain.test.ts tests/integration/chain/text.chain.test.ts tests/integration/chain/video.chain.test.ts tests/integration/chain/voice.chain.test.ts
 - [2026-02-25 23:07] 结果: chain 测试已由映射断言升级为 addTaskJob enqueue 行为断言（校验 queue 选择 + jobId/priority）
 - [2026-02-25 23:07] 问题: route->worker->DB 端到端链路仍待补
@@ -503,12 +503,12 @@ it('[条件] -> [预期结果]', async () => {
 - [2026-02-25 23:08] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract tests/integration/chain tests/unit/worker
 - [2026-02-25 23:08] 结果: 16 个测试文件全部通过，117/117 测试通过
 
-- [2026-02-25 23:09] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/crud-routes.test.ts
+- [2026-02-25 23:09] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/crud-routes.test.ts
 - [2026-02-25 23:09] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract/crud-routes.test.ts
 - [2026-02-25 23:09] 结果: 新增 CRUD 结果级断言（PATCH 写入字段值、DELETE 删除调用与越权 403），从“仅鉴权检查”升级为“含写库行为检查”
 - [2026-02-25 23:09] 问题: novel-promotion 侧 CRUD 的字段级断言仍待扩展
 
-- [2026-02-25 23:09] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/task-infra-routes.test.ts
+- [2026-02-25 23:09] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/task-infra-routes.test.ts
 - [2026-02-25 23:09] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract/task-infra-routes.test.ts
 - [2026-02-25 23:09] 结果: 新增 SSE replay 成功路径断言（`text/event-stream`、`last-event-id` 回放、channel 订阅行为）
 - [2026-02-25 23:09] 问题: SSE 终态事件的 completed/failed 序列断言仍待补
@@ -517,24 +517,24 @@ it('[条件] -> [预期结果]', async () => {
 - [2026-02-25 23:10] 结果: 16 个测试文件全部通过，120/120 测试通过
 
 - [2026-02-25 23:11] 状态变更: Phase 1.3 🔄 -> ✅
-- [2026-02-25 23:11] 修改文件: /Users/earth/Desktop/waoowaoo/tests/contracts/behavior-test-standard.md, /Users/earth/Desktop/waoowaoo/scripts/guards/test-behavior-quality-guard.mjs, /Users/earth/Desktop/waoowaoo/package.json
+- [2026-02-25 23:11] 修改文件: /Users/earth/Desktop/ivibemovie/tests/contracts/behavior-test-standard.md, /Users/earth/Desktop/ivibemovie/scripts/guards/test-behavior-quality-guard.mjs, /Users/earth/Desktop/ivibemovie/package.json
 - [2026-02-25 23:11] 运行命令: node scripts/guards/test-behavior-quality-guard.mjs && npm run check:test-coverage-guards
 - [2026-02-25 23:11] 结果: 行为级质量守卫已接入（拦截源码字符串契约 + 弱断言），并纳入 `check:test-coverage-guards`
 - [2026-02-25 23:11] 问题: 无
 
-- [2026-02-25 23:12] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/direct-submit-routes.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/llm-observe-routes.test.ts
+- [2026-02-25 23:12] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/direct-submit-routes.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/llm-observe-routes.test.ts
 - [2026-02-25 23:12] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract/direct-submit-routes.test.ts tests/integration/api/contract/llm-observe-routes.test.ts
 - [2026-02-25 23:12] 结果: 两个 contract 测试新增 `toHaveBeenCalledWith(objectContaining(...))` 强断言，通过行为质量守卫
 - [2026-02-25 23:12] 问题: 无
 
 - [2026-02-25 23:13] 状态变更: Phase 5.1 ⏸ -> ✅
-- [2026-02-25 23:13] 修改文件: /Users/earth/Desktop/waoowaoo/tests/unit/optimistic/sse-invalidation.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/optimistic/task-target-state-map.test.ts
+- [2026-02-25 23:13] 修改文件: /Users/earth/Desktop/ivibemovie/tests/unit/optimistic/sse-invalidation.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/optimistic/task-target-state-map.test.ts
 - [2026-02-25 23:13] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/optimistic/sse-invalidation.test.ts tests/unit/optimistic/task-target-state-map.test.ts
 - [2026-02-25 23:13] 结果: 两个 optimistic 结构级测试已替换为行为级（SSE 终态 invalidation 与 target-state overlay 合并规则）
 - [2026-02-25 23:13] 问题: 无
 
 - [2026-02-25 23:16] 状态变更: Phase 3.3 ⏸ -> 🔄
-- [2026-02-25 23:16] 修改文件: /Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-tasks.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/voice-design.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/asset-hub-ai-design.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/asset-hub-ai-modify.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-prompt-appearance.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-prompt-location.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-prompt-shot.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/shot-ai-variants.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/llm-proxy.test.ts
+- [2026-02-25 23:16] 修改文件: /Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-tasks.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/voice-design.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/asset-hub-ai-design.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/asset-hub-ai-modify.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-prompt-appearance.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-prompt-location.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-prompt-shot.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/shot-ai-variants.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/llm-proxy.test.ts
 - [2026-02-25 23:16] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/worker/shot-ai-tasks.test.ts tests/unit/worker/voice-design.test.ts tests/unit/worker/asset-hub-ai-design.test.ts tests/unit/worker/asset-hub-ai-modify.test.ts tests/unit/worker/shot-ai-prompt-appearance.test.ts tests/unit/worker/shot-ai-prompt-location.test.ts tests/unit/worker/shot-ai-prompt-shot.test.ts tests/unit/worker/shot-ai-variants.test.ts tests/unit/worker/llm-proxy.test.ts
 - [2026-02-25 23:16] 结果: 新增 9 个 worker 行为测试文件（20 条用例+5 条用例），覆盖 shot-ai 分发、prompt 修改链路、asset-hub ai 设计/修改、voice-design、llm-proxy 显式失败
 - [2026-02-25 23:16] 问题: 无
@@ -545,7 +545,7 @@ it('[条件] -> [预期结果]', async () => {
 - [2026-02-25 23:17] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/optimistic tests/unit/worker tests/integration/api/contract tests/integration/chain
 - [2026-02-25 23:17] 结果: 全回归分组通过，31 文件 / 155 测试通过
 
-- [2026-02-25 23:25] 修改文件: /Users/earth/Desktop/waoowaoo/tests/unit/worker/story-to-script.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/screenplay-convert.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/analyze-novel.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/analyze-global.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/voice-analyze.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/clips-build.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/character-profile.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/character-image-task-handler.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/location-image-task-handler.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/panel-image-task-handler.test.ts, /Users/earth/Desktop/waoowaoo/tests/unit/worker/panel-variant-task-handler.test.ts
+- [2026-02-25 23:25] 修改文件: /Users/earth/Desktop/ivibemovie/tests/unit/worker/story-to-script.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/screenplay-convert.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/analyze-novel.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/analyze-global.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/voice-analyze.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/clips-build.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/character-profile.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/character-image-task-handler.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/location-image-task-handler.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/panel-image-task-handler.test.ts, /Users/earth/Desktop/ivibemovie/tests/unit/worker/panel-variant-task-handler.test.ts
 - [2026-02-25 23:25] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/worker/story-to-script.test.ts tests/unit/worker/screenplay-convert.test.ts tests/unit/worker/analyze-novel.test.ts tests/unit/worker/analyze-global.test.ts tests/unit/worker/voice-analyze.test.ts tests/unit/worker/clips-build.test.ts tests/unit/worker/character-profile.test.ts tests/unit/worker/character-image-task-handler.test.ts tests/unit/worker/location-image-task-handler.test.ts tests/unit/worker/panel-image-task-handler.test.ts tests/unit/worker/panel-variant-task-handler.test.ts
 - [2026-02-25 23:25] 结果: 新增 11 个 worker handler 行为测试文件，覆盖剩余未落地入口（文本链路 + 图片链路），失败路径/成功路径/关键分支断言全部落地
 - [2026-02-25 23:25] 问题: 首轮运行出现 5 个断言问题（重试分支 mock 泄漏与断言过窄），已在同轮修复
@@ -565,17 +565,17 @@ it('[条件] -> [预期结果]', async () => {
 - [2026-02-25 23:27] 结果: 26/26 handler 入口均存在对应 worker 行为测试文件引用
 - [2026-02-25 23:27] 问题: 无
 
-- [2026-02-25 23:46] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/crud-routes.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/api/contract/task-infra-routes.test.ts
+- [2026-02-25 23:46] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/crud-routes.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/api/contract/task-infra-routes.test.ts
 - [2026-02-25 23:46] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/api/contract/crud-routes.test.ts tests/integration/api/contract/task-infra-routes.test.ts
 - [2026-02-25 23:46] 结果: CRUD 合同新增 novel-promotion 写回断言（select-character-image / select-location-image / clips PATCH），task-infra 新增 SSE channel 终态事件序列断言（processing -> completed）
 - [2026-02-25 23:46] 问题: 无
 
-- [2026-02-25 23:46] 修改文件: /Users/earth/Desktop/waoowaoo/tests/integration/chain/image.chain.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/chain/text.chain.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/chain/video.chain.test.ts, /Users/earth/Desktop/waoowaoo/tests/integration/chain/voice.chain.test.ts
+- [2026-02-25 23:46] 修改文件: /Users/earth/Desktop/ivibemovie/tests/integration/chain/image.chain.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/chain/text.chain.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/chain/video.chain.test.ts, /Users/earth/Desktop/ivibemovie/tests/integration/chain/voice.chain.test.ts
 - [2026-02-25 23:46] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/integration/chain/image.chain.test.ts tests/integration/chain/text.chain.test.ts tests/integration/chain/video.chain.test.ts tests/integration/chain/voice.chain.test.ts
 - [2026-02-25 23:46] 结果: 4 个 chain 文件由“仅 queue 映射”升级为“queue payload -> worker 消费 -> 结果/写回断言”
 - [2026-02-25 23:46] 问题: 无
 
-- [2026-02-25 23:47] 修改文件: /Users/earth/Desktop/waoowaoo/tests/contracts/route-behavior-matrix.ts, /Users/earth/Desktop/waoowaoo/tests/contracts/tasktype-behavior-matrix.ts, /Users/earth/Desktop/waoowaoo/scripts/guards/test-behavior-route-coverage-guard.mjs, /Users/earth/Desktop/waoowaoo/scripts/guards/test-behavior-tasktype-coverage-guard.mjs, /Users/earth/Desktop/waoowaoo/package.json, /Users/earth/Desktop/waoowaoo/tests/contracts/task-type-catalog.ts, /Users/earth/Desktop/waoowaoo/docs/testing/behavior-test-guideline.md
+- [2026-02-25 23:47] 修改文件: /Users/earth/Desktop/ivibemovie/tests/contracts/route-behavior-matrix.ts, /Users/earth/Desktop/ivibemovie/tests/contracts/tasktype-behavior-matrix.ts, /Users/earth/Desktop/ivibemovie/scripts/guards/test-behavior-route-coverage-guard.mjs, /Users/earth/Desktop/ivibemovie/scripts/guards/test-behavior-tasktype-coverage-guard.mjs, /Users/earth/Desktop/ivibemovie/package.json, /Users/earth/Desktop/ivibemovie/tests/contracts/task-type-catalog.ts, /Users/earth/Desktop/ivibemovie/docs/testing/behavior-test-guideline.md
 - [2026-02-25 23:47] 运行命令: BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/optimistic tests/unit/worker tests/integration/api/contract tests/integration/chain && npm run check:test-coverage-guards
 - [2026-02-25 23:47] 结果: 分组回归通过（42 文件 / 191 测试），覆盖门禁通过（behavior quality + route 117 + taskType 37 + behavior matrices）
 - [2026-02-25 23:47] 问题: 无

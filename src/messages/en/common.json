@@ -1,0 +1,56 @@
+{
+  "app": {
+    "name": "iVibeMovie",
+    "tagline": "AI Short Drama Creator"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "settings": "Settings",
+    "admin": "Admin"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "project": {
+    "create": "Create Project",
+    "name": "Project Name",
+    "description": "Description",
+    "episodes": "Episodes",
+    "characters": "Characters",
+    "locations": "Locations",
+    "storyboard": "Storyboard",
+    "video": "Video",
+    "timeline": "Timeline",
+    "settings": "Settings"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "generate": "Generate",
+    "regenerate": "Regenerate",
+    "upload": "Upload",
+    "download": "Download",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "generating": "Generating...",
+    "success": "Success",
+    "error": "Error",
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed"
+  }
+}

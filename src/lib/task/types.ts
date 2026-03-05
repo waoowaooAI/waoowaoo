@@ -5,7 +5,7 @@ export const TASK_STATUS = {
   PROCESSING: 'processing',
   COMPLETED: 'completed',
   FAILED: 'failed',
-  DISMISSED: 'dismissed',
+  CANCELLED: 'cancelled',
 } as const
 
 export type TaskStatus = (typeof TASK_STATUS)[keyof typeof TASK_STATUS]
@@ -69,6 +69,10 @@ export const TASK_TYPE = {
   CHARACTER_PROFILE_CONFIRM: 'character_profile_confirm',
   CHARACTER_PROFILE_BATCH_CONFIRM: 'character_profile_batch_confirm',
   EPISODE_SPLIT_LLM: 'episode_split_llm',
+  SEGMENT_SPLIT_LLM: 'segment_split_llm',
+  EXTRACT_CHARACTERS_LLM: 'extract_characters_llm',
+  EXTRACT_LOCATIONS_LLM: 'extract_locations_llm',
+  EXTRACT_PROPS_LLM: 'extract_props_llm',
   ASSET_HUB_AI_DESIGN_CHARACTER: 'asset_hub_ai_design_character',
   ASSET_HUB_AI_DESIGN_LOCATION: 'asset_hub_ai_design_location',
   ASSET_HUB_AI_MODIFY_CHARACTER: 'asset_hub_ai_modify_character',

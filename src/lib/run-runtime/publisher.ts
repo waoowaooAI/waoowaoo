@@ -1,4 +1,3 @@
-import { redis } from '@/lib/redis'
 import { appendRunEventWithSeq } from './service'
 import type { RunEventInput } from './types'
 
@@ -10,7 +9,7 @@ export function getProjectRunChannel(projectId: string) {
 
 export async function publishRunEvent(input: RunEventInput) {
   const event = await appendRunEventWithSeq(input)
-  const message = {
+  return {
     id: event.id,
     type: 'run.event',
     runId: event.runId,
@@ -24,7 +23,4 @@ export async function publishRunEvent(input: RunEventInput) {
     payload: event.payload || null,
     ts: event.createdAt,
   }
-  await redis.publish(getProjectRunChannel(event.projectId), JSON.stringify(message))
-  return message
 }
-

@@ -132,7 +132,7 @@ export default function ProjectDetailPage() {
 
   // 创建剧集
   const handleCreateEpisode = async (name: string, description?: string) => {
-    const res = await fetch(`/api/novel-promotion/${projectId}/episodes`, {
+    const res = await fetch(`/api/v2/projects/${projectId}/episodes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, description })
@@ -161,7 +161,7 @@ export default function ProjectDetailPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
 
       // 刷新后重新获取最新的剧集列表
-      const res = await fetch(`/api/projects/${projectId}/data`)
+      const res = await fetch(`/api/v2/projects/${projectId}/data`)
       const data = await res.json()
       // API 返回结构是 { project: { novelPromotionData: { episodes: [...] } } }
       const newEpisodes = data?.project?.novelPromotionData?.episodes || []
@@ -192,7 +192,7 @@ export default function ProjectDetailPage() {
 
   // 重命名剧集
   const handleRenameEpisode = async (episodeId: string, newName: string) => {
-    const res = await fetch(`/api/novel-promotion/${projectId}/episodes/${episodeId}`, {
+    const res = await fetch(`/api/v2/projects/${projectId}/episodes/${episodeId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newName })
@@ -212,7 +212,7 @@ export default function ProjectDetailPage() {
 
   // 删除剧集
   const handleDeleteEpisode = async (episodeId: string) => {
-    const res = await fetch(`/api/novel-promotion/${projectId}/episodes/${episodeId}`, {
+    const res = await fetch(`/api/v2/projects/${projectId}/episodes/${episodeId}`, {
       method: 'DELETE',
     })
     if (!res.ok) {

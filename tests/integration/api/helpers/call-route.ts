@@ -14,7 +14,7 @@ export async function callRoute(
   body?: unknown,
   options?: { headers?: HeaderMap; params?: RouteParams; query?: Record<string, string> },
 ) {
-  const url = new URL('http://localhost:3000/api/test')
+  const url = new URL('http://localhost:3533/api/test')
   if (options?.query) {
     for (const [key, value] of Object.entries(options.query)) {
       url.searchParams.set(key, value)

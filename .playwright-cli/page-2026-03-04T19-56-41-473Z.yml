@@ -1,0 +1,51 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e52] [cursor=pointer]:
+    - img [ref=e53]
+  - alert [ref=e56]
+  - generic [ref=e292]:
+    - navigation [ref=e293]:
+      - generic [ref=e295]:
+        - generic [ref=e296]:
+          - link "iVibeMovie" [ref=e297] [cursor=pointer]:
+            - /url: /workspace
+            - img "iVibeMovie" [ref=e298]
+          - generic [ref=e299]: Beta v0.2 (测试版)
+        - generic [ref=e300]:
+          - link "工作区" [ref=e301] [cursor=pointer]:
+            - /url: /workspace
+          - link "资产中心" [ref=e302] [cursor=pointer]:
+            - /url: /workspace/asset-hub
+            - img [ref=e303]
+            - text: 资产中心
+          - link "设置中心" [ref=e306] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e307]
+            - text: 设置中心
+          - button "Switch language" [ref=e320]:
+            - img [ref=e321]
+            - generic [ref=e324]: 简体中文
+            - img [ref=e325]
+    - generic [ref=e327]:
+      - generic [ref=e329]:
+        - heading "资产中心" [level=1] [ref=e330]
+        - paragraph [ref=e331]: 管理您的全局角色和场景资产
+        - paragraph [ref=e332]:
+          - img [ref=e333]
+          - text: 资产中心使用默认模型，如需修改请在
+          - link "API配置页面" [ref=e335] [cursor=pointer]:
+            - /url: /profile
+          - text: 进行设置
+      - generic [ref=e336]:
+        - generic [ref=e337]:
+          - generic [ref=e339]:
+            - heading "文件夹" [level=3] [ref=e340]
+            - button "新建文件夹" [ref=e341]:
+              - img [ref=e342]
+          - generic [ref=e343]:
+            - button "所有资产" [ref=e344]:
+              - img [ref=e345]
+              - generic [ref=e347]: 所有资产
+            - generic [ref=e348]: 暂无文件夹
+        - generic [ref=e351]:
+          - img [ref=e352]
+          - generic [ref=e354]: 生成中

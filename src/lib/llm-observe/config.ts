@@ -36,4 +36,4 @@ export const LLM_OBSERVE_REASONING_VISIBLE = parseBoolean(
   true,
 )
 export const INTERNAL_TASK_TOKEN = process.env.INTERNAL_TASK_TOKEN || ''
-export const INTERNAL_TASK_API_BASE_URL = process.env.INTERNAL_TASK_API_BASE_URL || process.env.NEXTAUTH_URL || 'http://127.0.0.1:3000'
+export const INTERNAL_TASK_API_BASE_URL = process.env.INTERNAL_TASK_API_BASE_URL || process.env.NEXTAUTH_URL || 'http://127.0.0.1:3533'

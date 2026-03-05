@@ -264,8 +264,8 @@ async function fetchWithTimeout(
     // 🔧 本地模式修复：相对路径需要补全完整 URL
     let fullUrl = url
     if (url.startsWith('/')) {
-        // 服务端 fetch 需要完整 URL，使用 localhost:3000 作为基础地址
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        // 服务端 fetch 需要完整 URL，使用 localhost:3533 作为基础地址
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3533'
         fullUrl = `${baseUrl}${url}`
     }
 

@@ -213,7 +213,7 @@ export default function ProfilePage() {
       if (txStartDate) params.append('startDate', txStartDate)
       if (txEndDate) params.append('endDate', txEndDate)
 
-      const res = await fetch(`/api/user/transactions?${params}`)
+      const res = await fetch(`/api/v2/user/transactions?${params}`)
       if (res.ok) {
         const data = await res.json()
         if (typeof data.currency === 'string' && data.currency) setCurrency(data.currency)
@@ -278,7 +278,7 @@ export default function ProfilePage() {
   async function fetchProjectDetails(projectId: string) {
     setDetailsLoading(true)
     try {
-      const res = await fetch(`/api/projects/${projectId}/costs`)
+      const res = await fetch(`/api/v2/projects/${projectId}/costs`)
       if (res.ok) {
         const data = await res.json()
         if (typeof data.currency === 'string' && data.currency) setCurrency(data.currency)

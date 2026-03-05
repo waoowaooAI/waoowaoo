@@ -36,10 +36,6 @@ const queryTaskTargetStatesMock = vi.hoisted(() => vi.fn())
 const withPrismaRetryMock = vi.hoisted(() => vi.fn(async <T>(fn: () => Promise<T>) => await fn()))
 const listEventsAfterMock = vi.hoisted(() => vi.fn(async () => []))
 const listTaskLifecycleEventsMock = vi.hoisted(() => vi.fn(async () => []))
-const addChannelListenerMock = vi.hoisted(() => vi.fn(async () => async () => undefined))
-const subscriberState = vi.hoisted(() => ({
-  listener: null as ((message: string) => void) | null,
-}))
 
 vi.mock('@/lib/api-auth', () => {
   const unauthorized = () => new Response(
@@ -89,12 +85,6 @@ vi.mock('@/lib/prisma-retry', () => ({
   withPrismaRetry: withPrismaRetryMock,
 }))
 
-vi.mock('@/lib/sse/shared-subscriber', () => ({
-  getSharedSubscriber: vi.fn(() => ({
-    addChannelListener: addChannelListenerMock,
-  })),
-}))
-
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     task: {
@@ -119,7 +109,6 @@ describe('api contract - task infra routes (behavior)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     authState.authenticated = true
-    subscriberState.listener = null
 
     queryTasksMock.mockResolvedValue([baseTask])
     dismissFailedTasksMock.mockResolvedValue(1)
@@ -143,10 +132,6 @@ describe('api contract - task infra routes (behavior)', () => {
         updatedAt: new Date().toISOString(),
       },
     ])
-    addChannelListenerMock.mockImplementation(async (_channel: string, listener: (message: string) => void) => {
-      subscriberState.listener = listener
-      return async () => undefined
-    })
     listTaskLifecycleEventsMock.mockResolvedValue([])
   })
 
@@ -377,8 +362,7 @@ describe('api contract - task infra routes (behavior)', () => {
 
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toContain('text/event-stream')
-    expect(listEventsAfterMock).toHaveBeenCalledWith('project-1', 3, 5000)
-    expect(addChannelListenerMock).toHaveBeenCalledWith('project:project-1', expect.any(Function))
+    expect(listEventsAfterMock).toHaveBeenCalledWith('project-1', '3', 5000)
 
     const reader = res.body?.getReader()
     expect(reader).toBeTruthy()
@@ -391,7 +375,37 @@ describe('api contract - task infra routes (behavior)', () => {
 
   it('GET /api/sse: channel lifecycle stream includes terminal completed event', async () => {
     const { GET } = await import('@/app/api/sse/route')
-    listEventsAfterMock.mockResolvedValueOnce([])
+    listEventsAfterMock
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: '11',
+          type: 'task.lifecycle',
+          taskId: 'task-1',
+          projectId: 'project-1',
+          userId: 'user-1',
+          ts: new Date().toISOString(),
+          taskType: 'IMAGE_CHARACTER',
+          targetType: 'CharacterAppearance',
+          targetId: 'appearance-1',
+          episodeId: null,
+          payload: { lifecycleType: 'processing', progress: 60 },
+        },
+        {
+          id: '12',
+          type: 'task.lifecycle',
+          taskId: 'task-1',
+          projectId: 'project-1',
+          userId: 'user-1',
+          ts: new Date().toISOString(),
+          taskType: 'IMAGE_CHARACTER',
+          targetType: 'CharacterAppearance',
+          targetId: 'appearance-1',
+          episodeId: null,
+          payload: { lifecycleType: 'completed', progress: 100 },
+        },
+      ])
+      .mockResolvedValue([])
 
     const req = buildMockRequest({
       path: '/api/sse',
@@ -402,41 +416,23 @@ describe('api contract - task infra routes (behavior)', () => {
     const res = await GET(req)
     expect(res.status).toBe(200)
 
-    const listener = subscriberState.listener
-    expect(listener).toBeTruthy()
-
-    listener!(JSON.stringify({
-      id: '11',
-      type: 'task.lifecycle',
-      taskId: 'task-1',
-      projectId: 'project-1',
-      userId: 'user-1',
-      ts: new Date().toISOString(),
-      taskType: 'IMAGE_CHARACTER',
-      targetType: 'CharacterAppearance',
-      targetId: 'appearance-1',
-      episodeId: null,
-      payload: { lifecycleType: 'processing', progress: 60 },
-    }))
-    listener!(JSON.stringify({
-      id: '12',
-      type: 'task.lifecycle',
-      taskId: 'task-1',
-      projectId: 'project-1',
-      userId: 'user-1',
-      ts: new Date().toISOString(),
-      taskType: 'IMAGE_CHARACTER',
-      targetType: 'CharacterAppearance',
-      targetId: 'appearance-1',
-      episodeId: null,
-      payload: { lifecycleType: 'completed', progress: 100 },
-    }))
-
     const reader = res.body?.getReader()
     expect(reader).toBeTruthy()
-    const chunk1 = await reader!.read()
-    const chunk2 = await reader!.read()
-    const merged = `${new TextDecoder().decode(chunk1.value)}${new TextDecoder().decode(chunk2.value)}`
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1400)
+    })
+
+    const readWithTimeout = async (timeoutMs: number) => await Promise.race([
+      reader!.read(),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('sse read timeout')), timeoutMs)
+      }),
+    ])
+
+    const chunk1 = await readWithTimeout(3000)
+    const chunk2 = await readWithTimeout(3000)
+    const merged = `${new TextDecoder().decode(chunk1.value || new Uint8Array())}${new TextDecoder().decode(chunk2.value || new Uint8Array())}`
 
     expect(merged).toContain('"lifecycleType":"processing"')
     expect(merged).toContain('"lifecycleType":"completed"')

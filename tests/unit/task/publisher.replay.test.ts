@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const taskEventFindManyMock = vi.hoisted(() => vi.fn(async () => []))
+const taskEventFindFirstMock = vi.hoisted(() => vi.fn(async () => null))
 const taskEventCreateMock = vi.hoisted(() => vi.fn(async () => null))
 const taskFindManyMock = vi.hoisted(() => vi.fn(async () => []))
-const redisPublishMock = vi.hoisted(() => vi.fn(async () => 1))
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     taskEvent: {
       findMany: taskEventFindManyMock,
+      findFirst: taskEventFindFirstMock,
       create: taskEventCreateMock,
     },
     task: {
@@ -17,20 +18,14 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-vi.mock('@/lib/redis', () => ({
-  redis: {
-    publish: redisPublishMock,
-  },
-}))
-
 import { listEventsAfter, listTaskLifecycleEvents, publishTaskStreamEvent } from '@/lib/task/publisher'
 
 describe('task publisher replay', () => {
   beforeEach(() => {
     taskEventFindManyMock.mockReset()
+    taskEventFindFirstMock.mockReset()
     taskEventCreateMock.mockReset()
     taskFindManyMock.mockReset()
-    redisPublishMock.mockReset()
   })
 
   it('replays persisted lifecycle + stream rows in chronological order', async () => {
@@ -89,7 +84,7 @@ describe('task publisher replay', () => {
 
     expect(taskEventFindManyMock).toHaveBeenCalledWith(expect.objectContaining({
       where: { taskId: 'task-1' },
-      orderBy: { id: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 50,
     }))
     expect(events).toHaveLength(2)
@@ -99,6 +94,7 @@ describe('task publisher replay', () => {
   })
 
   it('persists stream rows when persist=true', async () => {
+    taskEventFindFirstMock.mockResolvedValueOnce({ seq: 0 })
     taskEventCreateMock.mockResolvedValueOnce({
       id: 99,
       taskId: 'task-1',
@@ -115,8 +111,6 @@ describe('task publisher replay', () => {
       },
       createdAt: new Date('2026-02-27T00:00:03.000Z'),
     })
-    redisPublishMock.mockResolvedValueOnce(1)
-
     const message = await publishTaskStreamEvent({
       taskId: 'task-1',
       projectId: 'project-1',
@@ -143,12 +137,15 @@ describe('task publisher replay', () => {
         eventType: 'task.stream',
       }),
     }))
-    expect(redisPublishMock).toHaveBeenCalledTimes(1)
     expect(message?.id).toBe('99')
     expect(message?.type).toBe('task.stream')
   })
 
   it('replays lifecycle + stream rows in listEventsAfter', async () => {
+    taskEventFindFirstMock.mockResolvedValueOnce({
+      id: '100',
+      createdAt: new Date('2026-02-27T00:00:02.000Z'),
+    })
     taskEventFindManyMock.mockResolvedValueOnce([
       {
         id: 101,
@@ -190,14 +187,23 @@ describe('task publisher replay', () => {
       },
     ])
 
-    const events = await listEventsAfter('project-1', 100, 20)
+    const events = await listEventsAfter('project-1', '100', 20)
 
     expect(taskEventFindManyMock).toHaveBeenCalledWith(expect.objectContaining({
       where: {
         projectId: 'project-1',
-        id: { gt: 100 },
+        OR: [
+          { createdAt: { gt: new Date('2026-02-27T00:00:02.000Z') } },
+          {
+            AND: [
+              { createdAt: new Date('2026-02-27T00:00:02.000Z') },
+              { id: { gt: '100' } },
+            ],
+          },
+        ],
       },
-      orderBy: { id: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: 400,
     }))
     expect(events).toHaveLength(2)
     expect(events.map((event) => event.id)).toEqual(['101', '102'])

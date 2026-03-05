@@ -1,0 +1,34 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e52] [cursor=pointer]:
+    - img [ref=e53]
+  - alert [ref=e56]
+  - generic [ref=e139]:
+    - navigation [ref=e141]:
+      - generic [ref=e143]:
+        - generic [ref=e144]:
+          - link "iVibeMovie" [ref=e145] [cursor=pointer]:
+            - /url: /workspace
+            - img "iVibeMovie" [ref=e146]
+          - generic [ref=e147]: Beta v0.2 (测试版)
+        - generic [ref=e148]:
+          - link "工作区" [ref=e149] [cursor=pointer]:
+            - /url: /workspace
+          - link "资产中心" [ref=e150] [cursor=pointer]:
+            - /url: /workspace/asset-hub
+            - img [ref=e151]
+            - text: 资产中心
+          - link "设置中心" [ref=e154] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e155]
+            - text: 设置中心
+          - button "Switch language" [ref=e168]:
+            - img [ref=e169]
+            - generic [ref=e172]: 简体中文
+            - img [ref=e173]
+    - main [ref=e175]:
+      - generic [ref=e178]:
+        - heading "iVibeMovie AI影视Studio" [level=1] [ref=e179]:
+          - generic [ref=e180]: iVibeMovie
+          - text: AI影视Studio
+        - link "进入工作区" [ref=e182] [cursor=pointer]:
+          - /url: /workspace

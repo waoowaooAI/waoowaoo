@@ -1,0 +1,51 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e52] [cursor=pointer]:
+    - img [ref=e53]
+  - alert [ref=e56]
+  - generic [ref=e355]:
+    - navigation [ref=e356]:
+      - generic [ref=e358]:
+        - generic [ref=e359]:
+          - link "iVibeMovie" [ref=e360] [cursor=pointer]:
+            - /url: /workspace
+            - img "iVibeMovie" [ref=e361]
+          - generic [ref=e362]: Beta v0.2 (测试版)
+        - generic [ref=e363]:
+          - link "工作区" [ref=e364] [cursor=pointer]:
+            - /url: /workspace
+          - link "资产中心" [ref=e365] [cursor=pointer]:
+            - /url: /workspace/asset-hub
+            - img [ref=e366]
+            - text: 资产中心
+          - link "设置中心" [ref=e369] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e370]
+            - text: 设置中心
+          - button "Switch language" [ref=e383]:
+            - img [ref=e384]
+            - generic [ref=e387]: 简体中文
+            - img [ref=e388]
+    - main [ref=e390]:
+      - generic [ref=e391]:
+        - generic [ref=e393]:
+          - generic [ref=e394]:
+            - generic [ref=e395]:
+              - heading "e2e_user_3533" [level=2] [ref=e396]
+              - paragraph [ref=e397]: 个人账户
+            - generic [ref=e398]:
+              - generic [ref=e399]: 可用余额
+              - generic [ref=e400]: ¥0.00
+              - generic [ref=e401]:
+                - generic [ref=e402]: 冻结¥0.00
+                - generic [ref=e403]: 已消费¥0.00
+          - navigation [ref=e404]:
+            - button "API 配置" [ref=e405]:
+              - img [ref=e406]
+              - generic [ref=e409]: API 配置
+            - button "扣费记录" [ref=e410]:
+              - img [ref=e411]
+              - generic [ref=e414]: 扣费记录
+          - button "退出登录" [ref=e415]:
+            - img [ref=e416]
+            - text: 退出登录
+        - generic [ref=e421]: 加载中...

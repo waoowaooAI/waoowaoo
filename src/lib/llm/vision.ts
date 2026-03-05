@@ -194,7 +194,7 @@ export async function chatCompletionWithVision(
             _ulogInfo('[LLM Vision] 转换本地图片为 Base64')
           } catch (e) {
             _ulogError('[LLM Vision] 转换本地图片失败:', e)
-            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3533'
             finalUrl = `${baseUrl}${url}`
           }
         }

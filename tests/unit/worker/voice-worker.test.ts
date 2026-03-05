@@ -34,10 +34,6 @@ vi.mock('bullmq', () => ({
   },
 }))
 
-vi.mock('@/lib/redis', () => ({
-  queueRedis: {},
-}))
-
 vi.mock('@/lib/voice/generate-voice-line', () => ({
   generateVoiceLine: generateVoiceLineMock,
 }))

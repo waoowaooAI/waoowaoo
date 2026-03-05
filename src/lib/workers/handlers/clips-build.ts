@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { executeAiTextStep } from '@/lib/ai-runtime'
@@ -38,6 +39,27 @@ function parseClipArrayResponse(responseText: string): Array<Record<string, unkn
 
 function readText(value: unknown): string {
   return typeof value === 'string' ? value : ''
+}
+
+function readPositiveInt(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  const integer = Math.floor(value)
+  return integer > 0 ? integer : null
+}
+
+function estimateClipDurationSec(input: {
+  clipContent: string
+  fullContent: string
+  episodeDurationSec: number | null
+  targetDurationSec: number
+}): number {
+  const clipChars = input.clipContent.trim().length
+  const fullChars = input.fullContent.trim().length
+  if (input.episodeDurationSec && clipChars > 0 && fullChars > 0) {
+    const estimated = Math.round((clipChars / fullChars) * input.episodeDurationSec)
+    return Math.max(1, estimated)
+  }
+  return Math.max(1, input.targetDurationSec)
 }
 
 const MAX_SPLIT_BOUNDARY_ATTEMPTS = 2
@@ -103,6 +125,11 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
   if (!contentToProcess.trim()) {
     throw new Error('No novel text to process')
   }
+  const timing = payload.timing && typeof payload.timing === 'object' && !Array.isArray(payload.timing)
+    ? payload.timing as Record<string, unknown>
+    : {}
+  const targetDurationSec = readPositiveInt(timing.segmentDurationSec) || 5
+  const episodeDurationSec = readPositiveInt(timing.episodeDurationSec)
 
   const locationsLibName = novelData.locations.length > 0
     ? novelData.locations.map((item) => item.name).join('、')
@@ -136,6 +163,14 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
     startText: string
     endText: string
     summary: string
+    splitReason: string
+    boundaryMarkers: {
+      startMarker: string
+      endMarker: string
+    }
+    targetDurationSec: number
+    estimatedDurationSec: number
+    durationDeltaSec: number
     location: string | null
     characters: unknown
     content: string
@@ -188,13 +223,30 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
           failedAt = { index: i + 1, startText, endText }
           break
         }
+        const clipContent = contentToProcess.slice(match.startIndex, match.endIndex)
+        const estimatedDurationSec = estimateClipDurationSec({
+          clipContent,
+          fullContent: contentToProcess,
+          episodeDurationSec,
+          targetDurationSec,
+        })
         currentResolved.push({
           startText,
           endText,
           summary: readText(clipData.summary),
+          splitReason:
+            readText(clipData.splitReason || clipData.reason || clipData.split_reason).trim()
+            || '按语义与边界标记拆分',
+          boundaryMarkers: {
+            startMarker: startText,
+            endMarker: endText,
+          },
+          targetDurationSec,
+          estimatedDurationSec,
+          durationDeltaSec: Math.abs(estimatedDurationSec - targetDurationSec),
           location: readText(clipData.location) || null,
           characters: clipData.characters,
-          content: contentToProcess.slice(match.startIndex, match.endIndex),
+          content: clipContent,
         })
         searchFrom = match.endIndex
       }
@@ -252,8 +304,34 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
     displayMode: 'detail',
   })
 
+  const clipPlanEntries = resolvedClips.map((clip, index) => ({
+    index: index + 1,
+    summary: clip.summary,
+    splitReason: clip.splitReason,
+    boundaryMarkers: clip.boundaryMarkers,
+    targetDurationSec: clip.targetDurationSec,
+    estimatedDurationSec: clip.estimatedDurationSec,
+    durationDeltaSec: clip.durationDeltaSec,
+  }))
+  const clipPlanVersionHash = createHash('sha256')
+    .update(JSON.stringify(clipPlanEntries))
+    .digest('hex')
+    .slice(0, 16)
+  const maxDurationDeltaSec = clipPlanEntries.reduce((max, clip) => Math.max(max, clip.durationDeltaSec), 0)
+
   return {
     episodeId,
     count: createdClips.length,
+    clipPlan: {
+      schema: 'clip_plan',
+      version: 'v2',
+      versionHash: clipPlanVersionHash,
+      generatedAt: new Date().toISOString(),
+      targetDurationSec,
+      maxDurationDeltaSec,
+      toleranceSec: 1,
+      alignmentWithinTolerance: maxDurationDeltaSec <= 1,
+    },
+    clips: clipPlanEntries,
   }
 }

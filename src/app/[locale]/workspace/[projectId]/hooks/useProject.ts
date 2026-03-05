@@ -25,6 +25,11 @@ export interface RefreshOptions {
   mode?: RefreshMode      // 默认 'silent'
 }
 
+const getErrorMessage = (err: unknown): string => {
+  if (err instanceof Error) return err.message
+  return String(err)
+}
+
 /**
  * 通用项目数据管理Hook
  * 
@@ -69,7 +74,7 @@ export function useProject(projectId: string) {
     try {
       // 刷新项目数据
       if (scope === 'all' || scope === 'project') {
-        const res = await fetch(`/api/projects/${projectId}/data`)
+        const res = await fetch(`/api/v2/projects/${projectId}/data`)
         if (!res.ok) {
           const errorData = await res.json()
           throw new Error(errorData.error || 'Failed to load project')
@@ -85,7 +90,7 @@ export function useProject(projectId: string) {
 
       // 刷新资产数据
       if (scope === 'all' || scope === 'assets') {
-        const res = await fetch(`/api/projects/${projectId}/assets`)
+        const res = await fetch(`/api/v2/projects/${projectId}/assets`)
         if (res.ok) {
           const assets = await res.json()
           setProject(prev => {
@@ -140,7 +145,3 @@ export function useProject(projectId: string) {
     updateProject
   }
 }
-  const getErrorMessage = (err: unknown): string => {
-    if (err instanceof Error) return err.message
-    return String(err)
-  }

@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import { redis } from '@/lib/redis'
 import {
   TASK_EVENT_TYPE,
   TASK_SSE_EVENT_TYPE,
@@ -15,12 +14,13 @@ const CHANNEL_PREFIX = 'task-events:project:'
 const STREAM_EPHEMERAL_ENABLED = process.env.LLM_STREAM_EPHEMERAL_ENABLED !== 'false'
 
 type TaskEventRow = {
-  id: number
+  id: string
   taskId: string
   projectId: string
   userId: string
   eventType: string
   payload: Record<string, unknown> | null
+  seq: number
   createdAt: Date
 }
 
@@ -35,6 +35,7 @@ type TaskMeta = {
 type TaskEventModel = {
   create: (args: unknown) => Promise<TaskEventRow>
   findMany: (args: unknown) => Promise<TaskEventRow[]>
+  findFirst: (args: unknown) => Promise<TaskEventRow | null>
 }
 
 type TaskModel = {
@@ -44,8 +45,13 @@ type TaskModel = {
 const taskEventModel = (prisma as unknown as { taskEvent: TaskEventModel }).taskEvent
 const taskModel = (prisma as unknown as { task: TaskModel }).task
 
-function createEphemeralId() {
-  return `ephemeral:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`
+async function resolveNextEventSeq(taskId: string): Promise<number> {
+  const latest = await taskEventModel.findFirst({
+    where: { taskId },
+    orderBy: { seq: 'desc' },
+    select: { seq: true },
+  })
+  return (latest?.seq || 0) + 1
 }
 
 function isLifecycleEventType(value: string): value is TaskLifecycleEventType {
@@ -208,7 +214,7 @@ export async function listTaskLifecycleEvents(taskId: string, limit = 500) {
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.floor(limit), 1), 5000) : 500
   const latestRows = await taskEventModel.findMany({
     where: { taskId },
-    orderBy: { id: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: safeLimit,
   })
   const rows = [...latestRows].reverse()
@@ -240,21 +246,20 @@ export async function publishTaskLifecycleEvent(params: {
   payload?: Record<string, unknown> | null
   persist?: boolean
 }) {
-  const persist = params.persist !== false
   const normalizedType = normalizeLifecycleType(params.lifecycleType)
-  const event = persist
-    ? await taskEventModel.create({
-        data: {
-          taskId: params.taskId,
-          projectId: params.projectId,
-          userId: params.userId,
-          eventType: normalizedType,
-          payload: normalizeLifecyclePayload(params.lifecycleType, params.taskType, params.payload || null),
-        },
-      })
-    : null
-  const ts = (event?.createdAt || new Date()).toISOString()
-  const id = event?.id ? String(event.id) : createEphemeralId()
+  const seq = await resolveNextEventSeq(params.taskId)
+  const event = await taskEventModel.create({
+    data: {
+      taskId: params.taskId,
+      projectId: params.projectId,
+      userId: params.userId,
+      seq,
+      eventType: normalizedType,
+      payload: normalizeLifecyclePayload(params.lifecycleType, params.taskType, params.payload || null),
+    },
+  })
+  const ts = event.createdAt.toISOString()
+  const id = String(event.id)
 
   const message = buildLifecycleEvent({
     id,
@@ -270,7 +275,6 @@ export async function publishTaskLifecycleEvent(params: {
     payload: params.payload || null,
   })
 
-  await redis.publish(getProjectChannel(params.projectId), JSON.stringify(message))
   await mirrorTaskEventToRun(message)
   return message
 }
@@ -314,21 +318,20 @@ export async function publishTaskStreamEvent(params: {
 }) {
   if (!STREAM_EPHEMERAL_ENABLED) return null
 
-  const persist = params.persist === true
   const normalizedPayload = normalizeStreamPayload(params.taskType, params.payload || null)
-  const event = persist
-    ? await taskEventModel.create({
-        data: {
-          taskId: params.taskId,
-          projectId: params.projectId,
-          userId: params.userId,
-          eventType: TASK_SSE_EVENT_TYPE.STREAM,
-          payload: normalizedPayload,
-        },
-      })
-    : null
-  const ts = (event?.createdAt || new Date()).toISOString()
-  const id = event?.id ? String(event.id) : createEphemeralId()
+  const seq = await resolveNextEventSeq(params.taskId)
+  const event = await taskEventModel.create({
+    data: {
+      taskId: params.taskId,
+      projectId: params.projectId,
+      userId: params.userId,
+      seq,
+      eventType: TASK_SSE_EVENT_TYPE.STREAM,
+      payload: normalizedPayload,
+    },
+  })
+  const ts = event.createdAt.toISOString()
+  const id = String(event.id)
 
   const message = buildStreamEvent({
     id,
@@ -343,15 +346,37 @@ export async function publishTaskStreamEvent(params: {
     payload: normalizedPayload,
   })
 
-  await redis.publish(getProjectChannel(params.projectId), JSON.stringify(message))
   await mirrorTaskEventToRun(message)
   return message
 }
 
-export async function listEventsAfter(projectId: string, afterId: number, limit = 200) {
+export async function listEventsAfter(projectId: string, afterId: string | null, limit = 200) {
   const pageSize = Math.max(limit * 2, 400)
   const maxScanRows = Math.max(limit * 50, 20_000)
-  let cursor = afterId
+  const initialCursor = typeof afterId === 'string' && afterId.trim() ? afterId.trim() : null
+  let cursorId: string | null = initialCursor
+  let cursorCreatedAt: Date | null = null
+
+  if (cursorId) {
+    const anchor = await taskEventModel.findFirst({
+      where: {
+        projectId,
+        id: cursorId,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+    })
+    if (anchor) {
+      cursorId = anchor.id
+      cursorCreatedAt = anchor.createdAt
+    } else {
+      cursorId = null
+      cursorCreatedAt = null
+    }
+  }
+
   let scannedRows = 0
   const collected: TaskEventRow[] = []
 
@@ -359,9 +384,21 @@ export async function listEventsAfter(projectId: string, afterId: number, limit 
     const rows = await taskEventModel.findMany({
       where: {
         projectId,
-        id: { gt: cursor },
+        ...(cursorId && cursorCreatedAt
+          ? {
+              OR: [
+                { createdAt: { gt: cursorCreatedAt } },
+                {
+                  AND: [
+                    { createdAt: cursorCreatedAt },
+                    { id: { gt: cursorId } },
+                  ],
+                },
+              ],
+            }
+          : {}),
       },
-      orderBy: { id: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       take: pageSize,
     })
 
@@ -374,7 +411,11 @@ export async function listEventsAfter(projectId: string, afterId: number, limit 
       if (collected.length >= limit) break
     }
 
-    cursor = rows[rows.length - 1]?.id || cursor
+    const last = rows[rows.length - 1]
+    if (last) {
+      cursorId = last.id
+      cursorCreatedAt = last.createdAt
+    }
     if (rows.length < pageSize) break
   }
 

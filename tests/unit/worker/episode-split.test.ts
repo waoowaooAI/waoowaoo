@@ -118,9 +118,18 @@ describe('worker episode-split', () => {
     const result = await handleEpisodeSplitTask(job)
 
     expect(result.success).toBe(true)
+    expect(result.episodePlan?.schema).toBe('episode_plan')
+    expect(result.episodePlan?.version).toBe('v2')
+    expect(result.episodePlan?.episodeCount).toBe(1)
+    expect(result.episodePlan?.versionHash).toMatch(/^[a-f0-9]{16}$/)
     expect(result.episodes).toHaveLength(1)
     expect(result.episodes[0]?.number).toBe(1)
     expect(result.episodes[0]?.title).toBe('第一集')
+    expect(result.episodes[0]?.rhythmAnchors).toEqual({
+      hook: '开端',
+      twist: '开端',
+      conflict: '开端',
+    })
     expect(result.episodes[0]?.content).toContain('START_MARKER')
     expect(result.episodes[0]?.content).toContain('END_MARKER')
   })

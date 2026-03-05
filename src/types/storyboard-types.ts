@@ -46,3 +46,30 @@ export function getPanelCandidates(panel: NovelPromotionPanel): string[] {
         return []
     }
 }
+
+export type AssetExtractType = 'characters' | 'locations' | 'props'
+
+export interface AssetExtractItem {
+    name: string
+    aliases: string[]
+    sourceSegmentIds: string[]
+    sourceSnippets: string[]
+}
+
+export interface AssetExtractResult {
+    success: boolean
+    extractType: AssetExtractType
+    extractionSchema: {
+        schema: 'asset_extract'
+        version: string
+        sourceRefField: 'sourceSegmentIds'
+    }
+    dedupe: {
+        inputCount: number
+        outputCount: number
+    }
+    items: AssetExtractItem[]
+}
+
+export const CHARACTER_VIEW_LAYOUT_OPTIONS = [4] as const
+export const LOCATION_VIEW_LAYOUT_OPTIONS = [4, 9, 16] as const

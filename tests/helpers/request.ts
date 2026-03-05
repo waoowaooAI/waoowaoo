@@ -22,7 +22,7 @@ export function buildMockRequest(params: {
   headers?: HeaderMap
   query?: QueryMap
 }) {
-  const url = new URL(params.path, 'http://localhost:3000')
+  const url = new URL(params.path, 'http://localhost:3533')
   appendQuery(url, params.query)
   const jsonBody = toJsonBody(params.body)
 

@@ -124,7 +124,7 @@ export async function getProjectModelConfig(
   userId: string,
 ): Promise<ProjectModelConfig> {
   const [projectData, userPref] = await Promise.all([
-    prisma.novelPromotionProject.findUnique({ where: { projectId } }),
+    prisma.project.findUnique({ where: { id: projectId } }),
     prisma.userPreference.findUnique({ where: { userId } }),
   ])
 

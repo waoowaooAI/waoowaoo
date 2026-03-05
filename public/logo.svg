@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB103"/>
+      <stop offset="100%" style="stop-color:#FF9500"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Film strip circle -->
+  <circle cx="60" cy="60" r="52" stroke="url(#brandGrad)" stroke-width="4" fill="none" filter="url(#glow)" stroke-dasharray="12 4"/>
+  <!-- Play triangle -->
+  <path d="M45 30 L90 60 L45 90Z" fill="url(#brandGrad)" filter="url(#glow)"/>
+</svg>

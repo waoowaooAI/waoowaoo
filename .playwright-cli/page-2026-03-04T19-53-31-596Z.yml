@@ -1,0 +1,41 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e52] [cursor=pointer]:
+    - img [ref=e53]
+  - alert [ref=e56]
+  - generic [ref=e100]:
+    - navigation [ref=e101]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - link "iVibeMovie" [ref=e105] [cursor=pointer]:
+            - /url: /
+            - img "iVibeMovie" [ref=e106]
+          - generic [ref=e107]: Beta v0.2 (测试版)
+        - generic [ref=e108]:
+          - link "登录" [ref=e109] [cursor=pointer]:
+            - /url: /auth/signin
+          - link "注册" [ref=e110] [cursor=pointer]:
+            - /url: /auth/signup
+          - button "Switch language" [ref=e112]:
+            - img [ref=e113]
+            - generic [ref=e116]: 简体中文
+            - img [ref=e117]
+    - generic [ref=e122]:
+      - generic [ref=e123]:
+        - heading "欢迎回来" [level=1] [ref=e124]
+        - paragraph [ref=e125]: 登录到 iVibeMovie
+      - generic [ref=e126]:
+        - generic [ref=e127]:
+          - generic [ref=e128]: 用户名
+          - textbox "用户名" [ref=e129]:
+            - /placeholder: 请输入用户名
+        - generic [ref=e130]:
+          - generic [ref=e131]: 密码
+          - textbox "密码" [ref=e132]:
+            - /placeholder: 请输入密码
+        - button "登录" [ref=e133]
+      - paragraph [ref=e135]:
+        - text: 还没有账户？
+        - link "立即注册" [ref=e136] [cursor=pointer]:
+          - /url: /auth/signup
+      - link "← 返回首页" [ref=e138] [cursor=pointer]:
+        - /url: /

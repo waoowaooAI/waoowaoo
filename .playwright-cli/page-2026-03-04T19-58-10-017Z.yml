@@ -1,0 +1,31 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "iVibeMovie" [ref=e7] [cursor=pointer]:
+            - /url: /workspace
+            - img "iVibeMovie" [ref=e8]
+          - generic [ref=e9]: Beta v0.2 (测试版)
+        - generic [ref=e10]:
+          - link "工作区" [ref=e24] [cursor=pointer]:
+            - /url: /workspace
+          - link "资产中心" [ref=e25] [cursor=pointer]:
+            - /url: /workspace/asset-hub
+            - img [ref=e26]
+            - text: 资产中心
+          - link "设置中心" [ref=e29] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e30]
+            - text: 设置中心
+          - button "Switch language" [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e47]: 简体中文
+            - img [ref=e48]
+    - main [ref=e21]:
+      - generic [ref=e51]:
+        - paragraph [ref=e52]: legacy endpoint removed, use /api/v2 routes
+        - button "返回工作区" [ref=e53]
+  - button "Open Next.js Dev Tools" [ref=e59] [cursor=pointer]:
+    - img [ref=e60]
+  - alert [ref=e23]

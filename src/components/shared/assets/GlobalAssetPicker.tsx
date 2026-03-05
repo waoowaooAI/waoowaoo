@@ -116,7 +116,7 @@ export default function GlobalAssetPicker({
     const charactersQuery = useQuery({
         queryKey: ['global-assets', 'characters'],
         queryFn: async () => {
-            const res = await fetch('/api/asset-hub/characters')
+            const res = await fetch('/api/v2/asset-hub/characters')
             if (!res.ok) throw new Error('Failed to fetch characters')
             const data = await res.json()
             return data.characters as GlobalCharacter[]
@@ -126,7 +126,7 @@ export default function GlobalAssetPicker({
     const locationsQuery = useQuery({
         queryKey: ['global-assets', 'locations'],
         queryFn: async () => {
-            const res = await fetch('/api/asset-hub/locations')
+            const res = await fetch('/api/v2/asset-hub/locations')
             if (!res.ok) throw new Error('Failed to fetch locations')
             const data = await res.json()
             return data.locations as GlobalLocation[]
@@ -136,7 +136,7 @@ export default function GlobalAssetPicker({
     const voicesQuery = useQuery({
         queryKey: ['global-assets', 'voices'],
         queryFn: async () => {
-            const res = await fetch('/api/asset-hub/voices')
+            const res = await fetch('/api/v2/asset-hub/voices')
             if (!res.ok) throw new Error('Failed to fetch voices')
             const data = await res.json()
             return data.voices as GlobalVoice[]

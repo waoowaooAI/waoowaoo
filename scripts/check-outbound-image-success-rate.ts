@@ -114,7 +114,7 @@ async function fetchWindowSummary(params: {
   const rows = await prisma.task.findMany({
     where: {
       type: { in: monitoredTypes },
-      createdAt: {
+      queuedAt: {
         gte: params.from,
         lt: params.to,
       },

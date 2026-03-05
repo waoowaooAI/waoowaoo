@@ -118,13 +118,37 @@ describe('worker clips-build behavior', () => {
   })
 
   it('success path -> creates clip row with concrete boundaries and characters payload', async () => {
-    const job = buildJob({ episodeId: 'episode-1' })
+    const job = buildJob({
+      episodeId: 'episode-1',
+      timing: {
+        segmentDurationSec: 6,
+        episodeDurationSec: 72,
+      },
+    })
     const result = await handleClipsBuildTask(job)
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       episodeId: 'episode-1',
       count: 1,
+      clipPlan: {
+        schema: 'clip_plan',
+        version: 'v2',
+        targetDurationSec: 6,
+      },
+      clips: [
+        {
+          index: 1,
+          splitReason: '按语义与边界标记拆分',
+          boundaryMarkers: {
+            startMarker: 'START one',
+            endMarker: 'END',
+          },
+          targetDurationSec: 6,
+        },
+      ],
     })
+    expect(result.clipPlan.versionHash).toMatch(/^[a-f0-9]{16}$/)
+    expect(result.clips[0]?.durationDeltaSec).toBeGreaterThanOrEqual(0)
 
     expect(prismaMock.novelPromotionClip.create).toHaveBeenCalledWith({
       data: {

@@ -1,30 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
-import { apiHandler, ApiError } from '@/lib/api-errors'
+import { NextResponse } from 'next/server'
 
-export const POST = apiHandler(async (
-  request: NextRequest,
-  context: { params: Promise<{ projectId: string }> }
-) => {
-  const { projectId } = await context.params
+function gone() {
+  return NextResponse.json(
+    {
+      error: {
+        code: 'ENDPOINT_REMOVED',
+        message: 'legacy endpoint removed, use /api/v2 routes',
+      },
+    },
+    { status: 410 },
+  )
+}
 
-  // 🔐 统一权限验证
-  const authResult = await requireProjectAuthLight(projectId)
-  if (isErrorResponse(authResult)) return authResult
-
-  const { shotId, field, value } = await request.json()
-
-  // 验证字段
-  if (field !== 'imagePrompt' && field !== 'videoPrompt') {
-    throw new ApiError('INVALID_PARAMS')
-  }
-
-  // 更新shot
-  const updatedShot = await prisma.novelPromotionShot.update({
-    where: { id: shotId },
-    data: { [field]: value }
-  })
-
-  return NextResponse.json({ success: true, shot: updatedShot })
-})
+export const GET = gone
+export const POST = gone
+export const PUT = gone
+export const PATCH = gone
+export const DELETE = gone
+export const OPTIONS = gone

@@ -1,12 +1,12 @@
 import { JobsOptions, Queue } from 'bullmq'
-import { queueRedis } from '@/lib/redis'
+import { createScopedLogger } from '@/lib/logging/core'
 import { QueueType, TaskType, TASK_TYPE, type TaskJobData } from './types'
 
 export const QUEUE_NAME = {
-  IMAGE: 'waoowaoo-image',
-  VIDEO: 'waoowaoo-video',
-  VOICE: 'waoowaoo-voice',
-  TEXT: 'waoowaoo-text',
+  IMAGE: 'ivibemovie-image',
+  VIDEO: 'ivibemovie-video',
+  VOICE: 'ivibemovie-voice',
+  TEXT: 'ivibemovie-text',
 } as const
 
 const defaultJobOptions: JobsOptions = {
@@ -19,27 +19,49 @@ const defaultJobOptions: JobsOptions = {
   },
 }
 
+const logger = createScopedLogger({
+  module: 'task.queues',
+  action: 'task.queue',
+})
+
 export const imageQueue = new Queue<TaskJobData>(QUEUE_NAME.IMAGE, {
-  connection: queueRedis,
   defaultJobOptions,
 })
 
 export const videoQueue = new Queue<TaskJobData>(QUEUE_NAME.VIDEO, {
-  connection: queueRedis,
   defaultJobOptions,
 })
 
 export const voiceQueue = new Queue<TaskJobData>(QUEUE_NAME.VOICE, {
-  connection: queueRedis,
   defaultJobOptions,
 })
 
 export const textQueue = new Queue<TaskJobData>(QUEUE_NAME.TEXT, {
-  connection: queueRedis,
   defaultJobOptions,
 })
 
-const ALL_QUEUES = [imageQueue, videoQueue, voiceQueue, textQueue]
+const ALL_QUEUES: Array<{ queueType: QueueType; queueName: string; queue: Queue<TaskJobData> }> = [
+  {
+    queueType: 'image',
+    queueName: QUEUE_NAME.IMAGE,
+    queue: imageQueue,
+  },
+  {
+    queueType: 'video',
+    queueName: QUEUE_NAME.VIDEO,
+    queue: videoQueue,
+  },
+  {
+    queueType: 'voice',
+    queueName: QUEUE_NAME.VOICE,
+    queue: voiceQueue,
+  },
+  {
+    queueType: 'text',
+    queueName: QUEUE_NAME.TEXT,
+    queue: textQueue,
+  },
+]
 
 const IMAGE_TYPES = new Set<TaskType>([
   TASK_TYPE.IMAGE_PANEL,
@@ -84,19 +106,108 @@ export async function addTaskJob(data: TaskJobData, opts?: JobsOptions) {
   const queueType = getQueueTypeByTaskType(data.type)
   const queue = getQueueByType(queueType)
   const priority = typeof opts?.priority === 'number' ? opts.priority : 0
-  return await queue.add(data.type, data, {
+  const startedAt = Date.now()
+  const enqueueOpts = {
     jobId: data.taskId,
     priority,
     ...(opts || {}),
+  }
+
+  logger.info({
+    action: 'task.queue.enqueue.begin',
+    message: 'enqueue task to queue',
+    taskId: data.taskId,
+    projectId: data.projectId,
+    userId: data.userId,
+    details: {
+      queueType,
+      queueName: QUEUE_NAME[queueType.toUpperCase() as 'IMAGE' | 'VIDEO' | 'VOICE' | 'TEXT'],
+      taskType: data.type,
+      priority,
+      attempts: enqueueOpts.attempts ?? defaultJobOptions.attempts ?? null,
+      backoff: enqueueOpts.backoff ?? defaultJobOptions.backoff ?? null,
+    },
   })
+
+  try {
+    const job = await queue.add(data.type, data, enqueueOpts)
+    logger.info({
+      action: 'task.queue.enqueue.success',
+      message: 'task enqueued',
+      taskId: data.taskId,
+      projectId: data.projectId,
+      userId: data.userId,
+      durationMs: Date.now() - startedAt,
+      details: {
+        queueType,
+        queueName: QUEUE_NAME[queueType.toUpperCase() as 'IMAGE' | 'VIDEO' | 'VOICE' | 'TEXT'],
+        taskType: data.type,
+        jobId: job.id,
+        priority,
+      },
+    })
+    return job
+  } catch (error) {
+    logger.error({
+      action: 'task.queue.enqueue.failed',
+      message: error instanceof Error ? error.message : String(error),
+      taskId: data.taskId,
+      projectId: data.projectId,
+      userId: data.userId,
+      durationMs: Date.now() - startedAt,
+      errorCode: 'QUEUE_ENQUEUE_FAILED',
+      retryable: false,
+      details: {
+        queueType,
+        queueName: QUEUE_NAME[queueType.toUpperCase() as 'IMAGE' | 'VIDEO' | 'VOICE' | 'TEXT'],
+        taskType: data.type,
+        priority,
+      },
+      error:
+        error instanceof Error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
+          : {
+              message: String(error),
+            },
+    })
+    throw error
+  }
 }
 
 export async function removeTaskJob(taskId: string) {
-  for (const queue of ALL_QUEUES) {
-    const job = await queue.getJob(taskId)
+  const startedAt = Date.now()
+  logger.info({
+    action: 'task.queue.remove.begin',
+    message: 'remove task job requested',
+    taskId,
+  })
+
+  for (const queueInfo of ALL_QUEUES) {
+    const job = await queueInfo.queue.getJob(taskId)
     if (!job) continue
     await job.remove()
+    logger.info({
+      action: 'task.queue.remove.success',
+      message: 'task job removed from queue',
+      taskId,
+      durationMs: Date.now() - startedAt,
+      details: {
+        queueType: queueInfo.queueType,
+        queueName: queueInfo.queueName,
+        jobId: job.id,
+      },
+    })
     return true
   }
+  logger.warn({
+    action: 'task.queue.remove.miss',
+    message: 'task job not found in any queue',
+    taskId,
+    durationMs: Date.now() - startedAt,
+  })
   return false
 }

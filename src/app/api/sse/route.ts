@@ -1,24 +1,23 @@
 import { createScopedLogger } from '@/lib/logging/core'
 import { NextRequest, NextResponse } from 'next/server'
 import { apiHandler, ApiError, getRequestId } from '@/lib/api-errors'
-import { getProjectChannel, listEventsAfter } from '@/lib/task/publisher'
+import { listEventsAfter } from '@/lib/task/publisher'
 import { isErrorResponse, requireProjectAuthLight, requireUserAuth } from '@/lib/api-auth'
 import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
-import { getSharedSubscriber } from '@/lib/sse/shared-subscriber'
 import { prisma } from '@/lib/prisma'
 import { coerceTaskIntent } from '@/lib/task/intent'
 
-function parseReplayCursorId(value: string | null): number {
-  if (!value) return 0
+const EVENT_POLL_INTERVAL_MS = Number.parseInt(process.env.SSE_EVENT_POLL_INTERVAL_MS || '1200', 10) || 1200
+
+function parseReplayCursorId(value: string | null): string | null {
+  if (!value) return null
   const trimmed = value.trim()
-  if (!trimmed || !/^\d+$/.test(trimmed)) return 0
-  const parsed = Number.parseInt(trimmed, 10)
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+  return trimmed || null
 }
 
 function formatSSE(event: SSEEvent) {
   const dataLine = `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`
-  if (typeof event.id === 'string' && /^\d+$/.test(event.id)) {
+  if (typeof event.id === 'string' && event.id.trim()) {
     return `id: ${event.id}\n${dataLine}`
   }
   return dataLine
@@ -33,6 +32,15 @@ function asObject(value: unknown): Record<string, unknown> | null {
   return value as Record<string, unknown>
 }
 
+async function getLatestTaskEventId(projectId: string): Promise<string | null> {
+  const latest = await prisma.taskEvent.findFirst({
+    where: { projectId },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    select: { id: true },
+  })
+  return latest?.id || null
+}
+
 async function listActiveLifecycleSnapshot(params: {
   projectId: string
   episodeId: string | null
@@ -44,11 +52,10 @@ async function listActiveLifecycleSnapshot(params: {
     where: {
       projectId: params.projectId,
       userId: params.userId,
-      status: {
-        in: ['queued', 'processing']},
-      ...(params.episodeId ? { episodeId: params.episodeId } : {})},
-    orderBy: {
-      updatedAt: 'desc'},
+      status: { in: ['queued', 'processing'] },
+      ...(params.episodeId ? { episodeId: params.episodeId } : {}),
+    },
+    orderBy: { queuedAt: 'desc' },
     take: limit,
     select: {
       id: true,
@@ -60,7 +67,9 @@ async function listActiveLifecycleSnapshot(params: {
       status: true,
       progress: true,
       payload: true,
-      updatedAt: true}})
+      queuedAt: true,
+    },
+  })
 
   return rows.map((row): SSEEvent => {
     const payload = asObject(row.payload)
@@ -72,20 +81,22 @@ async function listActiveLifecycleSnapshot(params: {
       ...(payload || {}),
       lifecycleType,
       intent: coerceTaskIntent(payloadUi?.intent ?? payload?.intent, row.type),
-      progress: typeof row.progress === 'number' ? row.progress : null}
+      progress: typeof row.progress === 'number' ? row.progress : null,
+    }
 
     return {
-      id: `snapshot:${row.id}:${row.updatedAt.getTime()}`,
+      id: `snapshot:${row.id}:${row.queuedAt.getTime()}`,
       type: TASK_SSE_EVENT_TYPE.LIFECYCLE,
       taskId: row.id,
       projectId: params.projectId,
       userId: row.userId,
-      ts: row.updatedAt.toISOString(),
+      ts: row.queuedAt.toISOString(),
       taskType: row.type,
       targetType: row.targetType,
       targetId: row.targetId,
       episodeId: row.episodeId,
-      payload: eventPayload}
+      payload: eventPayload,
+    }
   })
 }
 
@@ -102,8 +113,6 @@ export const GET = apiHandler(async (request: NextRequest) => {
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
 
-  const channel = getProjectChannel(projectId)
-  const sharedSubscriber = getSharedSubscriber()
   const requestId = getRequestId(request)
   const encoder = new TextEncoder()
   const lastEventId = parseReplayCursorId(request.headers.get('last-event-id'))
@@ -113,19 +122,24 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let closed = false
-      let timer: ReturnType<typeof setInterval> | null = null
-      let unsubscribe: (() => Promise<void>) | null = null
+      let heartbeatTimer: ReturnType<typeof setInterval> | null = null
+      let pollTimer: ReturnType<typeof setInterval> | null = null
+      let eventCursor = lastEventId
+      let polling = false
       const logger = createScopedLogger({
         module: 'sse',
         action: 'sse.stream',
         requestId: requestId || undefined,
         projectId,
-        userId: session.user.id})
+        userId: session.user.id,
+      })
       logger.info({
         action: 'sse.connect',
         message: 'sse connection established',
         details: {
-          lastEventId: lastEventId || 0}})
+          lastEventId: lastEventId || null,
+        },
+      })
 
       const safeEnqueue = (chunk: string) => {
         if (closed) return
@@ -135,16 +149,18 @@ export const GET = apiHandler(async (request: NextRequest) => {
       const close = async () => {
         if (closed) return
         closed = true
-        try {
-          await unsubscribe?.()
-        } catch {}
+        if (heartbeatTimer) {
+          clearInterval(heartbeatTimer)
+          heartbeatTimer = null
+        }
+        if (pollTimer) {
+          clearInterval(pollTimer)
+          pollTimer = null
+        }
         logger.info({
           action: 'sse.disconnect',
-          message: 'sse connection closed'})
-        if (timer) {
-          clearInterval(timer)
-          timer = null
-        }
+          message: 'sse connection closed',
+        })
         try {
           controller.close()
         } catch {}
@@ -155,52 +171,78 @@ export const GET = apiHandler(async (request: NextRequest) => {
         void close()
       })
 
-      if (lastEventId > 0) {
+      if (lastEventId) {
         const missed = await listEventsAfter(projectId, lastEventId, 5000)
         logger.info({
           action: 'sse.replay',
           message: 'sse replay sent',
           details: {
             fromEventId: lastEventId,
-            count: missed.length}})
+            count: missed.length,
+          },
+        })
         for (const event of missed) {
           safeEnqueue(formatSSE(event))
+          if (typeof event.id === 'string' && event.id.trim()) {
+            eventCursor = event.id
+          }
         }
       } else {
         const snapshotEvents = await listActiveLifecycleSnapshot({
           projectId,
           episodeId,
           userId: session.user.id,
-          limit: 500})
+          limit: 500,
+        })
         logger.info({
           action: 'sse.active_snapshot',
           message: 'sse active snapshot sent',
           details: {
-            count: snapshotEvents.length}})
+            count: snapshotEvents.length,
+          },
+        })
         for (const event of snapshotEvents) {
           safeEnqueue(formatSSE(event))
         }
+        eventCursor = await getLatestTaskEventId(projectId)
       }
 
-      unsubscribe = await sharedSubscriber.addChannelListener(channel, (message) => {
-        try {
-          const event = JSON.parse(message) as SSEEvent
-          safeEnqueue(formatSSE(event))
-        } catch {
-          safeEnqueue(`data: ${message}\n\n`)
-        }
-      })
+      pollTimer = setInterval(() => {
+        if (polling || closed) return
+        polling = true
+        void (async () => {
+          try {
+            const delta = await listEventsAfter(projectId, eventCursor, 300)
+            for (const event of delta) {
+              safeEnqueue(formatSSE(event))
+              if (typeof event.id === 'string' && event.id.trim()) {
+                eventCursor = event.id
+              }
+            }
+          } catch (error) {
+            logger.error({
+              action: 'sse.poll.failed',
+              message: error instanceof Error ? error.message : String(error),
+            })
+          } finally {
+            polling = false
+          }
+        })()
+      }, EVENT_POLL_INTERVAL_MS)
 
-      timer = setInterval(() => safeEnqueue(formatHeartbeat()), 15_000)
+      heartbeatTimer = setInterval(() => safeEnqueue(formatHeartbeat()), 15_000)
     },
     cancel() {
       void closeStream?.()
-    }})
+    },
+  })
 
   return new NextResponse(stream as unknown as BodyInit, {
     headers: {
       'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
       Connection: 'keep-alive',
-      'X-Accel-Buffering': 'no'}})
+      'X-Accel-Buffering': 'no',
+    },
+  })
 })

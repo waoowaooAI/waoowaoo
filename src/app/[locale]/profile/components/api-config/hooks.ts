@@ -238,8 +238,8 @@ export function useProviders(): UseProvidersReturn {
             setProviders([...allProviders, ...customProviders])
 
             // 合并预设和已保存的模型
-            const savedModelsRaw = data.models || []
-            const savedModelsNormalized = savedModelsRaw.map((m: CustomModel) => ({
+            const savedModelsRaw: CustomModel[] = Array.isArray(data.models) ? (data.models as CustomModel[]) : []
+            const savedModelsNormalized: CustomModel[] = savedModelsRaw.map((m: CustomModel): CustomModel => ({
                 ...m,
                 modelKey: m.modelKey || encodeModelKey(m.provider, m.modelId),
             }))
@@ -270,9 +270,9 @@ export function useProviders(): UseProvidersReturn {
                 }
                 return applyPricingDisplay(mergedPreset, pricingDisplay)
             })
-            const customModels = savedModels.filter((m: CustomModel) =>
+            const customModels: CustomModel[] = savedModels.filter((m: CustomModel) =>
                 !PRESET_MODELS.find((preset) => encodeModelKey(preset.provider, preset.modelId) === m.modelKey)
-            ).map((m: CustomModel) => ({
+            ).map((m: CustomModel): CustomModel => ({
                 ...applyPricingDisplay(m, pricingDisplay),
                 source: m.source === 'discovered' ? 'discovered' : 'manual',
                 // 尊重服务端返回的 enabled 字段（后端对 disabled presets 会明确返回 enabled: false）

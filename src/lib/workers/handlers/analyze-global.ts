@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { executeAiTextStep } from '@/lib/ai-runtime'
@@ -19,7 +20,65 @@ import { buildAnalyzeGlobalPrompts, loadAnalyzeGlobalPromptTemplates } from './a
 import { createAnalyzeGlobalStats, persistAnalyzeGlobalChunk } from './analyze-global-persist'
 import { resolveAnalysisModel } from './resolve-analysis-model'
 
+type CharacterRelationNode = {
+  id: string
+  name: string
+}
+
+type CharacterRelationEdge = {
+  from: string
+  to: string
+  relation: string
+  coOccurrenceCount: number
+}
+
+function collectWorldRules(globalAssetText: string): string[] {
+  return globalAssetText
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(0, 8)
+}
+
+function buildCharacterRelations(input: {
+  characters: CharacterBrief[]
+  episodes: Array<{ novelText: string | null }>
+}): { nodes: CharacterRelationNode[]; edges: CharacterRelationEdge[] } {
+  const nodes: CharacterRelationNode[] = input.characters.map((character) => ({
+    id: character.id,
+    name: character.name,
+  }))
+  const edgeCounter = new Map<string, number>()
+  for (const episode of input.episodes) {
+    const text = readText(episode.novelText)
+    if (!text.trim()) continue
+    const present = input.characters.filter((character) => {
+      if (text.includes(character.name)) return true
+      return character.aliases.some((alias) => alias && text.includes(alias))
+    })
+    for (let i = 0; i < present.length; i += 1) {
+      for (let j = i + 1; j < present.length; j += 1) {
+        const left = present[i]
+        const right = present[j]
+        const key = [left.id, right.id].sort().join('::')
+        edgeCounter.set(key, (edgeCounter.get(key) || 0) + 1)
+      }
+    }
+  }
+  const edges: CharacterRelationEdge[] = Array.from(edgeCounter.entries()).map(([key, count]) => {
+    const [from, to] = key.split('::')
+    return {
+      from,
+      to,
+      relation: '同场互动',
+      coOccurrenceCount: count,
+    }
+  })
+  return { nodes, edges }
+}
+
 export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
+  const payload = (job.data.payload || {}) as Record<string, unknown>
   const projectId = job.data.projectId
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -185,8 +244,45 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
     displayMode: 'detail',
   })
 
+  const worldRules = collectWorldRules(readText(novelData.globalAssetText))
+  const characterRelations = buildCharacterRelations({
+    characters: existingCharacters,
+    episodes: novelData.episodes.map((episode) => ({
+      novelText: episode.novelText,
+    })),
+  })
+  const styleConstraints = [
+    '角色设定跨集一致，称呼与动机不漂移',
+    '冲突强度逐集递进，保持短剧节奏',
+    '台词口吻与世界观术语保持统一',
+  ]
+  const promptAppend = readText(payload.promptAppend).trim()
+  if (promptAppend) {
+    styleConstraints.push(`附加约束: ${promptAppend}`)
+  }
+  const globalContextCore = {
+    schema: 'global_context',
+    version: 'v2',
+    worldRules,
+    characterRelations,
+    styleConstraints,
+  }
+  const versionHash = createHash('sha256')
+    .update(JSON.stringify(globalContextCore))
+    .digest('hex')
+    .slice(0, 16)
+
   return {
     success: true,
+    globalContext: {
+      ...globalContextCore,
+      versionHash,
+      generatedAt: new Date().toISOString(),
+      sourceCoverage: {
+        totalChunks: stats.totalChunks,
+        processedChunks: stats.processedChunks,
+      },
+    },
     stats: {
       totalChunks: stats.totalChunks,
       newCharacters: stats.newCharacters,

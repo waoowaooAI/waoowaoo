@@ -30,7 +30,7 @@ describe('logging core suppression', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const { createScopedLogger } = await import('@/lib/logging/core')
-    const logger = createScopedLogger({ module: 'worker.waoowaoo-text' })
+    const logger = createScopedLogger({ module: 'worker.ivibemovie-text' })
 
     logger.info({
       action: 'worker.progress.stream',
@@ -48,7 +48,7 @@ describe('logging core suppression', () => {
   it('keeps non-suppressed logs', async () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
     const { createScopedLogger } = await import('@/lib/logging/core')
-    const logger = createScopedLogger({ module: 'worker.waoowaoo-text' })
+    const logger = createScopedLogger({ module: 'worker.ivibemovie-text' })
 
     logger.info({
       action: 'worker.progress',

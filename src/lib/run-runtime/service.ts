@@ -18,41 +18,27 @@ type GraphRunRow = {
   id: string
   userId: string
   projectId: string
-  episodeId: string | null
   workflowType: string
   taskType: string | null
   taskId: string | null
-  targetType: string
-  targetId: string
   status: string
   input: unknown
   output: unknown
   errorCode: string | null
-  errorMessage: string | null
-  cancelRequestedAt: Date | null
-  queuedAt: Date
-  startedAt: Date | null
   finishedAt: Date | null
-  lastSeq: number
   createdAt: Date
-  updatedAt: Date
 }
 
 type GraphStepRow = {
   id: string
   runId: string
   stepKey: string
-  stepTitle: string
+  stepTitle: string | null
   status: string
   currentAttempt: number
-  stepIndex: number
-  stepTotal: number
-  startedAt: Date | null
-  finishedAt: Date | null
-  lastErrorCode: string | null
-  lastErrorMessage: string | null
+  stepIndex: number | null
+  stepTotal: number | null
   createdAt: Date
-  updatedAt: Date
 }
 
 type GraphEventRow = {
@@ -119,9 +105,45 @@ type GraphRuntimeClient = GraphRuntimeTx & {
 
 const runtimeClient = prisma as unknown as GraphRuntimeClient
 
+const RUN_CONTEXT_KEY = '__run_context'
+
+type RunContext = {
+  episodeId: string | null
+  targetType: string | null
+  targetId: string | null
+}
+
 function toObject(value: unknown): JsonRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
   return value as JsonRecord
+}
+
+function toOptionalString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
+function extractRunContextFromInput(value: unknown): RunContext {
+  const payload = toObject(value)
+  const context = toObject(payload[RUN_CONTEXT_KEY])
+  return {
+    episodeId: toOptionalString(context.episodeId),
+    targetType: toOptionalString(context.targetType),
+    targetId: toOptionalString(context.targetId),
+  }
+}
+
+function attachRunContextToInput(input: JsonRecord | null | undefined, context: RunContext): JsonRecord {
+  const nextInput: JsonRecord = {
+    ...(input || {}),
+    [RUN_CONTEXT_KEY]: {
+      episodeId: context.episodeId,
+      targetType: context.targetType,
+      targetId: context.targetId,
+    },
+  }
+  return nextInput
 }
 
 function asRunStatus(value: string): RunStatus {
@@ -161,13 +183,6 @@ function readInt(payload: JsonRecord, key: string): number | null {
   return null
 }
 
-function resolveErrorMessage(payload: JsonRecord): string | null {
-  const direct = readString(payload, 'message') || readString(payload, 'errorMessage')
-  if (direct) return direct
-  const errorPayload = toObject(payload.error)
-  return readString(errorPayload, 'message') || readString(errorPayload, 'errorMessage')
-}
-
 function normalizeLane(lane: string | null): 'text' | 'reasoning' | null {
   if (lane === 'reasoning') return 'reasoning'
   if (lane === 'text') return 'text'
@@ -191,37 +206,40 @@ function mapEventRow(row: GraphEventRow): RunEvent {
 }
 
 function mapRunRow(run: GraphRunRow) {
+  const context = extractRunContextFromInput(run.input)
+  const createdAtIso = run.createdAt.toISOString()
   return {
     id: run.id,
     userId: run.userId,
     projectId: run.projectId,
-    episodeId: run.episodeId,
+    episodeId: context.episodeId,
     workflowType: run.workflowType,
     taskType: run.taskType,
     taskId: run.taskId,
-    targetType: run.targetType,
-    targetId: run.targetId,
+    targetType: context.targetType,
+    targetId: context.targetId,
     status: asRunStatus(run.status),
     input: toObject(run.input),
     output: toObject(run.output),
     errorCode: run.errorCode,
-    errorMessage: run.errorMessage,
-    cancelRequestedAt: toIso(run.cancelRequestedAt),
-    queuedAt: run.queuedAt.toISOString(),
-    startedAt: toIso(run.startedAt),
+    errorMessage: null,
+    cancelRequestedAt: null,
+    queuedAt: createdAtIso,
+    startedAt: null,
     finishedAt: toIso(run.finishedAt),
-    lastSeq: run.lastSeq,
-    createdAt: run.createdAt.toISOString(),
-    updatedAt: run.updatedAt.toISOString(),
+    lastSeq: 0,
+    createdAt: createdAtIso,
+    updatedAt: createdAtIso,
   }
 }
 
 function mapStepRow(step: GraphStepRow) {
+  const createdAtIso = step.createdAt.toISOString()
   return {
     id: step.id,
     runId: step.runId,
     stepKey: step.stepKey,
-    stepTitle: step.stepTitle,
+    stepTitle: step.stepTitle || step.stepKey,
     status: step.status as
       | typeof RUN_STEP_STATUS.PENDING
       | typeof RUN_STEP_STATUS.RUNNING
@@ -229,14 +247,14 @@ function mapStepRow(step: GraphStepRow) {
       | typeof RUN_STEP_STATUS.FAILED
       | typeof RUN_STEP_STATUS.CANCELED,
     currentAttempt: step.currentAttempt,
-    stepIndex: step.stepIndex,
-    stepTotal: step.stepTotal,
-    startedAt: toIso(step.startedAt),
-    finishedAt: toIso(step.finishedAt),
-    lastErrorCode: step.lastErrorCode,
-    lastErrorMessage: step.lastErrorMessage,
-    createdAt: step.createdAt.toISOString(),
-    updatedAt: step.updatedAt.toISOString(),
+    stepIndex: step.stepIndex ?? 0,
+    stepTotal: step.stepTotal ?? 0,
+    startedAt: null,
+    finishedAt: null,
+    lastErrorCode: null,
+    lastErrorMessage: null,
+    createdAt: createdAtIso,
+    updatedAt: createdAtIso,
   }
 }
 
@@ -266,7 +284,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       where: { id: input.runId },
       data: {
         status: RUN_STATUS.RUNNING,
-        startedAt: now,
       },
     })
     return
@@ -290,7 +307,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       },
       data: {
         status: RUN_STEP_STATUS.COMPLETED,
-        finishedAt: now,
       },
     })
     return
@@ -302,7 +318,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       data: {
         status: RUN_STATUS.FAILED,
         errorCode: readString(payload, 'errorCode'),
-        errorMessage: resolveErrorMessage(payload),
         finishedAt: now,
       },
     })
@@ -315,9 +330,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       },
       data: {
         status: RUN_STEP_STATUS.FAILED,
-        finishedAt: now,
-        lastErrorCode: readString(payload, 'errorCode'),
-        lastErrorMessage: resolveErrorMessage(payload),
       },
     })
     return
@@ -340,9 +352,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       },
       data: {
         status: RUN_STEP_STATUS.CANCELED,
-        finishedAt: now,
-        lastErrorCode: 'CANCELED',
-        lastErrorMessage: 'Run cancelled',
       },
     })
     return
@@ -367,7 +376,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
     },
     data: {
       status: RUN_STATUS.RUNNING,
-      startedAt: now,
     },
   })
 
@@ -386,12 +394,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       currentAttempt: stepProjection.attempt,
       stepIndex: stepProjection.stepIndex,
       stepTotal: stepProjection.stepTotal,
-      startedAt: now,
-      finishedAt: isStepCompleted || isStepFailed ? now : null,
-      lastErrorCode: isStepFailed ? readString(stepProjection.payload, 'errorCode') : null,
-      lastErrorMessage: isStepFailed
-        ? (readString(stepProjection.payload, 'message') || readString(stepProjection.payload, 'errorMessage'))
-        : null,
     },
     update: {
       stepTitle: stepProjection.stepTitle,
@@ -399,12 +401,6 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       currentAttempt: stepProjection.attempt,
       stepIndex: stepProjection.stepIndex,
       stepTotal: stepProjection.stepTotal,
-      startedAt: undefined,
-      finishedAt: isStepCompleted || isStepFailed ? now : null,
-      lastErrorCode: isStepFailed ? readString(stepProjection.payload, 'errorCode') : null,
-      lastErrorMessage: isStepFailed
-        ? resolveErrorMessage(stepProjection.payload)
-        : null,
     },
   })
 
@@ -423,39 +419,32 @@ async function applyRunProjection(tx: GraphRuntimeTx, input: RunEventInput) {
       status: nextStatus,
       outputText: isStepCompleted ? readString(stepProjection.payload, 'text') : null,
       outputReasoning: isStepCompleted ? readString(stepProjection.payload, 'reasoning') : null,
-      errorCode: isStepFailed ? readString(stepProjection.payload, 'errorCode') : null,
-      errorMessage: isStepFailed ? resolveErrorMessage(stepProjection.payload) : null,
-      startedAt: now,
-      finishedAt: isStepCompleted || isStepFailed ? now : null,
       usageJson: toObject(stepProjection.payload.usage),
     },
     update: {
       status: nextStatus,
       outputText: isStepCompleted ? readString(stepProjection.payload, 'text') : null,
       outputReasoning: isStepCompleted ? readString(stepProjection.payload, 'reasoning') : null,
-      errorCode: isStepFailed ? readString(stepProjection.payload, 'errorCode') : null,
-      errorMessage: isStepFailed ? resolveErrorMessage(stepProjection.payload) : null,
-      finishedAt: isStepCompleted || isStepFailed ? now : null,
       usageJson: toObject(stepProjection.payload.usage),
     },
   })
 }
 
 export async function createRun(input: CreateRunInput) {
+  const context: RunContext = {
+    episodeId: input.episodeId || null,
+    targetType: input.targetType,
+    targetId: input.targetId,
+  }
   const row = await runtimeClient.graphRun.create({
     data: {
       userId: input.userId,
       projectId: input.projectId,
-      episodeId: input.episodeId || null,
       workflowType: input.workflowType,
       taskType: input.taskType || null,
       taskId: input.taskId || null,
-      targetType: input.targetType,
-      targetId: input.targetId,
       status: RUN_STATUS.QUEUED,
-      input: input.input || null,
-      queuedAt: new Date(),
-      lastSeq: 0,
+      input: attachRunContextToInput(input.input || null, context),
     },
   })
   return mapRunRow(row)
@@ -488,7 +477,7 @@ export async function getRunSnapshot(runId: string) {
       where: { runId },
       orderBy: [
         { stepIndex: 'asc' },
-        { updatedAt: 'asc' },
+        { createdAt: 'asc' },
       ],
     }),
   ])
@@ -511,15 +500,19 @@ export async function listRuns(input: ListRunsInput) {
       userId: input.userId,
       ...(input.projectId ? { projectId: input.projectId } : {}),
       ...(input.workflowType ? { workflowType: input.workflowType } : {}),
-      ...(input.targetType ? { targetType: input.targetType } : {}),
-      ...(input.targetId ? { targetId: input.targetId } : {}),
-      ...(input.episodeId ? { episodeId: input.episodeId } : {}),
       ...(statusFilter ? { status: statusFilter } : {}),
     },
     orderBy: { createdAt: 'desc' },
     take: safeLimit,
   })
-  return rows.map(mapRunRow)
+  return rows
+    .map(mapRunRow)
+    .filter((run) => {
+      if (input.episodeId && run.episodeId !== input.episodeId) return false
+      if (input.targetType && run.targetType !== input.targetType) return false
+      if (input.targetId && run.targetId !== input.targetId) return false
+      return true
+    })
 }
 
 export async function requestRunCancel(params: {
@@ -536,7 +529,6 @@ export async function requestRunCancel(params: {
     },
     data: {
       status: RUN_STATUS.CANCELING,
-      cancelRequestedAt: new Date(),
     },
   })
   const row = await runtimeClient.graphRun.findUnique({
@@ -547,23 +539,19 @@ export async function requestRunCancel(params: {
 
 export async function appendRunEventWithSeq(input: RunEventInput): Promise<RunEvent> {
   return await runtimeClient.$transaction(async (tx) => {
-    const run = await tx.graphRun.update({
-      where: { id: input.runId },
-      data: {
-        lastSeq: { increment: 1 },
-      },
-      select: {
-        id: true,
-        lastSeq: true,
-      },
+    const latestEvents = await tx.graphEvent.findMany({
+      where: { runId: input.runId },
+      orderBy: { seq: 'desc' },
+      take: 1,
     })
+    const nextSeq = (latestEvents[0]?.seq || 0) + 1
 
     const created = await tx.graphEvent.create({
       data: {
         runId: input.runId,
         projectId: input.projectId,
         userId: input.userId,
-        seq: run.lastSeq,
+        seq: nextSeq,
         eventType: input.eventType,
         stepKey: input.stepKey || null,
         attempt: input.attempt || null,

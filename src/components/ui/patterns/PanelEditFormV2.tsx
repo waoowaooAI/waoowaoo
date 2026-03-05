@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { UiPatternMode } from './types'
+import { evaluateStoryboardRuleHints } from '@/features/storyboard/rule-hints'
 
 export interface PanelEditFormV2Props {
   panelData: PanelEditData
@@ -87,6 +88,7 @@ export default function PanelEditFormV2({
   uiMode = 'flow'
 }: PanelEditFormV2Props) {
   const t = useTranslations('storyboard')
+  const ruleHints = evaluateStoryboardRuleHints(panelData)
 
   return (
     <div className="space-y-3" data-mode={uiMode}>
@@ -111,6 +113,27 @@ export default function PanelEditFormV2({
               {t('common.retrySave')}
             </Button>
           ) : null}
+        </div>
+      ) : null}
+
+      {ruleHints.length > 0 ? (
+        <div className="space-y-2 rounded-md border border-border bg-muted/40 p-2.5">
+          <p className="text-xs font-medium text-foreground">创作规则提示</p>
+          <div className="space-y-1.5">
+            {ruleHints.map((hint) => (
+              <div
+                key={hint.id}
+                className={`rounded border px-2 py-1.5 text-xs ${hint.level === 'warning'
+                    ? 'border-amber-200 bg-amber-100/80 text-amber-800'
+                    : 'border-sky-200 bg-sky-100/80 text-sky-800'
+                  }`}
+              >
+                <p className="font-medium">{hint.title}</p>
+                <p className="opacity-90">{hint.message}</p>
+                <p className="mt-0.5 opacity-90">{hint.action}</p>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
 

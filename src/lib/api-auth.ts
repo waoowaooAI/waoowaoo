@@ -192,7 +192,7 @@ export async function requireAuth(): Promise<AuthSession> {
 
 /**
  * 验证项目访问权限
- * 包含：Session 验证 + 项目存在检查 + 所有权验证 + NovelPromotionData 检查
+ * 包含：Session 验证 + 项目存在检查 + 所有权验证
  * 
  * @param projectId 项目 ID
  * @param options 可选配置，支持按需加载关联数据
@@ -223,27 +223,23 @@ export async function requireProjectAuth<T extends ProjectAuthIncludes = Project
     bindAuthLogContext(session, projectId)
 
     // 2. 构建动态 include 对象
-    const novelPromotionIncludes: Record<string, boolean> = {}
+    const projectIncludes: Record<string, boolean> = {}
     if (options?.include?.characters) {
-        novelPromotionIncludes.characters = true
+        projectIncludes.characters = true
     }
     if (options?.include?.locations) {
-        novelPromotionIncludes.locations = true
+        projectIncludes.locations = true
     }
     if (options?.include?.episodes) {
-        novelPromotionIncludes.episodes = true
+        projectIncludes.episodes = true
     }
 
-    // 3. 获取项目（包含 novelPromotionData 及其可选关联）
-    const hasIncludes = Object.keys(novelPromotionIncludes).length > 0
+    // 3. 获取项目（包含可选关联）
+    const hasIncludes = Object.keys(projectIncludes).length > 0
     const project = await withPrismaRetry(() =>
         prisma.project.findUnique({
             where: { id: projectId },
-            include: {
-                novelPromotionData: hasIncludes
-                    ? { include: novelPromotionIncludes }
-                    : true
-            }
+            ...(hasIncludes ? { include: projectIncludes } : {})
         })
     )
 
@@ -257,21 +253,32 @@ export async function requireProjectAuth<T extends ProjectAuthIncludes = Project
         return forbidden()
     }
 
-    // 6. NovelPromotionData 检查
-    if (!project.novelPromotionData) {
-        return notFound('Novel promotion data')
-    }
-
-    // 统一返回 modelKey（provider::modelId），禁止降级为纯 modelId
-    const rawNovelData = project.novelPromotionData as {
+    // 6. 统一返回 modelKey（provider::modelId），禁止降级为纯 modelId
+    const projectLike = project as unknown as {
+        id: string
         analysisModel?: string | null
         characterModel?: string | null
         locationModel?: string | null
         storyboardModel?: string | null
         editModel?: string | null
         videoModel?: string | null
+        characters?: AuthCharacterLike[]
+        locations?: AuthLocationLike[]
+        episodes?: AuthEpisodeLike[]
         [key: string]: unknown
     }
+    const rawNovelData = {
+        id: projectLike.id,
+        analysisModel: projectLike.analysisModel,
+        characterModel: projectLike.characterModel,
+        locationModel: projectLike.locationModel,
+        storyboardModel: projectLike.storyboardModel,
+        editModel: projectLike.editModel,
+        videoModel: projectLike.videoModel,
+        ...(options?.include?.characters ? { characters: projectLike.characters || [] } : {}),
+        ...(options?.include?.locations ? { locations: projectLike.locations || [] } : {}),
+        ...(options?.include?.episodes ? { episodes: projectLike.episodes || [] } : {}),
+    } as const
     const processedNovelData = {
         ...rawNovelData,
         analysisModel: extractModelKey(rawNovelData.analysisModel),

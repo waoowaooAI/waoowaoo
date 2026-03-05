@@ -52,7 +52,7 @@ COPY --from=builder /app/postcss.config.mjs ./postcss.config.mjs
 # 本地存储数据目录 + 空 .env（tsx --env-file=.env 需要文件存在，实际 env 由 docker-compose 注入）
 RUN mkdir -p /app/data/uploads /app/logs && touch /app/.env
 
-EXPOSE 3000 3010
+EXPOSE 3533
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["npm", "run", "start"]

@@ -21,7 +21,9 @@ export const GET = apiHandler(async () => {
   const costSummary = await getUserCostSummary(userId)
 
   // 获取项目名称
-  const projectIds = costSummary.byProject.map(p => p.projectId)
+  const projectIds = costSummary.byProject
+    .map((p) => p.projectId)
+    .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
   const projects = await prisma.project.findMany({
     where: { id: { in: projectIds } },
     select: { id: true, name: true }
@@ -32,7 +34,7 @@ export const GET = apiHandler(async () => {
   // 合并项目名称
   const byProjectWithNames = costSummary.byProject.map(p => ({
     projectId: p.projectId,
-    projectName: projectMap.get(p.projectId) || '未知项目',
+    projectName: p.projectId ? (projectMap.get(p.projectId) || '未知项目') : '未关联项目',
     totalCost: p._sum.cost || 0,
     recordCount: p._count
   }))

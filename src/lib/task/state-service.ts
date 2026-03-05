@@ -60,7 +60,7 @@ export function toProgress(value: unknown): number | null {
 
 export function extractTaskStateFields(task: {
   type: string
-  progress: number
+  progress: number | null
   payload: unknown
 }) {
   const payload = asObject(task.payload)
@@ -109,7 +109,7 @@ export function resolveTargetState(
     id: string
     type: string
     status: string
-    progress: number
+    progress: number | null
     payload: unknown
     errorCode: string | null
     errorMessage: string | null
@@ -125,7 +125,7 @@ export function resolveTargetState(
 
   const running = filtered.find((task) => ACTIVE_STATUS.has(task.status)) || null
   const terminal = filtered.find((task) =>
-    task.status === 'completed' || task.status === 'failed'
+    task.status === 'completed' || task.status === 'failed' || task.status === 'cancelled'
   ) || null
   const latest = running || terminal
 
@@ -220,7 +220,7 @@ export async function queryTaskTargetStates(params: {
     id: string
     type: string
     status: string
-    progress: number
+    progress: number | null
     payload: unknown
     errorCode: string | null
     errorMessage: string | null
@@ -240,7 +240,7 @@ export async function queryTaskTargetStates(params: {
           targetId: item.targetId,
         })),
         status: {
-          in: ['queued', 'processing', 'completed', 'failed'],
+          in: ['queued', 'processing', 'completed', 'failed', 'cancelled'],
         },
         ...typeFilter,
       },
@@ -258,7 +258,14 @@ export async function queryTaskTargetStates(params: {
         updatedAt: true,
       },
     })
-    allRows.push(...rows)
+    for (const row of rows) {
+      if (!row.targetType || !row.targetId) continue
+      allRows.push({
+        ...row,
+        targetType: row.targetType,
+        targetId: row.targetId,
+      })
+    }
   }
 
   // 应用层按 updatedAt desc 排序（每个 target 组内排序即可）

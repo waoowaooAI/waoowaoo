@@ -10,16 +10,19 @@ const ACTIVE_STATUSES: TaskStatus[] = [TASK_STATUS.QUEUED, TASK_STATUS.PROCESSIN
 const taskModel = prisma.task
 
 /**
- * 校验 BullMQ Job 是否仍然活着。
- * 检查失败时（如 Redis 不可用）安全降级为 true，不阻塞正常创建流程。
+ * 校验队列任务是否仍然活着。
+ * 显式失败，不做静默降级，避免隐藏队列/对账异常。
  */
 async function verifyJobAlive(taskId: string): Promise<boolean> {
   try {
     const { isJobAlive } = await import('./reconcile')
     return await isJobAlive(taskId)
-  } catch {
-    // Redis 异常等不可控情况 → 降级信任 DB 状态
-    return true
+  } catch (error) {
+    throw new Error(
+      `[TaskService] verifyJobAlive failed for task ${taskId}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    )
   }
 }
 
@@ -161,7 +164,7 @@ export async function createTask(input: CreateTaskInput) {
           if (!resolveTaskLocaleFromBody(existing.payload)) {
             await updateTaskPayload(existing.id, normalizeTaskPayloadLocale(existing.payload, recoveredLocale))
           }
-          // 校验 BullMQ Job 是否真的还活着，防止 DB 与队列状态脱节导致永久卡死
+          // 校验队列任务是否还活着，防止 DB 与队列状态脱节导致永久卡死
           const jobAlive = await verifyJobAlive(existing.id)
           if (jobAlive) {
             return { task: existing, deduped: true as const }
@@ -679,7 +682,7 @@ export async function dismissFailedTasks(taskIds: string[], userId: string) {
       status: TASK_STATUS.FAILED,
     },
     data: {
-      status: TASK_STATUS.DISMISSED,
+      status: TASK_STATUS.CANCELLED,
     },
   })
   return result.count

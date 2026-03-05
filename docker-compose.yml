@@ -1,120 +1,50 @@
 services:
-  # ==================== MySQL ====================
-  mysql:
-    image: mysql:8.0
-    container_name: waoowaoo-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: waoowaoo123
-      MYSQL_DATABASE: waoowaoo
-      MYSQL_ROOT_HOST: "%"
-    ports:
-      - "13306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    command:
-      - "--default-authentication-plugin=mysql_native_password"
-      - "--sql_mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -pwaoowaoo123"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 15s
-
-  # ==================== Redis ====================
-  redis:
-    image: redis:7-alpine
-    container_name: waoowaoo-redis
-    restart: unless-stopped
-    ports:
-      - "16379:6379"
-    volumes:
-      - redis_data:/data
-    command: ["redis-server", "--appendonly", "yes"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 5s
-
-  # ==================== App (Next.js + Workers) ====================
   app:
     build: .
-    container_name: waoowaoo-app
+    container_name: ivibemovie-app
     restart: unless-stopped
     environment:
-      # 数据库（指向容器内部 MySQL，用服务名 mysql 而非 localhost）
-      DATABASE_URL: "mysql://root:waoowaoo123@mysql:3306/waoowaoo"
-      # Redis（指向容器内部 Redis，用服务名 redis）
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_USERNAME: ""
-      REDIS_PASSWORD: ""
-      REDIS_TLS: ""
-      # 存储：默认本地存储
+      DATABASE_URL: "postgresql://postgres:aM5BwzzLRtuXx34@156.239.242.28:25432/ivibemovie?schema=public"
       STORAGE_TYPE: local
-      # 认证
-      NEXTAUTH_URL: "http://localhost:3000"
-      NEXTAUTH_SECRET: "waoowaoo-default-secret-2026"
-      # 内部密钥
-      CRON_SECRET: "waoowaoo-docker-cron-secret"
-      INTERNAL_TASK_TOKEN: "waoowaoo-docker-task-token"
-      API_ENCRYPTION_KEY: "waoowaoo-opensource-fixed-key-2026"
-      # Worker 配置
+      NEXTAUTH_URL: "http://localhost:3533"
+      NEXTAUTH_SECRET: "ivibemovie-default-secret-2026"
+      CRON_SECRET: "ivibemovie-docker-cron-secret"
+      INTERNAL_TASK_TOKEN: "ivibemovie-docker-task-token"
+      API_ENCRYPTION_KEY: "ivibemovie-opensource-fixed-key-2026"
       WATCHDOG_INTERVAL_MS: "30000"
       TASK_HEARTBEAT_TIMEOUT_MS: "90000"
       QUEUE_CONCURRENCY_IMAGE: "50"
       QUEUE_CONCURRENCY_VIDEO: "50"
       QUEUE_CONCURRENCY_VOICE: "20"
       QUEUE_CONCURRENCY_TEXT: "50"
-      # Bull Board
-      BULL_BOARD_HOST: "0.0.0.0"
-      BULL_BOARD_PORT: "3010"
-      BULL_BOARD_BASE_PATH: "/admin/queues"
-      BULL_BOARD_USER: ""
-      BULL_BOARD_PASSWORD: ""
-      # 日志
       LOG_UNIFIED_ENABLED: "true"
       LOG_LEVEL: "INFO"
       LOG_FORMAT: "json"
       LOG_DEBUG_ENABLED: "false"
       LOG_AUDIT_ENABLED: "true"
-      LOG_SERVICE: "waoowaoo"
+      LOG_SERVICE: "ivibemovie"
       LOG_REDACT_KEYS: "password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token"
-      # 计费
       BILLING_MODE: "OFF"
-      # 流式
       LLM_STREAM_EPHEMERAL_ENABLED: "true"
+      PG_BOSS_SCHEMA: "pgboss"
     ports:
-      - "13000:3000"
-      - "13010:3010"
+      - "3533:3533"
     volumes:
       - ./data:/app/data
       - ./docker-logs:/app/logs
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     command: >
       sh -c "
         npx prisma db push --skip-generate &&
         (sleep 5 && echo '' &&
         echo '╔══════════════════════════════════════════════════╗' &&
-        echo '║            waoowaoo is ready!                    ║' &&
+        echo '║            iVibeMovie is ready!                  ║' &&
         echo '║                                                  ║' &&
-        echo '║  HTTP:  http://localhost:13000                    ║' &&
+        echo '║  HTTP:  http://localhost:3533                    ║' &&
         echo '║                                                  ║' &&
-        echo '║  For HTTPS, run Caddy on host:                   ║' &&
-        echo '║  caddy run --config Caddyfile                    ║' &&
-        echo '║  Then open: https://localhost:1443                ║' &&
+        echo '║  For HTTPS, run Caddy on host:                  ║' &&
+        echo '║  caddy run --config Caddyfile                   ║' &&
+        echo '║  Then open: https://localhost:1443              ║' &&
         echo '╚══════════════════════════════════════════════════╝' &&
         echo '') &
         npm run start
       "
-
-volumes:
-  mysql_data:
-  redis_data:
