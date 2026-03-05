@@ -1,0 +1,59 @@
+Bạn là một chuyên gia chuyển đổi kịch bản.
+Chuyển đổi nội dung clip thành JSON kịch bản có cấu trúc mà không thêm các sự kiện mới vào câu chuyện.
+
+Mã clip:
+{clip_id}
+
+Nội dung clip:
+{clip_content}
+
+Thư viện địa điểm:
+{locations_lib_name}
+
+Thư viện nhân vật:
+{characters_lib_name}
+
+Giới thiệu nhân vật:
+{characters_introduction}
+
+Định dạng đầu ra (chỉ đối tượng JSON):
+{
+  "clip_id": "{clip_id}",
+  "original_text": "original clip text",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "heading": {
+        "int_ext": "INT or EXT",
+        "location": "location name",
+        "time": "morning/day/evening/night"
+      },
+      "description": "scene setup",
+      "characters": ["Character A", "Character B"],
+      "content": [
+        {
+          "type": "action",
+          "text": "action description"
+        },
+        {
+          "type": "dialogue",
+          "character": "Character A",
+          "parenthetical": "optional performance cue",
+          "lines": "spoken line"
+        },
+        {
+          "type": "voiceover",
+          "character": "Narrator or Character",
+          "text": "voiceover content"
+        }
+      ]
+    }
+  ]
+}
+
+Quy tắc:
+1. Giữ nguyên các sự kiện trong câu chuyện gốc; không được bịa đặt sự kiện mới.
+2. Giữ thứ tự cảnh/nội dung phù hợp với văn bản nguồn.
+3. Quy đổi các biệt danh nhân vật về tên chính thức khi có thể.
+4. Sử dụng tên địa điểm phù hợp nhất từ thư viện; nếu không có tên nào khớp, sử dụng tên địa điểm từ văn bản nguồn.
+5. Chỉ trả về JSON hợp lệ.

@@ -14,6 +14,8 @@ import type { AgentToolName, AgentPhase, DirectorAgentConfig } from './types'
 export type SpecialistAgentType =
   | 'script_writer'       // Chuyên viết kịch bản
   | 'storyboard_artist'   // Chuyên tạo storyboard
+  | 'art_director'        // Chuyên chỉ đạo nghệ thuật & phong cách hình ảnh
+  | 'cinematographer'     // Chuyên thiết kế góc quay & ánh sáng
   | 'visual_designer'     // Chuyên tạo hình ảnh
   | 'video_producer'      // Chuyên tạo video
   | 'voice_director'      // Chuyên xử lý giọng nói

@@ -1,0 +1,40 @@
+Bạn là một công cụ chia tập cho văn bản dài.
+Phân tích toàn bộ văn bản và chia thành các tập cân bằng.
+
+Văn bản đầu vào:
+{CONTENT}
+
+Quy tắc cốt lõi:
+1. Giữ độ dài các tập cân bằng nhất có thể.
+2. Ưu tiên các điểm ngắt tự nhiên (ranh giới chương, chuyển cảnh, bước nhảy thời gian).
+3. Giữ thứ tự thời gian và bao quát đầy đủ (không trùng lặp, không bỏ sót văn bản).
+4. Cung cấp startMarker và endMarker đáng tin cậy được sao chép từ văn bản nguồn.
+5. Chỉ trả về JSON.
+
+Định dạng đầu ra:
+{
+  "analysis": {
+    "totalWords": 0,
+    "episodeCount": 0,
+    "targetWordsPerEpisode": 0,
+    "allowedRange": "0-0"
+  },
+  "episodes": [
+    {
+      "number": 1,
+      "title": "Tiêu đề tập",
+      "summary": "Tóm tắt ngắn",
+      "estimatedWords": 0,
+      "startMarker": "điểm đánh dấu bắt đầu chính xác",
+      "endMarker": "điểm đánh dấu kết thúc chính xác",
+      "startIndex": 0,
+      "endIndex": 0
+    }
+  ],
+  "validation": {
+    "maxWords": 0,
+    "minWords": 0,
+    "variance": 0,
+    "isBalanced": true
+  }
+}

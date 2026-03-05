@@ -315,6 +315,22 @@ export function useTimeline(projectId: string, episodeId: string) {
     dispatch({ type: 'TOGGLE_SNAP' })
   }, [])
 
+  const lockTrack = useCallback((trackId: string) => {
+    dispatch({ type: 'LOCK_TRACK', trackId })
+  }, [])
+
+  const unlockTrack = useCallback((trackId: string) => {
+    dispatch({ type: 'UNLOCK_TRACK', trackId })
+  }, [])
+
+  const muteTrack = useCallback((trackId: string) => {
+    dispatch({ type: 'MUTE_TRACK', trackId })
+  }, [])
+
+  const unmuteTrack = useCallback((trackId: string) => {
+    dispatch({ type: 'UNMUTE_TRACK', trackId })
+  }, [])
+
   // Zoom in/out helpers
   const zoomIn = useCallback(() => {
     dispatch({ type: 'SET_ZOOM', zoom: state.zoom * 1.25 })
@@ -364,5 +380,11 @@ export function useTimeline(projectId: string, episodeId: string) {
     zoomOut,
     zoomToFit,
     toggleSnap,
+
+    // Track lock/mute
+    lockTrack,
+    unlockTrack,
+    muteTrack,
+    unmuteTrack,
   }
 }

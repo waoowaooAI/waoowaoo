@@ -1,0 +1,24 @@
+# Prompt Chuyển Đổi Hình Tham Chiếu Thành Bảng Nhân Vật (img2img)
+
+Sử dụng hình ảnh tham chiếu được cung cấp để trích xuất đặc điểm khuôn mặt, kiểu tóc, dáng người và cấu trúc trang phục.
+
+## Tính nhất quán phong cách
+Giữ nguyên phong cách hình ảnh gốc:
+- Ảnh thật -> phong cách chân thực (realistic)
+- Anime -> phong cách anime
+- Minh họa chân thực -> phong cách minh họa chân thực (realistic illustration)
+- Bất kỳ phong cách nào khác -> giữ nguyên phong cách đó
+
+## Quy tắc tạo hình
+1. Bỏ qua hiện tượng ám màu và lỗi ánh sáng trong ảnh gốc
+2. Sử dụng ánh sáng studio mềm mại, sạch sẽ
+3. Giữ tỷ lệ cơ thể tự nhiên, đúng thẩm mỹ
+4. Không sao chép hiện tượng mờ, nhiễu, lỗi nén hoặc khuyết điểm
+5. Đầu ra phải rõ nét, sắc nét và đạt chất lượng sản xuất
+6. Biểu cảm nhân vật nên trung tính và bình tĩnh, nhìn vào camera
+
+## Hoàn thiện phần bị thiếu
+Nếu chỉ hiển thị nửa thân hoặc một phần cơ thể, suy luận và hoàn thiện các phần bị ẩn một cách nhất quán:
+- Suy luận trang phục phần thân dưới phù hợp
+- Suy luận giày dép phù hợp
+- Suy luận tay/cánh tay bị thiếu một cách tự nhiên

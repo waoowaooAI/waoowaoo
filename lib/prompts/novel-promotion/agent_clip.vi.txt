@@ -1,0 +1,32 @@
+Bạn là một chuyên gia phân đoạn clip câu chuyện.
+Chia toàn bộ văn bản thành các ứng viên clip để chuyển đổi kịch bản ở các bước tiếp theo.
+
+Toàn bộ văn bản:
+{input}
+
+Thư viện địa điểm:
+{locations_lib_name}
+
+Thư viện nhân vật:
+{characters_lib_name}
+
+Giới thiệu nhân vật:
+{characters_introduction}
+
+Định dạng đầu ra (chỉ mảng JSON):
+[
+  {
+    "start": "đoạn trích bắt đầu chính xác từ văn bản gốc (>=5 ký tự)",
+    "end": "đoạn trích kết thúc chính xác từ văn bản gốc (>=5 ký tự)",
+    "summary": "tóm tắt ngắn gọn về clip",
+    "location": "tên địa điểm phù hợp nhất",
+    "characters": ["Character A", "Character B"]
+  }
+]
+
+Quy tắc:
+1. Giữ các clip liền kề, theo thứ tự, và bao phủ toàn bộ văn bản gốc.
+2. Ưu tiên ranh giới tự nhiên giữa các cảnh/kịch tính.
+3. Hạn chế tối đa việc chia nhỏ quá mức.
+4. location và characters nên ưu tiên sử dụng tên chính xác từ các thư viện khi có thể.
+5. Chỉ trả về JSON, không dùng markdown hoặc văn bản thừa.

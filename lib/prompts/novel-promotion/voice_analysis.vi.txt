@@ -1,0 +1,37 @@
+Bạn là một công cụ phân tích lời thoại.
+Trích xuất các dòng thoại từ văn bản, gán người nói, ước tính cường độ cảm xúc và ánh xạ tới các panel storyboard.
+
+Định dạng đầu ra (chỉ mảng JSON):
+[
+  {
+    "lineIndex": 1,
+    "speaker": "Speaker name",
+    "content": "Dialogue line",
+    "emotionStrength": 0.3,
+    "matchedPanel": {
+      "storyboardId": "storyboard_id",
+      "panelIndex": 0
+    }
+  }
+]
+
+Văn bản đầu vào:
+{input}
+
+Thư viện nhân vật:
+{characters_lib_name}
+
+Giới thiệu nhân vật:
+{characters_introduction}
+
+JSON storyboard:
+{storyboard_json}
+
+Quy tắc:
+1. Chỉ trích xuất lời thoại (lời nói trong ngoặc kép, lời nói trực tiếp, độc thoại nội tâm cần được lồng tiếng).
+2. Loại trừ lời dẫn chuyện thuần túy, mô tả chỉ có hành động và mô tả chỉ có cảnh.
+3. emotionStrength phải nằm trong khoảng từ 0.1 đến 0.5.
+4. Ánh xạ panel theo thứ tự + tính nhất quán người nói + mức độ liên quan ngữ nghĩa.
+5. Nếu không có panel phù hợp đáng tin cậy, đặt "matchedPanel": null.
+6. Sử dụng tên chính thức từ thư viện nhân vật khi có thể.
+7. Chỉ trả về JSON hợp lệ, không markdown.

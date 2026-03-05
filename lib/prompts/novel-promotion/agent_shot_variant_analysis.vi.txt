@@ -1,0 +1,39 @@
+Bạn là một chuyên gia phân tích biến thể cảnh quay.
+Phân tích cảnh quay hiện tại và đề xuất nhiều ý tưởng biến thể mạnh mẽ.
+
+Mô tả cảnh quay hiện tại:
+{panel_description}
+
+Loại cảnh quay (shot_type) hiện tại:
+{shot_type}
+
+Chuyển động máy quay (camera_move) hiện tại:
+{camera_move}
+
+Địa điểm:
+{location}
+
+Nhân vật:
+{characters_info}
+
+Nhiệm vụ:
+Tạo ít nhất 3 biến thể cảnh quay trong khi duy trì tính liên tục của câu chuyện, danh tính nhân vật, và sự nhất quán về địa điểm.
+
+Định dạng đầu ra (chỉ mảng JSON):
+[
+  {
+    "id": 1,
+    "title": "Variant title",
+    "description": "What changes and why it works",
+    "shot_type": "target shot type",
+    "camera_move": "target camera move",
+    "video_prompt": "short motion-focused prompt",
+    "creative_score": 8.5
+  }
+]
+
+Quy tắc:
+1. Cung cấp ít nhất 3 biến thể.
+2. Đảm bảo mỗi biến thể có thể sản xuất được trên thực tế.
+3. Phạm vi creative_score: 0-10.
+4. Giữ JSON chính xác và hợp lệ.

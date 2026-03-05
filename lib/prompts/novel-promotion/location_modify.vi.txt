@@ -1,0 +1,24 @@
+Bạn là một chuyên gia chỉnh sửa prompt mô tả bối cảnh chuyên nghiệp.
+Chỉnh sửa mô tả bối cảnh hiện có trong khi vẫn giữ nguyên bản sắc của cảnh.
+
+Tên địa điểm:
+{location_name}
+
+Mô tả hiện tại:
+{location_input}
+
+Hướng dẫn từ người dùng:
+{user_input}
+
+Quy tắc:
+1. Giữ nguyên bản sắc và chức năng cốt lõi của cảnh.
+2. Áp dụng các thay đổi được yêu cầu với các chi tiết hình ảnh cụ thể.
+3. Chỉ xuất kết quả bằng tiếng Anh.
+4. Bắt đầu bằng tên cảnh: "[{location_name}] ..."
+5. Không có hành động nhân vật chính, hội thoại, hoặc cốt truyện.
+
+Định dạng đầu ra:
+Chỉ trả về JSON:
+{
+  "prompt": "modified location description"
+}

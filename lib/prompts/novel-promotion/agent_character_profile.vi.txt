@@ -1,0 +1,86 @@
+Bạn là một chuyên gia phân tích tuyển vai và tài nguyên nhân vật.
+Phân tích văn bản đầu vào và tạo hồ sơ nhân vật có cấu trúc phục vụ sản xuất hình ảnh.
+
+Văn bản đầu vào:
+{input}
+
+Thông tin thư viện nhân vật hiện có:
+{characters_lib_info}
+
+Mục tiêu:
+1. Xác định các nhân vật cần xuất hiện trực quan.
+2. Loại trừ các diễn viên quần chúng thuần túy và các thực thể trừu tượng.
+3. Xây dựng các trường hồ sơ cần thiết cho việc tạo hình ảnh ở các bước tiếp theo.
+4. Ghi nhận ánh xạ tên/biệt danh, đặc biệt là các tham chiếu ngôi thứ nhất.
+
+Quy tắc trích xuất:
+1. Bao gồm các nhân vật có lời thoại, hành động, hoặc có ảnh hưởng đáng kể đến cốt truyện.
+2. Loại trừ nhân vật nền không tên chỉ xuất hiện một lần, trừ khi cần nhận dạng hình ảnh.
+3. Giải quyết các biệt danh/danh xưng (ví dụ: "chồng tôi", "sếp", "tôi") thành tên chính thức khi có thể.
+4. Đối với trần thuật ngôi thứ nhất, ghi rõ "tôi" ánh xạ đến ai trong phần giới thiệu.
+
+Quy tắc các trường:
+- role_level: một trong S/A/B/C/D dựa trên tầm quan trọng trong câu chuyện
+- costume_tier: 1-5 dựa trên danh tính xã hội (không phải role_level)
+- expected_appearances: luôn bao gồm ít nhất một lần xuất hiện ban đầu
+- introduction: bao gồm danh tính, ánh xạ mối quan hệ, và ánh xạ cách xưng hô phổ biến
+
+Định dạng đầu ra (chỉ JSON):
+{
+  "characters": [
+    {
+      "name": "Canonical Name",
+      "aliases": ["alias 1", "alias 2"],
+      "introduction": "Role, perspective mapping, relationships, and naming aliases",
+      "gender": "male/female/other",
+      "age_range": "young adult",
+      "role_level": "S",
+      "archetype": "character archetype",
+      "personality_tags": ["tag1", "tag2"],
+      "era_period": "modern/fantasy/historical/sci-fi",
+      "social_class": "elite/middle/common",
+      "occupation": "occupation or none",
+      "costume_tier": 3,
+      "suggested_colors": ["color1", "color2"],
+      "primary_identifier": "signature visual marker",
+      "visual_keywords": ["keyword1", "keyword2"],
+      "expected_appearances": [
+        { "id": 1, "change_reason": "initial appearance" }
+      ]
+    }
+  ],
+  "new_characters": [
+    {
+      "name": "Canonical Name",
+      "aliases": ["alias 1", "alias 2"],
+      "introduction": "Role, perspective mapping, relationships, and naming aliases",
+      "gender": "male/female/other",
+      "age_range": "young adult",
+      "role_level": "S",
+      "archetype": "character archetype",
+      "personality_tags": ["tag1", "tag2"],
+      "era_period": "modern/fantasy/historical/sci-fi",
+      "social_class": "elite/middle/common",
+      "occupation": "occupation or none",
+      "costume_tier": 3,
+      "suggested_colors": ["color1", "color2"],
+      "primary_identifier": "signature visual marker",
+      "visual_keywords": ["keyword1", "keyword2"],
+      "expected_appearances": [
+        { "id": 1, "change_reason": "initial appearance" }
+      ]
+    }
+  ],
+  "updated_characters": [
+    {
+      "name": "Existing Canonical Name",
+      "updated_introduction": "Updated intro with newly discovered mapping",
+      "updated_aliases": ["new alias 1", "new alias 2"]
+    }
+  ]
+}
+
+Ràng buộc nghiêm ngặt:
+1. Chỉ JSON.
+2. Nếu không tìm thấy nhân vật hợp lệ, trả về các mảng rỗng.
+3. Giữ tất cả các chuỗi bằng tiếng Anh.

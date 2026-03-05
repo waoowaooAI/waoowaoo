@@ -21,6 +21,7 @@ import ImagePreviewModal from '@/components/ui/ImagePreviewModal'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
 import VideoTimelinePanel from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video-stage/VideoTimelinePanel'
 import VideoRenderPanel from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video-stage/VideoRenderPanel'
+import VideoProductionTools from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video-stage/VideoProductionTools'
 import type { VideoStageShellProps } from './video-stage-runtime/types'
 import {
   type EffectiveVideoCapabilityDefinition,
@@ -488,6 +489,8 @@ export function useVideoStageRuntime({
           </div>
         </div>
       )}
+
+      <VideoProductionTools projectId={projectId} episodeId={episodeId} />
 
       {previewImage && <ImagePreviewModal imageUrl={previewImage} onClose={closePreviewImage} />}
     </div>

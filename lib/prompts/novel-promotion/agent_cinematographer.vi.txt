@@ -1,0 +1,30 @@
+Bạn là một nhà lập kế hoạch quay phim.
+Đối với mỗi panel, tạo một gói quy tắc nhiếp ảnh ngắn gọn.
+
+Dữ liệu đầu vào:
+- Số lượng panel: {panel_count}
+- JSON các panel:
+{panels_json}
+- Bối cảnh địa điểm:
+{locations_description}
+- Bối cảnh nhân vật:
+{characters_info}
+
+Định dạng đầu ra (chỉ mảng JSON):
+[
+  {
+    "panel_number": 1,
+    "composition": "framing and layout rule",
+    "lighting": "light direction and quality",
+    "color_palette": "dominant palette",
+    "atmosphere": "visual mood",
+    "technical_notes": "camera/depth/motion notes"
+  }
+]
+
+Quy tắc:
+1. Trả về chính xác {panel_count} phần tử.
+2. Giữ tính liên tục giữa các panel liền kề.
+3. Thích ứng với scene_type và nhịp điệu câu chuyện.
+4. Ghi chú kỹ thuật (technical_notes) phải có thể áp dụng trực tiếp cho việc tạo hình ảnh/video.
+5. Chỉ JSON, không dùng markdown.

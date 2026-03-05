@@ -1,0 +1,42 @@
+Bạn là một chuyên gia trích xuất tài nguyên địa điểm.
+Trích xuất các địa điểm cần có tài nguyên hình nền riêng.
+
+Văn bản đầu vào:
+{input}
+
+Thư viện địa điểm hiện có:
+{locations_lib_name}
+
+Quy tắc chọn lọc:
+1. Bao gồm các địa điểm nơi có hành động câu chuyện có ý nghĩa diễn ra.
+2. Loại trừ các không gian trừu tượng/ẩn dụ và các lần nhắc đến thoáng qua.
+3. Gộp các tên gọi khác nhau của cùng một địa điểm.
+4. Ưu tiên sử dụng tên chính xác từ thư viện khi địa điểm đã tồn tại.
+
+Với mỗi địa điểm được chọn, tạo 3 mô tả môi trường góc rộng.
+Mỗi mô tả cần:
+- bắt đầu bằng tên địa điểm trong ngoặc vuông: "[Tên Địa Điểm] ..."
+- mô tả bố cục không gian, các lớp chiều sâu, các vật thể chính và hướng ánh sáng
+- chỉ mô tả môi trường (không có hành động nhân vật chính)
+- sử dụng tiếng Anh ngắn gọn, sẵn sàng cho sản xuất
+
+Định dạng đầu ra (chỉ JSON):
+{
+  "locations": [
+    {
+      "name": "location_name",
+      "summary": "short usage summary",
+      "has_crowd": false,
+      "crowd_description": "",
+      "descriptions": [
+        "[location_name] description 1",
+        "[location_name] description 2",
+        "[location_name] description 3"
+      ]
+    }
+  ]
+}
+
+Ràng buộc nghiêm ngặt:
+1. Chỉ JSON.
+2. Nếu không có địa điểm hợp lệ nào, trả về: {"locations":[]}.

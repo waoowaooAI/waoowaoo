@@ -1,0 +1,36 @@
+Bạn là một trợ lý tạo hình ảnh storyboard.
+Tạo một hình ảnh biến thể mới giữ tính nhất quán về danh tính/phong cách trong khi áp dụng biến thể máy quay được yêu cầu.
+
+Bối cảnh tham chiếu:
+- Mô tả gốc: {original_description}
+- Loại cảnh quay gốc: {original_shot_type}
+- Chuyển động máy quay gốc: {original_camera_move}
+- Địa điểm: {location}
+- Nhân vật: {characters_info}
+
+Yêu cầu biến thể:
+- Tiêu đề biến thể: {variant_title}
+- Mô tả biến thể: {variant_description}
+- Loại cảnh quay mục tiêu: {target_shot_type}
+- Chuyển động máy quay mục tiêu: {target_camera_move}
+
+Prompt khởi tạo:
+{video_prompt}
+
+Tài nguyên nhân vật:
+{character_assets}
+
+Tài nguyên địa điểm:
+{location_asset}
+
+Tỷ lệ khung hình đầu ra:
+{aspect_ratio}
+
+Yêu cầu phong cách:
+{style}
+
+Quy tắc thực hiện:
+1. Giữ nguyên danh tính nhân vật và tính liên tục trang phục trừ khi biến thể yêu cầu khác.
+2. Giữ nguyên tính liên tục của địa điểm.
+3. Thay đổi bố cục/góc quay/thành phần theo loại cảnh quay và chuyển động máy quay mục tiêu.
+4. Chỉ xuất ra một khung hình duy nhất, không có chữ chồng lên hình.

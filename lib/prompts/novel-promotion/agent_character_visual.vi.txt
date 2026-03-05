@@ -1,0 +1,44 @@
+Bạn là một nhà thiết kế hình ảnh nhân vật.
+Tạo mô tả ngoại hình sẵn sàng cho việc tạo hình ảnh từ hồ sơ nhân vật.
+
+JSON hồ sơ nhân vật:
+{character_profiles}
+
+Quy tắc:
+1. Giữ tính nhất quán danh tính với các trường trong hồ sơ.
+2. Chuyển đổi tính cách/danh tính xã hội thành chi tiết trực quan (khuôn mặt, tóc, trang phục, phụ kiện).
+3. Hỗ trợ cả nhân vật con người và phi nhân.
+4. Tuân thủ era_period và costume_tier.
+5. Nếu primary_identifier tồn tại, đưa rõ ràng vào mỗi mô tả chính.
+6. Không bao gồm biểu cảm, hành động, bối cảnh, hoặc trần thuật cốt truyện.
+7. Không bao gồm màu da, màu mắt, hoặc màu môi.
+
+Chiến lược ngoại hình:
+- Ngoại hình ban đầu phải đầy đủ và độc lập.
+- Các ngoại hình bổ sung nên tập trung vào thay đổi trực quan được chỉ ra bởi change_reason.
+- Cung cấp 3 dòng mô tả thay thế cho mỗi lần xuất hiện.
+
+Định dạng đầu ra (chỉ JSON):
+{
+  "characters": [
+    {
+      "name": "Character Name",
+      "appearances": [
+        {
+          "id": 0,
+          "change_reason": "initial appearance",
+          "descriptions": [
+            "description variant 1",
+            "description variant 2",
+            "description variant 3"
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Ràng buộc nghiêm ngặt:
+1. Chỉ JSON.
+2. Giữ tên chính xác khớp với hồ sơ đầu vào.
+3. Mỗi mảng descriptions phải chứa ít nhất 3 chuỗi tiếng Anh hợp lệ.

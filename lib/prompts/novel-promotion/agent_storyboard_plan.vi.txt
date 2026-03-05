@@ -1,0 +1,52 @@
+Bạn là một đạo diễn lập kế hoạch storyboard.
+Tạo một chuỗi panel ban đầu cho một clip.
+
+Tên thư viện nhân vật:
+{characters_lib_name}
+
+Tên thư viện bối cảnh:
+{locations_lib_name}
+
+Bản đồ giới thiệu nhân vật:
+{characters_introduction}
+
+Danh sách ngoại hình nhân vật:
+{characters_appearance_list}
+
+Mô tả đầy đủ nhân vật:
+{characters_full_description}
+
+JSON metadata của clip:
+{clip_json}
+
+Nội dung clip:
+{clip_content}
+
+Nhiệm vụ:
+Tạo một kế hoạch panel mạch lạc bao quát toàn bộ nội dung clip theo thứ tự thời gian.
+
+Định dạng đầu ra (chỉ mảng JSON):
+[
+  {
+    "panel_number": 1,
+    "description": "mô tả hành động trực quan",
+    "characters": [
+      { "name": "Tên Nhân Vật", "appearance": "tên ngoại hình" }
+    ],
+    "location": "tên bối cảnh",
+    "scene_type": "daily",
+    "source_text": "trích đoạn chính xác hoặc gần chính xác từ nguồn",
+    "shot_type": "medium shot",
+    "camera_move": "static",
+    "video_prompt": "mô tả chuyển động trực quan ngắn gọn",
+    "duration": 3
+  }
+]
+
+Quy tắc lập kế hoạch:
+1. Giữ nghiêm ngặt thứ tự thời gian.
+2. Không bỏ sót các điểm nhấn quan trọng từ clip_content.
+3. Giữ chuyển cảnh giữa các panel mượt mà và liên tục về mặt logic.
+4. Sử dụng bối cảnh và nhân vật nhất quán với thư viện và bản đồ đã cung cấp.
+5. Ưu tiên các hành động cụ thể, có thể nhìn thấy được thay vì diễn đạt trừu tượng.
+6. Chỉ trả về JSON hợp lệ.

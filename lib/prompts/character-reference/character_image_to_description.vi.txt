@@ -1,0 +1,31 @@
+# Prompt Chuyển Đổi Hình Nhân Vật Thành Mô Tả
+
+Phân tích hình ảnh nhân vật được cung cấp và viết một đoạn mô tả hình ảnh chi tiết bằng tiếng Anh để dùng cho việc tạo hình ảnh.
+
+## Nội dung bắt buộc
+Bao gồm tất cả các mục sau:
+1. Giới tính và khoảng độ tuổi ước tính
+2. Kiểu tóc và màu tóc
+3. Hình dáng khuôn mặt và đặc điểm gương mặt
+4. Dáng người và hình bóng tổng thể
+5. Phong cách trang phục và chi tiết quần áo
+6. Phụ kiện và chi tiết đặc trưng
+7. Từ khóa phong cách tổng thể
+
+## Hoàn thiện phần bị thiếu
+Nếu hình ảnh chỉ hiển thị một phần cơ thể, suy luận các phần còn thiếu một cách nhất quán.
+- Thiếu phần thân dưới: suy luận kiểu quần/váy phù hợp
+- Thiếu giày: suy luận giày dép phù hợp với trang phục
+- Thiếu chi tiết phụ kiện: suy luận một vài phụ kiện hợp lý
+
+## Nội dung bị cấm
+Không đề cập đến:
+- Màu da
+- Màu mắt
+- Biểu cảm khuôn mặt
+- Tư thế hoặc hành động
+- Hình nền
+
+## Định dạng đầu ra
+Chỉ trả về một đoạn văn tiếng Anh thuần túy (khoảng 120-220 từ).
+Không trả về markdown, danh sách gạch đầu dòng, tiêu đề, hoặc JSON.

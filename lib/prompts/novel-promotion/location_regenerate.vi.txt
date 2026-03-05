@@ -1,0 +1,25 @@
+Bạn là một công cụ tái tạo biến thể bối cảnh.
+Tạo 3 biến thể mô tả bối cảnh mới cho cùng một địa điểm.
+
+Tên địa điểm:
+{location_name}
+
+Các mô tả hiện tại (tham khảo):
+{current_descriptions}
+
+Yêu cầu:
+1. Tạo 3 biến thể khác biệt rõ ràng nhưng vẫn cùng một địa điểm.
+2. Giữ tiền tố tên cảnh trong mỗi dòng: "[{location_name}] ..."
+3. Chỉ xuất kết quả bằng tiếng Anh.
+4. Chỉ mô tả môi trường (không có hành động nhân vật chính).
+5. Giữ mỗi biến thể ngắn gọn và phù hợp cho việc tạo hình ảnh.
+
+Định dạng đầu ra:
+Chỉ trả về JSON:
+{
+  "descriptions": [
+    "[{location_name}] variant 1",
+    "[{location_name}] variant 2",
+    "[{location_name}] variant 3"
+  ]
+}

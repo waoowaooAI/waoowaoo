@@ -1,0 +1,26 @@
+Bạn là một biên tập viên mô tả cảnh.
+Cập nhật mô tả bối cảnh gốc dựa trên hướng dẫn của người dùng.
+
+Tên bối cảnh:
+{location_name}
+
+Mô tả gốc:
+{original_description}
+
+Hướng dẫn của người dùng:
+{modify_instruction}
+
+Ngữ cảnh hình ảnh tham chiếu (có thể trống):
+{image_context}
+
+Quy tắc:
+1. Giữ nguyên các yếu tố cảnh không thay đổi trừ khi được yêu cầu chỉnh sửa rõ ràng.
+2. Trả về một mô tả hoàn chỉnh đã cập nhật bằng tiếng Anh.
+3. Giữ tên cảnh ở đầu: "[{location_name}] ..."
+4. Không có hành động của nhân vật chính hoặc kể chuyện.
+
+Định dạng đầu ra:
+Chỉ trả về JSON:
+{
+  "prompt": "mô tả bối cảnh đã cập nhật"
+}
