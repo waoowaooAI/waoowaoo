@@ -29,7 +29,7 @@ import type {
 } from './types'
 import { DEFAULT_DIRECTOR_CONFIG } from './types'
 import { AGENT_TOOLS, buildToolDefinitionsForLLM } from './tools'
-import { getSpecialistForPhase, getAllSpecialistAgents } from './specialist-registry'
+import { getAllSpecialistAgents } from './specialist-registry'
 import { runQualityReview } from './quality-reviewer'
 import type { QualityReviewResult } from './specialist-types'
 import { submitTask } from '@/lib/task/submitter'

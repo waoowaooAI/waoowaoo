@@ -1,9 +1,8 @@
 'use client'
 
-import { useCallback, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type {
   AudioTrack,
-  AudioTrackType,
   BGMTrack,
   SFXTrack,
   AudioMixState,
@@ -126,6 +125,23 @@ function audioMixReducer(state: AudioMixState, action: AudioMixAction): AudioMix
       }
     }
 
+    case 'REORDER_TRACKS': {
+      const trackType = action.payload.trackType as AudioTrack['type']
+      const orderedIds = action.payload.orderedIds as string[]
+      const reorder = <T extends AudioTrack>(tracks: T[]): T[] => {
+        const map = new Map(tracks.map((t) => [t.id, t]))
+        return orderedIds.map((id) => map.get(id)).filter((t): t is T => t !== undefined)
+      }
+      const nextState = { ...state, updatedAt: now }
+      switch (trackType) {
+        case 'bgm': nextState.bgmTracks = reorder(state.bgmTracks); break
+        case 'sfx': nextState.sfxTracks = reorder(state.sfxTracks); break
+        case 'voice': nextState.voiceTracks = reorder(state.voiceTracks); break
+        case 'ambient': nextState.ambientTracks = reorder(state.ambientTracks); break
+      }
+      return nextState
+    }
+
     default:
       return state
   }
@@ -172,12 +188,26 @@ export function useAudioMix(projectId: string, episodeId: string) {
   const audioContextRef = useRef<AudioContext | null>(null)
   const animFrameRef = useRef<number>(0)
 
-  // Ensure AudioContext exists
+  // Ensure AudioContext exists, with resume for Safari
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new AudioContext()
     }
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume()
+    }
     return audioContextRef.current
+  }, [])
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(animFrameRef.current)
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+    }
   }, [])
 
   // Track CRUD
@@ -254,13 +284,11 @@ export function useAudioMix(projectId: string, episodeId: string) {
     setPlayback((prev) => ({ ...prev, currentTime: Math.max(0, time) }))
   }, [])
 
-  // Get all tracks flat
-  const allTracks = [
-    ...state.bgmTracks,
-    ...state.sfxTracks,
-    ...state.voiceTracks,
-    ...state.ambientTracks,
-  ]
+  // Get all tracks flat (memoized to avoid new array identity on every render)
+  const allTracks = useMemo(
+    () => [...state.bgmTracks, ...state.sfxTracks, ...state.voiceTracks, ...state.ambientTracks],
+    [state.bgmTracks, state.sfxTracks, state.voiceTracks, state.ambientTracks],
+  )
 
   return {
     // State

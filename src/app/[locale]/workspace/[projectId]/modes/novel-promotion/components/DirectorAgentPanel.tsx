@@ -491,7 +491,6 @@ export default function DirectorAgentPanel({
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [splitRatio, setSplitRatio] = useState(60) // left panel percentage
   const containerRef = useRef<HTMLDivElement>(null)
-  const prevThinkingRef = useRef('')
 
   // Track phase changes as system messages
   const prevPhaseRef = useRef<AgentPhase | null>(null)
@@ -511,10 +510,15 @@ export default function DirectorAgentPanel({
   }, [state.phase])
 
   // When agent completes, add summary message
+  const thinkingTextRef = useRef(state.thinkingText)
+  thinkingTextRef.current = state.thinkingText
+  const artifactsRef = useRef(state.artifacts)
+  artifactsRef.current = state.artifacts
+
   useEffect(() => {
     if (state.status === 'completed' && prevPhaseRef.current !== 'completed') {
       prevPhaseRef.current = 'completed'
-      const summary = state.thinkingText.slice(-300) || 'Task completed successfully.'
+      const summary = thinkingTextRef.current.slice(-300) || 'Task completed successfully.'
       setMessages((prev) => [
         ...prev,
         {
@@ -523,11 +527,11 @@ export default function DirectorAgentPanel({
           content: summary,
           timestamp: Date.now(),
           phase: 'completed',
-          artifacts: state.artifacts,
+          artifacts: artifactsRef.current,
         },
       ])
     }
-  }, [state.status, state.thinkingText, state.artifacts])
+  }, [state.status])
 
   // When agent fails, add error message
   useEffect(() => {
@@ -559,12 +563,11 @@ export default function DirectorAgentPanel({
 
       // Reset refs for new run
       prevPhaseRef.current = null
-      prevThinkingRef.current = ''
 
       // Start the agent with the user's request
       state.start(text)
     },
-    [state],
+    [state.start],
   )
 
   // Handle resize
@@ -574,13 +577,6 @@ export default function DirectorAgentPanel({
     const deltaPercent = (deltaX / containerWidth) * 100
     setSplitRatio((prev) => Math.max(30, Math.min(80, prev + deltaPercent)))
   }, [])
-
-  // Reset messages when panel is reset
-  useEffect(() => {
-    if (state.status === 'idle' && messages.length > 0 && !state.isRunning) {
-      // Keep messages for history, don't auto-clear
-    }
-  }, [state.status, messages.length, state.isRunning])
 
   if (!state.isVisible && messages.length === 0) return null
 
@@ -633,7 +629,6 @@ export default function DirectorAgentPanel({
                     onClick={() => {
                       setMessages([])
                       prevPhaseRef.current = null
-                      prevThinkingRef.current = ''
                       onReset()
                     }}
                     className="glass-btn-base glass-btn-secondary rounded-lg px-3 py-1.5 text-xs"

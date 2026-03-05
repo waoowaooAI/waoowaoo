@@ -119,7 +119,7 @@ function timelineReducer(state: TimelineState, action: TimelineAction): Timeline
               ...newTracks[targetTrackIndex],
               items: [
                 ...newTracks[targetTrackIndex].items,
-                { ...movedItem, startTime: Math.max(0, snappedTime), trackId: action.newTrackId! },
+                { ...movedItem, startTime: Math.max(0, snappedTime), endTime: Math.max(0, snappedTime) + movedItem.duration, trackId: action.newTrackId! },
               ],
             }
           }
@@ -224,6 +224,7 @@ function timelineReducer(state: TimelineState, action: TimelineAction): Timeline
 }
 
 function snapToGrid(time: number, interval: number): number {
+  if (interval <= 0) return time
   return Math.round(time / interval) * interval
 }
 

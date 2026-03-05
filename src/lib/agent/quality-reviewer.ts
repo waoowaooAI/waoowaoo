@@ -11,13 +11,13 @@
 import OpenAI from 'openai'
 import { createScopedLogger } from '@/lib/logging/core'
 import { getSpecialistAgent } from './specialist-registry'
-import type {
-  QualityReviewRequest,
-  QualityReviewResult,
-  ReviewCriterion,
-  ReviewTargetType,
-  RevisionSuggestion,
+import {
   REVIEW_THRESHOLDS,
+  type QualityReviewRequest,
+  type QualityReviewResult,
+  type ReviewCriterion,
+  type ReviewTargetType,
+  type RevisionSuggestion,
 } from './specialist-types'
 import type { AgentState } from './types'
 
@@ -190,7 +190,7 @@ function parseReviewResponse(
     const parsed = JSON.parse(jsonStr.trim())
 
     // Validate và normalize
-    const thresholds: Record<string, number> = { lenient: 5, moderate: 7, strict: 8 }
+    const thresholds = REVIEW_THRESHOLDS
     const threshold = thresholds[request.strictness] || 7
 
     const overallScore = Math.max(1, Math.min(10, Number(parsed.overallScore) || 5))
@@ -198,7 +198,7 @@ function parseReviewResponse(
     return {
       overallScore,
       passed: overallScore >= threshold,
-      criteriaScores: normalizecriteriaScores(parsed.criteriaScores || {}, request.criteria),
+      criteriaScores: normalizeCriteriaScores(parsed.criteriaScores || {}, request.criteria),
       summary: String(parsed.summary || 'Review completed'),
       recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
       criticalIssues: Array.isArray(parsed.criticalIssues) ? parsed.criticalIssues : [],
@@ -208,7 +208,7 @@ function parseReviewResponse(
     // Fallback: extract score from text
     const scoreMatch = responseText.match(/(?:score|điểm|评分)[:\s]*(\d+)/i)
     const score = scoreMatch ? Math.max(1, Math.min(10, parseInt(scoreMatch[1]))) : 5
-    const thresholds: Record<string, number> = { lenient: 5, moderate: 7, strict: 8 }
+    const thresholds = REVIEW_THRESHOLDS
     const threshold = thresholds[request.strictness] || 7
 
     return {
@@ -223,7 +223,7 @@ function parseReviewResponse(
   }
 }
 
-function normalizecriteriaScores(
+function normalizeCriteriaScores(
   raw: Record<string, unknown>,
   criteria: ReviewCriterion[],
 ): QualityReviewResult['criteriaScores'] {

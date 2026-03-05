@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppIcon } from '@/components/ui/icons'
-import type { TimelineTrack, TimelineItem, TimelineTrackType, TimelineDragState } from '@/types/timeline'
+import type { TimelineTrack, TimelineItem, TimelineDragState } from '@/types/timeline'
 import { TRACK_TYPE_COLORS } from '@/types/timeline'
 
 // =====================================================
@@ -249,7 +249,6 @@ interface TimelineEditorProps {
   onSelectItems: (ids: string[]) => void
   onMoveItem: (id: string, newStartTime: number, newTrackId?: string) => void
   onResizeItem: (id: string, newDuration: number) => void
-  onSplitItem: (id: string, splitTime: number) => void
   onTogglePlay: () => void
   onZoomIn: () => void
   onZoomOut: () => void
@@ -285,9 +284,17 @@ export default function TimelineEditor({
 }: TimelineEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [scrollLeft, setScrollLeft] = useState(0)
+  const dragCleanupRef = useRef<(() => void) | null>(null)
+
+  // Cleanup drag listeners on unmount
+  useEffect(() => {
+    return () => {
+      dragCleanupRef.current?.()
+    }
+  }, [])
 
   // Drag state
-  const [dragState, setDragState] = useState<TimelineDragState>({
+  const [, setDragState] = useState<TimelineDragState>({
     isDragging: false,
     dragType: null,
     dragItemId: null,
@@ -323,6 +330,14 @@ export default function TimelineEditor({
 
       const handleMouseUp = () => {
         setDragState((prev) => ({ ...prev, isDragging: false, dragType: null, dragItemId: null }))
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+        document.body.style.cursor = ''
+        dragCleanupRef.current = null
+      }
+
+      // Store cleanup function so we can call it on unmount
+      dragCleanupRef.current = () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
         document.body.style.cursor = ''
