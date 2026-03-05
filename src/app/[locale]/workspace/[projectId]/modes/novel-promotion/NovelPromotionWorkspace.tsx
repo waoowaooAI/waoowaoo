@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import ProgressToast from '@/components/ProgressToast'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { AnimatedBackground } from '@/components/ui/SharedComponents'
@@ -8,13 +10,16 @@ import WorkspaceRunStreamConsoles from './components/WorkspaceRunStreamConsoles'
 import WorkspaceStageContent from './components/WorkspaceStageContent'
 import WorkspaceAssetLibraryModal from './components/WorkspaceAssetLibraryModal'
 import WorkspaceHeaderShell from './components/WorkspaceHeaderShell'
+import DirectorAgentPanel from './components/DirectorAgentPanel'
 import { WorkspaceStageRuntimeProvider } from './WorkspaceStageRuntimeContext'
 import { useNovelPromotionWorkspaceController } from './hooks/useNovelPromotionWorkspaceController'
+import { useDirectorAgent } from './hooks/useDirectorAgent'
 import type { NovelPromotionWorkspaceProps } from './types'
 import '@/styles/animations.css'
 
 function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
   const vm = useNovelPromotionWorkspaceController(props)
+  const ta = useTranslations('directorAgent')
 
   const {
     project,
@@ -26,6 +31,10 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
     onEpisodeRename,
     onEpisodeDelete,
   } = props
+
+  // Director Agent state
+  const director = useDirectorAgent(projectId, episodeId)
+  const [directorMinimized, setDirectorMinimized] = useState(false)
 
   if (!vm.project.projectData) {
     return <div className="text-center text-[var(--glass-text-secondary)]">{vm.i18n.tc('loading')}</div>
@@ -72,6 +81,16 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
         assetLibraryLabel={vm.i18n.t('buttons.assetLibrary')}
         settingsLabel={vm.i18n.t('buttons.settings')}
         refreshTitle={vm.i18n.t('buttons.refreshData')}
+        onStartDirector={episodeId ? () => {
+          if (director.isRunning) {
+            setDirectorMinimized(false)
+          } else {
+            director.start()
+            setDirectorMinimized(false)
+          }
+        } : undefined}
+        directorLabel={ta('button.label')}
+        directorRunning={director.isRunning}
       />
 
       <div className="pt-24">
@@ -116,6 +135,15 @@ function NovelPromotionWorkspaceContent(props: NovelPromotionWorkspaceProps) {
           scriptToStoryboardConsoleMinimized={vm.execution.scriptToStoryboardConsoleMinimized}
           onStoryToScriptMinimizedChange={vm.execution.setStoryToScriptConsoleMinimized}
           onScriptToStoryboardMinimizedChange={vm.execution.setScriptToStoryboardConsoleMinimized}
+        />
+
+        <DirectorAgentPanel
+          state={director}
+          minimized={directorMinimized}
+          onMinimize={() => setDirectorMinimized(true)}
+          onMaximize={() => setDirectorMinimized(false)}
+          onStop={director.stop}
+          onReset={director.reset}
         />
       </div>
     </div>

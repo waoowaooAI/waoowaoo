@@ -75,6 +75,9 @@ interface WorkspaceHeaderShellProps {
   assetLibraryLabel: string
   settingsLabel: string
   refreshTitle: string
+  onStartDirector?: () => void
+  directorLabel?: string
+  directorRunning?: boolean
 }
 
 export default function WorkspaceHeaderShell({
@@ -114,6 +117,9 @@ export default function WorkspaceHeaderShell({
   assetLibraryLabel,
   settingsLabel,
   refreshTitle,
+  onStartDirector,
+  directorLabel,
+  directorRunning,
 }: WorkspaceHeaderShellProps) {
   return (
     <>
@@ -191,9 +197,12 @@ export default function WorkspaceHeaderShell({
         onOpenAssetLibrary={onOpenAssetLibrary}
         onOpenSettings={onOpenSettingsModal}
         onRefresh={onRefresh}
+        onStartDirector={onStartDirector}
         assetLibraryLabel={assetLibraryLabel}
         settingsLabel={settingsLabel}
         refreshTitle={refreshTitle}
+        directorLabel={directorLabel}
+        directorRunning={directorRunning}
       />
     </>
   )

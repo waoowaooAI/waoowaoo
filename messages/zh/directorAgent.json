@@ -1,0 +1,34 @@
+{
+  "button": {
+    "label": "AI导演"
+  },
+  "pill": {
+    "running": "导演运行中...",
+    "completed": "导演已完成",
+    "failed": "导演失败"
+  },
+  "panel": {
+    "title": "AI导演 Agent",
+    "thinking": "思考过程",
+    "waitingThinking": "等待Agent开始思考...",
+    "toolLog": "工具日志",
+    "noToolCalls": "暂无工具调用。",
+    "stop": "停止",
+    "close": "关闭",
+    "minimize": "最小化",
+    "iteration": "迭代: {count}"
+  },
+  "phases": {
+    "planning": "规划中",
+    "analyzing": "分析小说",
+    "scripting": "编写剧本",
+    "storyboarding": "创建分镜",
+    "generating_assets": "生成资源",
+    "generating_video": "生成视频",
+    "generating_voice": "生成配音",
+    "reviewing": "质量审查",
+    "revising": "修正中",
+    "completed": "已完成",
+    "failed": "失败"
+  }
+}

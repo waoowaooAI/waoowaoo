@@ -46,7 +46,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
         assetHub,
         assetModal,
         assetPicker,
-        layout
+        layout,
+        directorAgent
     ] = await Promise.all([
         import(`../messages/${locale}/common.json`),
         import(`../messages/${locale}/stages.json`),
@@ -77,7 +78,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
         import(`../messages/${locale}/assetHub.json`),
         import(`../messages/${locale}/assetModal.json`),
         import(`../messages/${locale}/assetPicker.json`),
-        import(`../messages/${locale}/layout.json`)
+        import(`../messages/${locale}/layout.json`),
+        import(`../messages/${locale}/directorAgent.json`)
     ]);
 
     return {
@@ -112,7 +114,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
             assetHub: assetHub.default,
             assetModal: assetModal.default,
             assetPicker: assetPicker.default,
-            layout: layout.default
+            layout: layout.default,
+            directorAgent: directorAgent.default
         }
     };
 });

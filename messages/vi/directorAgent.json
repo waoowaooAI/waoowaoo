@@ -1,0 +1,34 @@
+{
+  "button": {
+    "label": "AI Director"
+  },
+  "pill": {
+    "running": "Director đang chạy...",
+    "completed": "Director hoàn thành",
+    "failed": "Director thất bại"
+  },
+  "panel": {
+    "title": "AI Director Agent",
+    "thinking": "Quá trình suy nghĩ",
+    "waitingThinking": "Đang chờ agent bắt đầu suy nghĩ...",
+    "toolLog": "Nhật ký công cụ",
+    "noToolCalls": "Chưa có lời gọi công cụ nào.",
+    "stop": "Dừng lại",
+    "close": "Đóng",
+    "minimize": "Thu nhỏ",
+    "iteration": "Vòng lặp: {count}"
+  },
+  "phases": {
+    "planning": "Lên kế hoạch",
+    "analyzing": "Phân tích truyện",
+    "scripting": "Viết kịch bản",
+    "storyboarding": "Tạo storyboard",
+    "generating_assets": "Tạo tài nguyên",
+    "generating_video": "Tạo video",
+    "generating_voice": "Tạo giọng nói",
+    "reviewing": "Kiểm tra chất lượng",
+    "revising": "Sửa lỗi",
+    "completed": "Hoàn thành",
+    "failed": "Thất bại"
+  }
+}

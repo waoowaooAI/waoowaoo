@@ -1,0 +1,34 @@
+{
+  "button": {
+    "label": "AI Director"
+  },
+  "pill": {
+    "running": "Director running...",
+    "completed": "Director completed",
+    "failed": "Director failed"
+  },
+  "panel": {
+    "title": "AI Director Agent",
+    "thinking": "Thinking Process",
+    "waitingThinking": "Waiting for agent to start thinking...",
+    "toolLog": "Tool Log",
+    "noToolCalls": "No tool calls yet.",
+    "stop": "Stop",
+    "close": "Close",
+    "minimize": "Minimize",
+    "iteration": "Iteration: {count}"
+  },
+  "phases": {
+    "planning": "Planning",
+    "analyzing": "Analyzing Novel",
+    "scripting": "Writing Script",
+    "storyboarding": "Creating Storyboard",
+    "generating_assets": "Generating Assets",
+    "generating_video": "Generating Video",
+    "generating_voice": "Generating Voice",
+    "reviewing": "Quality Review",
+    "revising": "Revising",
+    "completed": "Completed",
+    "failed": "Failed"
+  }
+}
