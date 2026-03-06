@@ -126,7 +126,31 @@ export APP_TAG=<last-good-tag>
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-## 8. 故障排查顺序
+## 8. Docker daemon 代理配置（可选）
+
+如本机拉取镜像受限，可使用脚本为 **systemd 管理的 Docker Engine** 配置代理。
+
+```bash
+scripts/configure-docker-daemon-proxy.sh http://<proxy-host>:<proxy-port>
+```
+
+也可通过环境变量：
+
+```bash
+PROXY_ADDR=http://<proxy-host>:<proxy-port> scripts/configure-docker-daemon-proxy.sh
+```
+
+可选参数：
+
+- `NO_PROXY`：覆盖默认 NO_PROXY 列表
+- `SKIP_PULL=1`：跳过 `docker pull mysql:8.0` 冒烟检查
+
+兼容性说明：
+
+- 支持：Linux + systemd + `docker.service`
+- 不支持：Docker Desktop、rootless Docker、非 systemd 主机（脚本会直接失败退出）
+
+## 9. 故障排查顺序
 
 1. 服务状态：
 
