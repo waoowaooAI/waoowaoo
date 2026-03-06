@@ -50,8 +50,11 @@ function normalizeProviderBaseUrl(providerId: string, rawBaseUrl?: string): stri
   try {
     const parsed = new URL(baseUrl)
     const pathSegments = parsed.pathname.split('/').filter(Boolean)
-    const hasV1 = pathSegments.includes('v1')
-    if (hasV1) return baseUrl
+
+    // Check if the last path segment is a version identifier (e.g., v1, v2, v4, v1beta, v1alpha)
+    const lastSegment = pathSegments[pathSegments.length - 1]
+    const hasVersionPath = lastSegment && /^v\d+/.test(lastSegment)
+    if (hasVersionPath) return baseUrl
 
     const trimmedPath = parsed.pathname.replace(/\/+$/, '')
     parsed.pathname = `${trimmedPath === '' || trimmedPath === '/' ? '' : trimmedPath}/v1`
