@@ -33,7 +33,9 @@ interface StoredModel {
 interface StoredProvider {
   id?: string
   name?: string
+  baseUrl?: string
   apiKey?: string
+  extraHeaders?: Record<string, string>
 }
 
 interface UserModelOption {
@@ -150,7 +152,17 @@ function parseStoredProviders(rawProviders: string | null | undefined): StoredPr
 }
 
 function hasStoredProviderApiKey(provider: StoredProvider): boolean {
-  return typeof provider.apiKey === 'string' && provider.apiKey.trim().length > 0
+  const apiKey = typeof provider.apiKey === 'string' ? provider.apiKey.trim() : ''
+  if (apiKey.length > 0) return true
+
+  const providerId = typeof provider.id === 'string' ? provider.id.trim() : ''
+  const providerKey = providerId.includes(':') ? providerId.split(':')[0] : providerId
+  if (providerKey === 'openai-compatible') {
+    const hasBaseUrl = typeof provider.baseUrl === 'string' && provider.baseUrl.trim().length > 0
+    return hasBaseUrl
+  }
+
+  return false
 }
 
 export const GET = apiHandler(async () => {

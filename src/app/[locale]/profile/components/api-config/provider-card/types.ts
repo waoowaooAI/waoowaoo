@@ -18,6 +18,8 @@ export interface ProviderCardProps {
   onToggleModel: (modelKey: string) => void
   onUpdateApiKey: (providerId: string, apiKey: string) => void
   onUpdateBaseUrl?: (providerId: string, baseUrl: string) => void
+  onUpdateExtraHeaders?: (providerId: string, extraHeaders?: Record<string, string>) => void
+  onFetchProviderModels?: (providerId: string) => Promise<void>
   onDeleteModel: (modelKey: string) => void
   onUpdateModel?: (modelKey: string, updates: Partial<CustomModel>) => void
   onDeleteProvider?: (providerId: string) => void

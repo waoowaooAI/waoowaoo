@@ -15,6 +15,7 @@ export interface Provider {
     baseUrl?: string
     apiKey?: string
     hasApiKey?: boolean
+    extraHeaders?: Record<string, string>
     apiMode?: 'gemini-sdk' | 'openai-official'
 }
 
@@ -163,6 +164,7 @@ export const PRESET_PROVIDERS: Omit<Provider, 'apiKey' | 'hasApiKey'>[] = [
     { id: 'ark', name: 'Volcengine Ark' },
     { id: 'google', name: 'Google AI Studio' },
     { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
+    { id: 'openai-compatible', name: 'OpenAI Compatible', baseUrl: 'https://api.openai.com/v1', apiMode: 'openai-official' },
     { id: 'minimax', name: 'MiniMax Hailuo' },
     { id: 'vidu', name: 'Vidu' },
     { id: 'fal', name: 'FAL' },

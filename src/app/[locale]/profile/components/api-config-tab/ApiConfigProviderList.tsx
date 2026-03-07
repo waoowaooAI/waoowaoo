@@ -24,6 +24,8 @@ interface ApiConfigProviderListProps {
   onToggleModel: (modelKey: string, providerId: string) => void
   onUpdateApiKey: (providerId: string, apiKey: string) => void
   onUpdateBaseUrl: (providerId: string, baseUrl: string) => void
+  onUpdateExtraHeaders: (providerId: string, extraHeaders?: Record<string, string>) => void
+  onFetchProviderModels: (providerId: string) => Promise<void>
   onDeleteModel: (modelKey: string, providerId: string) => void
   onUpdateModel: (modelKey: string, updates: Partial<CustomModel>, providerId: string) => void
   onDeleteProvider: (providerId: string) => void
@@ -51,6 +53,8 @@ export function ApiConfigProviderList({
   onToggleModel,
   onUpdateApiKey,
   onUpdateBaseUrl,
+  onUpdateExtraHeaders,
+  onFetchProviderModels,
   onDeleteModel,
   onUpdateModel,
   onDeleteProvider,
@@ -83,6 +87,8 @@ export function ApiConfigProviderList({
               onToggleModel={(modelKey) => onToggleModel(modelKey, provider.id)}
               onUpdateApiKey={onUpdateApiKey}
               onUpdateBaseUrl={onUpdateBaseUrl}
+              onUpdateExtraHeaders={onUpdateExtraHeaders}
+              onFetchProviderModels={onFetchProviderModels}
               onDeleteModel={(modelKey) => onDeleteModel(modelKey, provider.id)}
               onUpdateModel={(modelKey, updates) => onUpdateModel(modelKey, updates, provider.id)}
               onDeleteProvider={onDeleteProvider}

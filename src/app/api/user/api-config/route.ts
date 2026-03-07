@@ -45,6 +45,7 @@ interface StoredProvider {
   name: string
   baseUrl?: string
   apiKey?: string
+  extraHeaders?: Record<string, string>
   apiMode?: ApiModeType
 }
 
@@ -157,6 +158,32 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function normalizeStringRecord(value: unknown, field: string): Record<string, string> | undefined {
+  if (value === undefined || value === null) return undefined
+  if (!isRecord(value)) {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'PROVIDER_PAYLOAD_INVALID',
+      field,
+    })
+  }
+
+  const out: Record<string, string> = {}
+  for (const [key, raw] of Object.entries(value)) {
+    if (typeof raw !== 'string') {
+      throw new ApiError('INVALID_PARAMS', {
+        code: 'PROVIDER_PAYLOAD_INVALID',
+        field: `${field}.${key}`,
+      })
+    }
+    const normalizedKey = key.trim()
+    const normalizedValue = raw.trim()
+    if (!normalizedKey || !normalizedValue) continue
+    out[normalizedKey] = normalizedValue
+  }
+
+  return Object.keys(out).length > 0 ? out : undefined
 }
 
 function formatPriceAmount(amount: number): string {
@@ -716,6 +743,7 @@ function normalizeProvidersInput(rawProviders: unknown): StoredProvider[] {
       name,
       baseUrl: readTrimmedString(item.baseUrl) || undefined,
       apiKey: typeof item.apiKey === 'string' ? item.apiKey.trim() : undefined,
+      extraHeaders: normalizeStringRecord(item.extraHeaders, `providers[${index}].extraHeaders`),
       apiMode: apiModeRaw,
     })
   }
@@ -900,6 +928,10 @@ function validateDefaultModelPricing(defaultModels: DefaultModelsPayload) {
     if (!parsed) continue
     const apiType = DEFAULT_FIELD_TO_PRICING_API_TYPE[field]
 
+    if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(parsed.provider))) {
+      continue
+    }
+
     if (!hasBuiltinPricingForModel(apiType, parsed.provider, parsed.modelId)) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'DEFAULT_MODEL_PRICING_NOT_CONFIGURED',
@@ -937,6 +969,11 @@ function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayload): D
     const parsed = parseModelKeyStrict(modelKey)
     if (!parsed) {
       sanitized[field] = ''
+      continue
+    }
+
+    if (OPTIONAL_PRICING_PROVIDER_KEYS.has(getProviderKey(parsed.provider))) {
+      sanitized[field] = parsed.modelKey
       continue
     }
 
@@ -1161,6 +1198,7 @@ export const GET = apiHandler(async () => {
   const providers = parseStoredProviders(pref?.customProviders).map((provider) => ({
     ...provider,
     apiKey: provider.apiKey ? decryptApiKey(provider.apiKey) : '',
+    extraHeaders: provider.extraHeaders,
   }))
 
   const billingMode = await getBillingMode()
@@ -1291,6 +1329,7 @@ export const PUT = apiHandler(async (request: NextRequest) => {
         id: provider.id,
         name: provider.name,
         baseUrl: provider.baseUrl,
+        extraHeaders: provider.extraHeaders,
         apiMode: provider.apiMode,
         apiKey: finalApiKey,
       }

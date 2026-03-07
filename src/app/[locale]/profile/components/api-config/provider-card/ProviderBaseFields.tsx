@@ -97,7 +97,7 @@ export function ProviderBaseFields({ provider, t, state }: ProviderBaseFieldsPro
       </div>
 
       {state.showBaseUrlEdit && (
-        <div className="px-3.5 pb-2.5 pt-2">
+        <div className="space-y-2 px-3.5 pb-2.5 pt-2">
           <div className="glass-surface-soft flex items-center gap-2.5 rounded-xl px-3 py-2">
             <div className="flex w-full items-center gap-2">
               <span className="w-[64px] shrink-0 whitespace-nowrap text-[12px] font-semibold text-[var(--glass-text-tertiary)]">
@@ -156,6 +156,53 @@ export function ProviderBaseFields({ provider, t, state }: ProviderBaseFieldsPro
               )}
             </div>
           </div>
+
+          {state.showExtraHeadersEdit && (
+            <div className="glass-surface-soft rounded-xl px-3 py-2">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-[12px] font-semibold text-[var(--glass-text-tertiary)]">
+                  {t('extraHeadersLabel')}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={state.handleFetchProviderModels}
+                    disabled={state.isFetchingModels}
+                    className="glass-btn-base glass-btn-tone-info h-7 px-2.5 text-[12px] font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <AppIcon name="refresh" className="h-3.5 w-3.5" />
+                    <span>{state.isFetchingModels ? t('fetchingModels') : t('fetchModels')}</span>
+                  </button>
+                  <button
+                    onClick={state.startEditExtraHeaders}
+                    className="glass-icon-btn-sm shrink-0"
+                    title={t('configure')}
+                  >
+                    <AppIcon name="edit" className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <textarea
+                value={state.tempExtraHeaders}
+                onChange={(event) => state.setTempExtraHeaders(event.target.value)}
+                placeholder={t('extraHeadersPlaceholder')}
+                className="glass-input-base min-h-[96px] w-full resize-y px-3 py-2 text-[12px] font-mono"
+              />
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  onClick={state.handleCancelExtraHeadersEdit}
+                  className="glass-btn-base glass-btn-secondary px-3 py-1.5 text-[12px]"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  onClick={state.handleSaveExtraHeaders}
+                  className="glass-btn-base glass-btn-primary px-3 py-1.5 text-[12px]"
+                >
+                  {t('save')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>

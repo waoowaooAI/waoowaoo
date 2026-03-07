@@ -102,6 +102,7 @@ export function ApiConfigTabContainer() {
     saveStatus,
     updateProviderApiKey,
     updateProviderBaseUrl,
+    updateProviderExtraHeaders,
     addProvider,
     deleteProvider,
     toggleModel,
@@ -188,6 +189,57 @@ export function ApiConfigTabContainer() {
       apiType: 'gemini-compatible',
     })
     setShowAddGeminiProvider(false)
+  }
+
+  const handleFetchProviderModels = async (providerId: string) => {
+    const provider = providers.find((item) => item.id === providerId)
+    if (!provider) return
+
+    const response = await fetch('/api/user/api-config/fetch-models', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        providerId,
+        provider: getProviderDisplayName(providerId, locale),
+        baseUrl: provider.baseUrl,
+        apiKey: provider.apiKey,
+        extraHeaders: provider.extraHeaders,
+        apiMode: provider.apiMode,
+      }),
+    })
+
+    const data = await response.json().catch(() => ({})) as {
+      success?: boolean
+      models?: Array<{ modelId: string; name: string; type: 'llm' | 'image' | 'video' | 'audio' }>
+      message?: string
+      error?: { message?: string }
+    }
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error?.message || data.message || t('fetchModelsFailed'))
+    }
+
+    let importedCount = 0
+    for (const fetchedModel of data.models || []) {
+      const modelKey = encodeModelKey(providerId, fetchedModel.modelId)
+      const exists = models.some((model) => model.modelKey === modelKey)
+      if (exists) continue
+      addModel({
+        modelId: fetchedModel.modelId,
+        modelKey,
+        name: fetchedModel.name,
+        type: fetchedModel.type,
+        provider: providerId,
+        price: 0,
+      })
+      importedCount += 1
+    }
+
+    alert(
+      importedCount > 0
+        ? t('fetchModelsImported', { count: importedCount })
+        : t('fetchModelsNoNewModels'),
+    )
   }
 
   if (loading) {
@@ -361,6 +413,8 @@ export function ApiConfigTabContainer() {
             onToggleModel={toggleModel}
             onUpdateApiKey={updateProviderApiKey}
             onUpdateBaseUrl={updateProviderBaseUrl}
+            onUpdateExtraHeaders={updateProviderExtraHeaders}
+            onFetchProviderModels={handleFetchProviderModels}
             onDeleteModel={deleteModel}
             onUpdateModel={updateModel}
             onDeleteProvider={deleteProvider}

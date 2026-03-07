@@ -25,8 +25,10 @@ interface UseProviderCardStateParams {
   defaultModels: ProviderCardProps['defaultModels']
   onUpdateApiKey: ProviderCardProps['onUpdateApiKey']
   onUpdateBaseUrl: ProviderCardProps['onUpdateBaseUrl']
+  onUpdateExtraHeaders: ProviderCardProps['onUpdateExtraHeaders']
   onUpdateModel: ProviderCardProps['onUpdateModel']
   onAddModel: ProviderCardProps['onAddModel']
+  onFetchProviderModels: ProviderCardProps['onFetchProviderModels']
   t: ProviderCardTranslator
 }
 
@@ -153,6 +155,7 @@ export interface UseProviderCardStateResult {
   providerKey: string
   isPresetProvider: boolean
   showBaseUrlEdit: boolean
+  showExtraHeadersEdit: boolean
   tutorial: ReturnType<typeof getProviderTutorial>
   groupedModels: ProviderCardGroupedModels
   hasModels: boolean
@@ -161,10 +164,12 @@ export interface UseProviderCardStateResult {
   showKey: boolean
   tempKey: string
   tempUrl: string
+  tempExtraHeaders: string
   showTutorial: boolean
   showAddForm: ProviderCardModelType | null
   newModel: ModelFormState
   batchMode: boolean
+  isFetchingModels: boolean
   editingModelId: string | null
   editModel: ModelFormState
   maskedKey: string
@@ -178,12 +183,17 @@ export interface UseProviderCardStateResult {
   setEditModel: (value: ModelFormState) => void
   setTempKey: (value: string) => void
   setTempUrl: (value: string) => void
+  setTempExtraHeaders: (value: string) => void
   startEditKey: () => void
   startEditUrl: () => void
+  startEditExtraHeaders: () => void
   handleSaveKey: () => void
   handleCancelEdit: () => void
   handleSaveUrl: () => void
   handleCancelUrlEdit: () => void
+  handleSaveExtraHeaders: () => void
+  handleCancelExtraHeadersEdit: () => void
+  handleFetchProviderModels: () => Promise<void>
   handleEditModel: (model: CustomModel) => void
   handleCancelEditModel: () => void
   handleSaveModel: (originalModelKey: string) => void
@@ -199,8 +209,10 @@ export function useProviderCardState({
   defaultModels,
   onUpdateApiKey,
   onUpdateBaseUrl,
+  onUpdateExtraHeaders,
   onUpdateModel,
   onAddModel,
+  onFetchProviderModels,
   t,
 }: UseProviderCardStateParams): UseProviderCardStateResult {
   const [isEditing, setIsEditing] = useState(false)
@@ -208,10 +220,14 @@ export function useProviderCardState({
   const [showKey, setShowKey] = useState(false)
   const [tempKey, setTempKey] = useState(provider.apiKey || '')
   const [tempUrl, setTempUrl] = useState(provider.baseUrl || '')
+  const [tempExtraHeaders, setTempExtraHeaders] = useState(
+    provider.extraHeaders ? JSON.stringify(provider.extraHeaders, null, 2) : '',
+  )
   const [showTutorial, setShowTutorial] = useState(false)
   const [showAddForm, setShowAddForm] = useState<ProviderCardModelType | null>(null)
   const [newModel, setNewModel] = useState<ModelFormState>(EMPTY_MODEL_FORM)
   const [batchMode, setBatchMode] = useState(false)
+  const [isFetchingModels, setIsFetchingModels] = useState(false)
   const [editingModelId, setEditingModelId] = useState<string | null>(null)
   const [editModel, setEditModel] = useState<ModelFormState>(EMPTY_MODEL_FORM)
 
@@ -222,6 +238,7 @@ export function useProviderCardState({
   const showBaseUrlEdit =
     ['gemini-compatible', 'openai-compatible'].includes(providerKey) &&
     Boolean(onUpdateBaseUrl)
+  const showExtraHeadersEdit = providerKey === 'openai-compatible' && Boolean(onUpdateExtraHeaders)
   const tutorial = getProviderTutorial(provider.id)
 
   const groupedModels: ProviderCardGroupedModels = {}
@@ -271,6 +288,10 @@ export function useProviderCardState({
     setIsEditingUrl(true)
   }
 
+  const startEditExtraHeaders = () => {
+    setTempExtraHeaders(provider.extraHeaders ? JSON.stringify(provider.extraHeaders, null, 2) : '')
+  }
+
   const handleSaveKey = () => {
     onUpdateApiKey(provider.id, tempKey)
     setIsEditing(false)
@@ -289,6 +310,45 @@ export function useProviderCardState({
   const handleCancelUrlEdit = () => {
     setTempUrl(provider.baseUrl || '')
     setIsEditingUrl(false)
+  }
+
+  const handleSaveExtraHeaders = () => {
+    try {
+      const trimmed = tempExtraHeaders.trim()
+      if (!trimmed) {
+        onUpdateExtraHeaders?.(provider.id, undefined)
+        return
+      }
+      const parsed = JSON.parse(trimmed) as unknown
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('invalid headers shape')
+      }
+      const normalized = Object.fromEntries(
+        Object.entries(parsed as Record<string, unknown>)
+          .filter(([, value]) => typeof value === 'string' && value.trim().length > 0)
+          .map(([key, value]) => [key.trim(), (value as string).trim()]),
+      ) as Record<string, string>
+      onUpdateExtraHeaders?.(provider.id, Object.keys(normalized).length > 0 ? normalized : undefined)
+    } catch {
+      alert(t('extraHeadersInvalid'))
+    }
+  }
+
+  const handleCancelExtraHeadersEdit = () => {
+    setTempExtraHeaders(provider.extraHeaders ? JSON.stringify(provider.extraHeaders, null, 2) : '')
+  }
+
+  const handleFetchProviderModels = async () => {
+    if (!onFetchProviderModels) return
+    try {
+      setIsFetchingModels(true)
+      await onFetchProviderModels(provider.id)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('fetchModelsFailed')
+      alert(message)
+    } finally {
+      setIsFetchingModels(false)
+    }
   }
 
   const handleEditModel = (model: CustomModel) => {
@@ -391,6 +451,7 @@ export function useProviderCardState({
     providerKey,
     isPresetProvider,
     showBaseUrlEdit,
+    showExtraHeadersEdit,
     tutorial,
     groupedModels,
     hasModels,
@@ -399,10 +460,12 @@ export function useProviderCardState({
     showKey,
     tempKey,
     tempUrl,
+    tempExtraHeaders,
     showTutorial,
     showAddForm,
     newModel,
     batchMode,
+    isFetchingModels,
     editingModelId,
     editModel,
     maskedKey,
@@ -416,12 +479,17 @@ export function useProviderCardState({
     setEditModel,
     setTempKey,
     setTempUrl,
+    setTempExtraHeaders,
     startEditKey,
     startEditUrl,
+    startEditExtraHeaders,
     handleSaveKey,
     handleCancelEdit,
     handleSaveUrl,
     handleCancelUrlEdit,
+    handleSaveExtraHeaders,
+    handleCancelExtraHeadersEdit,
+    handleFetchProviderModels,
     handleEditModel,
     handleCancelEditModel,
     handleSaveModel,

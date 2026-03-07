@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const openAIState = vi.hoisted(() => ({
   create: vi.fn(),
+  list: vi.fn(),
 }))
 
 vi.mock('openai', () => ({
@@ -10,6 +11,10 @@ vi.mock('openai', () => ({
       completions: {
         create: openAIState.create,
       },
+    }
+
+    models = {
+      list: openAIState.list,
     }
   },
 }))

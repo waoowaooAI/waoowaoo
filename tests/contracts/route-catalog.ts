@@ -140,6 +140,7 @@ const ROUTE_FILES = [
   'src/app/api/tasks/route.ts',
   'src/app/api/user-preference/route.ts',
   'src/app/api/user/api-config/route.ts',
+  'src/app/api/user/api-config/fetch-models/route.ts',
   'src/app/api/user/api-config/test-connection/route.ts',
   'src/app/api/user/balance/route.ts',
   'src/app/api/user/costs/details/route.ts',

@@ -36,7 +36,15 @@ function hasProviderApiKey(provider: Provider | undefined): boolean {
   if (!provider) return false
   if (provider.hasApiKey === true) return true
   const apiKey = typeof provider.apiKey === 'string' ? provider.apiKey.trim() : ''
-  return apiKey.length > 0
+  if (apiKey.length > 0) return true
+
+  const providerKey = getProviderKey(provider.id)
+  if (providerKey === 'openai-compatible') {
+    const baseUrl = typeof provider.baseUrl === 'string' ? provider.baseUrl.trim() : ''
+    return baseUrl.length > 0
+  }
+
+  return false
 }
 
 export function useApiConfigFilters({

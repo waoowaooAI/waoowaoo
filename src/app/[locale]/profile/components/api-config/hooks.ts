@@ -36,6 +36,7 @@ interface UseProvidersReturn {
     saveStatus: 'idle' | 'saving' | 'saved' | 'error'
     updateProviderApiKey: (providerId: string, apiKey: string) => void
     updateProviderBaseUrl: (providerId: string, baseUrl: string) => void
+    updateProviderExtraHeaders: (providerId: string, extraHeaders?: Record<string, string>) => void
     addProvider: (provider: Omit<Provider, 'hasApiKey'>) => void
     deleteProvider: (providerId: string) => void
     updateProviderInfo: (providerId: string, name: string, baseUrl?: string) => void
@@ -205,14 +206,16 @@ export function useProviders(): UseProvidersReturn {
                     apiKey: saved?.apiKey || '',
                     hasApiKey: !!saved?.apiKey,
                     // 保留用户保存的 baseUrl（用于自建服务）
-                    baseUrl: saved?.baseUrl || preset.baseUrl
+                    baseUrl: saved?.baseUrl || preset.baseUrl,
+                    extraHeaders: saved?.extraHeaders,
+                    apiMode: saved?.apiMode,
                 }
             })
             const customProviders = savedProviders.filter(p =>
                 !PRESET_PROVIDERS.find(preset => preset.id === getProviderKey(p.id))
             ).map(p => ({
                 ...p,
-                hasApiKey: !!p.apiKey
+                hasApiKey: !!p.apiKey,
             }))
             setProviders([...allProviders, ...customProviders])
 
@@ -478,6 +481,17 @@ export function useProviders(): UseProvidersReturn {
         })
     }, [performSave])
 
+    const updateProviderExtraHeaders = useCallback((providerId: string, extraHeaders?: Record<string, string>) => {
+        setProviders(prev => {
+            const next = prev.map(p =>
+                p.id === providerId ? { ...p, extraHeaders } : p
+            )
+            latestProvidersRef.current = next
+            void performSave(undefined, true)
+            return next
+        })
+    }, [performSave])
+
     // 模型操作
     const toggleModel = useCallback((modelKey: string, providerId?: string) => {
         if (isPresetComingSoonModelKey(modelKey)) {
@@ -589,6 +603,7 @@ export function useProviders(): UseProvidersReturn {
         saveStatus,
         updateProviderApiKey,
         updateProviderBaseUrl,
+        updateProviderExtraHeaders,
         addProvider,
         deleteProvider,
         updateProviderInfo,

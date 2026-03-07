@@ -19,6 +19,8 @@ export function ProviderCard({
   onUpdateModel,
   onDeleteProvider,
   onAddModel,
+  onUpdateExtraHeaders,
+  onFetchProviderModels,
 }: ProviderCardProps) {
   const t = useTranslations('apiConfig')
 
@@ -29,8 +31,10 @@ export function ProviderCard({
     defaultModels,
     onUpdateApiKey,
     onUpdateBaseUrl,
+    onUpdateExtraHeaders,
     onUpdateModel,
     onAddModel,
+    onFetchProviderModels,
     t,
   })
 
