@@ -164,6 +164,8 @@ export default function WorkspaceHeaderShell({
     }
   }, [isMobile, isMobileMenuOpen])
 
+  const mobileMenuPanelId = 'workspace-mobile-menu-panel'
+
   const sortedEpisodes = useMemo(() => {
     const getNum = (name: string) => { const m = name.match(/\d+/); return m ? parseInt(m[0], 10) : Infinity }
     return [...episodes].sort((a, b) => {
@@ -233,8 +235,12 @@ export default function WorkspaceHeaderShell({
           type="button"
           aria-label={isMobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={isMobileMenuOpen}
+          aria-controls={mobileMenuPanelId}
           onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-          className="fixed left-3 top-[calc(env(safe-area-inset-top,0px)+4.5rem)] z-[70] glass-btn-base glass-btn-secondary h-11 w-11 rounded-2xl"
+          className={`fixed left-3 top-[calc(env(safe-area-inset-top,0px)+4.5rem)] h-11 w-11 rounded-2xl glass-btn-base transition-opacity ${isMobileMenuOpen
+            ? 'z-[58] glass-btn-tone-info'
+            : 'z-[70] glass-btn-secondary'
+            }`}
         >
           <AppIcon name={isMobileMenuOpen ? 'close' : 'menu'} className="h-5 w-5" />
         </button>
@@ -272,7 +278,8 @@ export default function WorkspaceHeaderShell({
           />
 
           <aside
-            className="fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+7.25rem)] bottom-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] z-[70] glass-surface-modal rounded-2xl p-3 overflow-y-auto"
+            id={mobileMenuPanelId}
+            className="fixed inset-x-2 top-[calc(env(safe-area-inset-top,0px)+7.25rem)] bottom-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] z-[70] glass-surface-modal rounded-2xl p-3 overflow-y-auto overscroll-contain"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile workspace navigation"
