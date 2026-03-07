@@ -274,8 +274,8 @@ export default function LLMStageStreamCard({
 
   return (
     <article className="glass-surface-modal flex h-full w-full flex-col overflow-hidden rounded-2xl text-[var(--glass-text-primary)]">
-      <header className="border-b border-[var(--glass-stroke-base)] px-5 py-5 md:px-6">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[15rem_minmax(0,1fr)_auto] md:items-center">
+      <header className="border-b border-[var(--glass-stroke-base)] px-4 py-4 sm:px-5 sm:py-5 md:px-6">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[15rem_minmax(0,1fr)_auto] lg:items-center">
           <div className="glass-surface-soft rounded-xl border border-[var(--glass-stroke-base)] p-3">
             <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--glass-text-tertiary)]">
               {t('stageCard.stage')}
@@ -288,19 +288,19 @@ export default function LLMStageStreamCard({
             </p>
           </div>
 
-          <div className="min-w-0 text-center">
+          <div className="min-w-0 text-left lg:text-center">
             <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--glass-text-tertiary)]">
               {resolveProgressText(subtitle, 'stageCard.realtimeStream')}
             </p>
-            <h2 className="mt-1 text-xl font-semibold text-[var(--glass-text-primary)] md:text-2xl">
+            <h2 className="mt-1 text-lg font-semibold text-[var(--glass-text-primary)] sm:text-xl md:text-2xl">
               {resolveProgressText(title, 'stageCard.currentStage')}
             </h2>
-            <p className="mt-2 truncate text-sm text-[var(--glass-text-secondary)]">
+            <p className="mt-2 break-words text-sm text-[var(--glass-text-secondary)]">
               {resolveProgressText(activeMessage || activeStage.subtitle, 'runtime.llm.processing')}
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center justify-start whitespace-nowrap md:justify-end">{topRightAction || null}</div>
+          <div className="flex w-full flex-wrap items-center justify-start gap-2 lg:w-auto lg:shrink-0 lg:justify-end">{topRightAction || null}</div>
         </div>
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--glass-bg-muted)]">

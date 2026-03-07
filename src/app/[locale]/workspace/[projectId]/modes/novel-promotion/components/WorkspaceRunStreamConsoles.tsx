@@ -86,8 +86,8 @@ export default function WorkspaceRunStreamConsoles({
       )}
 
       {showStoryToScriptConsole && !storyToScriptConsoleMinimized && (
-        <div className="fixed inset-0 z-[120] glass-overlay backdrop-blur-sm">
-          <div className="mx-auto mt-4 h-[calc(100vh-2rem)] w-[min(96vw,1400px)]">
+        <div className="fixed inset-0 z-[120] glass-overlay backdrop-blur-sm px-2 py-2 sm:px-4 sm:py-4">
+          <div className="mx-auto h-[calc(100svh-1rem)] w-full max-w-[1400px] sm:h-[calc(100svh-2rem)]">
             <LLMStageStreamCard
               title={storyToScriptCardTitle}
               subtitle={t('runConsole.storyToScriptSubtitle')}
@@ -102,7 +102,7 @@ export default function WorkspaceRunStreamConsoles({
               autoScroll={storyToScriptStream.selectedStep?.id === storyToScriptStream.activeStepId}
               errorMessage={storyToScriptStream.errorMessage}
               topRightAction={(
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={storyToScriptStream.reset}
@@ -135,8 +135,8 @@ export default function WorkspaceRunStreamConsoles({
       )}
 
       {showScriptToStoryboardConsole && !scriptToStoryboardConsoleMinimized && (
-        <div className="fixed inset-0 z-[120] glass-overlay backdrop-blur-sm">
-          <div className="mx-auto mt-4 h-[calc(100vh-2rem)] w-[min(96vw,1400px)]">
+        <div className="fixed inset-0 z-[120] glass-overlay backdrop-blur-sm px-2 py-2 sm:px-4 sm:py-4">
+          <div className="mx-auto h-[calc(100svh-1rem)] w-full max-w-[1400px] sm:h-[calc(100svh-2rem)]">
             <LLMStageStreamCard
               title={scriptToStoryboardCardTitle}
               subtitle={t('runConsole.scriptToStoryboardSubtitle')}
@@ -151,7 +151,7 @@ export default function WorkspaceRunStreamConsoles({
               autoScroll={scriptToStoryboardStream.selectedStep?.id === scriptToStoryboardStream.activeStepId}
               errorMessage={scriptToStoryboardStream.errorMessage}
               topRightAction={(
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={scriptToStoryboardStream.reset}

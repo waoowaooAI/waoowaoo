@@ -353,7 +353,7 @@ export default function ScriptView({
   const missingAssetsCount = charsWithoutImage.length + locationsWithoutImage.length
 
   return (
-    <div className="w-full grid grid-cols-12 gap-6 min-h-[400px] lg:h-[calc(100vh-180px)] animate-fadeIn">
+    <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12 lg:h-[calc(100svh-180px)] lg:min-h-[400px] animate-fadeIn">
       <ScriptViewScriptPanel
         clips={clips}
         selectedClipId={selectedClipId}
