@@ -1,0 +1,1051 @@
+[
+  {
+    "modelType": "image",
+    "provider": "fal",
+    "modelId": "banana-2",
+    "capabilities": {
+      "image": {
+        "resolutionOptions": [
+          "1K",
+          "2K",
+          "4K"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-fast-251015",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-fast-251015-batch",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-250528",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-250528-batch",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-lite-i2v-250428",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-lite-i2v-250428-batch",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-5-pro-251215",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          true,
+          false
+        ],
+        "durationOptions": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-5-pro-251215-batch",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          true,
+          false
+        ],
+        "durationOptions": [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "resolutionOptions": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "google",
+    "modelId": "gemini-3.1-pro-preview",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "google",
+    "modelId": "gemini-3.1-flash-lite-preview",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "google",
+    "modelId": "gemini-3-flash-preview",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "ark",
+    "modelId": "doubao-seed-1-8-251228",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "ark",
+    "modelId": "doubao-seed-2-0-pro-260215",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "ark",
+    "modelId": "doubao-seed-2-0-lite-260215",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "llm",
+    "provider": "ark",
+    "modelId": "doubao-seed-2-0-mini-260215",
+    "capabilities": {
+      "llm": {
+        "reasoningEffortOptions": [
+          "minimal",
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "gemini-3-pro-image-preview",
+    "capabilities": {
+      "image": {
+        "resolutionOptions": [
+          "2K",
+          "4K"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "gemini-3-pro-image-preview-batch",
+    "capabilities": {
+      "image": {
+        "resolutionOptions": [
+          "2K",
+          "4K"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "gemini-3.1-flash-image-preview",
+    "capabilities": {
+      "image": {
+        "resolutionOptions": [
+          "0.5K",
+          "1K",
+          "2K",
+          "4K"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "gemini-2.5-flash-image",
+    "capabilities": {
+      "image": {
+        "resolutionOptions": [
+          "1K"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "imagen-4.0-generate-001",
+    "capabilities": {
+      "image": {}
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "imagen-4.0-fast-generate-001",
+    "capabilities": {
+      "image": {}
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "imagen-4.0-ultra-generate-001",
+    "capabilities": {
+      "image": {}
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "google",
+    "modelId": "veo-3.1-generate-preview",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          4,
+          6,
+          8
+        ],
+        "resolutionOptions": [
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "google",
+    "modelId": "veo-3.1-fast-generate-preview",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          4,
+          6,
+          8
+        ],
+        "resolutionOptions": [
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "google",
+    "modelId": "veo-3.0-generate-001",
+    "capabilities": {
+      "video": {
+        "durationOptions": [
+          4,
+          6,
+          8
+        ],
+        "resolutionOptions": [
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "google",
+    "modelId": "veo-3.0-fast-generate-001",
+    "capabilities": {
+      "video": {
+        "durationOptions": [
+          4,
+          6,
+          8
+        ],
+        "resolutionOptions": [
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "google",
+    "modelId": "veo-2.0-generate-001",
+    "capabilities": {
+      "video": {
+        "durationOptions": [
+          5,
+          6,
+          8
+        ],
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          5,
+          10
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/v3/standard/image-to-video",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/v3/pro/image-to-video",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "bailian",
+    "modelId": "wan2.6-i2v-flash",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "bailian",
+    "modelId": "wan2.6-i2v",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "bailian",
+    "modelId": "wan2.5-i2v-preview",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "bailian",
+    "modelId": "wan2.2-i2v-plus",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "bailian",
+    "modelId": "wan2.2-kf2v-flash",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "firstlastframe"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "bailian",
+    "modelId": "wanx2.1-kf2v-plus",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "firstlastframe"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "minimax",
+    "modelId": "minimax-hailuo-2.3",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          6,
+          10
+        ],
+        "resolutionOptions": [
+          "768p",
+          "1080p"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "minimax",
+    "modelId": "minimax-hailuo-2.3-fast",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          6,
+          10
+        ],
+        "resolutionOptions": [
+          "768p",
+          "1080p"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "minimax",
+    "modelId": "minimax-hailuo-02",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          6,
+          10
+        ],
+        "resolutionOptions": [
+          "512p",
+          "768p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "minimax",
+    "modelId": "t2v-01",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          6
+        ],
+        "resolutionOptions": [
+          "720p"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "minimax",
+    "modelId": "t2v-01-director",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal"
+        ],
+        "durationOptions": [
+          6
+        ],
+        "resolutionOptions": [
+          "720p"
+        ],
+        "firstlastframe": false,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "viduq3-pro",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          false,
+          true
+        ],
+        "durationOptions": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "resolutionOptions": [
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "viduq2-pro-fast",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          false,
+          true
+        ],
+        "durationOptions": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "resolutionOptions": [
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "viduq2-pro",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          false,
+          true
+        ],
+        "durationOptions": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "resolutionOptions": [
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "viduq2-turbo",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "generateAudioOptions": [
+          false,
+          true
+        ],
+        "durationOptions": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "resolutionOptions": [
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": true
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "viduq1",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          5
+        ],
+        "resolutionOptions": [
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "viduq1-classic",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          5
+        ],
+        "resolutionOptions": [
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  },
+  {
+    "modelType": "video",
+    "provider": "vidu",
+    "modelId": "vidu2.0",
+    "capabilities": {
+      "video": {
+        "generationModeOptions": [
+          "normal",
+          "firstlastframe"
+        ],
+        "durationOptions": [
+          4,
+          8
+        ],
+        "resolutionOptions": [
+          "360p",
+          "720p",
+          "1080p"
+        ],
+        "firstlastframe": true,
+        "supportGenerateAudio": false
+      }
+    }
+  }
+]

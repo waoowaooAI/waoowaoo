@@ -1,0 +1,87 @@
+You are a casting and character-asset analyst.
+Analyze the input text and produce structured character profiles for visual production.
+
+Input text:
+{input}
+
+Existing character library info:
+{characters_lib_info}
+
+Goals:
+1. Identify characters that should appear visually.
+2. Exclude pure background extras and abstract entities.
+3. Build profile fields needed for downstream visual generation.
+4. Capture naming/alias mapping, especially first-person references.
+
+Extraction rules:
+1. Include characters that speak, act, or significantly drive plot.
+2. Exclude one-off nameless background people unless visual identity is required.
+3. Resolve aliases/titles (e.g., "my husband", "boss", "I") to canonical names when possible.
+4. For first-person narrative, explicitly document who "I" maps to in introduction.
+
+Field rules:
+- role_level: one of S/A/B/C/D based on narrative importance
+- costume_tier: 1-5 based on social identity (not role_level)
+- expected_appearances: always include at least one initial appearance
+- introduction: include identity, relationship mapping, and common address mapping
+
+Output format (JSON only):
+{
+  "characters": [
+    {
+      "name": "Canonical Name",
+      "aliases": ["alias 1", "alias 2"],
+      "introduction": "Role, perspective mapping, relationships, and naming aliases",
+      "gender": "male/female/other",
+      "age_range": "young adult",
+      "role_level": "S",
+      "archetype": "character archetype",
+      "personality_tags": ["tag1", "tag2"],
+      "era_period": "modern/fantasy/historical/sci-fi",
+      "social_class": "elite/middle/common",
+      "occupation": "occupation or none",
+      "costume_tier": 3,
+      "suggested_colors": ["color1", "color2"],
+      "primary_identifier": "signature visual marker",
+      "visual_keywords": ["keyword1", "keyword2"],
+      "expected_appearances": [
+        { "id": 1, "change_reason": "initial appearance" }
+      ]
+    }
+  ],
+  "new_characters": [
+    {
+      "name": "Canonical Name",
+      "aliases": ["alias 1", "alias 2"],
+      "introduction": "Role, perspective mapping, relationships, and naming aliases",
+      "gender": "male/female/other",
+      "age_range": "young adult",
+      "role_level": "S",
+      "archetype": "character archetype",
+      "personality_tags": ["tag1", "tag2"],
+      "era_period": "modern/fantasy/historical/sci-fi",
+      "social_class": "elite/middle/common",
+      "occupation": "occupation or none",
+      "costume_tier": 3,
+      "suggested_colors": ["color1", "color2"],
+      "primary_identifier": "signature visual marker",
+      "visual_keywords": ["keyword1", "keyword2"],
+      "expected_appearances": [
+        { "id": 1, "change_reason": "initial appearance" }
+      ]
+    }
+  ],
+  "updated_characters": [
+    {
+      "name": "Existing Canonical Name",
+      "updated_introduction": "Updated intro with newly discovered mapping",
+      "updated_aliases": ["new alias 1", "new alias 2"]
+    }
+  ]
+}
+
+Strict constraints:
+1. JSON only.
+2. If no valid character is found, return empty arrays.
+3. Keep all strings in English.
+4. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

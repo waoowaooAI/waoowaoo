@@ -1,0 +1,71 @@
+import { TASK_TYPE, type TaskType } from '@/lib/task/types'
+import type { LLMObserveDisplayMode } from './config'
+
+export type LLMTaskPolicy = {
+  consoleEnabled: boolean
+  displayMode: LLMObserveDisplayMode
+  fullscreen: boolean
+  priority: number
+  captureReasoning: boolean
+}
+
+const DEFAULT_POLICY: LLMTaskPolicy = {
+  consoleEnabled: false,
+  displayMode: 'loading',
+  fullscreen: false,
+  priority: 0,
+  captureReasoning: false,
+}
+
+const LONG_FLOW_POLICY: LLMTaskPolicy = {
+  consoleEnabled: true,
+  displayMode: 'detail',
+  fullscreen: true,
+  priority: 1,
+  captureReasoning: true,
+}
+
+const LONG_FLOW_HIGH_POLICY: LLMTaskPolicy = {
+  ...LONG_FLOW_POLICY,
+  priority: 2,
+}
+
+const LLM_STANDARD_POLICY: LLMTaskPolicy = {
+  consoleEnabled: true,
+  displayMode: 'loading',
+  fullscreen: false,
+  priority: 0,
+  captureReasoning: true,
+}
+
+const POLICY_BY_TASK_TYPE: Partial<Record<TaskType, LLMTaskPolicy>> = {
+  [TASK_TYPE.REGENERATE_STORYBOARD_TEXT]: LONG_FLOW_HIGH_POLICY,
+  [TASK_TYPE.INSERT_PANEL]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ANALYZE_NOVEL]: LONG_FLOW_POLICY,
+  [TASK_TYPE.STORY_TO_SCRIPT_RUN]: LONG_FLOW_HIGH_POLICY,
+  [TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN]: LONG_FLOW_HIGH_POLICY,
+  [TASK_TYPE.CLIPS_BUILD]: LONG_FLOW_POLICY,
+  [TASK_TYPE.SCREENPLAY_CONVERT]: LONG_FLOW_HIGH_POLICY,
+  [TASK_TYPE.VOICE_ANALYZE]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ANALYZE_GLOBAL]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.AI_MODIFY_APPEARANCE]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.AI_MODIFY_LOCATION]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.AI_MODIFY_SHOT_PROMPT]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ANALYZE_SHOT_VARIANTS]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.AI_CREATE_CHARACTER]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.AI_CREATE_LOCATION]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.REFERENCE_TO_CHARACTER]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.CHARACTER_PROFILE_CONFIRM]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.EPISODE_SPLIT_LLM]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ASSET_HUB_AI_DESIGN_CHARACTER]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ASSET_HUB_AI_DESIGN_LOCATION]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ASSET_HUB_AI_MODIFY_CHARACTER]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ASSET_HUB_AI_MODIFY_LOCATION]: LLM_STANDARD_POLICY,
+  [TASK_TYPE.ASSET_HUB_REFERENCE_TO_CHARACTER]: LLM_STANDARD_POLICY,
+}
+
+export function getLLMTaskPolicy(taskType: string | null | undefined): LLMTaskPolicy {
+  if (!taskType) return DEFAULT_POLICY
+  return POLICY_BY_TASK_TYPE[taskType as TaskType] || DEFAULT_POLICY
+}

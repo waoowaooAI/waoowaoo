@@ -1,0 +1,148 @@
+{
+    "appName": "waoowaoo",
+    "betaVersion": "Beta v{version}",
+    "updateNotice": {
+        "title": "发现新版本",
+        "subtitle": "当前 v{current} · 最新 v{latest}",
+        "description": "软件已发布新版本，建议立刻前去升级。",
+        "releaseName": "版本",
+        "publishedAt": "发布时间",
+        "updateTag": "Update",
+        "viewRelease": "查看更新",
+        "remindLater": "稍后提醒",
+        "close": "关闭",
+        "openDialog": "打开更新弹窗",
+        "checkUpdate": "检查新版本",
+        "upToDate": "已是最新版本"
+    },
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "search": "搜索",
+    "clear": "清除",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "submit": "提交",
+    "reset": "重置",
+    "generate": "生成",
+    "regenerate": "重新生成",
+    "preview": "预览",
+    "download": "下载",
+    "upload": "上传",
+    "select": "选择",
+    "add": "添加",
+    "remove": "移除",
+    "refresh": "刷新",
+    "expand": "展开",
+    "collapse": "收起",
+    "all": "全部",
+    "none": "无",
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告",
+    "info": "信息",
+    "copy": "复制",
+    "paste": "粘贴",
+    "apply": "应用",
+    "autoSave": "自动保存",
+    "saved": "已保存",
+    "episode": "剧集",
+    "project": "项目",
+    "editEpisodeName": "编辑剧集名称",
+    "deleteEpisode": "删除剧集",
+    "deleteEpisodeConfirm": "确认删除",
+    "newEpisode": "新建剧集",
+    "optional": "（可选）",
+    "rename": "重命名",
+    "dragToReorder": "拖动调整位置",
+    "episodeNamePlaceholder": "输入剧集名称...",
+    "cancelSelection": "取消选择",
+    "referenceImage": "参考图",
+    "previewLarge": "预览大图",
+    "viewOriginal": "查看原图",
+    "schemeN": "方案 {n}",
+    "insufficientBalance": "余额不足",
+    "insufficientBalanceDetail": "账户余额不足，请充值后继续使用",
+    "operationFailed": "操作失败",
+    "pleaseRetry": "请重试",
+    "recommended": "推荐",
+    "language": {
+        "select": "选择语言",
+        "zh": "中文",
+        "en": "English",
+        "switchConfirmTitle": "切换语言？",
+        "switchConfirmMessage": "切换到 {targetLanguage} 后，不仅界面文字会改变，整条流程的提示词模板、剧本生成和任务输出语言也会同步切换。是否继续？",
+        "switchConfirmAction": "确认切换"
+    },
+    "taskStatus": {
+        "intent": {
+            "generate": {
+                "running": {
+                    "image": "生成中",
+                    "video": "生成中",
+                    "audio": "生成中",
+                    "text": "生成中"
+                }
+            },
+            "regenerate": {
+                "running": {
+                    "image": "重新生成中",
+                    "video": "重新生成中",
+                    "audio": "重新生成中",
+                    "text": "重新生成中"
+                }
+            },
+            "modify": {
+                "running": {
+                    "image": "修改中",
+                    "video": "修改中",
+                    "audio": "修改中",
+                    "text": "修改中"
+                }
+            },
+            "analyze": {
+                "running": {
+                    "image": "分析中",
+                    "video": "分析中",
+                    "audio": "分析中",
+                    "text": "分析中"
+                }
+            },
+            "build": {
+                "running": {
+                    "image": "构建中",
+                    "video": "构建中",
+                    "audio": "构建中",
+                    "text": "构建中"
+                }
+            },
+            "convert": {
+                "running": {
+                    "image": "转换中",
+                    "video": "转换中",
+                    "audio": "转换中",
+                    "text": "转换中"
+                }
+            },
+            "process": {
+                "running": {
+                    "image": "处理中",
+                    "video": "处理中",
+                    "audio": "处理中",
+                    "text": "处理中"
+                }
+            }
+        },
+        "failed": {
+            "image": "处理失败",
+            "video": "处理失败",
+            "audio": "处理失败",
+            "text": "处理失败"
+        }
+    }
+}

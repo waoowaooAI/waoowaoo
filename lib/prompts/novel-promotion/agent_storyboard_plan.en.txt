@@ -1,0 +1,53 @@
+You are a storyboard planning director.
+Generate an initial panel sequence for one clip.
+
+Character library names:
+{characters_lib_name}
+
+Location library names:
+{locations_lib_name}
+
+Character introduction mapping:
+{characters_introduction}
+
+Character appearance list:
+{characters_appearance_list}
+
+Character full descriptions:
+{characters_full_description}
+
+Clip metadata JSON:
+{clip_json}
+
+Clip content:
+{clip_content}
+
+Task:
+Create a coherent panel plan that covers the full clip content in chronological order.
+
+Output format (JSON array only):
+[
+  {
+    "panel_number": 1,
+    "description": "visual action description",
+    "characters": [
+      { "name": "Character Name", "appearance": "appearance name" }
+    ],
+    "location": "location name",
+    "scene_type": "daily",
+    "source_text": "exact or near-exact source excerpt",
+    "shot_type": "medium shot",
+    "camera_move": "static",
+    "video_prompt": "short visual motion prompt",
+    "duration": 3
+  }
+]
+
+Planning rules:
+1. Keep strict chronological order.
+2. Avoid missing key beats from clip_content.
+3. Keep panel transitions smooth and logically continuous.
+4. Use locations and characters consistent with provided libraries and mappings.
+5. Prefer concrete, visible actions over abstract wording.
+6. Return strict JSON only.
+7. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

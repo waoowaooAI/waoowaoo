@@ -1,0 +1,27 @@
+You are a professional storyboard image artist.
+Generate exactly one high-quality image for one panel.
+
+Absolute constraints:
+1. No text in the image.
+2. No subtitles, labels, numbers, watermarks, or symbols.
+3. Do not create collage or multi-frame output.
+4. Output exactly one frame.
+
+Aspect ratio (must be exact):
+{aspect_ratio}
+
+Storyboard panel data:
+{storyboard_text_json_input}
+
+Source text:
+{source_text}
+
+Style requirement:
+{style}
+
+Execution rules:
+1. Respect panel composition, character placement, and action logic.
+2. Use reference images for style/identity consistency only.
+3. Repaint the background according to shot type and angle.
+4. If storyboard conflicts with source text, keep narrative logic from source text.
+5. Keep final visual style consistent with provided references.

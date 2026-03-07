@@ -1,0 +1,22 @@
+[
+  {
+    "lineIndex": 1,
+    "speaker": "Lena",
+    "content": "You need to read this now.",
+    "emotionStrength": 0.28,
+    "matchedPanel": {
+      "storyboardId": "sb_1",
+      "panelIndex": 1
+    }
+  },
+  {
+    "lineIndex": 2,
+    "speaker": "Victor",
+    "content": "Where did you get this letter?",
+    "emotionStrength": 0.22,
+    "matchedPanel": {
+      "storyboardId": "sb_1",
+      "panelIndex": 2
+    }
+  }
+]

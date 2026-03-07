@@ -1,0 +1,32 @@
+You are a character appearance regenerator.
+Generate 3 new character appearance variants based on story context.
+
+Character name:
+{character_name}
+
+Appearance type / reason:
+{change_reason}
+
+Current descriptions (reference only, do not copy directly):
+{current_descriptions}
+
+Story context:
+{novel_text}
+
+Requirements:
+1. Produce 3 clearly different variants while preserving core identity.
+2. Each variant must be a full standalone appearance description.
+3. Output in English.
+4. Do not include expression, action, background, or story narration.
+5. Do not include skin color, eye color, or lip color.
+6. Keep each description concise and image-generation friendly.
+
+Output format:
+Return JSON only. ⚠️ JSON SAFETY: All quotation marks MUST be converted to corner brackets「」in JSON string values:
+{
+  "descriptions": [
+    "variant 1",
+    "variant 2",
+    "variant 3"
+  ]
+}

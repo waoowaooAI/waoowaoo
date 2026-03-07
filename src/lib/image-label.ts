@@ -1,0 +1,171 @@
+import { logError as _ulogError } from '@/lib/logging/core'
+/**
+ * 图片黑边标签处理工具
+ * 用于给图片添加/更新顶部的黑边文字标签
+ */
+
+import sharp from 'sharp'
+import { uploadObject, getSignedUrl, generateUniqueKey, toFetchableUrl } from '@/lib/storage'
+import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
+import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
+import { initializeFonts, createLabelSVG } from '@/lib/fonts'
+
+/**
+ * 更新图片的黑边标签（裁剪旧标签 + 添加新标签）
+ * 
+ * @param imageUrl - 原始图片 URL 或 COS key
+ * @param newLabelText - 新的标签文本
+ * @param options - 可选配置
+ * @returns 更新后的 COS key
+ */
+export async function updateImageLabel(
+    imageUrl: string,
+    newLabelText: string,
+    options?: {
+        /** 是否生成新的 key（默认覆盖原 key） */
+        generateNewKey?: boolean
+        /** 新 key 的前缀（仅当 generateNewKey=true 时有效） */
+        keyPrefix?: string
+    }
+): Promise<string> {
+    await initializeFonts()
+
+    const originalKey = await resolveStorageKeyFromMediaValue(imageUrl)
+    if (!originalKey) {
+        throw new Error(`无法归一化媒体 key: ${imageUrl}`)
+    }
+    const signedUrl = getSignedUrl(originalKey, 3600)
+
+    // 下载图片
+    const response = await fetch(toFetchableUrl(signedUrl))
+    if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status}`)
+    }
+    const buffer = Buffer.from(await response.arrayBuffer())
+
+    // 获取图片元数据
+    const meta = await sharp(buffer).metadata()
+    const w = meta.width || 2160
+    const h = meta.height || 2160
+
+    // 计算标签条高度（与生成时一致：高度的 4%）
+    const fontSize = Math.floor(h * 0.04)
+    const pad = Math.floor(fontSize * 0.5)
+    const barH = fontSize + pad * 2
+
+    // 裁剪掉顶部的旧标签条
+    const croppedBuffer = await sharp(buffer)
+        .extract({ left: 0, top: barH, width: w, height: h - barH })
+        .toBuffer()
+
+    // 创建新的 SVG 标签条
+    const svg = await createLabelSVG(w, barH, fontSize, pad, newLabelText)
+
+    // 添加新标签条到图片顶部
+    const processed = await sharp(croppedBuffer)
+        .extend({ top: barH, bottom: 0, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 1 } })
+        .composite([{ input: svg, top: 0, left: 0 }])
+        .jpeg({ quality: 90, mozjpeg: true })
+        .toBuffer()
+
+    // 决定使用原始 key 还是生成新 key
+    const finalKey = options?.generateNewKey
+        ? generateUniqueKey(options.keyPrefix || 'labeled-image', 'jpg')
+        : originalKey
+
+    await uploadObject(processed, finalKey)
+    return finalKey
+}
+
+/**
+ * 批量更新角色形象的标签
+ * 用于从资产中心复制角色到项目时更新标签
+ */
+export async function updateCharacterAppearanceLabels(
+    appearances: Array<{
+        imageUrl: string | null
+        imageUrls: string
+        changeReason: string
+    }>,
+    characterName: string
+): Promise<Array<{ imageUrl: string | null; imageUrls: string }>> {
+    const results: Array<{ imageUrl: string | null; imageUrls: string }> = []
+
+    for (const appearance of appearances) {
+        try {
+            // 获取图片 URLs
+            let imageUrls = decodeImageUrlsFromDb(appearance.imageUrls, 'appearance.imageUrls')
+            if (imageUrls.length === 0 && appearance.imageUrl) {
+                imageUrls = [appearance.imageUrl]
+            }
+
+            if (imageUrls.length === 0) {
+                results.push({ imageUrl: null, imageUrls: encodeImageUrls([]) })
+                continue
+            }
+
+            // 更新每张图片的标签
+            const newLabelText = `${characterName} - ${appearance.changeReason}`
+            const newImageUrls: string[] = await Promise.all(
+                imageUrls.map(async (url) => {
+                    if (!url) return ''
+                    try {
+                        // 生成新的 key，避免覆盖资产中心的原图
+                        return await updateImageLabel(url, newLabelText, {
+                            generateNewKey: true,
+                            keyPrefix: `project-char-copy`
+                        })
+                    } catch (e) {
+                        _ulogError(`Failed to update label for image:`, e)
+                        return url // 失败时保留原 URL
+                    }
+                })
+            )
+
+            const firstUrl = newImageUrls.find((u) => !!u) || null
+            results.push({
+                imageUrl: firstUrl,
+                imageUrls: encodeImageUrls(newImageUrls)
+            })
+        } catch (e) {
+            _ulogError('Failed to update appearance labels:', e)
+            results.push({ imageUrl: appearance.imageUrl, imageUrls: appearance.imageUrls })
+        }
+    }
+
+    return results
+}
+
+/**
+ * 批量更新场景图片的标签
+ * 用于从资产中心复制场景到项目时更新标签
+ */
+export async function updateLocationImageLabels(
+    images: Array<{
+        imageUrl: string | null
+    }>,
+    locationName: string
+): Promise<Array<{ imageUrl: string | null }>> {
+    const results: Array<{ imageUrl: string | null }> = []
+
+    for (const image of images) {
+        if (!image.imageUrl) {
+            results.push({ imageUrl: null })
+            continue
+        }
+
+        try {
+            // 生成新的 key，避免覆盖资产中心的原图
+            const newImageUrl = await updateImageLabel(image.imageUrl, locationName, {
+                generateNewKey: true,
+                keyPrefix: `project-loc-copy`
+            })
+            results.push({ imageUrl: newImageUrl })
+        } catch (e) {
+            _ulogError('Failed to update location image label:', e)
+            results.push({ imageUrl: image.imageUrl })
+        }
+    }
+
+    return results
+}

@@ -1,0 +1,6023 @@
+[
+  {
+    "apiType": "text",
+    "provider": "openrouter",
+    "modelId": "google/gemini-3.1-pro-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 9
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 72
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "openrouter",
+    "modelId": "google/gemini-3-pro-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 9
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 72
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "openrouter",
+    "modelId": "google/gemini-3-flash-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 0.54
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 2.16
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "openrouter",
+    "modelId": "anthropic/claude-sonnet-4.5",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 21.6
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 108
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "openrouter",
+    "modelId": "anthropic/claude-sonnet-4",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 21.6
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 108
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "google",
+    "modelId": "gemini-3.1-pro-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 14.4
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 86.4
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "google",
+    "modelId": "gemini-3-pro-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 14.4
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 86.4
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "google",
+    "modelId": "gemini-3-flash-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 3.6
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 21.6
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "ark",
+    "modelId": "doubao-seed-1-8-251228",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 0.8
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "ark",
+    "modelId": "doubao-seed-2-0-pro-260215",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 3.2
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 16
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "ark",
+    "modelId": "doubao-seed-2-0-lite-260215",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 0.6
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 3.6
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "ark",
+    "modelId": "doubao-seed-2-0-mini-260215",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 0.2
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "ark",
+    "modelId": "doubao-seed-1-6-251015",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 0.8
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 2
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "text",
+    "provider": "ark",
+    "modelId": "doubao-seed-1-6-lite-251015",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "tokenType": "input"
+          },
+          "amount": 0.3
+        },
+        {
+          "when": {
+            "tokenType": "output"
+          },
+          "amount": 0.6
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "fal",
+    "modelId": "banana",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.9648
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "fal",
+    "modelId": "banana-2",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "1K"
+          },
+          "amount": 0.576
+        },
+        {
+          "when": {
+            "resolution": "2K"
+          },
+          "amount": 0.864
+        },
+        {
+          "when": {
+            "resolution": "4K"
+          },
+          "amount": 1.152
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "legacy",
+    "modelId": "banana-2k",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.9648
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "legacy",
+    "modelId": "banana-4k",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 1.728
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "legacy",
+    "modelId": "seedream",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.25
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "legacy",
+    "modelId": "seedream4",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.2
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "ark",
+    "modelId": "doubao-seedream-4-5-251128",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.25
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "ark",
+    "modelId": "doubao-seedream-4-0-250828",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.2
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "gemini-3-pro-image-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "2K"
+          },
+          "amount": 0.9648
+        },
+        {
+          "when": {
+            "resolution": "4K"
+          },
+          "amount": 1.728
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "gemini-3-pro-image-preview-batch",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "2K"
+          },
+          "amount": 0.4824
+        },
+        {
+          "when": {
+            "resolution": "4K"
+          },
+          "amount": 0.864
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "gemini-3.1-flash-image-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "0.5K"
+          },
+          "amount": 0.324
+        },
+        {
+          "when": {
+            "resolution": "1K"
+          },
+          "amount": 0.4824
+        },
+        {
+          "when": {
+            "resolution": "2K"
+          },
+          "amount": 0.7272
+        },
+        {
+          "when": {
+            "resolution": "4K"
+          },
+          "amount": 1.0872
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "gemini-2.5-flash-image",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.2808
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "imagen-4.0-generate-001",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.288
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "imagen-4.0-ultra-generate-001",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.432
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "imagen-4.0-fast-generate-001",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.144
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-fast-251015",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.2
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 0.43
+        },
+        {
+          "when": {
+            "resolution": "1080p"
+          },
+          "amount": 1.03
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-fast-251015-batch",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.1
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 0.22
+        },
+        {
+          "when": {
+            "resolution": "1080p"
+          },
+          "amount": 0.51
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-5-pro-251215",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p",
+            "generateAudio": true
+          },
+          "amount": 0.8
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "generateAudio": true
+          },
+          "amount": 1.73
+        },
+        {
+          "when": {
+            "resolution": "1080p",
+            "generateAudio": true
+          },
+          "amount": 3.89
+        },
+        {
+          "when": {
+            "resolution": "480p",
+            "generateAudio": false
+          },
+          "amount": 0.4
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "generateAudio": false
+          },
+          "amount": 0.86
+        },
+        {
+          "when": {
+            "resolution": "1080p",
+            "generateAudio": false
+          },
+          "amount": 1.94
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-5-pro-251215-batch",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p",
+            "generateAudio": true
+          },
+          "amount": 0.4
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "generateAudio": true
+          },
+          "amount": 0.86
+        },
+        {
+          "when": {
+            "resolution": "1080p",
+            "generateAudio": true
+          },
+          "amount": 1.94
+        },
+        {
+          "when": {
+            "resolution": "480p",
+            "generateAudio": false
+          },
+          "amount": 0.2
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "generateAudio": false
+          },
+          "amount": 0.43
+        },
+        {
+          "when": {
+            "resolution": "1080p",
+            "generateAudio": false
+          },
+          "amount": 0.97
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-250528",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.73
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 1.54
+        },
+        {
+          "when": {
+            "resolution": "1080p"
+          },
+          "amount": 3.67
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-pro-250528-batch",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.36
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 0.77
+        },
+        {
+          "when": {
+            "resolution": "1080p"
+          },
+          "amount": 1.84
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-lite-i2v-250428",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.49
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 1.03
+        },
+        {
+          "when": {
+            "resolution": "1080p"
+          },
+          "amount": 2.45
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "ark",
+    "modelId": "doubao-seedance-1-0-lite-i2v-250428-batch",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "480p"
+          },
+          "amount": 0.24
+        },
+        {
+          "when": {
+            "resolution": "720p"
+          },
+          "amount": 0.51
+        },
+        {
+          "when": {
+            "resolution": "1080p"
+          },
+          "amount": 1.22
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "google",
+    "modelId": "veo-3.1-generate-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4
+          },
+          "amount": 11.52
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6
+          },
+          "amount": 17.28
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 23.04
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8
+          },
+          "amount": 23.04
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "4k",
+            "duration": 8
+          },
+          "amount": 34.56
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 23.04
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8
+          },
+          "amount": 23.04
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "4k",
+            "duration": 8
+          },
+          "amount": 34.56
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "google",
+    "modelId": "veo-3.1-fast-generate-preview",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4
+          },
+          "amount": 4.32
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6
+          },
+          "amount": 6.48
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 8.64
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8
+          },
+          "amount": 8.64
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "4k",
+            "duration": 8
+          },
+          "amount": 20.16
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 8.64
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8
+          },
+          "amount": 8.64
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "4k",
+            "duration": 8
+          },
+          "amount": 20.16
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "google",
+    "modelId": "veo-3.0-generate-001",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "720p",
+            "duration": 4
+          },
+          "amount": 11.52
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "duration": 6
+          },
+          "amount": 17.28
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 23.04
+        },
+        {
+          "when": {
+            "resolution": "1080p",
+            "duration": 8
+          },
+          "amount": 23.04
+        },
+        {
+          "when": {
+            "resolution": "4k",
+            "duration": 8
+          },
+          "amount": 23.04
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "google",
+    "modelId": "veo-3.0-fast-generate-001",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "resolution": "720p",
+            "duration": 4
+          },
+          "amount": 4.32
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "duration": 6
+          },
+          "amount": 6.48
+        },
+        {
+          "when": {
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 8.64
+        },
+        {
+          "when": {
+            "resolution": "1080p",
+            "duration": 8
+          },
+          "amount": 8.64
+        },
+        {
+          "when": {
+            "resolution": "4k",
+            "duration": 8
+          },
+          "amount": 8.64
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "google",
+    "modelId": "veo-2.0-generate-001",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "duration": 5
+          },
+          "amount": 12.6
+        },
+        {
+          "when": {
+            "duration": 6
+          },
+          "amount": 15.12
+        },
+        {
+          "when": {
+            "duration": 8
+          },
+          "amount": 20.16
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-wan25",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 1.8
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-veo31",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 2.88
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-sora2",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 3.6
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-kling25",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 2.16
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/v2.5-turbo/pro/image-to-video",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "duration": 5
+          },
+          "amount": 0.35
+        },
+        {
+          "when": {
+            "duration": 10
+          },
+          "amount": 0.7
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/v3/standard/image-to-video",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "duration": 3
+          },
+          "amount": 0.504
+        },
+        {
+          "when": {
+            "duration": 4
+          },
+          "amount": 0.672
+        },
+        {
+          "when": {
+            "duration": 5
+          },
+          "amount": 0.84
+        },
+        {
+          "when": {
+            "duration": 6
+          },
+          "amount": 1.008
+        },
+        {
+          "when": {
+            "duration": 7
+          },
+          "amount": 1.176
+        },
+        {
+          "when": {
+            "duration": 8
+          },
+          "amount": 1.344
+        },
+        {
+          "when": {
+            "duration": 9
+          },
+          "amount": 1.512
+        },
+        {
+          "when": {
+            "duration": 10
+          },
+          "amount": 1.68
+        },
+        {
+          "when": {
+            "duration": 11
+          },
+          "amount": 1.848
+        },
+        {
+          "when": {
+            "duration": 12
+          },
+          "amount": 2.016
+        },
+        {
+          "when": {
+            "duration": 13
+          },
+          "amount": 2.184
+        },
+        {
+          "when": {
+            "duration": 14
+          },
+          "amount": 2.352
+        },
+        {
+          "when": {
+            "duration": 15
+          },
+          "amount": 2.52
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/v3/pro/image-to-video",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "duration": 3
+          },
+          "amount": 0.672
+        },
+        {
+          "when": {
+            "duration": 4
+          },
+          "amount": 0.896
+        },
+        {
+          "when": {
+            "duration": 5
+          },
+          "amount": 1.12
+        },
+        {
+          "when": {
+            "duration": 6
+          },
+          "amount": 1.344
+        },
+        {
+          "when": {
+            "duration": 7
+          },
+          "amount": 1.568
+        },
+        {
+          "when": {
+            "duration": 8
+          },
+          "amount": 1.792
+        },
+        {
+          "when": {
+            "duration": 9
+          },
+          "amount": 2.016
+        },
+        {
+          "when": {
+            "duration": 10
+          },
+          "amount": 2.24
+        },
+        {
+          "when": {
+            "duration": 11
+          },
+          "amount": 2.464
+        },
+        {
+          "when": {
+            "duration": 12
+          },
+          "amount": 2.688
+        },
+        {
+          "when": {
+            "duration": 13
+          },
+          "amount": 2.912
+        },
+        {
+          "when": {
+            "duration": 14
+          },
+          "amount": 3.136
+        },
+        {
+          "when": {
+            "duration": 15
+          },
+          "amount": 3.36
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "minimax",
+    "modelId": "minimax-hailuo-2.3",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "768p",
+            "duration": 6
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "768p",
+            "duration": 10
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6
+          },
+          "amount": 3.5
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "minimax",
+    "modelId": "minimax-hailuo-2.3-fast",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "768p",
+            "duration": 6
+          },
+          "amount": 1.35
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "768p",
+            "duration": 10
+          },
+          "amount": 2.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6
+          },
+          "amount": 2.31
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "minimax",
+    "modelId": "minimax-hailuo-02",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "512p",
+            "duration": 6
+          },
+          "amount": 0.6
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "512p",
+            "duration": 10
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "768p",
+            "duration": 6
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "768p",
+            "duration": 10
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6
+          },
+          "amount": 3.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "768p",
+            "duration": 6
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "768p",
+            "duration": 10
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6
+          },
+          "amount": 3.5
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "minimax",
+    "modelId": "t2v-01",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6
+          },
+          "amount": 3
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "minimax",
+    "modelId": "t2v-01-director",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6
+          },
+          "amount": 3
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "viduq3-pro",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 1.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 1.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 2.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 2.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 3.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 3.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 3.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 3.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 3.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 3.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 4.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 4.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 11,
+            "generateAudio": false
+          },
+          "amount": 4.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 11,
+            "generateAudio": true
+          },
+          "amount": 4.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 12,
+            "generateAudio": false
+          },
+          "amount": 5.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 12,
+            "generateAudio": true
+          },
+          "amount": 5.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 13,
+            "generateAudio": false
+          },
+          "amount": 5.6875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 13,
+            "generateAudio": true
+          },
+          "amount": 5.6875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 14,
+            "generateAudio": false
+          },
+          "amount": 6.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 14,
+            "generateAudio": true
+          },
+          "amount": 6.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 15,
+            "generateAudio": false
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 15,
+            "generateAudio": true
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 16,
+            "generateAudio": false
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 16,
+            "generateAudio": true
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 3.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 3.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 4.6875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 4.6875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 5.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 5.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 7.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 7.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 8.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 8.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 9.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 9.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 11,
+            "generateAudio": false
+          },
+          "amount": 10.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 11,
+            "generateAudio": true
+          },
+          "amount": 10.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 12,
+            "generateAudio": false
+          },
+          "amount": 11.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 12,
+            "generateAudio": true
+          },
+          "amount": 11.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 13,
+            "generateAudio": false
+          },
+          "amount": 12.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 13,
+            "generateAudio": true
+          },
+          "amount": 12.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 14,
+            "generateAudio": false
+          },
+          "amount": 13.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 14,
+            "generateAudio": true
+          },
+          "amount": 13.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 15,
+            "generateAudio": false
+          },
+          "amount": 14.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 15,
+            "generateAudio": true
+          },
+          "amount": 14.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 16,
+            "generateAudio": false
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 16,
+            "generateAudio": true
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 3
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 3
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 6
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 6
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 8
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 8
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 9
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 9
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 10
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 10
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 11,
+            "generateAudio": false
+          },
+          "amount": 11
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 11,
+            "generateAudio": true
+          },
+          "amount": 11
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 12,
+            "generateAudio": false
+          },
+          "amount": 12
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 12,
+            "generateAudio": true
+          },
+          "amount": 12
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 13,
+            "generateAudio": false
+          },
+          "amount": 13
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 13,
+            "generateAudio": true
+          },
+          "amount": 13
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 14,
+            "generateAudio": false
+          },
+          "amount": 14
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 14,
+            "generateAudio": true
+          },
+          "amount": 14
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 15,
+            "generateAudio": false
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 15,
+            "generateAudio": true
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 16,
+            "generateAudio": false
+          },
+          "amount": 16
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 16,
+            "generateAudio": true
+          },
+          "amount": 16
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 1.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 1.75
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.75
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 2.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 2.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 3.0625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 3.0625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 3.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 3.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 3.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 3.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 4.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 4.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 11,
+            "generateAudio": false
+          },
+          "amount": 4.8125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 11,
+            "generateAudio": true
+          },
+          "amount": 4.8125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 12,
+            "generateAudio": false
+          },
+          "amount": 5.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 12,
+            "generateAudio": true
+          },
+          "amount": 5.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 13,
+            "generateAudio": false
+          },
+          "amount": 5.6875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 13,
+            "generateAudio": true
+          },
+          "amount": 5.6875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 14,
+            "generateAudio": false
+          },
+          "amount": 6.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 14,
+            "generateAudio": true
+          },
+          "amount": 6.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 15,
+            "generateAudio": false
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 15,
+            "generateAudio": true
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 16,
+            "generateAudio": false
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 16,
+            "generateAudio": true
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 3.75
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 3.75
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 4.6875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 4.6875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 5.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 5.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 6.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 7.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 7.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 8.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 8.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 9.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 9.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 11,
+            "generateAudio": false
+          },
+          "amount": 10.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 11,
+            "generateAudio": true
+          },
+          "amount": 10.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 12,
+            "generateAudio": false
+          },
+          "amount": 11.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 12,
+            "generateAudio": true
+          },
+          "amount": 11.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 13,
+            "generateAudio": false
+          },
+          "amount": 12.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 13,
+            "generateAudio": true
+          },
+          "amount": 12.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 14,
+            "generateAudio": false
+          },
+          "amount": 13.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 14,
+            "generateAudio": true
+          },
+          "amount": 13.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 15,
+            "generateAudio": false
+          },
+          "amount": 14.0625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 15,
+            "generateAudio": true
+          },
+          "amount": 14.0625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 16,
+            "generateAudio": false
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 16,
+            "generateAudio": true
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 2
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 3
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 3
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 4
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 6
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 6
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 7
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 8
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 8
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 9
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 9
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 10
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 10
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 11,
+            "generateAudio": false
+          },
+          "amount": 11
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 11,
+            "generateAudio": true
+          },
+          "amount": 11
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 12,
+            "generateAudio": false
+          },
+          "amount": 12
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 12,
+            "generateAudio": true
+          },
+          "amount": 12
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 13,
+            "generateAudio": false
+          },
+          "amount": 13
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 13,
+            "generateAudio": true
+          },
+          "amount": 13
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 14,
+            "generateAudio": false
+          },
+          "amount": 14
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 14,
+            "generateAudio": true
+          },
+          "amount": 14
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 15,
+            "generateAudio": false
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 15,
+            "generateAudio": true
+          },
+          "amount": 15
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 16,
+            "generateAudio": false
+          },
+          "amount": 16
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 16,
+            "generateAudio": true
+          },
+          "amount": 16
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "viduq2-pro-fast",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 0.84375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 0.90625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 0.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 0.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 0.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 1.03125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 0.6875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.15625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 0.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 1.21875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 0.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 1.28125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.21875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.34375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 1.46875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 1.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 1.59375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 1.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.84375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 1.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 1.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 1.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 2.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 0.84375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 0.90625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 0.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 0.96875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 0.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 1.03125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 0.6875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.15625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.96875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.75
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.21875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.34375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 1
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 1.46875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 1.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 1.59375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 1.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.84375
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "viduq2-pro",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.46875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.46875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 2.34375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 2.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 3.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 3.28125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 3.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 3.59375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 3.59375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 4.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 4.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 4.53125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 4.53125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 5.46875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 5.46875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 5.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 5.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 6.40625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.46875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.46875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 2.34375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 3.59375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 3.59375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 4.0625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 4.0625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 4.53125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 4.53125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 5.46875
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "viduq2-turbo",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.65625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 0.84375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 0.90625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 0.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 0.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 0.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.03125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 0.6875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 1.15625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 0.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "540p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 1.21875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 2.34375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 2.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 3.28125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 2.34375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 2.96875
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 3.4375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 3.28125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 3.75
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": false
+          },
+          "amount": 3.59375
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 9,
+            "generateAudio": true
+          },
+          "amount": 4.0625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": false
+          },
+          "amount": 3.90625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 10,
+            "generateAudio": true
+          },
+          "amount": 4.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.65625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 0.84375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 0.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 0.90625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 0.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 0.96875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 0.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 1.03125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "540p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 0.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 0.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 0.3125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 0.78125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 0.9375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 2.34375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": false
+          },
+          "amount": 1.09375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 1,
+            "generateAudio": true
+          },
+          "amount": 1.5625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": false
+          },
+          "amount": 1.40625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 2,
+            "generateAudio": true
+          },
+          "amount": 1.875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": false
+          },
+          "amount": 1.71875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 3,
+            "generateAudio": true
+          },
+          "amount": 2.1875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": false
+          },
+          "amount": 2.03125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4,
+            "generateAudio": true
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": false
+          },
+          "amount": 2.34375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5,
+            "generateAudio": true
+          },
+          "amount": 2.8125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": false
+          },
+          "amount": 2.65625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 6,
+            "generateAudio": true
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": false
+          },
+          "amount": 2.96875
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 7,
+            "generateAudio": true
+          },
+          "amount": 3.4375
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": false
+          },
+          "amount": 3.28125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 8,
+            "generateAudio": true
+          },
+          "amount": 3.75
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "viduq1",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5
+          },
+          "amount": 2.5
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "viduq1-classic",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 5
+          },
+          "amount": 2.5
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 5
+          },
+          "amount": 2.5
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "video",
+    "provider": "vidu",
+    "modelId": "vidu2.0",
+    "pricing": {
+      "mode": "capability",
+      "tiers": [
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "360p",
+            "duration": 4
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 4
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "1080p",
+            "duration": 4
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "normal",
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "360p",
+            "duration": 4
+          },
+          "amount": 0.625
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 4
+          },
+          "amount": 1.25
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "1080p",
+            "duration": 4
+          },
+          "amount": 3.125
+        },
+        {
+          "when": {
+            "generationMode": "firstlastframe",
+            "resolution": "720p",
+            "duration": 8
+          },
+          "amount": 3.125
+        }
+      ]
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "system",
+    "modelId": "index-tts2",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.0144
+    }
+  },
+  {
+    "apiType": "voice",
+    "provider": "fal",
+    "modelId": "fal-ai/index-tts-2/text-to-speech",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.0144
+    }
+  },
+  {
+    "apiType": "voice-design",
+    "provider": "system",
+    "modelId": "bailian-voice-design",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.2
+    }
+  },
+  {
+    "apiType": "voice-design",
+    "provider": "bailian",
+    "modelId": "bailian",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.2
+    }
+  },
+  {
+    "apiType": "lip-sync",
+    "provider": "system",
+    "modelId": "kling",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.5
+    }
+  },
+  {
+    "apiType": "lip-sync",
+    "provider": "fal",
+    "modelId": "fal-ai/kling-video/lipsync/audio-to-video",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.5
+    }
+  },
+  {
+    "apiType": "lip-sync",
+    "provider": "bailian",
+    "modelId": "videoretalk",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.08
+    }
+  },
+  {
+    "apiType": "lip-sync",
+    "provider": "vidu",
+    "modelId": "vidu-lipsync",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.5
+    }
+  }
+]

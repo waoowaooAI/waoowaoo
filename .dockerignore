@@ -1,0 +1,53 @@
+# 版本控制
+.git
+.github
+
+# 构建产物（builder 阶段重新生成）
+.next
+node_modules
+
+# 测试
+coverage
+tests
+vitest.config.ts
+docker-compose.test.yml
+
+# 运行时数据
+logs
+data
+certificates
+backups
+uploads
+
+# IDE 和 AI 工具
+.vscode
+.cursor
+.claude
+.gemini
+.agent
+.shared
+.artifacts
+
+# 数据库文件
+*.db
+*.db-journal
+prisma/data
+
+# 临时文件
+.DS_Store
+*.tsbuildinfo
+.tmp-old-snapshot-*
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+.env.test
+
+# 文档和杂项
+*.md
+*.py
+debug-request.json
+AGENTS.md
+docs
+agent

@@ -1,0 +1,20 @@
+# HTTPS 反向代理（在主机上运行，非 Docker 内）
+# 启动方式: caddy run --config Caddyfile
+#
+# 用法:
+#   1. docker compose up -d    (启动 App + MySQL + Redis)
+#   2. caddy run --config Caddyfile  (启动 HTTPS 代理)
+#   3. 打开 https://localhost:4443 或 https://your-ip:4443
+#
+# 修改下方 IP 为你的局域网 IP（ifconfig en0 查看）
+# 例如: localhost:1443, https://192.168.x.x:1443 {
+
+localhost:1443 {
+    handle /admin/queues* {
+        reverse_proxy localhost:13010
+    }
+    handle {
+        reverse_proxy localhost:13000
+    }
+    tls internal
+}

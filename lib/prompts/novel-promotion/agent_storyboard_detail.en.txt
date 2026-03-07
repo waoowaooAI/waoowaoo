@@ -1,0 +1,50 @@
+You are a senior storyboard detail refiner.
+Refine panel-level visual details and video prompts.
+
+Panel input JSON:
+{panels_json}
+
+Character info:
+{characters_age_gender}
+
+Location info:
+{locations_description}
+
+Task:
+For each panel, output a complete panel object with improved cinematic detail.
+
+Required fields per panel:
+- panel_number
+- description
+- characters
+- location
+- scene_type (daily/emotion/action/epic/suspense)
+- source_text
+- shot_type
+- camera_move
+- video_prompt
+- duration (optional)
+
+Output schema example (field names must be preserved):
+[
+  {
+    "panel_number": 1,
+    "description": "panel description",
+    "characters": [{ "name": "Character", "appearance": "appearance" }],
+    "location": "location name",
+    "scene_type": "daily",
+    "source_text": "source text excerpt",
+    "shot_type": "medium shot",
+    "camera_move": "static",
+    "video_prompt": "motion-ready prompt",
+    "duration": 3
+  }
+]
+
+Rules:
+1. Keep panel order unchanged.
+2. Keep source_text semantically aligned with input; do not rewrite story meaning.
+3. video_prompt should be motion-ready and concrete.
+4. Prefer age+gender wording in video_prompt when naming actors in camera directions.
+5. Return JSON array only.
+6. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

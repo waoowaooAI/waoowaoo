@@ -1,0 +1,37 @@
+{
+  "globalAssets": "全局资产",
+  "createFailed": "创建失败",
+  "deleteFailed": "删除失败",
+  "renameFailed": "重命名失败",
+  "refreshFailed": "刷新失败",
+  "projectNotFound": "项目不存在",
+  "backToWorkspace": "返回工作区",
+  "episode": "剧集",
+  "modelSetup": {
+    "title": "开始创作前，请先配置默认模型",
+    "description": "当前账号还没有默认分析模型，智能分集和后续 AI 流程无法使用。请先完成默认模型配置。",
+    "configureNow": "立即配置分析模型",
+    "goProfile": "前往个人设置",
+    "modalTitle": "配置默认分析模型",
+    "modalDescription": "请选择一个可用的文本模型作为默认分析模型。",
+    "selectModelLabel": "默认分析模型",
+    "selectModelPlaceholder": "请选择分析模型",
+    "selectModelFirst": "请先选择分析模型",
+    "noModelOptions": "当前没有可用的文本模型，请先在个人设置中配置 Provider 和模型。",
+    "saveFailed": "保存默认分析模型失败，请稍后重试"
+  },
+  "sidebar": {
+    "dragToMove": "拖动调整位置",
+    "listTitle": "剧集列表",
+    "episodeCount": "{count}集",
+    "empty": "暂无剧集，点击下方创建",
+    "save": "保存",
+    "deleteConfirm": "确定删除「{name}」？",
+    "delete": "删除",
+    "cancel": "取消",
+    "rename": "重命名",
+    "newEpisodePlaceholder": "输入剧集名称...",
+    "create": "创建",
+    "addEpisode": "添加剧集"
+  }
+}

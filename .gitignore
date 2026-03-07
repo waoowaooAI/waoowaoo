@@ -1,0 +1,88 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# vercel
+.vercel
+
+# IDE and AI tools
+.vscode/
+.idea/
+.claude/
+.cursor/
+.gemini/
+.artifacts/
+.agent/
+.shared/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+/src/generated/prisma
+
+# logs
+/logs
+*.log
+
+# environment variables
+.env
+.env.local
+.env.test
+.env.*.local
+docker-logs/
+
+# database
+*.db
+*.db-journal
+prisma/data/
+
+# uploads (user data)
+uploads/
+/data/
+
+certificates
+
+# local temporary snapshots for old-version verification
+.tmp-old-snapshot-*/
+
+# temporary files
+tmp/
+
+# internal AI agent config (not for public)
+AGENTS.md
+agent/
+
+# internal docs (not for public)
+docs/
+
+# GitHub CI workflows (internal)
+.github/

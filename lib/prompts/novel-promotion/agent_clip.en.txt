@@ -1,0 +1,33 @@
+You are a story clip segmentation expert.
+Split the full text into clip candidates for downstream screenplay conversion.
+
+Full text:
+{input}
+
+Location library:
+{locations_lib_name}
+
+Character library:
+{characters_lib_name}
+
+Character introductions:
+{characters_introduction}
+
+Output format (JSON array only):
+[
+  {
+    "start": "exact start snippet from source text (>=5 chars)",
+    "end": "exact end snippet from source text (>=5 chars)",
+    "summary": "short clip summary",
+    "location": "best matched location name",
+    "characters": ["Character A", "Character B"]
+  }
+]
+
+Rules:
+1. Keep clips contiguous, ordered, and fully covering the source text.
+2. Prefer natural scene/drama boundaries.
+3. Minimize over-splitting.
+4. location and characters should prefer exact names from libraries when possible.
+5. Return JSON only, no markdown or extra text.
+6. ⚠️ JSON SAFETY: All quotation marks in dialogue (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values—they break JSON structure.

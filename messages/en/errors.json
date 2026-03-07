@@ -1,0 +1,22 @@
+{
+    "UNAUTHORIZED": "Please log in first",
+    "FORBIDDEN": "Access denied",
+    "NOT_FOUND": "Resource not found",
+    "INSUFFICIENT_BALANCE": "Insufficient API balance. Please top up and retry",
+    "RATE_LIMIT": "Too many requests. Please retry in {retryAfter} seconds",
+    "MODEL_NOT_OPEN": "Model permission is not activated. Go to https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&advancedActiveKey=model and click \"Activate all models\" in the top-right of Model Management",
+    "MODEL_NOT_REGISTERED": "Model is not registered. Add an available model in configuration first",
+    "QUOTA_EXCEEDED": "Quota exceeded. Please try again later",
+    "GENERATION_FAILED": "Generation failed. Please retry",
+    "GENERATION_TIMEOUT": "Generation timed out. Please retry",
+    "SENSITIVE_CONTENT": "Content may contain sensitive material",
+    "INVALID_PARAMS": "Invalid parameters",
+    "MISSING_CONFIG": "Please complete model configuration first",
+    "INTERNAL_ERROR": "Server error. Please try again later",
+    "NETWORK_ERROR": "Network error. Please check your connection",
+    "EMPTY_RESPONSE": "Model returned an empty response (no meaningful content). Please retry",
+    "EXTERNAL_ERROR": "External service temporarily unavailable. Please retry later",
+    "TASK_NOT_READY": "Task is still processing",
+    "NO_RESULT": "Task has no result",
+    "CONFLICT": "Resource state conflict"
+}

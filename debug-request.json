@@ -1,0 +1,9 @@
+{
+  "model": "doubao-seedream-4-0-250828",
+  "prompt": "Lily and Olivia in 医院病房_日夜, medium shot, dramatic lighting, American comic style",
+  "sequential_image_generation": "disabled",
+  "response_format": "url",
+  "size": "1080x1920",
+  "stream": false,
+  "watermark": false
+}

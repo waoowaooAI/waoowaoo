@@ -1,0 +1,22 @@
+# Reference Image To Character Sheet Prompt (img2img)
+
+Use the provided reference image to extract face traits, hairstyle, body shape, and outfit structure.
+
+## Style priority
+Follow the user-selected style instruction as the highest-priority rule.
+Use reference images only to preserve character identity traits (face, hairstyle, body shape, outfit structure), and do not let reference style override the requested style.
+Only if no explicit style instruction is provided, you may preserve the original visual style.
+
+## Generation rules
+1. Ignore the original image color cast and lighting defects
+2. Use clean, soft studio lighting
+3. Keep natural, aesthetically correct body proportions
+4. Do not copy blur, noise, compression artifacts, or defects
+5. Output must be clear, sharp, and production-quality
+6. Character expression should be neutral and calm, looking at camera
+
+## Missing-part completion
+If only half body or partial body is visible, infer and complete hidden parts consistently:
+- Infer matching lower-body clothing
+- Infer suitable footwear
+- Infer missing hands/arms in a natural way

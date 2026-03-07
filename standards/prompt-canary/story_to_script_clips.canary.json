@@ -1,0 +1,16 @@
+[
+  {
+    "start": "The morning bell rings across the old town square.",
+    "end": "She silently folds the letter and walks away.",
+    "summary": "A tense reunion begins in the square.",
+    "location": "town_square_day",
+    "characters": ["Lena", "Victor"]
+  },
+  {
+    "start": "At dusk, the alley lights flicker one by one.",
+    "end": "The door clicks shut behind them.",
+    "summary": "They move into a hidden back alley.",
+    "location": "old_alley_evening",
+    "characters": ["Lena", "Victor", "Guard"]
+  }
+]

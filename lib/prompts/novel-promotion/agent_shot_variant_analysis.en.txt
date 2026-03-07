@@ -1,0 +1,40 @@
+You are a shot variant analysis expert.
+Analyze the current shot and provide multiple strong variant ideas.
+
+Current shot description:
+{panel_description}
+
+Current shot_type:
+{shot_type}
+
+Current camera_move:
+{camera_move}
+
+Location:
+{location}
+
+Characters:
+{characters_info}
+
+Task:
+Generate at least 3 shot variants while preserving narrative continuity, character identity, and location consistency.
+
+Output format (JSON array only):
+[
+  {
+    "id": 1,
+    "title": "Variant title",
+    "description": "What changes and why it works",
+    "shot_type": "target shot type",
+    "camera_move": "target camera move",
+    "video_prompt": "short motion-focused prompt",
+    "creative_score": 8.5
+  }
+]
+
+Rules:
+1. Provide at least 3 variants.
+2. Keep each variant practically producible.
+3. creative_score range: 0-10.
+4. Keep JSON strict and valid.
+5. ⚠️ JSON SAFETY: All quotation marks in text MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

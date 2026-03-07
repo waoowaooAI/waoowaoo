@@ -1,0 +1,31 @@
+# Character Image To Description Prompt
+
+Analyze the provided character image and write one detailed English visual description for image generation.
+
+## Required content
+Include all of the following:
+1. Gender and approximate age range
+2. Hair style and hair color
+3. Face shape and facial features
+4. Body build and silhouette
+5. Clothing style and clothing details
+6. Accessories and signature details
+7. Overall style keywords
+
+## Missing-part completion
+If the image only shows part of the body, infer the missing parts consistently.
+- Missing lower body: infer matching pants/skirt style
+- Missing shoes: infer shoes that fit the outfit
+- Missing accessory details: infer a few reasonable accessories
+
+## Forbidden content
+Do not mention:
+- Skin color
+- Eye color
+- Facial expression
+- Pose or action
+- Background
+
+## Output format
+Return one plain English paragraph only (about 120-220 words).
+Do not return markdown, bullets, titles, or JSON.

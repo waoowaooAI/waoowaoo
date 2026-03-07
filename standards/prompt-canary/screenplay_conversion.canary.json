@@ -1,0 +1,33 @@
+{
+  "clip_id": "clip_1",
+  "original_text": "Lena enters the hall and speaks to Victor.",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "heading": {
+        "int_ext": "INT",
+        "location": "grand_hall_night",
+        "time": "night"
+      },
+      "description": "A large hall lit by chandeliers with long shadows on the floor.",
+      "characters": ["Lena", "Victor"],
+      "content": [
+        {
+          "type": "action",
+          "text": "Lena steps forward and places the sealed letter on the table."
+        },
+        {
+          "type": "dialogue",
+          "character": "Lena",
+          "parenthetical": "firmly",
+          "lines": "You need to read this now."
+        },
+        {
+          "type": "voiceover",
+          "character": "Narrator",
+          "text": "The room holds its breath."
+        }
+      ]
+    }
+  ]
+}

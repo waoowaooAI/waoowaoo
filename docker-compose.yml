@@ -1,0 +1,165 @@
+services:
+  # ==================== MySQL ====================
+  mysql:
+    image: mysql:8.0
+    container_name: waoowaoo-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: waoowaoo123
+      MYSQL_DATABASE: waoowaoo
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--sql_mode=STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -pwaoowaoo123"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  # ==================== Redis ====================
+  redis:
+    image: redis:7-alpine
+    container_name: waoowaoo-redis
+    restart: unless-stopped
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  # ==================== MinIO ====================
+  minio:
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
+    container_name: waoowaoo-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "19000:9000"
+      - "19001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-02-21T16-00-46Z
+    container_name: waoowaoo-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb --ignore-existing local/waoowaoo
+      "
+
+  # ==================== App (Next.js + Workers) ====================
+  app:
+    build: .
+    container_name: waoowaoo-app
+    restart: unless-stopped
+    environment:
+      # 数据库（指向容器内部 MySQL，用服务名 mysql 而非 localhost）
+      DATABASE_URL: "mysql://root:waoowaoo123@mysql:3306/waoowaoo"
+      # Redis（指向容器内部 Redis，用服务名 redis）
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ""
+      REDIS_TLS: ""
+      # 存储：默认 MinIO（S3 兼容）
+      STORAGE_TYPE: minio
+      MINIO_ENDPOINT: "http://minio:9000"
+      MINIO_REGION: "us-east-1"
+      MINIO_BUCKET: "waoowaoo"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin"
+      MINIO_FORCE_PATH_STYLE: "true"
+      # 认证
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "waoowaoo-default-secret-2026"
+      # 内部密钥
+      CRON_SECRET: "waoowaoo-docker-cron-secret"
+      INTERNAL_TASK_TOKEN: "waoowaoo-docker-task-token"
+      API_ENCRYPTION_KEY: "waoowaoo-opensource-fixed-key-2026"
+      # Worker 配置
+      WATCHDOG_INTERVAL_MS: "30000"
+      TASK_HEARTBEAT_TIMEOUT_MS: "90000"
+      QUEUE_CONCURRENCY_IMAGE: "50"
+      QUEUE_CONCURRENCY_VIDEO: "50"
+      QUEUE_CONCURRENCY_VOICE: "20"
+      QUEUE_CONCURRENCY_TEXT: "50"
+      # Bull Board
+      BULL_BOARD_HOST: "0.0.0.0"
+      BULL_BOARD_PORT: "3010"
+      BULL_BOARD_BASE_PATH: "/admin/queues"
+      BULL_BOARD_USER: ""
+      BULL_BOARD_PASSWORD: ""
+      # 日志
+      LOG_UNIFIED_ENABLED: "true"
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "json"
+      LOG_DEBUG_ENABLED: "false"
+      LOG_AUDIT_ENABLED: "true"
+      LOG_SERVICE: "waoowaoo"
+      LOG_REDACT_KEYS: "password,token,apiKey,apikey,authorization,cookie,secret,access_token,refresh_token"
+      # 计费
+      BILLING_MODE: "OFF"
+      # 流式
+      LLM_STREAM_EPHEMERAL_ENABLED: "true"
+    ports:
+      - "13000:3000"
+      - "13010:3010"
+    volumes:
+      - ./data:/app/data
+      - ./docker-logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    command: >
+      sh -c "
+        npx prisma db push --skip-generate &&
+        (sleep 5 && echo '' &&
+        echo '╔══════════════════════════════════════════════════╗' &&
+        echo '║            waoowaoo is ready!                    ║' &&
+        echo '║                                                  ║' &&
+        echo '║  HTTP:  http://localhost:13000                    ║' &&
+        echo '║                                                  ║' &&
+        echo '║  For HTTPS, run Caddy on host:                   ║' &&
+        echo '║  caddy run --config Caddyfile                    ║' &&
+        echo '║  Then open: https://localhost:1443                ║' &&
+        echo '╚══════════════════════════════════════════════════╝' &&
+        echo '') &
+        npm run start
+      "
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:

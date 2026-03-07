@@ -1,0 +1,37 @@
+{
+  "globalAssets": "Global Assets",
+  "createFailed": "Creation failed",
+  "deleteFailed": "Deletion failed",
+  "renameFailed": "Rename failed",
+  "refreshFailed": "Refresh failed",
+  "projectNotFound": "Project not found",
+  "backToWorkspace": "Back to Workspace",
+  "episode": "Episode",
+  "modelSetup": {
+    "title": "Set up default models before starting",
+    "description": "No default analysis model is configured for this account. Smart split and downstream AI flows cannot run until it is set.",
+    "configureNow": "Configure Analysis Model",
+    "goProfile": "Go to Profile Settings",
+    "modalTitle": "Configure Default Analysis Model",
+    "modalDescription": "Select an available text model as the default analysis model.",
+    "selectModelLabel": "Default Analysis Model",
+    "selectModelPlaceholder": "Select an analysis model",
+    "selectModelFirst": "Please select an analysis model first",
+    "noModelOptions": "No text model is available. Configure your provider and models in Profile settings first.",
+    "saveFailed": "Failed to save default analysis model. Please try again."
+  },
+  "sidebar": {
+    "dragToMove": "Drag to move position",
+    "listTitle": "Episode List",
+    "episodeCount": "{count} episodes",
+    "empty": "No episodes yet. Create one below.",
+    "save": "Save",
+    "deleteConfirm": "Delete \"{name}\"?",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "rename": "Rename",
+    "newEpisodePlaceholder": "Enter episode name...",
+    "create": "Create",
+    "addEpisode": "Add Episode"
+  }
+}

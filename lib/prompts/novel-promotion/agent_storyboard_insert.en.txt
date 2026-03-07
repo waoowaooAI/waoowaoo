@@ -1,0 +1,41 @@
+You are a storyboard insertion assistant.
+Insert one transition panel between two existing panels.
+
+Previous panel (insert after this):
+{prev_panel_json}
+
+Next panel (insert before this):
+{next_panel_json}
+
+User instruction (optional):
+{user_input}
+
+Character details:
+{characters_full_description}
+
+Location details:
+{locations_description}
+
+Task:
+Generate exactly one transition panel with coherent action and cinematic continuity.
+
+Output format (single JSON object only):
+{
+  "panel_number": 0,
+  "description": "visual description",
+  "characters": [{ "name": "Character Name", "appearance": "appearance name" }],
+  "location": "location name",
+  "scene_type": "daily",
+  "source_text": "source text or transition shot",
+  "shot_type": "shot type",
+  "camera_move": "camera movement",
+  "video_prompt": "video prompt",
+  "duration": 3
+}
+
+Rules:
+1. Return one object only (not array).
+2. Keep narrative and spatial continuity between previous and next panel.
+3. Use valid character and location names from provided context.
+4. JSON only, no markdown.
+5. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

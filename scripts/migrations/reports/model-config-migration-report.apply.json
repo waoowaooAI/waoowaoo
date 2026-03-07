@@ -1,0 +1,1187 @@
+{
+  "generatedAt": "2026-02-12T12:51:54.103Z",
+  "mode": "apply",
+  "userPreference": {
+    "scanned": 7,
+    "updated": 1,
+    "updatedCustomModels": 1,
+    "updatedDefaultFields": 2
+  },
+  "novelPromotionProject": {
+    "scanned": 70,
+    "updated": 65,
+    "updatedFields": 189
+  },
+  "issues": [
+    {
+      "table": "userPreference",
+      "rowId": "0c3ddcbd-d6f7-4b57-90d0-3c2fe0d48c5c",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "anthropic/claude-sonnet-4.5",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "0c3ddcbd-d6f7-4b57-90d0-3c2fe0d48c5c",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "0c3ddcbd-d6f7-4b57-90d0-3c2fe0d48c5c",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "0c3ddcbd-d6f7-4b57-90d0-3c2fe0d48c5c",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "0c3ddcbd-d6f7-4b57-90d0-3c2fe0d48c5c",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "editModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "editModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "0c3ddcbd-d6f7-4b57-90d0-3c2fe0d48c5c",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "4c73593e-148d-4707-a2c2-087d2fd43a68",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "google/gemini-3-pro-preview",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "4c73593e-148d-4707-a2c2-087d2fd43a68",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "4c73593e-148d-4707-a2c2-087d2fd43a68",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "4c73593e-148d-4707-a2c2-087d2fd43a68",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "4c73593e-148d-4707-a2c2-087d2fd43a68",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "editModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "editModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "4c73593e-148d-4707-a2c2-087d2fd43a68",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "b33bc1c7-0ba8-475e-87e0-ba6ef897c2d2",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "google/gemini-3-pro-preview",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "b33bc1c7-0ba8-475e-87e0-ba6ef897c2d2",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "b33bc1c7-0ba8-475e-87e0-ba6ef897c2d2",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "b33bc1c7-0ba8-475e-87e0-ba6ef897c2d2",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "b33bc1c7-0ba8-475e-87e0-ba6ef897c2d2",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "editModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "editModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "b33bc1c7-0ba8-475e-87e0-ba6ef897c2d2",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "bb2a2aa3-29f9-4f85-9e93-6363faf17dc4",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "google/gemini-3-pro-preview",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "bb2a2aa3-29f9-4f85-9e93-6363faf17dc4",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "bb2a2aa3-29f9-4f85-9e93-6363faf17dc4",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "bb2a2aa3-29f9-4f85-9e93-6363faf17dc4",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "bb2a2aa3-29f9-4f85-9e93-6363faf17dc4",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "editModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "editModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "userPreference",
+      "rowId": "bb2a2aa3-29f9-4f85-9e93-6363faf17dc4",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "04ebb651-dc90-4c69-99d4-343dd037a9b9",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "anthropic/claude-sonnet-4.5",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "04ebb651-dc90-4c69-99d4-343dd037a9b9",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "04ebb651-dc90-4c69-99d4-343dd037a9b9",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "04ebb651-dc90-4c69-99d4-343dd037a9b9",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "04ebb651-dc90-4c69-99d4-343dd037a9b9",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "0574a234-e128-4196-a103-1fa8305f3ca0",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "0574a234-e128-4196-a103-1fa8305f3ca0",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "0a235755-3a90-44b1-813d-d00d163662b9",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "0a235755-3a90-44b1-813d-d00d163662b9",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "0a235755-3a90-44b1-813d-d00d163662b9",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "155e9723-b2ef-414f-8c5e-f9e1e34de536",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "1979ed4c-0d16-4696-a9ea-4a15e0c4cd0f",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "1979ed4c-0d16-4696-a9ea-4a15e0c4cd0f",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "1a296d18-c305-4639-9b11-3c694cd0718d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "1a296d18-c305-4639-9b11-3c694cd0718d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "2f898804-cda1-417a-9f58-6d19fa0f134d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3.0-pro-image-portrait",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "374c975a-8223-453e-81a4-d110c7e4b685",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "374c975a-8223-453e-81a4-d110c7e4b685",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "374c975a-8223-453e-81a4-d110c7e4b685",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "49909329-a771-4b18-a305-ff7d284bcf4e",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "49909329-a771-4b18-a305-ff7d284bcf4e",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "49909329-a771-4b18-a305-ff7d284bcf4e",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "49909329-a771-4b18-a305-ff7d284bcf4e",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "4f0eaccc-5fe4-4440-bcc0-be70892626c5",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "4f0eaccc-5fe4-4440-bcc0-be70892626c5",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "55e56c35-f59f-4d32-9e99-d67b46846870",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "55e56c35-f59f-4d32-9e99-d67b46846870",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "5cdef710-6aef-445a-b217-2cdb6987a68a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "5cdef710-6aef-445a-b217-2cdb6987a68a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "5cdef710-6aef-445a-b217-2cdb6987a68a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "5cdef710-6aef-445a-b217-2cdb6987a68a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "5d97db15-8e16-45dc-8fa7-5efa5a237a99",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "5d97db15-8e16-45dc-8fa7-5efa5a237a99",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "673acab3-9d09-4b1f-87cc-9cafbe60af80",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "673acab3-9d09-4b1f-87cc-9cafbe60af80",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "6bbb564a-14bd-4bc2-83e7-1a8e8612eb8e",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "anthropic/claude-sonnet-4.5",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "6bbb564a-14bd-4bc2-83e7-1a8e8612eb8e",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "6bbb564a-14bd-4bc2-83e7-1a8e8612eb8e",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "6bbb564a-14bd-4bc2-83e7-1a8e8612eb8e",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "6bbb564a-14bd-4bc2-83e7-1a8e8612eb8e",
+      "userId": "edb99912-94ce-403d-97bb-2a29d5d20cb6",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "77b44773-1264-419f-b145-4c2a9cbbd977",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "77b44773-1264-419f-b145-4c2a9cbbd977",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "77b44773-1264-419f-b145-4c2a9cbbd977",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "77b44773-1264-419f-b145-4c2a9cbbd977",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "788c5fc0-e3b6-48dd-a2e5-719069726a08",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "788c5fc0-e3b6-48dd-a2e5-719069726a08",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "811a2cde-2a8e-4934-947b-18bf9d6331e0",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana-2k",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "88dbc942-e549-48f8-808b-53e57fbdb97f",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "88dbc942-e549-48f8-808b-53e57fbdb97f",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "8ef54b9c-0142-49ad-a9cd-ec94c5132731",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "8ef54b9c-0142-49ad-a9cd-ec94c5132731",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "8ef54b9c-0142-49ad-a9cd-ec94c5132731",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "9b48f96d-7d46-4264-abfd-82ee338eecd7",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b1013460-0798-43f2-87bd-7b018cca1d58",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana-2k",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b8740c4d-0694-4106-9831-db665225a0c5",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b8740c4d-0694-4106-9831-db665225a0c5",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b8740c4d-0694-4106-9831-db665225a0c5",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b9f3f933-13d6-461a-bb80-1e94b48c855d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b9f3f933-13d6-461a-bb80-1e94b48c855d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b9f3f933-13d6-461a-bb80-1e94b48c855d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "b9f3f933-13d6-461a-bb80-1e94b48c855d",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bc31aa21-9eec-47d2-9853-e4b34d926b6a",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "google/gemini-3-pro-preview",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bc31aa21-9eec-47d2-9853-e4b34d926b6a",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bc31aa21-9eec-47d2-9853-e4b34d926b6a",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bc31aa21-9eec-47d2-9853-e4b34d926b6a",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bc31aa21-9eec-47d2-9853-e4b34d926b6a",
+      "userId": "5a28aff0-e370-4337-acf6-0f8ce86f346a",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bcf736cd-aeb9-49ce-bb36-d878400bbfd6",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bcf736cd-aeb9-49ce-bb36-d878400bbfd6",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bcf736cd-aeb9-49ce-bb36-d878400bbfd6",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "bcf736cd-aeb9-49ce-bb36-d878400bbfd6",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c38b1c73-9baa-4a03-86b7-5f6dbecc0e1e",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c38b1c73-9baa-4a03-86b7-5f6dbecc0e1e",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c61f1a58-42e8-4989-968b-5a373ae77e1a",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "google/gemini-3-pro-preview",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c61f1a58-42e8-4989-968b-5a373ae77e1a",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c61f1a58-42e8-4989-968b-5a373ae77e1a",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c61f1a58-42e8-4989-968b-5a373ae77e1a",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "c61f1a58-42e8-4989-968b-5a373ae77e1a",
+      "userId": "bea0c5b7-73f0-4048-8cb9-e6ef18650a0f",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ca374b6b-5666-4940-a859-23761fbacd62",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "openai/gpt-5.2",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "d1bbeef0-94d5-4247-b90f-105b432649e1",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "d1bbeef0-94d5-4247-b90f-105b432649e1",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "d2c7979d-839b-4baa-bbf0-c726f2cc09bb",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "imagen-4.0-ultra-generate-001",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "d2c7979d-839b-4baa-bbf0-c726f2cc09bb",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "d2c7979d-839b-4baa-bbf0-c726f2cc09bb",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "dc0669ec-effc-4626-a038-bbf48994d65a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "dc0669ec-effc-4626-a038-bbf48994d65a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "dc0669ec-effc-4626-a038-bbf48994d65a",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-fast-251015-batch",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "de428a7c-e719-4cda-874a-7c54878a14bc",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana-2k",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ec2526c0-1acd-4081-b13d-019d5d425710",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ec2526c0-1acd-4081-b13d-019d5d425710",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ec2526c0-1acd-4081-b13d-019d5d425710",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ed2d93ad-5cfa-4bd0-b373-a65aae679ef5",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ee5e7440-c825-4c0c-b903-0a51d983db6f",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ee5e7440-c825-4c0c-b903-0a51d983db6f",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f36d983d-ba52-4849-bcda-0d710b2e04f9",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "nano-banana-pro",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f36d983d-ba52-4849-bcda-0d710b2e04f9",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "editModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "nano-banana-pro",
+      "message": "editModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f38e00d3-09b0-47a5-8caf-71d491bae4d1",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "analysisModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "google/gemini-3-pro-preview",
+      "message": "analysisModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f38e00d3-09b0-47a5-8caf-71d491bae4d1",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f38e00d3-09b0-47a5-8caf-71d491bae4d1",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f38e00d3-09b0-47a5-8caf-71d491bae4d1",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "banana",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f38e00d3-09b0-47a5-8caf-71d491bae4d1",
+      "userId": "91c9fe74-556d-4036-a2a0-ebd3336fd8d8",
+      "field": "videoModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "doubao-seedance-1-0-pro-250528",
+      "message": "videoModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f45efd24-37b1-4ca6-8808-0b5c9de205f1",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f45efd24-37b1-4ca6-8808-0b5c9de205f1",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "f45efd24-37b1-4ca6-8808-0b5c9de205f1",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ff9129c7-f76f-4ab0-8fae-84be89b62390",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "characterModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "characterModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ff9129c7-f76f-4ab0-8fae-84be89b62390",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "locationModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "seedream4.5",
+      "message": "locationModel legacy modelId cannot be mapped"
+    },
+    {
+      "table": "novelPromotionProject",
+      "rowId": "ff9129c7-f76f-4ab0-8fae-84be89b62390",
+      "userId": "3d84c341-87d7-4165-971d-a3f6c576aa21",
+      "field": "storyboardModel",
+      "kind": "LEGACY_MODEL_ID_NOT_FOUND",
+      "rawValue": "gemini-3-pro-image-preview-batch",
+      "message": "storyboardModel legacy modelId cannot be mapped"
+    }
+  ]
+}

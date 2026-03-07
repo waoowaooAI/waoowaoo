@@ -1,0 +1,166 @@
+{
+  "stages": {
+    "story": "Story",
+    "script": "Script",
+    "storyboard": "Storyboard",
+    "video": "Video",
+    "editor": "AI Editor",
+    "editorComingSoon": "Coming soon, follow us for updates"
+  },
+  "buttons": {
+    "assetLibrary": "Asset Library",
+    "settings": "Project Config",
+    "refreshData": "Refresh Data",
+    "enterVideoGeneration": "Enter Video Generation →"
+  },
+  "smartImport": {
+    "title": "Start Your Creative Journey",
+    "subtitle": "First, choose your creation method",
+    "manualCreate": {
+      "title": "Create from Episode 1",
+      "description": "Start from episode 1, suitable for episodic creation or single short videos",
+      "button": "Start Creating"
+    },
+    "smartImport": {
+      "title": "Smart Import Full Book",
+      "description": "Upload a complete novel or script, AI engine automatically recognizes chapter structure and splits into episodes.",
+      "button": "Import Now",
+      "recommended": "Recommended"
+    },
+    "upload": {
+      "title": "Upload Raw Material",
+      "subtitle": "AI engine is ready, automatic episode splitting and formatting",
+      "maxWords": "(Max 30,000 words)",
+      "textInput": "Enter Text Content",
+      "documentUpload": "Upload Full Document",
+      "placeholder": "Paste your novel chapters or script content here...",
+      "filePlaceholder": "File uploaded mode",
+      "clickUpload": "Click to upload document",
+      "clearTextFirst": "Please clear left text first",
+      "supportedFormats": "Supports Word, TXT formats",
+      "preview": "Preview",
+      "expandPreview": "Expand More",
+      "collapsePreview": "Collapse",
+      "deleteFile": "Delete File",
+      "startAnalysis": "Start Smart Analysis",
+      "back": "Back",
+      "words": "words"
+    },
+    "analyzing": {
+      "title": "AI is Analyzing Your Story",
+      "description": "Recognizing chapter structure, smart splitting in progress...",
+      "autoSave": "Will auto-save after analysis complete"
+    },
+    "preview": {
+      "title": "Smart Splitting Complete",
+      "episodeCount": "Automatically split into {count} episodes",
+      "totalWords": "Total {count} words",
+      "autoSaved": "✓ Auto-saved",
+      "reanalyze": "Re-analyze",
+      "confirm": "Confirm Complete",
+      "saving": "Saving...",
+      "episodeList": "Episode List",
+      "addEpisode": "Add Episode",
+      "averageWords": "Average per episode",
+      "episodeContent": "Episode Content",
+      "episodePlaceholder": "Enter episode title...",
+      "summaryPlaceholder": "Enter plot summary...",
+      "newEpisode": "New Episode",
+      "deleteEpisode": "Delete Episode",
+      "deleteConfirm": {
+        "title": "Confirm Delete",
+        "message": "Are you sure you want to delete \"{title}\"?",
+        "cancel": "Cancel",
+        "confirm": "Confirm Delete"
+      },
+      "tip": {
+        "title": "Tip",
+        "content": "You can directly edit titles, summaries, and content. After clicking [Confirm Complete], episodes will be officially imported into the project"
+      }
+    },
+    "errors": {
+      "fileTooLarge": "File too large, please upload a file smaller than 10MB",
+      "docNotSupported": ".doc format not supported, please convert to .docx in Word",
+      "fileEmpty": "File content is empty",
+      "fileReadError": "File read failed, please try again",
+      "uploadFirst": "Please upload or paste content first",
+      "analyzeFailed": "Analysis failed",
+      "saveFailed": "Save failed"
+    },
+    "cancelConfirm": "Are you sure you want to cancel? Analyzed episodes will be cleared."
+  },
+  "storyInput": {
+    "currentEditing": "Currently editing: {name}",
+    "editingTip": "The following workflow is for this episode only. Switch episodes in the top left if needed",
+    "wordCount": "Word count:",
+    "assetLibraryTip": {
+      "title": "Need custom characters and locations?",
+      "description": "Click the 「Asset Library」 button in the top right to upload asset setting documents or manually add characters/locations. AI will prioritize using settings from the asset library for analysis."
+    },
+    "videoRatio": "Video Ratio",
+    "videoRatioHint": "Pick a ratio that matches your target platform and content format",
+    "ratioUsage": {
+      "1_1": "1:1: Square frame, good for avatars, covers and generic social posts",
+      "9_16": "9:16: Vertical video, ideal for TikTok, Reels, Shorts and other short‑video feeds",
+      "16_9": "16:9: Horizontal video, ideal for YouTube, Bilibili and desktop playback",
+      "4_3": "4:3: Classic TV ratio, useful for legacy footage or safe cropping",
+      "3_4": "3:4: Slightly vertical, suitable for mixed text + video layouts",
+      "2_3": "2:3: More vertical, good for posters and character key art",
+      "3_2": "3:2: Slightly horizontal, good for landscapes and story scenes",
+      "4_5": "4:5: Vertical poster ratio, common in social feed images",
+      "5_4": "5:4: Horizontal poster ratio, suitable for PC web banners",
+      "21_9": "21:9: Ultra‑wide cinematic frame, ideal for movie‑like shots and panoramas"
+    },
+    "ratioUsageTag": {
+      "1_1": "Square · Avatars/Covers",
+      "9_16": "Vertical · Short video",
+      "16_9": "Horizontal · Long video",
+      "4_3": "Horizontal · Classic TV",
+      "3_4": "Vertical · Text + video",
+      "2_3": "Vertical · Posters/Key art",
+      "3_2": "Horizontal · Landscape/Story",
+      "4_5": "Vertical · Feed image",
+      "5_4": "Horizontal · Banner",
+      "21_9": "Ultra‑wide · Cinema feel"
+    },
+    "visualStyle": "Visual Style",
+    "visualStyleHint": "Pick a style that matches your audience — e.g. Realistic for live‑action, Anime for 2D content",
+    "currentConfigSummary": "Current config: {ratio} · {style}. All subsequent generations will use this combo.",
+    "moreConfig": "For more configuration options, click the 「 Settings」 button in the top right",
+    "narration": {
+      "title": "Enable Narration Voiceover",
+      "description": "Generate TTS voice narration to add commentary to your video"
+    },
+    "creating": "AI Creating...",
+    "ready": "✓ Configuration complete, ready for next step",
+    "pleaseInput": "Please enter script content first"
+  },
+  "execution": {
+    "selectEpisode": "Please select an episode first",
+    "fillContentFirst": "Please enter content first",
+    "requestAborted": "Request aborted (possibly due to page refresh)",
+    "analysisFailed": "Asset analysis failed",
+    "prepareFailed": "Preparation failed",
+    "generationFailed": "Generation failed",
+    "batchVideoFailed": "Batch video generation failed",
+    "updateFailed": "Update failed",
+    "saveFailed": "Save failed",
+    "storyToScriptRunning": "Story→Script V2 running",
+    "scriptToStoryboardRunning": "Script→Storyboard V2 running",
+    "storyToScriptFailed": "Story to script failed",
+    "scriptToStoryboardFailed": "Script to storyboard failed",
+    "taskStreamTimeout": "Task timed out. The task may still be running in the background — please check its status or retry"
+  },
+  "rebuildConfirm": {
+    "storyToScript": {
+      "title": "Script Flow Will Be Rebuilt",
+      "message": "Downstream storyboard data is detected for this episode ({storyboardCount} storyboards, {panelCount} panels). Continuing will clear and rebuild this data. Continue?"
+    },
+    "scriptToStoryboard": {
+      "title": "Storyboard Data Will Be Rebuilt",
+      "message": "Existing storyboard data is detected for this episode ({storyboardCount} storyboards, {panelCount} panels). Continuing will clear current storyboards and regenerate them. Continue?"
+    },
+    "confirm": "Continue and Clear",
+    "cancel": "Cancel"
+  }
+}

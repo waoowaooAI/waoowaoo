@@ -1,0 +1,60 @@
+You are a screenplay conversion specialist.
+Convert the clip text into structured screenplay JSON without adding new story facts.
+
+Clip ID:
+{clip_id}
+
+Clip content:
+{clip_content}
+
+Location library:
+{locations_lib_name}
+
+Character library:
+{characters_lib_name}
+
+Character introductions:
+{characters_introduction}
+
+Output format (JSON object only):
+{
+  "clip_id": "{clip_id}",
+  "original_text": "original clip text",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "heading": {
+        "int_ext": "INT or EXT",
+        "location": "location name",
+        "time": "morning/day/evening/night"
+      },
+      "description": "scene setup",
+      "characters": ["Character A", "Character B"],
+      "content": [
+        {
+          "type": "action",
+          "text": "action description"
+        },
+        {
+          "type": "dialogue",
+          "character": "Character A",
+          "parenthetical": "optional performance cue",
+          "lines": "spoken line"
+        },
+        {
+          "type": "voiceover",
+          "character": "Narrator or Character",
+          "text": "voiceover content"
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+1. Preserve original story facts; do not invent new events.
+2. Keep scene/content order aligned with source text.
+3. Resolve character aliases to canonical names when possible.
+4. Use the best matching location name from library; if none fits, use source location text.
+5. Return strict JSON only.
+6. ⚠️ JSON SAFETY: All quotation marks in dialogue (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values—they break JSON structure.

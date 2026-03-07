@@ -1,0 +1,31 @@
+[
+  {
+    "panel_number": 1,
+    "description": "Wide shot of Lena entering the hall while Victor stands near the far table.",
+    "characters": [
+      { "name": "Lena", "appearance": "default" },
+      { "name": "Victor", "appearance": "formal" }
+    ],
+    "location": "grand_hall_night",
+    "scene_type": "daily",
+    "source_text": "Lena enters the hall and speaks to Victor.",
+    "shot_type": "wide shot",
+    "camera_move": "slow push in",
+    "video_prompt": "A woman walks into a grand hall and approaches a man at a long table.",
+    "duration": 3
+  },
+  {
+    "panel_number": 2,
+    "description": "Medium close-up of Lena placing a sealed letter on the table.",
+    "characters": [
+      { "name": "Lena", "appearance": "default" }
+    ],
+    "location": "grand_hall_night",
+    "scene_type": "emotion",
+    "source_text": "She places the letter in front of him.",
+    "shot_type": "medium close-up",
+    "camera_move": "static",
+    "video_prompt": "A young woman puts a sealed envelope on a wooden table.",
+    "duration": 2
+  }
+]

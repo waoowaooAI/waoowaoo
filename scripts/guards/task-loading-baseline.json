@@ -1,0 +1,9 @@
+{
+  "allowedDirectTaskStateUsageFiles": [
+    "src/lib/query/hooks/useTaskTargetStates.ts",
+    "src/lib/query/hooks/useTaskPresentation.ts",
+    "src/lib/query/hooks/useProjectAssets.ts",
+    "src/lib/query/hooks/useGlobalAssets.ts"
+  ],
+  "allowedLegacyGeneratingUsageFiles": []
+}

@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-02-12T12:53:12.288Z",
+  "mode": "dry-run",
+  "userPreference": {
+    "scanned": 7,
+    "updated": 4,
+    "updatedCustomModels": 0,
+    "updatedDefaultFields": 24
+  },
+  "novelPromotionProject": {
+    "scanned": 70,
+    "updated": 40,
+    "updatedFields": 106
+  },
+  "issues": []
+}

@@ -1,0 +1,6 @@
+{
+  "textModel": "anthropic/claude-sonnet-4",
+  "imageModel": "seedream",
+  "videoModel": "doubao-seedance-1-0-pro-fast-251015",
+  "voiceSeconds": 5
+}

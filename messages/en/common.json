@@ -1,0 +1,148 @@
+{
+    "appName": "waoowaoo",
+    "betaVersion": "Beta v{version}",
+    "updateNotice": {
+        "title": "New version available",
+        "subtitle": "Current v{current} · Latest v{latest}",
+        "description": "A newer version has been published on GitHub Releases. View the changelog to update safely.",
+        "releaseName": "Release",
+        "publishedAt": "Published",
+        "updateTag": "Update",
+        "viewRelease": "View update",
+        "remindLater": "Remind me later",
+        "close": "Close",
+        "openDialog": "Open update dialog",
+        "checkUpdate": "Check for updates",
+        "upToDate": "Already up to date"
+    },
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "clear": "Clear",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "generate": "Generate",
+    "regenerate": "Regenerate",
+    "preview": "Preview",
+    "download": "Download",
+    "upload": "Upload",
+    "select": "Select",
+    "add": "Add",
+    "remove": "Remove",
+    "refresh": "Refresh",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "all": "All",
+    "none": "None",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "copy": "Copy",
+    "paste": "Paste",
+    "apply": "Apply",
+    "autoSave": "Auto-save",
+    "saved": "Saved",
+    "episode": "Episode",
+    "project": "Project",
+    "editEpisodeName": "Edit Episode Name",
+    "deleteEpisode": "Delete Episode",
+    "deleteEpisodeConfirm": "Confirm Delete",
+    "newEpisode": "New Episode",
+    "optional": "(Optional)",
+    "rename": "Rename",
+    "dragToReorder": "Drag to reorder",
+    "episodeNamePlaceholder": "Enter episode name...",
+    "cancelSelection": "Cancel selection",
+    "referenceImage": "Reference image",
+    "previewLarge": "Preview large",
+    "viewOriginal": "View original",
+    "schemeN": "Scheme {n}",
+    "insufficientBalance": "Insufficient Balance",
+    "insufficientBalanceDetail": "Insufficient account balance, please recharge to continue",
+    "operationFailed": "Operation failed",
+    "pleaseRetry": "Please retry",
+    "recommended": "Recommended",
+    "language": {
+        "select": "Select language",
+        "zh": "Chinese",
+        "en": "English",
+        "switchConfirmTitle": "Switch language?",
+        "switchConfirmMessage": "Switching to {targetLanguage} will update not only interface text, but also end-to-end prompts, script generation, and workflow outputs. Continue?",
+        "switchConfirmAction": "Switch now"
+    },
+    "taskStatus": {
+        "intent": {
+            "generate": {
+                "running": {
+                    "image": "Generating",
+                    "video": "Generating",
+                    "audio": "Generating",
+                    "text": "Generating"
+                }
+            },
+            "regenerate": {
+                "running": {
+                    "image": "Regenerating",
+                    "video": "Regenerating",
+                    "audio": "Regenerating",
+                    "text": "Regenerating"
+                }
+            },
+            "modify": {
+                "running": {
+                    "image": "Modifying",
+                    "video": "Modifying",
+                    "audio": "Modifying",
+                    "text": "Modifying"
+                }
+            },
+            "analyze": {
+                "running": {
+                    "image": "Analyzing",
+                    "video": "Analyzing",
+                    "audio": "Analyzing",
+                    "text": "Analyzing"
+                }
+            },
+            "build": {
+                "running": {
+                    "image": "Building",
+                    "video": "Building",
+                    "audio": "Building",
+                    "text": "Building"
+                }
+            },
+            "convert": {
+                "running": {
+                    "image": "Converting",
+                    "video": "Converting",
+                    "audio": "Converting",
+                    "text": "Converting"
+                }
+            },
+            "process": {
+                "running": {
+                    "image": "Processing",
+                    "video": "Processing",
+                    "audio": "Processing",
+                    "text": "Processing"
+                }
+            }
+        },
+        "failed": {
+            "image": "Failed",
+            "video": "Failed",
+            "audio": "Failed",
+            "text": "Failed"
+        }
+    }
+}
