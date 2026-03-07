@@ -1,57 +1,61 @@
+# **🚀 探索 AI 影视的下一代创作流 | [立即加入 waoowaoo 在线网页版内测候补](https://www.waoowaoo.com/)**
+
 <p align="center">
   <img src="public/banner.png" alt="waoowaoo" width="600">
 </p>
 
-<h1 align="center">waoowaoo AI Video Studio</h1>
+<h1 align="center">waoowaoo AI 影视 Studio</h1>
 
 <p align="center">
-  An AI-powered tool for creating short drama / comic videos — automatically generates storyboards, characters, and scenes from novel text, then assembles them into complete videos.
+  一款基于 AI 技术的短剧/漫画视频制作工具，支持从小说文本自动生成分镜、角色、场景，并制作成完整视频。
 </p>
 
 <p align="center">
-  <a href="README_zh.md">中文文档</a> · <a href="https://www.waoowaoo.com/">Online Demo</a> · <a href="https://github.com/saturndec/waoowaoo/issues">Report Bug</a>
+  <a href="README_en.md">English</a> · <a href="https://www.waoowaoo.com/">加入内测候补</a> · <a href="https://github.com/saturndec/waoowaoo/issues">反馈问题</a>
 </p>
 
 > [!IMPORTANT]
-> **Beta Notice**: This project is currently in its early beta stage. As it is currently a solo-developed project, some bugs and imperfections are to be expected. We are iterating rapidly — please stay tuned for frequent updates! We are committed to rolling out a massive roadmap of new features and optimizations, with the ultimate goal of becoming the top-tier solution in the industry. Your feedback and feature requests are highly welcome!
+> ⚠️ **测试版声明**：本项目目前处于测试初期阶段，由于暂时只有我一个人开发，存在部分 bug 和不完善之处。我们正在快速迭代更新中，**欢迎进群反馈问题和需求，及时关注项目更新！目前更新会非常频繁，后续会增加大量新功能以及优化效果，我们的目标是成为行业最强AI工具！**
+
+<img src="images/dab6b4105e3260f37ba2d5f536dce259.jpg" width="30%">
 
 ---
 
-## ✨ Features
+## ✨ 功能特性
 
-- 🎬 **AI Script Analysis** — Parse novels, extract characters, scenes & plot automatically
-- 🎨 **Character & Scene Generation** — Consistent AI-generated character and scene images
-- 📽️ **Storyboard Video** — Auto-generate shots and compose into complete videos
-- 🎙️ **AI Voiceover** — Multi-character voice synthesis
-- 🌐 **Bilingual UI** — Chinese / English, switch in the top-right corner
+- 🎬 **AI 剧本分析** — 自动解析小说，提取角色、场景、剧情
+- 🎨 **角色 & 场景生成** — AI 生成一致性人物和场景图片
+- 📽️ **分镜视频制作** — 自动生成分镜头并合成视频
+- 🎙️ **AI 配音** — 多角色语音合成
+- 🌐 **多语言支持** — 中文 / 英文界面，右上角一键切换
 
 ---
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-**Prerequisites**: Install [Docker Desktop](https://docs.docker.com/get-docker/)
+**前提条件**：安装 [Docker Desktop](https://docs.docker.com/get-docker/)
 
-### Method 1: Pull Pre-built Image (Easiest)
+### 方式一：拉取预构建镜像（最简单）
 
-No need to clone the repository. Just download and run:
+无需克隆仓库，下载即用：
 
 ```bash
-# Download docker-compose.yml
+# 下载 docker-compose.yml
 wget https://raw.githubusercontent.com/saturndec/waoowaoo/main/docker-compose.yml
 
-# Replace local build with pre-built image
+# 将本地构建替换为预构建镜像
 sed -i 's|build: \.|image: ghcr.io/saturndec/waoowaoo:latest|' docker-compose.yml
 
-# Start all services
+# 启动所有服务
 docker compose up -d
 ```
 
-To update:
+更新版本：
 ```bash
 docker compose pull && docker compose up -d
 ```
 
-### Method 2: Clone & Docker Build (Full Control)
+### 方式二：克隆仓库 + Docker 构建（完全控制）
 
 ```bash
 git clone https://github.com/saturndec/waoowaoo.git
@@ -59,63 +63,63 @@ cd waoowaoo
 docker compose up -d
 ```
 
-To update:
+更新版本：
 ```bash
 git pull
 docker compose down && docker compose up -d --build
 ```
 
-### Method 3: Local Development (For Developers)
+### 方式三：本地开发模式（开发者）
 
 ```bash
 git clone https://github.com/saturndec/waoowaoo.git
 cd waoowaoo
 npm install
 
-# Start infrastructure only
+# 只启动基础设施
 docker compose up mysql redis minio -d
 
-# Run database migration
+# 运行数据库迁移
 npx prisma db push
 
-# Start development server
+# 启动开发服务器
 npm run dev
 ```
 
 ---
 
-Visit [http://localhost:13000](http://localhost:13000) (Method 1 & 2) or [http://localhost:3000](http://localhost:3000) (Method 3) to get started!
+访问 [http://localhost:13000](http://localhost:13000)（方式一、二）或 [http://localhost:3000](http://localhost:3000)（方式三）开始使用！
 
-> The database is initialized automatically on first launch — no extra configuration needed.
+> 首次启动会自动完成数据库初始化，无需任何额外配置。
 
 > [!TIP]
-> **If you experience lag**: HTTP mode may limit browser connections. Install [Caddy](https://caddyserver.com/docs/install) for HTTPS:
+> **如果遇到网页卡顿**：HTTP 模式下浏览器可能限制并发连接。可安装 [Caddy](https://caddyserver.com/docs/install) 启用 HTTPS：
 > ```bash
 > caddy run --config Caddyfile
 > ```
-> Then visit [https://localhost:1443](https://localhost:1443)
+> 然后访问 [https://localhost:1443](https://localhost:1443)
 
 ---
 
-## 🔧 API Configuration
+## 🔧 API 配置
 
-After launching, go to **Settings** to configure your AI service API keys. A built-in guide is provided.
+启动后进入**设置中心**配置 AI 服务的 API Key，内置配置教程。
 
-> 💡 **Recommended**: Tested with ByteDance Volcano Engine (Seedance, Seedream) and Google AI Studio. Text models currently require OpenRouter API.
-
----
-
-## 📦 Tech Stack
-
-- **Framework**: Next.js 15 + React 19
-- **Database**: MySQL + Prisma ORM
-- **Queue**: Redis + BullMQ
-- **Styling**: Tailwind CSS v4
-- **Auth**: NextAuth.js
+> 💡 **推荐**：已测试 字节跳动火山引擎（Seedance、Seedream）和 Google AI Studio。文本模型目前需要 OpenRouter API。
 
 ---
 
-## 📦 Preview
+## 📦 技术栈
+
+- **框架**: Next.js 15 + React 19
+- **数据库**: MySQL + Prisma ORM
+- **队列**: Redis + BullMQ
+- **样式**: Tailwind CSS v4
+- **认证**: NextAuth.js
+
+---
+
+## 📦 页面功能预览
 
 ![4f7b913264f7f26438c12560340e958c67fa833a](https://github.com/user-attachments/assets/fa0e9c57-9ea0-4df3-893e-b76c4c9d304b)
 ![67509361cbe6809d2496a550de5733b9f99a9702](https://github.com/user-attachments/assets/f2fb6a64-5ba8-4896-a064-be0ded213e42)
@@ -124,13 +128,13 @@ After launching, go to **Settings** to configure your AI service API keys. A bui
 
 ---
 
-## 🤝 Contributing
+## 🤝 参与方式
 
-This project is maintained by the core team. You're welcome to contribute by:
+本项目由核心团队独立维护。欢迎你通过以下方式参与：
 
-- 🐛 Filing [Issues](https://github.com/saturndec/waoowaoo/issues) — report bugs
-- 💡 Filing [Issues](https://github.com/saturndec/waoowaoo/issues) — propose features
-- 🔧 Submitting Pull Requests as references — we review every PR carefully for ideas, but the team implements fixes internally rather than merging external PRs directly
+- 🐛 提交 [Issue](https://github.com/saturndec/waoowaoo/issues) 反馈 Bug
+- 💡 提交 [Issue](https://github.com/saturndec/waoowaoo/issues) 提出功能建议
+- 🔧 提交 Pull Request 供参考 — 我们会认真审阅每一个 PR 的思路，但最终由团队自行实现修复，不会直接合并外部 PR
 
 ---
 
