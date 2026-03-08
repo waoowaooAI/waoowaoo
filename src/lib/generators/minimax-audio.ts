@@ -8,7 +8,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
  * 使用异步 T2A API：提交任务后返回 task_id，通过轮询获取结果
  */
 
-import { BaseAudioGenerator, AudioGenerateParams, GenerateResult } from './base'
+import { BaseAudioGenerator, type AudioGenerateParams, type GenerateResult } from './base'
 import { getProviderConfig } from '@/lib/api-config'
 
 const MINIMAX_BASE_URL = 'https://api.minimaxi.com/v1'

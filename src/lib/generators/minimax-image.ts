@@ -7,7 +7,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
  * 使用同步 API：直接返回 base64 图像数据
  */
 
-import { BaseImageGenerator, ImageGenerateParams, GenerateResult } from './base'
+import { BaseImageGenerator, type ImageGenerateParams, type GenerateResult } from './base'
 import { getProviderConfig } from '@/lib/api-config'
 
 const MINIMAX_BASE_URL = 'https://api.minimaxi.com/v1'
