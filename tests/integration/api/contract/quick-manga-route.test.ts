@@ -101,7 +101,7 @@ describe('api contract - quick manga route continuity', () => {
 
     expect(maybeSubmitLLMTaskMock).toHaveBeenCalledWith(expect.objectContaining({
       body: expect.objectContaining({
-        continuity: {
+        continuity: expect.objectContaining({
           sourceRunId: 'run-source',
           sourceStage: 'story-to-script',
           shortcut: 'history-regenerate',
@@ -112,7 +112,7 @@ describe('api contract - quick manga route continuity', () => {
             colorMode: 'full-color',
             style: 'line-art',
           },
-        },
+        }),
       }),
     }))
   })

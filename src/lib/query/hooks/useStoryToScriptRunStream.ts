@@ -10,6 +10,9 @@ export type StoryToScriptRunParams = {
   temperature?: number
   reasoning?: boolean
   reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high'
+  quickManga?: unknown
+  quickMangaControls?: unknown
+  continuity?: unknown
 }
 
 export type StoryToScriptRunResult = RunResult
@@ -69,6 +72,9 @@ export function useStoryToScriptRunStream({ projectId, episodeId }: UseStoryToSc
       temperature: params.temperature,
       reasoning: params.reasoning,
       reasoningEffort: params.reasoningEffort,
+      quickManga: params.quickManga,
+      quickMangaControls: params.quickMangaControls,
+      continuity: params.continuity,
       async: true,
       displayMode: 'detail',
     }),

@@ -21,9 +21,11 @@ describe('quick manga story input builder', () => {
 
     expect(merged).toContain('[QUICK_MANGA_ENTRY]')
     expect(merged).toContain('Preset: Comedy 4-koma')
-    expect(merged).toContain('Panel Layout: 4-koma Rhythm')
+    expect(merged).toContain('Panel Layout Input: 4-koma Rhythm')
+    expect(merged).toContain('Panel Layout Resolved: 4-koma Rhythm')
     expect(merged).toContain('Color Mode: Black & White')
     expect(merged).toContain('Visual Style: american-comic')
+    expect(merged).toContain('[LAYOUT_INTELLIGENCE_V1]')
     expect(merged).toContain('A student wakes up late and runs to school.')
   })
 

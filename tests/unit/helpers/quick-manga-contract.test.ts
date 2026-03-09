@@ -24,6 +24,19 @@ describe('quick manga contract helpers', () => {
         colorMode: 'auto',
         style: null,
       },
+      controls: {
+        styleLock: {
+          enabled: false,
+          profile: 'auto',
+          strength: 0.65,
+        },
+        chapterContinuity: {
+          mode: 'off',
+          chapterId: null,
+          conflictPolicy: 'balanced',
+        },
+      },
+      continuity: null,
     })
   })
 
@@ -42,9 +55,21 @@ describe('quick manga contract helpers', () => {
       quickManga: {
         enabled: true,
         preset: 'romance-drama',
-        layout: 'four-koma',
+        layout: 'splash-focus',
         colorMode: 'black-white',
         style: ' shojo ink ',
+      },
+      quickMangaControls: {
+        styleLock: {
+          enabled: true,
+          profile: 'line-consistent',
+          strength: 0.9,
+        },
+        chapterContinuity: {
+          mode: 'chapter-strict',
+          chapterId: ' chapter-02 ',
+          conflictPolicy: 'prefer-style-lock',
+        },
       },
     })
 
@@ -55,10 +80,23 @@ describe('quick manga contract helpers', () => {
       options: {
         enabled: true,
         preset: 'romance-drama',
-        layout: 'four-koma',
+        layout: 'splash-focus',
         colorMode: 'black-white',
         style: 'shojo ink',
       },
+      controls: {
+        styleLock: {
+          enabled: true,
+          profile: 'line-consistent',
+          strength: 0.9,
+        },
+        chapterContinuity: {
+          mode: 'chapter-strict',
+          chapterId: 'chapter-02',
+          conflictPolicy: 'prefer-style-lock',
+        },
+      },
+      continuity: null,
     })
   })
 

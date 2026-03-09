@@ -74,6 +74,8 @@ export const POST = apiHandler(async (
     style: parsed.options.style,
   }
 
+  const quickMangaControls = parsed.controls
+
   let continuity = parsed.continuity
   if (continuity?.shortcut === 'history-regenerate') {
     const sourceRunId = readString(continuity.sourceRunId)
@@ -116,6 +118,7 @@ export const POST = apiHandler(async (
         colorMode: continuity.reusedOptions.colorMode,
         style: continuity.reusedOptions.style || quickMangaPayload.style,
       },
+      reusedControls: continuity.reusedControls || quickMangaControls,
     }
   }
 
@@ -123,6 +126,7 @@ export const POST = apiHandler(async (
     ...body,
     episodeId: parsed.episodeId,
     quickManga: quickMangaPayload,
+    quickMangaControls,
     quickMangaStage: parsed.stage,
     continuity,
     content: parsed.stage === 'story-to-script'

@@ -9,6 +9,9 @@ export type ScriptToStoryboardRunParams = {
   temperature?: number
   reasoning?: boolean
   reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high'
+  quickManga?: unknown
+  quickMangaControls?: unknown
+  continuity?: unknown
 }
 
 export type ScriptToStoryboardRunResult = RunResult
@@ -64,6 +67,9 @@ export function useScriptToStoryboardRunStream({ projectId, episodeId }: UseScri
       temperature: params.temperature,
       reasoning: params.reasoning,
       reasoningEffort: params.reasoningEffort,
+      quickManga: params.quickManga,
+      quickMangaControls: params.quickMangaControls,
+      continuity: params.continuity,
       async: true,
       displayMode: 'detail',
     }),
