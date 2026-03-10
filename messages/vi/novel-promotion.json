@@ -136,10 +136,10 @@
         }
       },
       "history": {
-        "title": "Lịch sử Quick Manga",
-        "description": "Xem lại các run quick manga gần đây với trạng thái, continuity metadata và cấu hình có thể tái dùng",
-        "loading": "Đang tải lịch sử run...",
-        "empty": "Chưa có run quick manga cho bộ lọc này",
+        "title": "Lịch sử chạy Manga",
+        "description": "Xem lại các lần chạy Manga gần đây với trạng thái và cấu hình có thể tái sử dụng",
+        "loading": "Đang tải lịch sử chạy...",
+        "empty": "Chưa có lần chạy Manga cho bộ lọc này",
         "noPreview": "Chưa có preview",
         "filters": {
           "all": "Tất cả",
@@ -160,18 +160,18 @@
           "style": "Phong cách",
           "styleLockProfile": "Profile khóa style",
           "styleLockStrength": "Độ mạnh khóa style",
-          "chapterContinuityMode": "Chế độ continuity chapter",
+          "chapterContinuityMode": "Chế độ liên tục theo chương",
           "chapterId": "Chapter ID",
           "conflictPolicy": "Chính sách xung đột"
         },
         "continuityConflict": {
-          "title": "Xử lý xung đột continuity",
-          "helpText": "Khi style lock và chapter context xung đột, hệ thống áp dụng policy đã chọn để regenerate nhất quán."
+          "title": "Xử lý xung đột tính liên tục",
+          "helpText": "Khi khóa phong cách và ngữ cảnh theo chương xung đột, hệ thống áp dụng chính sách đã chọn để tái tạo nhất quán."
         },
         "conflictHints": {
-          "balanced": "Balanced: cân bằng giữa style lock và chapter context.",
-          "styleLockPriority": "Ưu tiên style lock: giữ style hình ảnh ổn định ngay cả khi chapter context lệch.",
-          "chapterContextPriority": "Ưu tiên chapter context: bám continuity chapter trước, nới style lock khi cần."
+          "balanced": "Cân bằng: dung hòa giữa khóa phong cách và ngữ cảnh theo chương.",
+          "styleLockPriority": "Ưu tiên khóa phong cách: giữ phong cách hình ảnh ổn định ngay cả khi ngữ cảnh theo chương lệch.",
+          "chapterContextPriority": "Ưu tiên ngữ cảnh theo chương: bám mạch chương trước, nới khóa phong cách khi cần."
         },
         "continuityShortcut": {
           "sourceRun": "Run nguồn: {runId}",
@@ -186,17 +186,17 @@
           "strength": "Độ mạnh Style Lock"
         },
         "chapter": {
-          "mode": "Chế độ continuity chapter",
+          "mode": "Chế độ liên tục theo chương",
           "id": "Chapter ID",
           "idPlaceholder": "Tùy chọn chapter id (vd: ch-02)",
           "conflictPolicy": "Chính sách xung đột"
         },
-        "conflictHelp": "Chọn policy để xử lý xung đột giữa style lock và chapter continuity khi regenerate."
+        "conflictHelp": "Chọn chính sách để xử lý xung đột giữa khóa phong cách và tính liên tục theo chương khi tái tạo."
       },
       "regenerate": {
-        "invalidSource": "Mục lịch sử đã chọn không phải nguồn quick manga hợp lệ",
-        "missingContent": "Không thể regenerate vì thiếu nội dung nguồn",
-        "failed": "Regenerate quick manga thất bại"
+        "invalidSource": "Mục lịch sử đã chọn không phải nguồn Manga hợp lệ",
+        "missingContent": "Không thể tái tạo vì thiếu nội dung nguồn",
+        "failed": "Tái tạo Manga thất bại"
       }
     },
     "narration": {

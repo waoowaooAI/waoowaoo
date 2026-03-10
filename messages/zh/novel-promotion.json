@@ -136,10 +136,10 @@
         }
       },
       "history": {
-        "title": "Quick Manga 历史记录",
-        "description": "查看最近 quick manga 运行，包含状态、continuity 元数据与可复用配置",
+        "title": "Manga 运行历史",
+        "description": "查看最近的 Manga 运行状态与可复用配置",
         "loading": "正在加载运行历史...",
-        "empty": "当前筛选下暂无 quick manga 运行",
+        "empty": "当前筛选下暂无 Manga 运行记录",
         "noPreview": "暂无预览",
         "filters": {
           "all": "全部",
@@ -166,12 +166,12 @@
         },
         "continuityConflict": {
           "title": "连续性冲突处理",
-          "helpText": "当 style lock 与 chapter context 冲突时，系统会按所选策略执行可预测的重生成。"
+          "helpText": "当风格锁定与章节上下文冲突时，系统会按所选策略执行可预测的重新生成。"
         },
         "conflictHints": {
-          "balanced": "平衡：在 style lock 与 chapter context 之间折中。",
-          "styleLockPriority": "优先 style lock：即使章节上下文冲突，也优先保持视觉风格一致。",
-          "chapterContextPriority": "优先 chapter context：先保证章节连续性，必要时放宽 style lock。"
+          "balanced": "平衡：在风格锁定与章节上下文之间折中。",
+          "styleLockPriority": "优先风格锁定：即使章节上下文冲突，也优先保持视觉风格一致。",
+          "chapterContextPriority": "优先章节上下文：先保证章节连续性，必要时放宽风格锁定。"
         },
         "continuityShortcut": {
           "sourceRun": "来源运行：{runId}",
@@ -194,9 +194,9 @@
         "conflictHelp": "选择策略以处理重生成时 style lock 与章节连续性的冲突。"
       },
       "regenerate": {
-        "invalidSource": "所选历史项不是有效的 quick manga 来源",
+        "invalidSource": "所选历史项不是有效的 Manga 来源",
         "missingContent": "由于缺少来源内容，无法重生成",
-        "failed": "Quick manga 重生成失败"
+        "failed": "Manga 重新生成失败"
       }
     },
     "narration": {

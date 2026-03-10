@@ -136,10 +136,10 @@
         }
       },
       "history": {
-        "title": "Quick Manga History",
-        "description": "Review recent quick manga runs with status, continuity metadata, and reusable settings",
+        "title": "Manga Run History",
+        "description": "Review recent Manga runs with status and reusable settings",
         "loading": "Loading run history...",
-        "empty": "No quick manga runs yet for this filter",
+        "empty": "No Manga runs yet for this filter",
         "noPreview": "No preview available",
         "filters": {
           "all": "All",
@@ -194,9 +194,9 @@
         "conflictHelp": "Choose policy to resolve style lock vs chapter continuity conflicts during regenerate."
       },
       "regenerate": {
-        "invalidSource": "Selected history item is not a valid quick manga source",
+        "invalidSource": "Selected history item is not a valid Manga source",
         "missingContent": "Cannot regenerate because source content is missing",
-        "failed": "Quick manga regenerate failed"
+        "failed": "Failed to regenerate Manga output"
       }
     },
     "narration": {
