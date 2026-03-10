@@ -102,7 +102,14 @@
     "videoRatio": "비디오 비율",
     "visualStyle": "비주얼 스타일",
     "moreConfig": "더 많은 구성 옵션을 보려면 오른쪽 상단의 「설정」 버튼을 클릭하세요.",
-    "quickManga": {
+    "narration": {
+      "title": "내레이션 음성 해설 활성화",
+      "description": "TTS 음성 내레이션을 생성하여 비디오에 해설을 추가하세요"
+    },
+    "creating": "AI 생성 중...",
+    "ready": "✓ 구성 완료, 다음 단계 준비 완료",
+    "pleaseInput": "스크립트 내용을 먼저 입력해주세요",
+    "manga": {
       "title": "Manga (Beta)",
       "description": "별도 모드로 이동하지 않고 현재 에디터에서 Manga 프리셋을 활성화합니다",
       "toggle": "Manga 모드 켜기",
@@ -136,10 +143,10 @@
         }
       },
       "history": {
-        "title": "퀵 망가 히스토리",
-        "description": "최근 quick manga 실행 내역을 상태, continuity 메타데이터, 재사용 설정과 함께 확인합니다",
+        "title": "Manga 실행 히스토리",
+        "description": "최근 Manga 실행 내역을 상태와 재사용 가능한 설정과 함께 확인합니다",
         "loading": "실행 히스토리 로딩 중...",
-        "empty": "이 필터에 해당하는 quick manga 실행이 아직 없습니다",
+        "empty": "이 필터에 해당하는 Manga 실행이 아직 없습니다",
         "noPreview": "미리보기가 없습니다",
         "filters": {
           "all": "전체",
@@ -194,18 +201,11 @@
         "conflictHelp": "재생성 시 스타일 락과 챕터 연속성 충돌을 해결할 정책을 선택하세요."
       },
       "regenerate": {
-        "invalidSource": "선택한 히스토리 항목은 유효한 quick manga 소스가 아닙니다",
+        "invalidSource": "선택한 히스토리 항목은 유효한 Manga 소스가 아닙니다",
         "missingContent": "원본 콘텐츠가 없어 재생성할 수 없습니다",
-        "failed": "Quick manga 재생성에 실패했습니다"
+        "failed": "Manga 출력 재생성에 실패했습니다"
       }
-    },
-    "narration": {
-      "title": "내레이션 음성 해설 활성화",
-      "description": "TTS 음성 내레이션을 생성하여 비디오에 해설을 추가하세요"
-    },
-    "creating": "AI 생성 중...",
-    "ready": "✓ 구성 완료, 다음 단계 준비 완료",
-    "pleaseInput": "스크립트 내용을 먼저 입력해주세요"
+    }
   },
   "execution": {
     "selectEpisode": "먼저 에피소드를 선택하세요.",

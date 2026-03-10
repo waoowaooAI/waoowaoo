@@ -4,7 +4,7 @@ import path from 'node:path'
 
 type NovelPromotionMessages = {
   storyInput?: {
-    quickManga?: {
+    manga?: {
       title?: string
       toggle?: string
     }
@@ -21,7 +21,7 @@ describe('manga entrypoint i18n label (VAT-87)', () => {
   it('uses unified title "Manga (Beta)" across locales', () => {
     for (const locale of ['en', 'vi', 'zh', 'ko'] as const) {
       const messages = readLocale(locale)
-      expect(messages.storyInput?.quickManga?.title).toBe('Manga (Beta)')
+      expect(messages.storyInput?.manga?.title).toBe('Manga (Beta)')
     }
   })
 
@@ -35,7 +35,7 @@ describe('manga entrypoint i18n label (VAT-87)', () => {
 
     for (const locale of Object.keys(expectedToggle) as Array<'en' | 'vi' | 'zh' | 'ko'>) {
       const messages = readLocale(locale)
-      expect(messages.storyInput?.quickManga?.toggle).toBe(expectedToggle[locale])
+      expect(messages.storyInput?.manga?.toggle).toBe(expectedToggle[locale])
     }
   })
 })

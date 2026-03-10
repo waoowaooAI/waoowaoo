@@ -215,7 +215,7 @@ export function useWorkspaceExecution({
     }
 
     if (!history?.options?.enabled) {
-      alert(t('storyInput.quickManga.regenerate.invalidSource'))
+      alert(t('storyInput.manga.regenerate.invalidSource'))
       return
     }
 
@@ -227,7 +227,7 @@ export function useWorkspaceExecution({
     })
 
     if (!resolvedContent) {
-      alert(t('storyInput.quickManga.regenerate.missingContent'))
+      alert(t('storyInput.manga.regenerate.missingContent'))
       return
     }
 
@@ -262,7 +262,7 @@ export function useWorkspaceExecution({
       })
 
       if (runResult.status !== 'completed') {
-        throw new Error(runResult.errorMessage || t('storyInput.quickManga.regenerate.failed'))
+        throw new Error(runResult.errorMessage || t('storyInput.manga.regenerate.failed'))
       }
 
       await onQuickMangaRegenerate?.(history)
@@ -272,7 +272,7 @@ export function useWorkspaceExecution({
       const message = isAbortError(err)
         ? t('execution.requestAborted')
         : getErrorMessage(err)
-      alert(`${t('storyInput.quickManga.regenerate.failed')}: ${message}`)
+      alert(`${t('storyInput.manga.regenerate.failed')}: ${message}`)
     } finally {
       setIsTransitioning(false)
       setTransitionProgress({ message: '', step: '' })

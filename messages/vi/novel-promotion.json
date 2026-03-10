@@ -102,7 +102,14 @@
     "videoRatio": "Tỷ lệ video",
     "visualStyle": "Phong cách trực quan",
     "moreConfig": "Để biết thêm tùy chọn cấu hình, hãy nhấp vào nút 「Cài đặt」 ở trên cùng bên phải",
-    "quickManga": {
+    "narration": {
+      "title": "Bật thuyết minh thuyết minh",
+      "description": "Tạo tường thuật bằng giọng nói TTS để thêm bình luận vào video của bạn"
+    },
+    "creating": "AI sáng tạo...",
+    "ready": "✓ Cấu hình hoàn tất, sẵn sàng cho bước tiếp theo",
+    "pleaseInput": "Vui lòng nhập nội dung kịch bản trước",
+    "manga": {
       "title": "Manga (Beta)",
       "description": "Bật preset tối ưu cho Manga ngay trong editor hiện tại mà không cần chuyển sang mode riêng",
       "toggle": "Bật chế độ Manga",
@@ -174,16 +181,16 @@
           "chapterContextPriority": "Ưu tiên ngữ cảnh theo chương: bám mạch chương trước, nới khóa phong cách khi cần."
         },
         "continuityShortcut": {
-          "sourceRun": "Run nguồn: {runId}",
+          "sourceRun": "Lần chạy nguồn: {runId}",
           "sourceStage": "Bước nguồn"
         }
       },
       "controls": {
         "title": "Điều khiển tạo sinh",
         "styleLock": {
-          "enabled": "Bật Style Lock",
-          "profile": "Profile Style Lock",
-          "strength": "Độ mạnh Style Lock"
+          "enabled": "Khóa phong cách",
+          "profile": "Hồ sơ khóa phong cách",
+          "strength": "Độ mạnh khóa phong cách"
         },
         "chapter": {
           "mode": "Chế độ liên tục theo chương",
@@ -198,14 +205,7 @@
         "missingContent": "Không thể tái tạo vì thiếu nội dung nguồn",
         "failed": "Tái tạo Manga thất bại"
       }
-    },
-    "narration": {
-      "title": "Bật thuyết minh thuyết minh",
-      "description": "Tạo tường thuật bằng giọng nói TTS để thêm bình luận vào video của bạn"
-    },
-    "creating": "AI sáng tạo...",
-    "ready": "✓ Cấu hình hoàn tất, sẵn sàng cho bước tiếp theo",
-    "pleaseInput": "Vui lòng nhập nội dung kịch bản trước"
+    }
   },
   "execution": {
     "selectEpisode": "Vui lòng chọn tập trước",

@@ -102,7 +102,14 @@
     "videoRatio": "Video Ratio",
     "visualStyle": "Visual Style",
     "moreConfig": "For more configuration options, click the 「 Settings」 button in the top right",
-    "quickManga": {
+    "narration": {
+      "title": "Enable Narration Voiceover",
+      "description": "Generate TTS voice narration to add commentary to your video"
+    },
+    "creating": "AI Creating...",
+    "ready": "✓ Configuration complete, ready for next step",
+    "pleaseInput": "Please enter script content first",
+    "manga": {
       "title": "Manga (Beta)",
       "description": "Enable manga-focused presets inside the current editor flow without switching to a separate mode",
       "toggle": "Enable Manga mode",
@@ -198,14 +205,7 @@
         "missingContent": "Cannot regenerate because source content is missing",
         "failed": "Failed to regenerate Manga output"
       }
-    },
-    "narration": {
-      "title": "Enable Narration Voiceover",
-      "description": "Generate TTS voice narration to add commentary to your video"
-    },
-    "creating": "AI Creating...",
-    "ready": "✓ Configuration complete, ready for next step",
-    "pleaseInput": "Please enter script content first"
+    }
   },
   "execution": {
     "selectEpisode": "Please select an episode first",

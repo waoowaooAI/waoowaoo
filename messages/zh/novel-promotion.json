@@ -102,7 +102,14 @@
     "videoRatio": "画面比例",
     "visualStyle": "视觉风格",
     "moreConfig": "更多配置请点击右上角「 配置」按钮",
-    "quickManga": {
+    "narration": {
+      "title": "启用旁白配音",
+      "description": "生成 TTS 语音旁白，为视频添加解说"
+    },
+    "creating": "AI 创作中...",
+    "ready": "✓ 配置完成，可以进入下一步",
+    "pleaseInput": "请先输入剧本内容",
+    "manga": {
       "title": "Manga (Beta)",
       "description": "在当前编辑器流程内启用 Manga 预设，无需切换到独立模式",
       "toggle": "开启 Manga 模式",
@@ -181,9 +188,9 @@
       "controls": {
         "title": "生成控制",
         "styleLock": {
-          "enabled": "启用 Style Lock",
-          "profile": "Style Lock 档位",
-          "strength": "Style Lock 强度"
+          "enabled": "风格锁定",
+          "profile": "风格锁定档位",
+          "strength": "风格锁定强度"
         },
         "chapter": {
           "mode": "章节连续性模式",
@@ -191,21 +198,14 @@
           "idPlaceholder": "可选章节 ID（例如 ch-02）",
           "conflictPolicy": "冲突策略"
         },
-        "conflictHelp": "选择策略以处理重生成时 style lock 与章节连续性的冲突。"
+        "conflictHelp": "选择策略以处理重生成时风格锁定与章节连续性的冲突。"
       },
       "regenerate": {
         "invalidSource": "所选历史项不是有效的 Manga 来源",
         "missingContent": "由于缺少来源内容，无法重生成",
         "failed": "Manga 重新生成失败"
       }
-    },
-    "narration": {
-      "title": "启用旁白配音",
-      "description": "生成 TTS 语音旁白，为视频添加解说"
-    },
-    "creating": "AI 创作中...",
-    "ready": "✓ 配置完成，可以进入下一步",
-    "pleaseInput": "请先输入剧本内容"
+    }
   },
   "execution": {
     "selectEpisode": "请先选择剧集",
