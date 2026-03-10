@@ -16,6 +16,7 @@ import {
   toProjectCreatePayload,
   type WorkspaceProjectEntryMode,
 } from '@/lib/workspace/project-mode'
+import { trackWorkspaceMangaEvent } from '@/lib/workspace/manga-discovery-analytics'
 
 interface ProjectStats {
   episodes: number
@@ -90,6 +91,13 @@ export default function WorkspacePage() {
     }
   }, [session, status, router])
 
+  useEffect(() => {
+    trackWorkspaceMangaEvent('workspace_manga_cta_view', {
+      surface: 'workspace_card',
+      locale,
+    })
+  }, [locale])
+
   // 获取项目列表
   const fetchProjects = useCallback(async (page: number = 1, search: string = '') => {
     try {
@@ -131,6 +139,27 @@ export default function WorkspacePage() {
   // 分页处理
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }))
+  }
+
+  const handleOpenCreateModal = (entryMode: WorkspaceProjectEntryMode = 'story') => {
+    if (entryMode === 'manga') {
+      trackWorkspaceMangaEvent('workspace_manga_cta_click', {
+        surface: 'workspace_card',
+        locale,
+      })
+    }
+
+    setFormData((prev) => ({ ...prev, entryMode }))
+    setShowCreateModal(true)
+  }
+
+  const handleEntryModeChange = (entryMode: WorkspaceProjectEntryMode) => {
+    setFormData((prev) => ({ ...prev, entryMode }))
+    trackWorkspaceMangaEvent('workspace_project_mode_selected', {
+      projectMode: entryMode,
+      locale,
+      surface: 'create_project_modal',
+    })
   }
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -320,7 +349,7 @@ export default function WorkspacePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {/* New Project Card */}
           <div
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => handleOpenCreateModal('story')}
             className="glass-surface p-6 cursor-pointer group flex items-center justify-center bg-gradient-to-br from-blue-500/5 via-cyan-500/5 to-blue-600/5 hover:from-blue-500/10 hover:via-cyan-500/10 hover:to-blue-600/10 transition-all duration-300"
           >
             <div className="flex flex-col items-center gap-3">
@@ -333,7 +362,7 @@ export default function WorkspacePage() {
 
           {/* Manga CTA Card */}
           <div
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => handleOpenCreateModal('manga')}
             className="glass-surface p-6 cursor-pointer group relative overflow-hidden bg-gradient-to-br from-fuchsia-500/10 via-pink-500/10 to-orange-400/10 hover:from-fuchsia-500/15 hover:via-pink-500/15 hover:to-orange-400/15 transition-all duration-300"
           >
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_45%)]" />
@@ -488,7 +517,7 @@ export default function WorkspacePage() {
             </p>
             {!searchQuery && (
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => handleOpenCreateModal('story')}
                 className="glass-btn-base glass-btn-primary px-6 py-3"
               >
                 {t('newProject')}
@@ -590,7 +619,7 @@ export default function WorkspacePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, entryMode: 'story' }))}
+                    onClick={() => handleEntryModeChange('story')}
                     className={`glass-btn-base px-3 py-3 text-left ${formData.entryMode === 'story' ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
                   >
                     <div className="text-sm font-semibold">{t('projectTypeStoryTitle')}</div>
@@ -598,7 +627,7 @@ export default function WorkspacePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, entryMode: 'manga' }))}
+                    onClick={() => handleEntryModeChange('manga')}
                     className={`glass-btn-base px-3 py-3 text-left ${formData.entryMode === 'manga' ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
                   >
                     <div className="text-sm font-semibold">{t('projectTypeMangaTitle')}</div>

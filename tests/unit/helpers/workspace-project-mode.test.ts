@@ -17,6 +17,22 @@ describe('workspace project mode helpers', () => {
       name: 'Story launch',
       description: 'baseline flow',
       mode: 'novel-promotion',
+      projectMode: 'story',
+    })
+  })
+
+  it('maps manga project creation payload to the same backend mode with explicit projectMode', () => {
+    expect(
+      toProjectCreatePayload({
+        name: ' Manga launch ',
+        description: ' quick start ',
+        entryMode: 'manga',
+      }),
+    ).toEqual({
+      name: 'Manga launch',
+      description: 'quick start',
+      mode: 'novel-promotion',
+      projectMode: 'manga',
     })
   })
 

@@ -10,6 +10,11 @@ export interface ProjectCreatePayload {
   name: string
   description: string
   mode: 'novel-promotion'
+  /**
+   * VAT-92 contract field for create flow mode selection.
+   * Keep optional for backward compatibility with older clients.
+   */
+  projectMode?: WorkspaceProjectEntryMode
 }
 
 export function toProjectCreatePayload(input: ProjectCreationInput): ProjectCreatePayload {
@@ -17,6 +22,7 @@ export function toProjectCreatePayload(input: ProjectCreationInput): ProjectCrea
     name: input.name.trim(),
     description: input.description.trim(),
     mode: 'novel-promotion',
+    projectMode: input.entryMode,
   }
 }
 

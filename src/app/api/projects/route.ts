@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { toMoneyNumber } from '@/lib/billing/money'
+import { logProjectAction } from '@/lib/logging/semantic'
 
 // GET - 获取用户的项目（支持分页和搜索）
 export const GET = apiHandler(async (request: NextRequest) => {
@@ -163,7 +164,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
 
-  const { name, description } = await request.json()
+  const { name, description, projectMode } = await request.json() as {
+    name?: string
+    description?: string
+    projectMode?: unknown
+  }
 
   if (!name || name.trim().length === 0) {
     throw new ApiError('INVALID_PARAMS')
@@ -181,6 +186,11 @@ export const POST = apiHandler(async (request: NextRequest) => {
   const userPreference = await prisma.userPreference.findUnique({
     where: { userId: session.user.id }
   })
+
+  const normalizedProjectMode =
+    projectMode === 'manga' || projectMode === 'story'
+      ? projectMode
+      : 'story'
 
   // 创建基础项目（mode 固定为 novel-promotion）
   const project = await prisma.project.create({
@@ -213,6 +223,20 @@ export const POST = apiHandler(async (request: NextRequest) => {
       })
     }
   })
+
+  // VAT-96 analytics: capture manga conversion only when projectMode=manga
+  if (normalizedProjectMode === 'manga') {
+    logProjectAction(
+      'WORKSPACE_MANGA_CONVERSION',
+      'workspace manga conversion captured',
+      {
+        event: 'workspace_manga_conversion',
+        projectMode: normalizedProjectMode,
+        projectId: project.id,
+      },
+      session.user.id,
+    )
+  }
 
   return NextResponse.json({ project }, { status: 201 })
 })
