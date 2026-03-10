@@ -96,6 +96,10 @@
         "convertToCharacter": "转换三视图",
         "converting": "转换中...",
         "dropOrClick": "拖放图片或点击上传",
-        "supportedFormats": "支持 JPG、PNG 格式"
+        "supportedFormats": "支持 JPG、PNG 格式",
+        "artStyleLabel": "画面风格"
+    },
+    "assetLibrary": {
+        "title": "资产库"
     }
 }

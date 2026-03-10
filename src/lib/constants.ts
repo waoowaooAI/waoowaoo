@@ -19,13 +19,13 @@ export const ASPECT_RATIO_CONFIGS: Record<string, { label: string; isVertical: b
   '21:9': { label: '21:9', isVertical: false },
 }
 
-// 配置页面使用的选项列表（从 ASPECT_RATIO_CONFIGS 派生）
+// Options list for config page (derived from ASPECT_RATIO_CONFIGS)
 export const VIDEO_RATIOS = Object.entries(ASPECT_RATIO_CONFIGS).map(([value, config]) => ({
   value,
   label: config.label
 }))
 
-// 获取比例配置
+// Get aspect ratio config
 export function getAspectRatioConfig(ratio: string) {
   return ASPECT_RATIO_CONFIGS[ratio] || ASPECT_RATIO_CONFIGS['16:9']
 }

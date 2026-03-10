@@ -346,7 +346,7 @@ export default function VoiceDesignDialogBase({
             <h3 className="font-semibold text-[var(--glass-text-primary)] mb-1">{tv('confirmReplace')}</h3>
             <p className="text-sm text-[var(--glass-text-secondary)] mb-4">
               {tv('replaceWarning')}
-              <span className="font-medium text-[var(--glass-text-primary)]">「{speaker}」</span>
+              <span className="font-medium text-[var(--glass-text-primary)]">&quot;{speaker}&quot;</span>
             </p>
             <div className="flex gap-2">
               <button

@@ -160,7 +160,7 @@ export function AddLocationModal({ folderId, onClose, onSuccess }: AddLocationMo
                         {/* 风格选择 */}
                         <div className="space-y-2">
                             <label className="glass-field-label block">
-                                画面风格
+                                {t('modal.artStyleLabel')}
                             </label>
                             <div className="grid grid-cols-2 gap-2">
                                 {ART_STYLES.map((style) => (

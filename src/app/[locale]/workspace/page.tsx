@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import Navbar from '@/components/Navbar'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
@@ -73,6 +73,7 @@ export default function WorkspacePage() {
 
   const t = useTranslations('workspace')
   const tc = useTranslations('common')
+  const locale = useLocale()
 
   // 检查用户是否已登录
   useEffect(() => {
@@ -164,15 +165,12 @@ export default function WorkspacePage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    // 转换为北京时间 (UTC+8)
-    const beijingTime = new Date(date.getTime() + 8 * 60 * 60 * 1000)
-    return beijingTime.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Shanghai'
+      minute: '2-digit'
     })
   }
 

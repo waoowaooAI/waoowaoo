@@ -32,6 +32,7 @@
         "extractPromptDesc": "Trích xuất mô tả từ hình ảnh trước, sau đó tạo (txt2img)",
         "maxReferenceImages": "Tối đa 5 hình ảnh tham khảo",
         "selectedCount": "Đã chọn {count}/5 hình ảnh",
+        "referenceImageN": "Hình ảnh tham khảo {n}",
         "extractDescription": "Trích xuất mô tả",
         "extracting": "Đang trích xuất...",
         "extractedDescription": "Mô tả được trích xuất (Có thể chỉnh sửa)",

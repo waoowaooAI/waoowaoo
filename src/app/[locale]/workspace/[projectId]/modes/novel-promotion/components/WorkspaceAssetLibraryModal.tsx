@@ -4,6 +4,7 @@ import AssetsStage from './AssetsStage'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import type { TaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
+import { useTranslations } from 'next-intl'
 
 interface WorkspaceAssetLibraryModalProps {
   isOpen: boolean
@@ -34,6 +35,7 @@ export default function WorkspaceAssetLibraryModal({
   triggerGlobalAnalyze,
   onGlobalAnalyzeComplete,
 }: WorkspaceAssetLibraryModalProps) {
+  const t = useTranslations('assetHub')
   if (!isOpen) return null
 
   return (
@@ -47,7 +49,7 @@ export default function WorkspaceAssetLibraryModal({
         <div className="flex items-center justify-between px-8 py-5 border-b border-[var(--glass-stroke-base)] flex-shrink-0">
           <h2 className="text-2xl font-bold text-[var(--glass-text-primary)] flex items-center gap-3">
             <AppIcon name="package" className="h-7 w-7 text-[var(--glass-text-secondary)]" />
-            资产库
+            {t('assetLibrary.title')}
           </h2>
           <button
             onClick={onClose}

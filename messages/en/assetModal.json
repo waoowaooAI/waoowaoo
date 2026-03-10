@@ -32,6 +32,7 @@
         "extractPromptDesc": "Extract description from image first, then generate (txt2img)",
         "maxReferenceImages": "Up to 5 reference images",
         "selectedCount": "Selected {count}/5 images",
+        "referenceImageN": "Reference Image {n}",
         "extractDescription": "Extract Description",
         "extracting": "Extracting...",
         "extractedDescription": "Extracted Description (Editable)",

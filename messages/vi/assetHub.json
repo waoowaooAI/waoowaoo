@@ -96,6 +96,10 @@
         "convertToCharacter": "Chuyển đổi sang 3-Chế độ xem",
         "converting": "Đang chuyển đổi...",
         "dropOrClick": "Thả hình ảnh hoặc bấm vào để tải lên",
-        "supportedFormats": "Hỗ trợ JPG, PNG"
+        "supportedFormats": "Hỗ trợ JPG, PNG",
+        "artStyleLabel": "Phong cách nghệ thuật"
+    },
+    "assetLibrary": {
+        "title": "Thư viện tài sản"
     }
 }

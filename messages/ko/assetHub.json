@@ -96,6 +96,10 @@
         "convertToCharacter": "3뷰로 전환",
         "converting": "변환 중...",
         "dropOrClick": "이미지를 드롭하거나 클릭하여 업로드하세요.",
-        "supportedFormats": "JPG, PNG 지원"
+        "supportedFormats": "JPG, PNG 지원",
+        "artStyleLabel": "아트 스타일"
+    },
+    "assetLibrary": {
+        "title": "에셋 라이브러리"
     }
 }

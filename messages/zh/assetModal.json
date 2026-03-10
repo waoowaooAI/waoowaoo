@@ -32,6 +32,7 @@
         "extractPromptDesc": "先从图片提取角色描述，可编辑后再生成（文生图）",
         "maxReferenceImages": "最多上传 5 张参考图",
         "selectedCount": "已选择 {count}/5 张参考图",
+        "referenceImageN": "参考图 {n}",
         "extractDescription": "提取角色描述",
         "extracting": "提取中...",
         "extractedDescription": "提取的角色描述（可编辑）",

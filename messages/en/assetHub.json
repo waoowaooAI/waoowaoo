@@ -96,6 +96,10 @@
         "convertToCharacter": "Convert to 3-View",
         "converting": "Converting...",
         "dropOrClick": "Drop image or click to upload",
-        "supportedFormats": "JPG, PNG supported"
+        "supportedFormats": "JPG, PNG supported",
+        "artStyleLabel": "Art Style"
+    },
+    "assetLibrary": {
+        "title": "Asset Library"
     }
 }

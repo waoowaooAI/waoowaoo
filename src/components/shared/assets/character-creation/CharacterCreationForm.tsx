@@ -231,7 +231,7 @@ export default function CharacterCreationForm({
           </div>
 
           <div className="glass-surface flex items-center gap-2 p-2 rounded-lg">
-            <span className="text-xs text-[var(--glass-text-secondary)] shrink-0">{t('character.generationMode')}：</span>
+            <span className="text-xs text-[var(--glass-text-secondary)] shrink-0">{t('character.generationMode')}:</span>
             {(() => {
               const subTabs = ['direct', 'extract'] as const
               const subIdx = subTabs.indexOf(referenceSubMode)

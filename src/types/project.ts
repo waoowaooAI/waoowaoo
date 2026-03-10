@@ -1,12 +1,12 @@
 import type { CapabilitySelections } from '@/lib/model-config-contract'
 
 // ============================================
-// 项目模式类型
+// Project mode types
 // ============================================
 export type ProjectMode = 'novel-promotion'
 
 // ============================================
-// 基础项目类型
+// Base project types
 // ============================================
 export interface BaseProject {
   id: string
@@ -19,7 +19,7 @@ export interface BaseProject {
 }
 
 // ============================================
-// 通用资产类型
+// Common asset types
 // ============================================
 
 export interface MediaRef {
@@ -33,76 +33,76 @@ export interface MediaRef {
   durationMs: number | null
 }
 
-// 角色形象（独立表）
-// 🔥 V6.5: characterId 改为可选以兼容 useProjectAssets 返回的数据
+// Character appearance (standalone table)
+// 🔥 V6.5: characterId is now optional to support useProjectAssets return data
 export interface CharacterAppearance {
   id: string
-  characterId?: string            // 可选，API 响应可能不包含
-  appearanceIndex: number           // 形象序号：0, 1, 2...（0 = 主形象）
-  changeReason: string              // "初始形象"、"落水湿身"
+  characterId?: string            // Optional, API response may not include
+  appearanceIndex: number           // Appearance index: 0, 1, 2... (0 = primary)
+  changeReason: string              // "initial appearance", "wet after falling into water"
   description: string | null
-  descriptions: string[] | null     // 3个描述变体
-  imageUrl: string | null           // 选中的图片
+  descriptions: string[] | null     // 3 description variants
+  imageUrl: string | null           // Selected image
   media?: MediaRef | null
-  imageUrls: string[]               // 候选图片数组
+  imageUrls: string[]               // Candidate image array
   imageMedias?: MediaRef[]
-  previousImageUrl: string | null   // 上一次的图片URL（用于撤回）
+  previousImageUrl: string | null   // Previous image URL (for undo)
   previousMedia?: MediaRef | null
-  previousImageUrls: string[]         // 上一次的图片数组（用于撤回）
+  previousImageUrls: string[]         // Previous image array (for undo)
   previousImageMedias?: MediaRef[]
-  previousDescription: string | null  // 上一次的描述（用于撤回）
-  previousDescriptions: string[] | null  // 上一次的描述数组（用于撤回）
-  selectedIndex: number | null      // 用户选中的图片索引
-  // 任务态字段（由 tasks + hook 派生，不再依赖数据库持久化）
+  previousDescription: string | null  // Previous description (for undo)
+  previousDescriptions: string[] | null  // Previous descriptions (for undo)
+  selectedIndex: number | null      // User selected image index
+  // Task state fields (derived from tasks + hook, no longer persisted)
   imageTaskRunning?: boolean
-  imageErrorMessage?: string | null  // 图片生成错误消息
-  lastError?: { code: string; message: string } | null  // 结构化错误（来自 task target state）
+  imageErrorMessage?: string | null  // Image generation error message
+  lastError?: { code: string; message: string } | null  // Structured error (from task target state)
 }
 
-// 角色
-// 🔥 V6.5: aliases 改为可选数组以兼容 useProjectAssets
+// Character
+// 🔥 V6.5: aliases is now optional array for useProjectAssets compatibility
 export interface Character {
   id: string
   name: string
-  aliases?: string[] | null         // 可选，别名数组
-  introduction?: string | null      // 角色介绍（叙述视角、称呼映射等）
-  appearances: CharacterAppearance[]  // 独立表关联
-  // 配音音色设置
-  voiceType?: 'custom' | 'qwen-designed' | 'uploaded' | null  // 音色类型
-  voiceId?: string | null                 // 音色 ID 或业务标识
-  customVoiceUrl?: string | null          // 自定义上传的参考音频URL
+  aliases?: string[] | null         // Optional, aliases array
+  introduction?: string | null      // Character intro (narrative perspective, name mapping, etc.)
+  appearances: CharacterAppearance[]  // Standalone table relation
+  // Voice type settings
+  voiceType?: 'custom' | 'qwen-designed' | 'uploaded' | null  // Voice type
+  voiceId?: string | null                 // Voice ID or business identifier
+  customVoiceUrl?: string | null          // Custom uploaded reference audio URL
   media?: MediaRef | null
-  // 角色档案（两阶段生成）
-  profileData?: string | null             // JSON格式的角色档案
-  profileConfirmed?: boolean             // 档案是否已确认
+  // Character profile (two-phase generation)
+  profileData?: string | null             // JSON format character profile
+  profileConfirmed?: boolean             // Profile confirmed status
 }
 
-// 场景图片（独立表）
-// 🔥 V6.5: locationId 改为可选以兼容 useProjectAssets
+// Location images (standalone table)
+// 🔥 V6.5: locationId is now optional for useProjectAssets compatibility
 export interface LocationImage {
   id: string
-  locationId?: string               // 可选，API 响应可能不包含
-  imageIndex: number              // 图片索引：0, 1, 2
+  locationId?: string               // Optional, API response may not include
+  imageIndex: number              // Image index: 0, 1, 2
   description: string | null
   imageUrl: string | null
   media?: MediaRef | null
-  previousImageUrl: string | null // 上一次的图片URL（用于撤回）
+  previousImageUrl: string | null // Previous image URL (for undo)
   previousMedia?: MediaRef | null
-  previousDescription: string | null  // 上一次的描述（用于撤回）
+  previousDescription: string | null  // Previous description (for undo)
   isSelected: boolean
-  // 任务态字段（由 tasks + hook 派生，不再依赖数据库持久化）
+  // Task state fields (derived from tasks + hook, no longer persisted)
   imageTaskRunning?: boolean
-  imageErrorMessage?: string | null  // 图片生成错误消息
-  lastError?: { code: string; message: string } | null  // 结构化错误（来自 task target state）
+  imageErrorMessage?: string | null  // Image generation error message
+  lastError?: { code: string; message: string } | null  // Structured error (from task target state)
 }
 
-// 场景
+// Location
 export interface Location {
   id: string
   name: string
-  summary: string | null            // 场景简要描述（用途/人物关联）
-  selectedImageId?: string | null   // 选中的图片ID（单一真源）
-  images: LocationImage[]           // 独立表关联
+  summary: string | null            // Location brief description(usage/character relation)
+  selectedImageId?: string | null   // Selected image ID (single source of truth)
+  images: LocationImage[]           // Standalone table relation
 }
 
 export interface AssetLibraryCharacter {
@@ -122,32 +122,32 @@ export interface AssetLibraryLocation {
 }
 
 // ============================================
-// 小说推文模式类型
+// Novel promotion mode types
 // ============================================
 
-// 工作流模式
+// Workflow mode
 export type WorkflowMode = 'srt' | 'agent'
 
-// Clip类型（兼容SRT和Agent两种模式）
+// Clip type (compatible with SRT and Agent modes)
 export interface NovelPromotionClip {
   id: string
 
-  // SRT模式字段
+  // SRT mode fields
   start?: number
   end?: number
   duration?: number
 
-  // Agent模式字段
+  // Agent mode fields
   startText?: string
   endText?: string
   shotCount?: number
 
-  // 共用字段
+  // Common fields
   summary: string
   location: string | null
   characters: string | null
   content: string
-  screenplay?: string | null  // 剧本JSON（Phase 0输出）
+  screenplay?: string | null  // Screenplay JSON (Phase 0 output)
 }
 
 export interface NovelPromotionPanel {
@@ -180,12 +180,12 @@ export interface NovelPromotionPanel {
   sketchImageMedia?: MediaRef | null
   previousImageUrl?: string | null
   previousImageMedia?: MediaRef | null
-  photographyRules: string | null  // 单镜头摄影规则JSON
-  actingNotes: string | null        // 演技指导数据JSON
-  // 任务态字段（由 tasks + hook 派生，不再依赖数据库持久化）
+  photographyRules: string | null  // Single shot photography rules JSON
+  actingNotes: string | null        // Acting notes data JSON
+  // Task state fields (derived from tasks + hook, no longer persisted)
   imageTaskRunning?: boolean
   videoTaskRunning?: boolean
-  imageErrorMessage?: string | null  // 图片生成错误消息
+  imageErrorMessage?: string | null  // Image generation error message
 }
 
 export interface NovelPromotionStoryboard {
@@ -198,8 +198,8 @@ export interface NovelPromotionStoryboard {
   media?: MediaRef | null
   storyboardTaskRunning?: boolean
   candidateImages?: string | null
-  lastError?: string | null  // 最后一次生成失败的错误信息
-  photographyPlan?: string | null  // 摄影方案JSON
+  lastError?: string | null  // Last generation error message
+  photographyPlan?: string | null  // Photography plan JSON
   panels?: NovelPromotionPanel[]
 }
 
@@ -223,7 +223,7 @@ export interface NovelPromotionShot {
   media?: MediaRef | null
   videoUrl?: string | null
   videoMedia?: MediaRef | null
-  // 任务态字段（由 tasks + hook 派生，不再依赖数据库持久化）
+  // Task state fields (derived from tasks + hook, no longer persisted)
   imageTaskRunning?: boolean
 }
 
@@ -243,7 +243,7 @@ export interface NovelPromotionProject {
   videoRatio: string
   capabilityOverrides?: CapabilitySelections | string | null
   ttsRate: string
-  workflowMode: WorkflowMode  // 新增：工作流模式
+  workflowMode: WorkflowMode  // New: workflow mode
   artStyle: string
   artStylePrompt: string | null
   audioUrl: string | null
@@ -268,7 +268,7 @@ export interface NovelPromotionProject {
 }
 
 // ============================================
-// 完整项目类型 (包含基础信息和模式数据)
+// Full project type (includes base info and mode data)
 // ============================================
 export interface Project extends BaseProject {
   novelPromotionData?: NovelPromotionProject

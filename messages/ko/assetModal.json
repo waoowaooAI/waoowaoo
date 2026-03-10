@@ -32,6 +32,7 @@
         "extractPromptDesc": "먼저 이미지에서 설명을 추출한 후 생성합니다(txt2img).",
         "maxReferenceImages": "최대 5개의 참조 이미지",
         "selectedCount": "선택한 {count}/5개 이미지",
+        "referenceImageN": "참조 이미지 {n}",
         "extractDescription": "추출 설명",
         "extracting": "적출...",
         "extractedDescription": "추출된 설명(편집 가능)",
