@@ -301,7 +301,7 @@ async function readUserConfig(userId: string): Promise<{ models: CustomModel[]; 
   const models = parseCustomModels(pref?.customModels).map((model) => {
     if (getProviderKey(model.provider).toLowerCase() !== 'openai-compatible') return model
     if (model.type !== 'image' && model.type !== 'video') return model
-    const expectedMediaType = model.type === 'image' ? 'image' as const : 'video' as const
+    const expectedMediaType = model.type === 'image' ? 'image' : 'video'
     const defaultTemplate = getDefaultMediaTemplate(expectedMediaType)
     if (!model.compatMediaTemplate || (model.compatMediaTemplate.version || 0) < defaultTemplate.version) {
       return { ...model, compatMediaTemplate: defaultTemplate }

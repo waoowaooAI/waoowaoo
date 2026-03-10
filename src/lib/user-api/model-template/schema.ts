@@ -495,7 +495,7 @@ export function parseOpenAICompatMediaTemplate(raw: unknown): {
   }
 
   const normalizedTemplate: OpenAICompatMediaTemplate = {
-    version: 1,
+    version: raw.version as number,
     mediaType,
     mode,
     create,
