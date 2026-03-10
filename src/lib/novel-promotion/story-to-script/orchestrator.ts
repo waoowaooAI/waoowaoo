@@ -1,7 +1,7 @@
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { normalizeAnyError } from '@/lib/errors/normalize'
 import { createScopedLogger } from '@/lib/logging/core'
-import { createClipContentMatcher, type ClipMatchLevel } from './clip-matching'
+import { createClipContentMatcher, createTextMarkerMatcher, type ClipMatchLevel } from './clip-matching'
 
 export type StoryToScriptStepMeta = {
   stepId: string
@@ -403,6 +403,25 @@ async function runStepWithRetry<T>(
   throw lastError!
 }
 
+function toFallbackAnchorCandidates(anchor: string): string[] {
+  const base = anchor.trim()
+  if (!base) return []
+
+  const candidates = new Set<string>()
+  const push = (value: string) => {
+    const next = value.trim()
+    if (next) candidates.add(next)
+  }
+
+  push(base)
+  push(base.replace(/^\s{0,3}#{1,6}\s+/u, ''))
+  push(base.replace(/^[-*•]+\s+/u, ''))
+  push(base.replace(/^\*\*(.+)\*\*$/u, '$1'))
+  push(base.replace(/^(?:[0-9]+[.)\-:]?|[0-9]️⃣|[①-⑳])\s*/u, ''))
+
+  return [...candidates]
+}
+
 export async function runStoryToScriptOrchestrator(
   input: StoryToScriptOrchestratorInput,
 ): Promise<StoryToScriptOrchestratorResult> {
@@ -546,6 +565,7 @@ export async function runStoryToScriptOrchestrator(
     }
 
     const matcher = createClipContentMatcher(content)
+    const markerMatcher = createTextMarkerMatcher(content)
     const nextClipList: StoryToScriptClipCandidate[] = []
     let searchFrom = 0
     let failedAt: { clipId: string; startText: string; endText: string } | null = null
@@ -555,7 +575,63 @@ export async function runStoryToScriptOrchestrator(
       const startText = asString(item.start)
       const endText = asString(item.end)
       const clipId = `clip_${index + 1}`
-      const match = matcher.matchBoundary(startText, endText, searchFrom)
+
+      let match = matcher.matchBoundary(startText, endText, searchFrom)
+
+      if (!match) {
+        const startCandidates = toFallbackAnchorCandidates(startText)
+        const endCandidates = toFallbackAnchorCandidates(endText)
+
+        for (const startCandidate of startCandidates) {
+          for (const endCandidate of endCandidates) {
+            const candidateMatch = matcher.matchBoundary(startCandidate, endCandidate, searchFrom)
+            if (candidateMatch) {
+              match = candidateMatch
+              break
+            }
+          }
+          if (match) break
+        }
+
+        if (!match && startCandidates.length > 0 && endCandidates.length > 0) {
+          let bestFallback: { startIndex: number; endIndex: number; confidence: number } | null = null
+
+          for (const startCandidate of startCandidates) {
+            const startMarker = markerMatcher.matchMarker(startCandidate, searchFrom)
+            if (!startMarker) continue
+
+            for (const endCandidate of endCandidates) {
+              const endMarker = markerMatcher.matchMarker(endCandidate, Math.max(startMarker.endIndex, searchFrom))
+              if (!endMarker) continue
+              if (endMarker.endIndex <= startMarker.startIndex) continue
+
+              const width = endMarker.endIndex - startMarker.startIndex
+              if (width <= 0) continue
+              const confidence = Math.min(startMarker.confidence, endMarker.confidence)
+
+              if (!bestFallback || confidence > bestFallback.confidence || (
+                confidence === bestFallback.confidence && width < (bestFallback.endIndex - bestFallback.startIndex)
+              )) {
+                bestFallback = {
+                  startIndex: startMarker.startIndex,
+                  endIndex: endMarker.endIndex,
+                  confidence,
+                }
+              }
+            }
+          }
+
+          if (bestFallback) {
+            match = {
+              startIndex: bestFallback.startIndex,
+              endIndex: bestFallback.endIndex,
+              level: 'L3',
+              confidence: Math.min(0.9, bestFallback.confidence),
+            }
+          }
+        }
+      }
+
       if (!match) {
         failedAt = { clipId, startText, endText }
         break

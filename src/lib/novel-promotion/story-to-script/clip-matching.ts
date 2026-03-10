@@ -60,10 +60,50 @@ const PUNCTUATION_MAP: Record<string, string> = {
   '‘': "'",
   '’': "'",
   '、': ',',
+  '·': '.',
+  '•': '.',
+  '—': '-',
+  '–': '-',
+  '〜': '~',
+  '～': '~',
   '…': '...',
 }
 
+const IGNORABLE_CHARS = new Set(['\uFE0E', '\uFE0F', '\u20E3', '\u200B', '\u200C', '\u200D', '#'])
+const CIRCLED_NUMBER_MAP: Record<string, string> = {
+  '①': '1',
+  '②': '2',
+  '③': '3',
+  '④': '4',
+  '⑤': '5',
+  '⑥': '6',
+  '⑦': '7',
+  '⑧': '8',
+  '⑨': '9',
+  '⑩': '10',
+  '⑪': '11',
+  '⑫': '12',
+  '⑬': '13',
+  '⑭': '14',
+  '⑮': '15',
+  '⑯': '16',
+  '⑰': '17',
+  '⑱': '18',
+  '⑲': '19',
+  '⑳': '20',
+}
+
 function normalizeChar(ch: string): string {
+  if (IGNORABLE_CHARS.has(ch)) return ''
+
+  const emojiKeycapMatch = ch.match(/[0-9]/u)
+  if (emojiKeycapMatch) {
+    return emojiKeycapMatch[0]
+  }
+
+  const circled = CIRCLED_NUMBER_MAP[ch]
+  if (circled) return circled
+
   const code = ch.charCodeAt(0)
   let normalized = ch
   if (code === 0x3000) {

@@ -87,4 +87,60 @@ describe('story-to-script orchestrator retry', () => {
 
     expect(actionCalls.get('analyze_characters')).toBe(1)
   })
+
+  it('matches split_clips boundaries with markdown headings, emoji numbering and korean line breaks', async () => {
+    const content = [
+      '# 1️⃣ 프롤로그',
+      '도시의 밤이 길게 이어진다.',
+      '',
+      '## 2️⃣ 문 앞에서',
+      '수진이 말했다:',
+      '지금 갈게!',
+      '',
+      '### 3️⃣ 골목 끝',
+      '민호가 대답했다.',
+    ].join('\n')
+
+    const runStep = vi.fn(async (_meta, _prompt, action: string) => {
+      if (action === 'analyze_characters') {
+        return { text: JSON.stringify({ characters: [{ name: '수진', introduction: '주인공' }] }), reasoning: '' }
+      }
+      if (action === 'analyze_locations') {
+        return { text: JSON.stringify({ locations: [{ name: '골목' }] }), reasoning: '' }
+      }
+      if (action === 'split_clips') {
+        return {
+          text: JSON.stringify([
+            {
+              start: '2. 문 앞에서',
+              end: '수진이 말했다 지금 갈게!',
+              summary: '문 앞 장면',
+              location: '골목',
+              characters: ['수진'],
+            },
+          ]),
+          reasoning: '',
+        }
+      }
+      return { text: JSON.stringify({ scenes: [{ id: 1 }] }), reasoning: '' }
+    })
+
+    const result = await runStoryToScriptOrchestrator({
+      content,
+      baseCharacters: [],
+      baseLocations: [],
+      baseCharacterIntroductions: [],
+      promptTemplates: {
+        characterPromptTemplate: '{input} {characters_lib_name} {characters_lib_info}',
+        locationPromptTemplate: '{input} {locations_lib_name}',
+        clipPromptTemplate: '{input} {locations_lib_name} {characters_lib_name} {characters_introduction}',
+        screenplayPromptTemplate: '{clip_content} {locations_lib_name} {characters_lib_name} {characters_introduction} {clip_id}',
+      },
+      runStep,
+    })
+
+    expect(result.summary.clipCount).toBe(1)
+    expect(result.clipList[0]?.content).toContain('문 앞에서')
+    expect(result.clipList[0]?.content).toContain('지금 갈게!')
+  })
 })
