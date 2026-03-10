@@ -32,5 +32,41 @@
   "statsEpisodes": "章节数",
   "statsImages": "图片数",
   "statsVideos": "视频数",
-  "noContent": "暂无内容"
+  "noContent": "暂无内容",
+  "starterTemplates": {
+    "title": "起步模板",
+    "subtitle": "选择一个模板快速开始，项目创建后仍可继续自定义。",
+    "story": {
+      "cinematicShort": {
+        "title": "电影感短片",
+        "desc": "适合短篇叙事视频的快速启动模板。"
+      },
+      "socialAd": {
+        "title": "社媒推广短片",
+        "desc": "面向社交平台的强钩子开场模板。"
+      },
+      "dialogueDrama": {
+        "title": "对白剧情",
+        "desc": "偏角色驱动、对白均衡的叙事结构。"
+      }
+    },
+    "manga": {
+      "actionBattle": {
+        "title": "Manga 热血战斗",
+        "desc": "用于动作对战节奏与分镜推进的起步流。"
+      },
+      "romanceSchool": {
+        "title": "Manga 校园恋爱",
+        "desc": "轻情绪、日常向的恋爱漫画起步模板。"
+      },
+      "fantasyQuest": {
+        "title": "Manga 奇幻冒险",
+        "desc": "以世界观搭建与冒险推进为核心。"
+      },
+      "comedy4Koma": {
+        "title": "Manga 四格喜剧",
+        "desc": "适合单集笑点驱动的四格叙事结构。"
+      }
+    }
+  }
 }

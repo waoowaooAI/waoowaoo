@@ -1,36 +1,72 @@
 {
-    "title": "내 프로젝트",
-    "subtitle": "AI 애니메이션 제작 프로젝트 관리",
-    "newProject": "새 프로젝트",
-    "searchPlaceholder": "프로젝트 이름 또는 설명 검색...",
-    "searchButton": "검색",
-    "clearButton": "지우기",
-    "updatedAt": "업데이트 날짜",
-    "noProjects": "아직 프로젝트가 없습니다.",
-    "noProjectsDesc": "첫 번째 AI 애니메이션 제작 프로젝트 만들기",
-    "noResults": "일치하는 프로젝트가 없습니다.",
-    "noResultsDesc": "다른 검색어를 사용해 보세요",
-    "createProject": "새 프로젝트",
-    "editProject": "프로젝트 편집",
-    "deleteProject": "프로젝트 삭제",
-    "deleteConfirm": "\"{name}\" 프로젝트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
-    "projectName": "프로젝트 이름",
-    "projectNamePlaceholder": "프로젝트 이름을 입력하세요",
-    "projectDescription": "프로젝트 설명(선택사항)",
-    "projectDescriptionPlaceholder": "프로젝트 설명을 입력하세요",
-    "projectTypeLabel": "프로젝트 유형",
-    "projectTypeStoryTitle": "Story Studio",
-    "projectTypeStoryDesc": "기본 스크립트/비디오 워크플로우",
-    "projectTypeMangaTitle": "Manga Quick Start",
-    "projectTypeMangaDesc": "Script 단계로 바로 이동 + Quick Manga 기본 활성화",
-    "creating": "만드는 중...",
-    "saving": "절약...",
-    "createFailed": "프로젝트를 생성하지 못했습니다.",
-    "updateFailed": "프로젝트를 업데이트하지 못했습니다.",
-    "deleteFailed": "프로젝트를 삭제하지 못했습니다.",
-    "totalProjects": "총 {count} 프로젝트",
-    "statsEpisodes": "에피소드",
-    "statsImages": "이미지",
-    "statsVideos": "비디오",
-    "noContent": "아직 콘텐츠가 없습니다."
+  "title": "내 프로젝트",
+  "subtitle": "AI 애니메이션 제작 프로젝트 관리",
+  "newProject": "새 프로젝트",
+  "searchPlaceholder": "프로젝트 이름 또는 설명 검색...",
+  "searchButton": "검색",
+  "clearButton": "지우기",
+  "updatedAt": "업데이트 날짜",
+  "noProjects": "아직 프로젝트가 없습니다.",
+  "noProjectsDesc": "첫 번째 AI 애니메이션 제작 프로젝트 만들기",
+  "noResults": "일치하는 프로젝트가 없습니다.",
+  "noResultsDesc": "다른 검색어를 사용해 보세요",
+  "createProject": "새 프로젝트",
+  "editProject": "프로젝트 편집",
+  "deleteProject": "프로젝트 삭제",
+  "deleteConfirm": "\"{name}\" 프로젝트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+  "projectName": "프로젝트 이름",
+  "projectNamePlaceholder": "프로젝트 이름을 입력하세요",
+  "projectDescription": "프로젝트 설명(선택사항)",
+  "projectDescriptionPlaceholder": "프로젝트 설명을 입력하세요",
+  "projectTypeLabel": "프로젝트 유형",
+  "projectTypeStoryTitle": "Story Studio",
+  "projectTypeStoryDesc": "기본 스크립트/비디오 워크플로우",
+  "projectTypeMangaTitle": "Manga Quick Start",
+  "projectTypeMangaDesc": "Script 단계로 바로 이동 + Quick Manga 기본 활성화",
+  "creating": "만드는 중...",
+  "saving": "절약...",
+  "createFailed": "프로젝트를 생성하지 못했습니다.",
+  "updateFailed": "프로젝트를 업데이트하지 못했습니다.",
+  "deleteFailed": "프로젝트를 삭제하지 못했습니다.",
+  "totalProjects": "총 {count} 프로젝트",
+  "statsEpisodes": "에피소드",
+  "statsImages": "이미지",
+  "statsVideos": "비디오",
+  "noContent": "아직 콘텐츠가 없습니다.",
+  "starterTemplates": {
+    "title": "시작 템플릿",
+    "subtitle": "템플릿을 선택해 빠르게 시작하세요. 프로젝트 생성 후에도 자유롭게 수정할 수 있습니다.",
+    "story": {
+      "cinematicShort": {
+        "title": "시네마틱 숏폼",
+        "desc": "짧은 서사형 영상 제작을 위한 빠른 시작 템플릿입니다."
+      },
+      "socialAd": {
+        "title": "소셜 프로모 클립",
+        "desc": "소셜 채널용 훅 중심 장면 구성에 최적화되었습니다."
+      },
+      "dialogueDrama": {
+        "title": "대사 중심 드라마",
+        "desc": "캐릭터 중심 전개에 맞춘 균형형 스크립트 구조입니다."
+      }
+    },
+    "manga": {
+      "actionBattle": {
+        "title": "Manga 액션 배틀",
+        "desc": "전투 연출과 패널 템포를 빠르게 구성하는 시작 플로우입니다."
+      },
+      "romanceSchool": {
+        "title": "Manga 학원 로맨스",
+        "desc": "가벼운 감정선의 일상 로맨스 흐름을 빠르게 시작합니다."
+      },
+      "fantasyQuest": {
+        "title": "Manga 판타지 퀘스트",
+        "desc": "세계관 구축과 모험 진행에 초점을 둔 템플릿입니다."
+      },
+      "comedy4Koma": {
+        "title": "Manga 4컷 코미디",
+        "desc": "에피소드형 4컷 개그 전개에 적합한 구조입니다."
+      }
+    }
+  }
 }

@@ -32,5 +32,41 @@
   "statsEpisodes": "Episodes",
   "statsImages": "Images",
   "statsVideos": "Videos",
-  "noContent": "No content yet"
+  "noContent": "No content yet",
+  "starterTemplates": {
+    "title": "Starter templates",
+    "subtitle": "Pick a template to start quickly. You can still customize after project creation.",
+    "story": {
+      "cinematicShort": {
+        "title": "Cinematic Short",
+        "desc": "Fast setup for a short-form narrative video flow."
+      },
+      "socialAd": {
+        "title": "Social Promo Clip",
+        "desc": "Template focused on hook-first scenes for social channels."
+      },
+      "dialogueDrama": {
+        "title": "Dialogue Drama",
+        "desc": "Balanced script structure for character-driven storytelling."
+      }
+    },
+    "manga": {
+      "actionBattle": {
+        "title": "Action Battle",
+        "desc": "Starter flow for dynamic fight choreography and panel pacing."
+      },
+      "romanceSchool": {
+        "title": "Romance School",
+        "desc": "Slice-of-life romance setup with light emotional beats."
+      },
+      "fantasyQuest": {
+        "title": "Fantasy Quest",
+        "desc": "Adventure-first template with world-building and progression."
+      },
+      "comedy4Koma": {
+        "title": "Comedy 4-koma",
+        "desc": "Compact gag structure for episodic four-panel storytelling."
+      }
+    }
+  }
 }

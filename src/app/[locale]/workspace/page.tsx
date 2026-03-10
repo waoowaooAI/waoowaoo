@@ -1,7 +1,7 @@
 'use client'
 import { logError as _ulogError } from '@/lib/logging/core'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -17,6 +17,11 @@ import {
   type WorkspaceProjectEntryMode,
 } from '@/lib/workspace/project-mode'
 import { trackWorkspaceMangaEvent } from '@/lib/workspace/manga-discovery-analytics'
+import {
+  buildStarterProjectName,
+  getStarterTemplatesByMode,
+  type WorkspaceStarterTemplate,
+} from '@/lib/workspace/onboarding-templates'
 
 interface ProjectStats {
   episodes: number
@@ -62,6 +67,7 @@ export default function WorkspacePage() {
     name: '',
     description: '',
     entryMode: 'story' as WorkspaceProjectEntryMode,
+    starterTemplateId: '',
   })
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -81,6 +87,16 @@ export default function WorkspacePage() {
   const t = useTranslations('workspace')
   const tc = useTranslations('common')
   const locale = useLocale()
+
+  const starterTemplates = useMemo(
+    () => getStarterTemplatesByMode(formData.entryMode),
+    [formData.entryMode],
+  )
+
+  const selectedStarterTemplate = useMemo<WorkspaceStarterTemplate | null>(() => {
+    if (starterTemplates.length === 0) return null
+    return starterTemplates.find((template) => template.id === formData.starterTemplateId) || starterTemplates[0]
+  }, [formData.starterTemplateId, starterTemplates])
 
   // 检查用户是否已登录
   useEffect(() => {
@@ -149,12 +165,24 @@ export default function WorkspacePage() {
       })
     }
 
-    setFormData((prev) => ({ ...prev, entryMode }))
+    setFormData((prev) => {
+      const templates = getStarterTemplatesByMode(entryMode)
+      return {
+        ...prev,
+        entryMode,
+        starterTemplateId: templates[0]?.id || '',
+      }
+    })
     setShowCreateModal(true)
   }
 
   const handleEntryModeChange = (entryMode: WorkspaceProjectEntryMode) => {
-    setFormData((prev) => ({ ...prev, entryMode }))
+    const templates = getStarterTemplatesByMode(entryMode)
+    setFormData((prev) => ({
+      ...prev,
+      entryMode,
+      starterTemplateId: templates[0]?.id || '',
+    }))
     trackWorkspaceMangaEvent('workspace_project_mode_selected', {
       projectMode: entryMode,
       locale,
@@ -164,16 +192,26 @@ export default function WorkspacePage() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name.trim()) return
+
+    const fallbackProjectName = selectedStarterTemplate
+      ? buildStarterProjectName(t(selectedStarterTemplate.titleKey))
+      : ''
+    const normalizedName = formData.name.trim() || fallbackProjectName
+    if (!normalizedName) return
 
     setCreateLoading(true)
     try {
+      const createInput = {
+        ...formData,
+        name: normalizedName,
+      }
+
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(toProjectCreatePayload(formData))
+        body: JSON.stringify(toProjectCreatePayload(createInput))
       })
 
       if (response.ok) {
@@ -186,7 +224,7 @@ export default function WorkspacePage() {
         setPagination(prev => ({ ...prev, page: 1 }))
         fetchProjects(1, '')
         setShowCreateModal(false)
-        setFormData({ name: '', description: '', entryMode: 'story' })
+        setFormData({ name: '', description: '', entryMode: 'story', starterTemplateId: '' })
 
         trackWorkspaceMangaEvent('workspace_project_created', {
           projectMode: formData.entryMode,
@@ -621,7 +659,7 @@ export default function WorkspacePage() {
                   maxLength={500}
                 />
               </div>
-              <div className="mb-6">
+              <div className="mb-4">
                 <span className="glass-field-label block mb-2">{t('projectTypeLabel')}</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
@@ -642,12 +680,39 @@ export default function WorkspacePage() {
                   </button>
                 </div>
               </div>
+
+              <div className="mb-6">
+                <span className="glass-field-label block mb-2">{t('starterTemplates.title')}</span>
+                <p className="text-xs text-[var(--glass-text-tertiary)] mb-3">{t('starterTemplates.subtitle')}</p>
+                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                  {starterTemplates.map((template) => {
+                    const isActive = selectedStarterTemplate?.id === template.id
+                    return (
+                      <button
+                        key={template.id}
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            starterTemplateId: template.id,
+                            name: prev.name.trim() ? prev.name : buildStarterProjectName(t(template.titleKey)),
+                          }))
+                        }
+                        className={`w-full glass-btn-base px-3 py-3 text-left ${isActive ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
+                      >
+                        <div className="text-sm font-semibold text-[var(--glass-text-primary)]">{t(template.titleKey)}</div>
+                        <div className="text-xs opacity-80 mt-1">{t(template.descriptionKey)}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false)
-                    setFormData({ name: '', description: '', entryMode: 'story' })
+                    setFormData({ name: '', description: '', entryMode: 'story', starterTemplateId: '' })
                   }}
                   className="glass-btn-base glass-btn-secondary px-4 py-2"
                   disabled={createLoading}
@@ -657,7 +722,7 @@ export default function WorkspacePage() {
                 <button
                   type="submit"
                   className="glass-btn-base glass-btn-primary px-4 py-2 disabled:opacity-50"
-                  disabled={createLoading || !formData.name.trim()}
+                  disabled={createLoading || (!formData.name.trim() && !selectedStarterTemplate)}
                 >
                   {createLoading ? t('creating') : t('createProject')}
                 </button>

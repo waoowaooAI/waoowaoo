@@ -1,36 +1,72 @@
 {
-    "title": "Dự án của tôi",
-    "subtitle": "Quản lý dự án sản xuất anime AI của bạn",
-    "newProject": "Dự án mới",
-    "searchPlaceholder": "Tìm kiếm tên dự án hoặc mô tả...",
-    "searchButton": "Tìm kiếm",
-    "clearButton": "Xóa",
-    "updatedAt": "Cập nhật lúc",
-    "noProjects": "Chưa có dự án nào",
-    "noProjectsDesc": "Tạo dự án sản xuất anime AI đầu tiên của bạn",
-    "noResults": "Không tìm thấy dự án phù hợp",
-    "noResultsDesc": "Hãy thử sử dụng các cụm từ tìm kiếm khác nhau",
-    "createProject": "Dự án mới",
-    "editProject": "Chỉnh sửa dự án",
-    "deleteProject": "Xóa dự án",
-    "deleteConfirm": "Bạn có chắc chắn muốn xóa dự án \"{name}\" không? Không thể hoàn tác hành động này.",
-    "projectName": "Tên dự án",
-    "projectNamePlaceholder": "Nhập tên dự án",
-    "projectDescription": "Mô tả dự án (Tùy chọn)",
-    "projectDescriptionPlaceholder": "Nhập mô tả dự án",
-    "projectTypeLabel": "Loại dự án",
-    "projectTypeStoryTitle": "Story Studio",
-    "projectTypeStoryDesc": "Flow chuẩn cho screenplay/video nhiều tập",
-    "projectTypeMangaTitle": "Manga Quick Start",
-    "projectTypeMangaDesc": "Vào thẳng Script + bật Quick Manga mặc định",
-    "creating": "Đang tạo...",
-    "saving": "Đang lưu...",
-    "createFailed": "Không tạo được dự án",
-    "updateFailed": "Không thể cập nhật dự án",
-    "deleteFailed": "Không thể xóa dự án",
-    "totalProjects": "Tổng cộng {count} dự án",
-    "statsEpisodes": "tập phim",
-    "statsImages": "Hình ảnh",
-    "statsVideos": "Video",
-    "noContent": "Chưa có nội dung"
+  "title": "Dự án của tôi",
+  "subtitle": "Quản lý dự án sản xuất anime AI của bạn",
+  "newProject": "Dự án mới",
+  "searchPlaceholder": "Tìm kiếm tên dự án hoặc mô tả...",
+  "searchButton": "Tìm kiếm",
+  "clearButton": "Xóa",
+  "updatedAt": "Cập nhật lúc",
+  "noProjects": "Chưa có dự án nào",
+  "noProjectsDesc": "Tạo dự án sản xuất anime AI đầu tiên của bạn",
+  "noResults": "Không tìm thấy dự án phù hợp",
+  "noResultsDesc": "Hãy thử sử dụng các cụm từ tìm kiếm khác nhau",
+  "createProject": "Dự án mới",
+  "editProject": "Chỉnh sửa dự án",
+  "deleteProject": "Xóa dự án",
+  "deleteConfirm": "Bạn có chắc chắn muốn xóa dự án \"{name}\" không? Không thể hoàn tác hành động này.",
+  "projectName": "Tên dự án",
+  "projectNamePlaceholder": "Nhập tên dự án",
+  "projectDescription": "Mô tả dự án (Tùy chọn)",
+  "projectDescriptionPlaceholder": "Nhập mô tả dự án",
+  "projectTypeLabel": "Loại dự án",
+  "projectTypeStoryTitle": "Story Studio",
+  "projectTypeStoryDesc": "Flow chuẩn cho screenplay/video nhiều tập",
+  "projectTypeMangaTitle": "Manga Quick Start",
+  "projectTypeMangaDesc": "Vào thẳng Script + bật Quick Manga mặc định",
+  "creating": "Đang tạo...",
+  "saving": "Đang lưu...",
+  "createFailed": "Không tạo được dự án",
+  "updateFailed": "Không thể cập nhật dự án",
+  "deleteFailed": "Không thể xóa dự án",
+  "totalProjects": "Tổng cộng {count} dự án",
+  "statsEpisodes": "tập phim",
+  "statsImages": "Hình ảnh",
+  "statsVideos": "Video",
+  "noContent": "Chưa có nội dung",
+  "starterTemplates": {
+    "title": "Mẫu khởi tạo",
+    "subtitle": "Chọn mẫu để bắt đầu nhanh. Bạn vẫn có thể tuỳ chỉnh sau khi tạo dự án.",
+    "story": {
+      "cinematicShort": {
+        "title": "Phim ngắn điện ảnh",
+        "desc": "Thiết lập nhanh cho flow video kể chuyện dạng ngắn."
+      },
+      "socialAd": {
+        "title": "Clip promo mạng xã hội",
+        "desc": "Mẫu tập trung hook mở đầu cho kênh social."
+      },
+      "dialogueDrama": {
+        "title": "Kịch thoại cảm xúc",
+        "desc": "Cấu trúc script cân bằng cho kể chuyện theo nhân vật."
+      }
+    },
+    "manga": {
+      "actionBattle": {
+        "title": "Manga Hành động đối kháng",
+        "desc": "Flow khởi tạo cho nhịp panel chiến đấu và chuyển động mạnh."
+      },
+      "romanceSchool": {
+        "title": "Manga Tình cảm học đường",
+        "desc": "Thiết lập romance đời thường với nhịp cảm xúc nhẹ."
+      },
+      "fantasyQuest": {
+        "title": "Manga Phiêu lưu giả tưởng",
+        "desc": "Mẫu ưu tiên hành trình khám phá và xây thế giới."
+      },
+      "comedy4Koma": {
+        "title": "Manga Hài 4-koma",
+        "desc": "Cấu trúc gag ngắn cho kể chuyện 4 khung theo tập."
+      }
+    }
+  }
 }
