@@ -623,105 +623,114 @@ export default function WorkspacePage() {
         )}
       </main>
 
-      {/* Create Project Modal - 简化版，只有名称和描述 */}
+      {/* Create Project Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm p-3 sm:p-4">
-          <div className="glass-surface-modal p-5 sm:p-6 w-full max-w-md max-h-[85vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-[var(--glass-text-primary)] mb-4">{t('createProject')}</h2>
-            <form onSubmit={handleCreateProject}>
-              <div className="mb-4">
-                <label htmlFor="name" className="glass-field-label block mb-2">
-                  {t('projectName')} *
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="glass-input-base w-full px-3 py-2"
-                  placeholder={t('projectNamePlaceholder')}
-                  maxLength={100}
-                  required
-                  autoFocus
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="description" className="glass-field-label block mb-2">
-                  {t('projectDescription')}
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="glass-textarea-base w-full px-3 py-2"
-                  placeholder={t('projectDescriptionPlaceholder')}
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
-              <div className="mb-4">
-                <span className="glass-field-label block mb-2">{t('projectTypeLabel')}</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEntryModeChange('story')}
-                    className={`glass-btn-base px-3 py-3 text-left ${formData.entryMode === 'story' ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
-                  >
-                    <div className="text-sm font-semibold">{t('projectTypeStoryTitle')}</div>
-                    <div className="text-xs opacity-80 mt-1">{t('projectTypeStoryDesc')}</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleEntryModeChange('manga')}
-                    className={`glass-btn-base px-3 py-3 text-left ${formData.entryMode === 'manga' ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
-                  >
-                    <div className="text-sm font-semibold">{t('projectTypeMangaTitle')}</div>
-                    <div className="text-xs opacity-80 mt-1">{t('projectTypeMangaDesc')}</div>
-                  </button>
-                </div>
+        <div className="fixed inset-0 glass-overlay flex items-center justify-center z-50 backdrop-blur-sm p-3 sm:p-4 lg:p-6">
+          <div className="glass-surface-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 lg:p-7">
+            <h2 className="text-2xl font-bold text-[var(--glass-text-primary)] mb-1">{t('createProject')}</h2>
+            <p className="text-sm text-[var(--glass-text-tertiary)] mb-5">{t('projectTypeLabel')} + {t('projectName')}</p>
+
+            <form onSubmit={handleCreateProject} className="space-y-5">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <section className="lg:col-span-8 space-y-4">
+                  <div>
+                    <span className="glass-field-label block mb-2">{t('projectTypeLabel')}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleEntryModeChange('story')}
+                        className={`glass-btn-base px-4 py-3 text-left ${formData.entryMode === 'story' ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/35' : 'glass-btn-secondary'}`}
+                      >
+                        <div className="text-sm font-semibold">{t('projectTypeStoryTitle')}</div>
+                        <div className="text-xs opacity-75 mt-1">{t('projectTypeStoryDesc')}</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEntryModeChange('manga')}
+                        className={`glass-btn-base px-4 py-3 text-left ${formData.entryMode === 'manga' ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/35' : 'glass-btn-secondary'}`}
+                      >
+                        <div className="text-sm font-semibold">{t('projectTypeMangaTitle')}</div>
+                        <div className="text-xs opacity-75 mt-1">{t('projectTypeMangaDesc')}</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="name" className="glass-field-label block mb-2">
+                      {t('projectName')} *
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="glass-input-base w-full px-3 py-2.5"
+                      placeholder={t('projectNamePlaceholder')}
+                      maxLength={100}
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="description" className="glass-field-label block mb-2">
+                      {t('projectDescription')}
+                    </label>
+                    <textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="glass-textarea-base w-full px-3 py-2.5"
+                      placeholder={t('projectDescriptionPlaceholder')}
+                      rows={2}
+                      maxLength={500}
+                    />
+                  </div>
+                </section>
+
+                <aside className="lg:col-span-4">
+                  <div className="rounded-xl border border-[var(--glass-border)]/60 bg-[var(--glass-background-secondary)]/35 p-3 sm:p-4">
+                    <span className="glass-field-label block mb-2">{t('starterTemplates.title')}</span>
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                      {starterTemplates.map((template) => {
+                        const isActive = selectedStarterTemplate?.id === template.id
+                        return (
+                          <button
+                            key={template.id}
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                starterTemplateId: template.id,
+                                name: prev.name.trim() ? prev.name : buildStarterProjectName(t(template.titleKey)),
+                              }))
+                            }
+                            className={`w-full glass-btn-base px-3 py-2.5 text-left ${isActive ? 'glass-btn-primary ring-2 ring-[var(--glass-primary)]/30' : 'glass-btn-secondary'}`}
+                          >
+                            <div className="text-sm font-semibold text-[var(--glass-text-primary)] truncate">{t(template.titleKey)}</div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </aside>
               </div>
 
-              <div className="mb-6">
-                <span className="glass-field-label block mb-2">{t('starterTemplates.title')}</span>
-                <p className="text-xs text-[var(--glass-text-tertiary)] mb-3">{t('starterTemplates.subtitle')}</p>
-                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {starterTemplates.map((template) => {
-                    const isActive = selectedStarterTemplate?.id === template.id
-                    return (
-                      <button
-                        key={template.id}
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            starterTemplateId: template.id,
-                            name: prev.name.trim() ? prev.name : buildStarterProjectName(t(template.titleKey)),
-                          }))
-                        }
-                        className={`w-full glass-btn-base px-3 py-3 text-left ${isActive ? 'glass-btn-primary' : 'glass-btn-secondary'}`}
-                      >
-                        <div className="text-sm font-semibold text-[var(--glass-text-primary)]">{t(template.titleKey)}</div>
-                        <div className="text-xs opacity-80 mt-1">{t(template.descriptionKey)}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-[var(--glass-border)]/40">
                 <button
                   type="button"
                   onClick={() => {
                     setShowCreateModal(false)
                     setFormData({ name: '', description: '', entryMode: 'story', starterTemplateId: '' })
                   }}
-                  className="glass-btn-base glass-btn-secondary px-4 py-2"
+                  className="glass-btn-base glass-btn-secondary px-4 py-2.5"
                   disabled={createLoading}
                 >
                   {tc('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="glass-btn-base glass-btn-primary px-4 py-2 disabled:opacity-50"
+                  className="glass-btn-base glass-btn-primary px-4 py-2.5 disabled:opacity-50"
                   disabled={createLoading || (!formData.name.trim() && !selectedStarterTemplate)}
                 >
                   {createLoading ? t('creating') : t('createProject')}
