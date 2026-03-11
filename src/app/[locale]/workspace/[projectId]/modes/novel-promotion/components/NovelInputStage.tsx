@@ -152,6 +152,8 @@ interface NovelInputStageProps {
   onCharacterStrategyChange?: (value: CharacterStrategyId) => void
   selectedEnvironmentId?: EnvironmentPresetId
   onEnvironmentChange?: (value: EnvironmentPresetId) => void
+  onGenerateDemoSampleAssets?: () => Promise<{ mode: 'real' | 'fallback' | 'mixed'; realTriggered: number; fallbackApplied: number }>
+  demoSampleAssetsPending?: boolean
 }
 
 export default function NovelInputStage({
@@ -192,6 +194,8 @@ export default function NovelInputStage({
   onCharacterStrategyChange,
   selectedEnvironmentId = 'city-night-neon',
   onEnvironmentChange,
+  onGenerateDemoSampleAssets,
+  demoSampleAssetsPending = false,
 }: NovelInputStageProps) {
   const t = useTranslations('novelPromotion')
   const tStoryboard = useTranslations('storyboard')
@@ -366,6 +370,8 @@ export default function NovelInputStage({
     )
     return matched?.id ?? null
   }, [artStyle, demoBundles, selectedCharacterStrategy, selectedEnvironmentId])
+
+  const [sampleAssetSummary, setSampleAssetSummary] = useState<string>('')
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
@@ -594,8 +600,34 @@ export default function NovelInputStage({
             <p className="text-xs text-[var(--glass-text-secondary)]">
               Model route: {providerFirstModels.openaiCompat.length > 0 ? 'OpenAI-compatible' : providerFirstModels.geminiCompat.length > 0 ? 'Gemini-compatible' : 'Default'}
             </p>
-            <p className="text-xs text-[var(--glass-text-tertiary)]">Image models khả dụng: {providerFirstModels.total}</p>
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <p className="text-xs text-[var(--glass-text-tertiary)]">Image models khả dụng: {providerFirstModels.total}</p>
+              {onGenerateDemoSampleAssets && (
+                <button
+                  type="button"
+                  disabled={demoSampleAssetsPending}
+                  onClick={async () => {
+                    const result = await onGenerateDemoSampleAssets()
+                    if (result.mode === 'real') {
+                      setSampleAssetSummary(`Sample assets: real ${result.realTriggered}, fallback ${result.fallbackApplied}`)
+                    } else if (result.mode === 'mixed') {
+                      setSampleAssetSummary(`Sample assets: mixed real ${result.realTriggered}, fallback ${result.fallbackApplied}`)
+                    } else {
+                      setSampleAssetSummary(`Sample assets: fallback ${result.fallbackApplied}`)
+                    }
+                  }}
+                  className="glass-btn-base px-3 py-1.5 text-xs"
+                >
+                  {demoSampleAssetsPending ? 'Đang tạo sample assets...' : 'Tạo sample assets'}
+                </button>
+              )}
+            </div>
           </div>
+          {sampleAssetSummary && (
+            <div className="mt-3 rounded-lg border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/20 px-3 py-2 text-xs text-[var(--glass-text-secondary)]">
+              {sampleAssetSummary}
+            </div>
+          )}
           <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
             {demoBundles.map((bundle) => {
               const active = activeBundleId === bundle.id

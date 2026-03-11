@@ -46,6 +46,8 @@ export default function ConfigStage() {
         onCharacterStrategyChange={runtime.onCharacterStrategyChange}
         selectedEnvironmentId={runtime.selectedEnvironmentId}
         onEnvironmentChange={runtime.onEnvironmentChange}
+        onGenerateDemoSampleAssets={runtime.onGenerateDemoSampleAssets}
+        demoSampleAssetsPending={runtime.demoSampleAssetsPending}
         onNext={runtime.onRunStoryToScript}
       />
       {runtime.journeyType === 'manga_webtoon' && (

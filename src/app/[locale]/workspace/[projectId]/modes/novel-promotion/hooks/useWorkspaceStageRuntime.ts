@@ -61,6 +61,8 @@ interface UseWorkspaceStageRuntimeParams {
   onQuickMangaConflictPolicyChange: (value: QuickMangaContinuityConflictPolicy) => Promise<void>
   onCharacterStrategyChange: (value: 'consistency-first' | 'emotion-first' | 'dynamic-action') => Promise<void>
   onEnvironmentChange: (value: 'city-night-neon' | 'forest-mist-dawn' | 'interior-cinematic') => Promise<void>
+  onGenerateDemoSampleAssets: () => Promise<{ mode: 'real' | 'fallback' | 'mixed'; realTriggered: number; fallbackApplied: number }>
+  demoSampleAssetsPending: boolean
   runWithRebuildConfirm: (action: 'storyToScript' | 'scriptToStoryboard', operation: () => Promise<void>) => Promise<void>
   runStoryToScriptFlow: () => Promise<void>
   runScriptToStoryboardFlow: () => Promise<void>
@@ -128,6 +130,8 @@ export function useWorkspaceStageRuntime({
   onQuickMangaConflictPolicyChange,
   onCharacterStrategyChange,
   onEnvironmentChange,
+  onGenerateDemoSampleAssets,
+  demoSampleAssetsPending,
   runWithRebuildConfirm,
   runStoryToScriptFlow,
   runScriptToStoryboardFlow,
@@ -183,6 +187,8 @@ export function useWorkspaceStageRuntime({
     onArtStyleChange: (value) => handleUpdateConfig('artStyle', value),
     onCharacterStrategyChange,
     onEnvironmentChange,
+    onGenerateDemoSampleAssets,
+    demoSampleAssetsPending,
     onRunStoryToScript: () => runWithRebuildConfirm('storyToScript', runStoryToScriptFlow),
     onClipUpdate: (clipId, data) => {
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -220,6 +226,8 @@ export function useWorkspaceStageRuntime({
     onQuickMangaEnabledChange,
     onCharacterStrategyChange,
     onEnvironmentChange,
+    onGenerateDemoSampleAssets,
+    demoSampleAssetsPending,
     onQuickMangaLayoutChange,
     onQuickMangaPresetChange,
     onQuickMangaStyleLockEnabledChange,

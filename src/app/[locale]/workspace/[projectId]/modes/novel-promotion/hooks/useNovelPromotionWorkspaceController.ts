@@ -88,6 +88,7 @@ export function useNovelPromotionWorkspaceController({
       : 'city-night-neon'
   const [selectedCharacterStrategy, setSelectedCharacterStrategy] = useState<CharacterStrategyId>(initialCharacterStrategy)
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<EnvironmentPresetId>(initialEnvironmentId)
+  const [demoSampleAssetsPending, setDemoSampleAssetsPending] = useState(false)
 
   useEffect(() => {
     const enabledFromEntry = shouldEnableQuickMangaFromSearchParams(searchParams)
@@ -284,6 +285,71 @@ export function useNovelPromotionWorkspaceController({
     await configActions.handleUpdateConfig('selectedEnvironmentId', value)
   }, [configActions])
 
+  const handleGenerateDemoSampleAssets = useCallback(async () => {
+    if (demoSampleAssetsPending) {
+      return { mode: 'fallback' as const, realTriggered: 0, fallbackApplied: 0 }
+    }
+
+    setDemoSampleAssetsPending(true)
+    try {
+      const response = await fetch(`/api/novel-promotion/${projectId}/demo-sample-assets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          journeyType: projectSnapshot.journeyType,
+          artStyle: projectSnapshot.artStyle,
+          selectedCharacterStrategy,
+          selectedEnvironmentId,
+          locale: 'vi',
+          source: 'vat121-novel-input',
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({})) as {
+        success?: boolean
+        mode?: 'real' | 'fallback' | 'mixed'
+        realTriggered?: number
+        fallbackApplied?: number
+        error?: { message?: string }
+        message?: string
+      }
+
+      if (!response.ok || payload.success !== true) {
+        throw new Error(payload.error?.message || payload.message || 'Không tạo được demo sample assets')
+      }
+
+      const mode = payload.mode || 'fallback'
+      const realTriggered = Number(payload.realTriggered || 0)
+      const fallbackApplied = Number(payload.fallbackApplied || 0)
+
+      await onRefresh({ mode: 'assets' })
+
+      if (mode === 'real') {
+        _ulogInfo(`[VAT-121] sample assets real triggered=${realTriggered}`)
+      } else if (mode === 'mixed') {
+        _ulogInfo(`[VAT-121] sample assets mixed real=${realTriggered} fallback=${fallbackApplied}`)
+      } else {
+        _ulogInfo(`[VAT-121] sample assets fallback=${fallbackApplied}`)
+      }
+
+      return {
+        mode,
+        realTriggered,
+        fallbackApplied,
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không tạo được demo sample assets'
+      _ulogInfo(`[VAT-121] sample assets failed: ${message}`)
+      return {
+        mode: 'fallback' as const,
+        realTriggered: 0,
+        fallbackApplied: 0,
+      }
+    } finally {
+      setDemoSampleAssetsPending(false)
+    }
+  }, [demoSampleAssetsPending, onRefresh, projectId, projectSnapshot.artStyle, projectSnapshot.journeyType, selectedCharacterStrategy, selectedEnvironmentId])
+
   const rebuildState = useRebuildConfirm({
     episodeId,
     episodeStoryboards: episode?.storyboards,
@@ -372,6 +438,8 @@ export function useNovelPromotionWorkspaceController({
     onQuickMangaConflictPolicyChange: handleQuickMangaConflictPolicyChange,
     onCharacterStrategyChange: handleCharacterStrategyChange,
     onEnvironmentChange: handleEnvironmentChange,
+    onGenerateDemoSampleAssets: handleGenerateDemoSampleAssets,
+    demoSampleAssetsPending,
     runWithRebuildConfirm: rebuildState.runWithRebuildConfirm,
     runStoryToScriptFlow: execution.runStoryToScriptFlow,
     runScriptToStoryboardFlow: execution.runScriptToStoryboardFlow,
