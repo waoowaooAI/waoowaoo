@@ -1,0 +1,202 @@
+{
+  "version": "v0.1-draft",
+  "generatedAt": "2026-03-11",
+  "scope": "VAT-132/VAT-133 manga_webtoon settings mapping draft",
+  "source": {
+    "provider": "Anifun AI Manga Generator",
+    "evidencePackPath": "/Users/mrcagents/.openclaw/workspace/tmp/anifun-evidence-package-2026-03-11/anifun-ai-manga-generator-capture-2026-03-11",
+    "panelTemplateDir": "panel-templates/",
+    "presetTemplateDir": "preset-templates/",
+    "note": "Template 01-03 là thumbnail giàu texture nên slot count chỉ ở mức estimate; template 04-13 có độ tin cậy cao hơn."
+  },
+  "referencePresets": [
+    {
+      "referencePresetId": "anifun_preset_01_school_romance",
+      "sourceFile": "preset-templates/01_school_romance.webp",
+      "intent": "school-romance, soft drama"
+    },
+    {
+      "referencePresetId": "anifun_preset_02_superhero_food",
+      "sourceFile": "preset-templates/02_superhero_food.webp",
+      "intent": "action-comedy, stylized"
+    },
+    {
+      "referencePresetId": "anifun_preset_03_cat_cafe_jp",
+      "sourceFile": "preset-templates/03_cat_cafe_jp.webp",
+      "intent": "slice-of-life, cozy"
+    },
+    {
+      "referencePresetId": "anifun_preset_04_confession_summer",
+      "sourceFile": "preset-templates/04_confession_summer.webp",
+      "intent": "romance-drama, emotional beat"
+    },
+    {
+      "referencePresetId": "anifun_preset_05_busy_day_witch",
+      "sourceFile": "preset-templates/05_busy_day_witch.webp",
+      "intent": "fantasy slice, expressive scenes"
+    },
+    {
+      "referencePresetId": "anifun_preset_06_sexy_beauty_day",
+      "sourceFile": "preset-templates/06_sexy_beauty_day.webp",
+      "intent": "character showcase, glam portrait"
+    }
+  ],
+  "layouts": [
+    {
+      "panelLayoutId": "anifun_t01",
+      "layoutFamily": "cinematic-complex",
+      "sourceTemplateFile": "panel-templates/01_52519e234bbf8a4801bfd86a361aae95.png",
+      "panelSlotCount": 5,
+      "slotCountConfidence": "low",
+      "panelSlots": ["p1", "p2", "p3", "p4", "p5"],
+      "narrativeIntent": "Trang mở cảnh động, nhịp nhanh với điểm nhấn nhân vật.",
+      "colorMode": "auto",
+      "suggestedStylePresets": ["action-battle", "auto"],
+      "referencePresetId": "anifun_preset_02_superhero_food"
+    },
+    {
+      "panelLayoutId": "anifun_t02",
+      "layoutFamily": "cinematic-zigzag",
+      "sourceTemplateFile": "panel-templates/02_abce6785736850b48b21d38f0fb017cf.webp",
+      "panelSlotCount": 6,
+      "slotCountConfidence": "low",
+      "panelSlots": ["p1", "p2", "p3", "p4", "p5", "p6"],
+      "narrativeIntent": "Đối thoại xen kẽ hành động, phân nhịp theo beat dọc.",
+      "colorMode": "limited-palette",
+      "suggestedStylePresets": ["romance-drama", "slice-of-life"],
+      "referencePresetId": "anifun_preset_04_confession_summer"
+    },
+    {
+      "panelLayoutId": "anifun_t03",
+      "layoutFamily": "cinematic-diagonal-focus",
+      "sourceTemplateFile": "panel-templates/03_df5a41e5d7e137c696b9094c5fe4aa30.webp",
+      "panelSlotCount": 5,
+      "slotCountConfidence": "low",
+      "panelSlots": ["p1", "p2", "p3", "p4", "p5"],
+      "narrativeIntent": "Trang chuyển cảnh có panel nhấn lớn + các panel phụ build tension.",
+      "colorMode": "black-white",
+      "suggestedStylePresets": ["action-battle", "romance-drama"],
+      "referencePresetId": "anifun_preset_05_busy_day_witch"
+    },
+    {
+      "panelLayoutId": "anifun_t04",
+      "layoutFamily": "single-splash",
+      "sourceTemplateFile": "panel-templates/04_temp_a7f9e68e1e8aed6e019da3eeb572f8fb.png",
+      "panelSlotCount": 1,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1"],
+      "narrativeIntent": "Cover/hero shot, reveal nhân vật hoặc key visual.",
+      "colorMode": "full-color",
+      "suggestedStylePresets": ["auto", "action-battle"],
+      "referencePresetId": "anifun_preset_06_sexy_beauty_day"
+    },
+    {
+      "panelLayoutId": "anifun_t05",
+      "layoutFamily": "dual-split",
+      "sourceTemplateFile": "panel-templates/05_temp_4423e55dcad38c07d6782dda3b064499.png",
+      "panelSlotCount": 2,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2"],
+      "narrativeIntent": "Before/after, setup/payoff hoặc đối thoại song song.",
+      "colorMode": "black-white",
+      "suggestedStylePresets": ["romance-drama", "slice-of-life"],
+      "referencePresetId": "anifun_preset_01_school_romance"
+    },
+    {
+      "panelLayoutId": "anifun_t06",
+      "layoutFamily": "triple-strip",
+      "sourceTemplateFile": "panel-templates/06_temp_10f2cc27bb7aa1b6413d12a1f6765bf7.png",
+      "panelSlotCount": 3,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3"],
+      "narrativeIntent": "3-beat progression: setup -> escalation -> payoff.",
+      "colorMode": "limited-palette",
+      "suggestedStylePresets": ["slice-of-life", "romance-drama"],
+      "referencePresetId": "anifun_preset_03_cat_cafe_jp"
+    },
+    {
+      "panelLayoutId": "anifun_t07",
+      "layoutFamily": "quad-grid-equal",
+      "sourceTemplateFile": "panel-templates/07_temp_5344e7516616eeec1f6548c42106dfa8.webp",
+      "panelSlotCount": 4,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3", "p4"],
+      "narrativeIntent": "Nhịp đều cho hội thoại/nhịp hài 4-beat.",
+      "colorMode": "black-white",
+      "suggestedStylePresets": ["comedy-4koma", "slice-of-life"],
+      "referencePresetId": "anifun_preset_03_cat_cafe_jp"
+    },
+    {
+      "panelLayoutId": "anifun_t08",
+      "layoutFamily": "quad-grid-portrait",
+      "sourceTemplateFile": "panel-templates/08_temp_a5cfbc301b677668d03238a124def56e.png",
+      "panelSlotCount": 4,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3", "p4"],
+      "narrativeIntent": "4 panel ưu tiên cận cảnh nhân vật, cảm xúc liên tục.",
+      "colorMode": "limited-palette",
+      "suggestedStylePresets": ["romance-drama", "slice-of-life"],
+      "referencePresetId": "anifun_preset_01_school_romance"
+    },
+    {
+      "panelLayoutId": "anifun_t09",
+      "layoutFamily": "quad-mixed-focus",
+      "sourceTemplateFile": "panel-templates/09_temp_f6f04f53b320e956d1402edf0b07fc29.png",
+      "panelSlotCount": 4,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3", "p4"],
+      "narrativeIntent": "1 panel lớn + 3 panel phụ để nhấn twist hoặc reaction.",
+      "colorMode": "auto",
+      "suggestedStylePresets": ["action-battle", "romance-drama"],
+      "referencePresetId": "anifun_preset_05_busy_day_witch"
+    },
+    {
+      "panelLayoutId": "anifun_t10",
+      "layoutFamily": "dense-six-panel",
+      "sourceTemplateFile": "panel-templates/10_temp_6ad28cc3e8e2ef052db60e2d204f6290.png",
+      "panelSlotCount": 6,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3", "p4", "p5", "p6"],
+      "narrativeIntent": "Trang dày thông tin (điều tra, hành động nhanh, montage).",
+      "colorMode": "black-white",
+      "suggestedStylePresets": ["action-battle", "comedy-4koma"],
+      "referencePresetId": "anifun_preset_02_superhero_food"
+    },
+    {
+      "panelLayoutId": "anifun_t11",
+      "layoutFamily": "quad-hero-bottom",
+      "sourceTemplateFile": "panel-templates/11_temp_ba7ccdcb68bfd98af4a180f5adfc5df6.webp",
+      "panelSlotCount": 4,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3", "p4"],
+      "narrativeIntent": "Nhịp buildup ở trên, payoff mạnh ở panel dưới cùng.",
+      "colorMode": "full-color",
+      "suggestedStylePresets": ["action-battle", "romance-drama"],
+      "referencePresetId": "anifun_preset_04_confession_summer"
+    },
+    {
+      "panelLayoutId": "anifun_t12",
+      "layoutFamily": "dual-hero-support",
+      "sourceTemplateFile": "panel-templates/12_temp_96e97b1ac042c5fc7231d5824d7bb1b1.webp",
+      "panelSlotCount": 2,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2"],
+      "narrativeIntent": "1 panel chính + 1 panel ngữ cảnh để nhấn cảm xúc/chuyển cảnh.",
+      "colorMode": "full-color",
+      "suggestedStylePresets": ["romance-drama", "slice-of-life"],
+      "referencePresetId": "anifun_preset_06_sexy_beauty_day"
+    },
+    {
+      "panelLayoutId": "anifun_t13",
+      "layoutFamily": "triple-focus",
+      "sourceTemplateFile": "panel-templates/13_temp_6892573eae1c2d46ef550e25c75c973a.webp",
+      "panelSlotCount": 3,
+      "slotCountConfidence": "high",
+      "panelSlots": ["p1", "p2", "p3"],
+      "narrativeIntent": "3 panel tập trung nhịp cảm xúc hoặc mini-arc gọn.",
+      "colorMode": "limited-palette",
+      "suggestedStylePresets": ["slice-of-life", "romance-drama", "comedy-4koma"],
+      "referencePresetId": "anifun_preset_03_cat_cafe_jp"
+    }
+  ]
+}
