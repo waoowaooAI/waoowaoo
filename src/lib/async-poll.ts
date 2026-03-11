@@ -19,7 +19,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 import { queryFalStatus } from './async-submit'
 import { queryGeminiBatchStatus, querySeedanceVideoStatus, queryGoogleVideoStatus } from './async-task-utils'
 import { getProviderConfig, getUserModels } from './api-config'
-import { buildRenderedTemplateRequest, buildTemplateVariables, normalizeResponseJson, readJsonPath } from './openai-compat-template-runtime'
+import { buildRenderedTemplateRequest, buildTemplateVariables, normalizeResponseJson, readJsonPath, resolveTemplateOperation, type TemplateOperation } from './openai-compat-template-runtime'
 import { composeModelKey } from './model-config-contract'
 
 const OPENAI_COMPAT_PROVIDER_PREFIX = 'openai-compatible:'
@@ -53,6 +53,7 @@ export function parseExternalId(externalId: string): {
     requestId: string
     providerToken?: string
     modelKeyToken?: string
+    templateOperation?: TemplateOperation
 } {
     // 标准格式：PROVIDER:TYPE:...
     if (externalId.startsWith('FAL:')) {
@@ -168,7 +169,9 @@ export function parseExternalId(externalId: string): {
         const type = parts[1]
         const providerToken = parts[2]
         const modelKeyToken = parts[3]
-        const requestId = parts.slice(4).join(':')
+        const candidateOperation = parts[4]
+        const hasOperation = candidateOperation === 'generate' || candidateOperation === 'edit'
+        const requestId = hasOperation ? parts.slice(5).join(':') : parts.slice(4).join(':')
         if ((type !== 'VIDEO' && type !== 'IMAGE') || !providerToken || !modelKeyToken || !requestId) {
             throw new Error(`无效 OCOMPAT externalId: "${externalId}"，应为 OCOMPAT:TYPE:providerToken:modelKeyToken:taskId`)
         }
@@ -178,6 +181,7 @@ export function parseExternalId(externalId: string): {
             providerToken,
             modelKeyToken,
             requestId,
+            ...(hasOperation ? { templateOperation: candidateOperation as TemplateOperation } : {}),
         }
     }
 
@@ -211,7 +215,7 @@ export function parseExternalId(externalId: string): {
 
     throw new Error(
         `无法识别的 externalId 格式: "${externalId}". ` +
-        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId`
+        `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, OCOMPAT:TYPE:providerToken:modelKeyToken:operation:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId`
     )
 }
 
@@ -246,7 +250,7 @@ export async function pollAsyncTask(
         case 'OPENAI':
             return await pollOpenAIVideoTask(parsed.requestId, userId, parsed.providerToken)
         case 'OCOMPAT':
-            return await pollOCompatTask(parsed.type, parsed.requestId, userId, parsed.providerToken, parsed.modelKeyToken)
+            return await pollOCompatTask(parsed.type, parsed.requestId, userId, parsed.providerToken, parsed.modelKeyToken, parsed.templateOperation)
         case 'BAILIAN':
             return await pollBailianTask(parsed.requestId, userId)
         case 'SILICONFLOW':
@@ -313,6 +317,7 @@ async function pollOCompatTask(
     userId: string,
     providerToken?: string,
     modelKeyToken?: string,
+    templateOperation?: TemplateOperation,
 ): Promise<PollResult> {
     if (!providerToken) throw new Error('OCOMPAT_PROVIDER_TOKEN_MISSING')
     if (!modelKeyToken) throw new Error('OCOMPAT_MODEL_KEY_TOKEN_MISSING')
@@ -326,7 +331,7 @@ async function pollOCompatTask(
     if (!model || !model.compatMediaTemplate) {
         throw new Error(`OCOMPAT_TEMPLATE_NOT_FOUND: ${modelKey}`)
     }
-    const template = model.compatMediaTemplate
+    const template = resolveTemplateOperation(model.compatMediaTemplate, templateOperation || 'generate')
     if (template.mode !== 'async' || !template.status) {
         throw new Error(`OCOMPAT_TEMPLATE_NOT_ASYNC: ${modelKey}`)
     }

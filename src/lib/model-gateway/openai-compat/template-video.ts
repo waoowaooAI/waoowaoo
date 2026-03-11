@@ -3,9 +3,11 @@ import type { OpenAICompatVideoRequest } from '../types'
 import {
   buildRenderedTemplateRequest,
   buildTemplateVariables,
-  extractTemplateError,
+  extractTemplateErrorFromResponse,
   normalizeResponseJson,
   readJsonPath,
+  resolveTemplateOperation,
+  type TemplateOperation,
 } from '@/lib/openai-compat-template-runtime'
 import { parseModelKeyStrict } from '@/lib/model-config-contract'
 import { resolveOpenAICompatClientConfig } from './common'
@@ -40,6 +42,17 @@ function resolveModelRef(request: OpenAICompatVideoRequest): string {
   throw new Error('OPENAI_COMPAT_VIDEO_MODEL_REF_REQUIRED')
 }
 
+function resolveVideoTemplateOperation(options: Record<string, unknown> | undefined): TemplateOperation {
+  const candidates = [options?.operation, options?.templateOperation, options?.generationMode]
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string') continue
+    const normalized = candidate.trim().toLowerCase()
+    if (normalized === 'edit') return 'edit'
+    if (normalized === 'generate' || normalized === 'generation') return 'generate'
+  }
+  return 'generate'
+}
+
 export async function generateVideoViaOpenAICompatTemplate(
   request: OpenAICompatVideoRequest,
 ): Promise<GenerateResult> {
@@ -51,6 +64,8 @@ export async function generateVideoViaOpenAICompatTemplate(
   }
 
   const config = await resolveOpenAICompatClientConfig(request.userId, request.providerId)
+  const operation = resolveVideoTemplateOperation(request.options)
+  const operationTemplate = resolveTemplateOperation(request.template, operation)
   const variables = buildTemplateVariables({
     model: request.modelId || '',
     prompt: request.prompt,
@@ -65,7 +80,7 @@ export async function generateVideoViaOpenAICompatTemplate(
 
   const createRequest = await buildRenderedTemplateRequest({
     baseUrl: config.baseUrl,
-    endpoint: request.template.create,
+    endpoint: operationTemplate.create,
     variables,
     defaultAuthHeader: `Bearer ${config.apiKey}`,
   })
@@ -81,22 +96,22 @@ export async function generateVideoViaOpenAICompatTemplate(
   const payload = normalizeResponseJson(rawText)
 
   if (!createResponse.ok) {
-    const errorMessage = extractTemplateError(request.template, payload, createResponse.status)
+    const errorMessage = extractTemplateErrorFromResponse(operationTemplate.response, payload, createResponse.status)
     if ([404, 405, 415].includes(createResponse.status)) {
       throw buildUnsupportedVideoFormatError(errorMessage)
     }
     throw new Error(errorMessage)
   }
 
-  if (request.template.mode === 'sync') {
-    const outputUrl = readJsonPath(payload, request.template.response.outputUrlPath)
+  if (operationTemplate.mode === 'sync') {
+    const outputUrl = readJsonPath(payload, operationTemplate.response.outputUrlPath)
     if (typeof outputUrl === 'string' && outputUrl.trim()) {
       return {
         success: true,
         videoUrl: outputUrl.trim(),
       }
     }
-    const outputUrls = readJsonPath(payload, request.template.response.outputUrlsPath)
+    const outputUrls = readJsonPath(payload, operationTemplate.response.outputUrlsPath)
     if (Array.isArray(outputUrls) && outputUrls.length > 0 && typeof outputUrls[0] === 'string') {
       return {
         success: true,
@@ -106,7 +121,7 @@ export async function generateVideoViaOpenAICompatTemplate(
     throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_OUTPUT_NOT_FOUND')
   }
 
-  const taskIdRaw = readJsonPath(payload, request.template.response.taskIdPath)
+  const taskIdRaw = readJsonPath(payload, operationTemplate.response.taskIdPath)
   const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : ''
   if (!taskId) {
     throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_TASK_ID_NOT_FOUND')
@@ -119,6 +134,6 @@ export async function generateVideoViaOpenAICompatTemplate(
     success: true,
     async: true,
     requestId: taskId,
-    externalId: `OCOMPAT:VIDEO:${providerToken}:${modelRefToken}:${taskId}`,
+    externalId: `OCOMPAT:VIDEO:${providerToken}:${modelRefToken}:${operation}:${taskId}`,
   }
 }

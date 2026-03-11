@@ -1,12 +1,26 @@
 import type {
+  OpenAICompatOperationTemplate,
   OpenAICompatMediaTemplate,
   TemplateBodyValue,
   TemplateEndpoint,
   TemplateHeaderMap,
+  TemplateOperationType,
+  TemplatePollingConfig,
+  TemplateResponseMap,
 } from '@/lib/openai-compat-media-template'
 import { toUploadFile } from '@/lib/model-gateway/openai-compat/common'
 
 export type TemplateVariableMap = Record<string, TemplateBodyValue | undefined>
+export type TemplateOperation = TemplateOperationType
+
+export interface ResolvedTemplateOperation {
+  mode: OpenAICompatMediaTemplate['mode']
+  create: TemplateEndpoint
+  status?: TemplateEndpoint
+  content?: TemplateEndpoint
+  response: TemplateResponseMap
+  polling?: TemplatePollingConfig
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -422,6 +436,42 @@ export function normalizeResponseJson(rawText: string): unknown {
   }
 }
 
+function normalizeOperationTemplate(
+  template: OpenAICompatMediaTemplate,
+  operationTemplate?: OpenAICompatOperationTemplate,
+): ResolvedTemplateOperation {
+  if (!operationTemplate) {
+    return {
+      mode: template.mode,
+      create: template.create,
+      status: template.status,
+      content: template.content,
+      response: template.response,
+      polling: template.polling,
+    }
+  }
+
+  return {
+    mode: template.mode,
+    create: operationTemplate.create,
+    status: operationTemplate.status ?? template.status,
+    content: operationTemplate.content ?? template.content,
+    response: {
+      ...template.response,
+      ...operationTemplate.response,
+    },
+    polling: operationTemplate.polling ?? template.polling,
+  }
+}
+
+export function resolveTemplateOperation(
+  template: OpenAICompatMediaTemplate,
+  operation: TemplateOperation = 'generate',
+): ResolvedTemplateOperation {
+  const operationTemplate = template.operations?.[operation]
+  return normalizeOperationTemplate(template, operationTemplate)
+}
+
 export function buildTemplateVariables(input: {
   model: string
   prompt: string
@@ -454,7 +504,15 @@ export function extractTemplateError(
   payload: unknown,
   status: number,
 ): string {
-  const mapped = readJsonPath(payload, template.response.errorPath)
+  return extractTemplateErrorFromResponse(template.response, payload, status)
+}
+
+export function extractTemplateErrorFromResponse(
+  response: Pick<TemplateResponseMap, 'errorPath'>,
+  payload: unknown,
+  status: number,
+): string {
+  const mapped = readJsonPath(payload, response.errorPath)
   if (typeof mapped === 'string' && mapped.trim()) return mapped.trim()
   const fallbackCandidates = [
     readJsonPath(payload, '$.error.message_zh'),
