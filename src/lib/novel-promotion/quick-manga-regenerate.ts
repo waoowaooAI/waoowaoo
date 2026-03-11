@@ -123,6 +123,7 @@ export function buildQuickMangaContinuityContext(params: {
       preset: payload.preset,
       layout: payload.layout,
       colorMode: payload.colorMode,
+      panelTemplateId: payload.panelTemplateId || null,
       style: payload.style,
     },
     reusedControls: buildQuickMangaGenerationControlsFromHistory(params.source),

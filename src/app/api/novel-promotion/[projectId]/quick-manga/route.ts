@@ -119,7 +119,7 @@ export const POST = apiHandler(async (
         preset: continuity.reusedOptions.preset,
         layout: continuity.reusedOptions.layout,
         colorMode: continuity.reusedOptions.colorMode,
-        panelTemplateId: continuity.reusedControls?.panelTemplateId || quickMangaPayload.panelTemplateId,
+        panelTemplateId: continuity.reusedOptions.panelTemplateId || continuity.reusedControls?.panelTemplateId || quickMangaPayload.panelTemplateId,
         style: continuity.reusedOptions.style || quickMangaPayload.style,
       },
       reusedControls: continuity.reusedControls || quickMangaControls,

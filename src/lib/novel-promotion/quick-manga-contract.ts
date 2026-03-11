@@ -39,6 +39,7 @@ export type QuickMangaContinuityContext = {
     preset: QuickMangaPreset
     layout: QuickMangaLayout
     colorMode: QuickMangaColorMode
+    panelTemplateId: string | null
     style: string | null
   }
   reusedControls?: QuickMangaGenerationControls
@@ -202,6 +203,7 @@ function parseContinuityContext(input: unknown): QuickMangaContinuityContext | n
       preset: toQuickMangaPreset(reusedOptionsInput.preset, 'auto'),
       layout: toQuickMangaLayout(reusedOptionsInput.layout, 'auto'),
       colorMode: toQuickMangaColorMode(reusedOptionsInput.colorMode, 'auto'),
+      panelTemplateId: toNullableTrimmedString(reusedOptionsInput.panelTemplateId),
       style: toNullableTrimmedString(reusedOptionsInput.style),
     },
     ...(hasReusedControls
