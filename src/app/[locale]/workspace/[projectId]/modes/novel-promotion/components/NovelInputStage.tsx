@@ -104,76 +104,6 @@ function RatioSelector({
   )
 }
 
-/**
- * StyleSelector - 视觉风格选择抽屉组件
- */
-function StyleSelector({
-  value,
-  onChange,
-  options
-}: {
-  value: string
-  onChange: (value: string) => void
-  options: { value: string; label: string; preview: string }[]
-}) {
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const selectedOption = options.find(o => o.value === value) || options[0]
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      {/* 触发按钮 */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="glass-input-base px-3 py-2.5 flex w-full items-center justify-between gap-2 cursor-pointer transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-lg">{selectedOption.preview}</span>
-          <span className="text-sm text-[var(--glass-text-primary)] font-medium">{selectedOption.label}</span>
-        </div>
-        <AppIcon name="chevronDown" className={`w-4 h-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {/* 下拉面板 */}
-      {isOpen && (
-        <div className="glass-surface-modal absolute z-50 mt-1 left-0 right-0 p-3">
-          <div className="grid grid-cols-2 gap-2">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
-                }}
-                className={`flex items-center gap-2 p-3 rounded-lg text-left transition-all ${value === option.value
-                  ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] shadow-[0_0_0_1px_rgba(79,128,255,0.35)]'
-                  : 'hover:bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]'
-                  }`}
-              >
-                <span className="text-lg">{option.preview}</span>
-                <span className="font-medium text-sm">{option.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 type CharacterStrategyId = 'consistency-first' | 'emotion-first' | 'dynamic-action'
 type EnvironmentPresetId = 'city-night-neon' | 'forest-mist-dawn' | 'interior-cinematic'
 
@@ -394,6 +324,49 @@ export default function NovelInputStage({
     },
   ]
 
+  const demoBundles = useMemo<Array<{
+    id: string
+    name: string
+    outcome: string
+    artStyle: string
+    character: CharacterStrategyId
+    environment: EnvironmentPresetId
+  }>>(() => [
+    {
+      id: 'launch-teaser',
+      name: 'Launch Teaser',
+      outcome: 'Ra teaser nhanh cho social ads với nhịp cảnh mạnh.',
+      artStyle: 'realistic',
+      character: 'dynamic-action',
+      environment: 'city-night-neon',
+    },
+    {
+      id: 'brand-story',
+      name: 'Brand Story',
+      outcome: 'Kể câu chuyện thương hiệu với cảm xúc rõ ràng.',
+      artStyle: 'american-comic',
+      character: 'emotion-first',
+      environment: 'interior-cinematic',
+    },
+    {
+      id: 'product-explainer',
+      name: 'Product Explainer',
+      outcome: 'Giữ hình ảnh nhân vật ổn định cho video giới thiệu sản phẩm.',
+      artStyle: 'japanese-anime',
+      character: 'consistency-first',
+      environment: 'forest-mist-dawn',
+    },
+  ], [])
+
+  const activeBundleId = useMemo(() => {
+    const matched = demoBundles.find((bundle) =>
+      bundle.artStyle === artStyle &&
+      bundle.character === selectedCharacterStrategy &&
+      bundle.environment === selectedEnvironmentId
+    )
+    return matched?.id ?? null
+  }, [artStyle, demoBundles, selectedCharacterStrategy, selectedEnvironmentId])
+
   return (
     <div className="max-w-5xl mx-auto space-y-5">
 
@@ -609,17 +582,51 @@ export default function NovelInputStage({
       </div>
       )}
 
-      {/* 画面比例与视觉风格配置 */}
-      <div className="glass-surface p-6 relative z-10">
-        <div className="mb-4 rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 px-3 py-2 text-xs text-[var(--glass-text-secondary)]">
-          {isMangaJourney ? t('storyInput.runtimeLane.manga.moreConfig') : t('storyInput.runtimeLane.film.moreConfig')}
+      {/* VAT-121: demo-focused flow */}
+      <div className="glass-surface p-6 space-y-5">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">Demo flow setup</h3>
+          <p className="text-xs text-[var(--glass-text-tertiary)]">Chọn outcome kinh doanh trước, sau đó chốt style + nhân vật + bối cảnh để ra script demo mạch hơn.</p>
         </div>
+
+        <div className="rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 p-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-xs text-[var(--glass-text-secondary)]">
+              Model route: {providerFirstModels.openaiCompat.length > 0 ? 'OpenAI-compatible' : providerFirstModels.geminiCompat.length > 0 ? 'Gemini-compatible' : 'Default'}
+            </p>
+            <p className="text-xs text-[var(--glass-text-tertiary)]">Image models khả dụng: {providerFirstModels.total}</p>
+          </div>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+            {demoBundles.map((bundle) => {
+              const active = activeBundleId === bundle.id
+              return (
+                <button
+                  key={bundle.id}
+                  type="button"
+                  onClick={() => {
+                    onArtStyleChange?.(bundle.artStyle)
+                    onCharacterStrategyChange?.(bundle.character)
+                    onEnvironmentChange?.(bundle.environment)
+                  }}
+                  className={`rounded-xl border p-3 text-left transition-all ${active
+                    ? 'border-[var(--glass-accent-from)] bg-[var(--glass-tone-info-bg)]/25'
+                    : 'border-[var(--glass-stroke-soft)] hover:bg-[var(--glass-bg-muted)]/30'
+                    }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-[var(--glass-text-primary)]">{bundle.name}</span>
+                    {active && <AppIcon name="check" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--glass-text-tertiary)]">{bundle.outcome}</p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* 画面比例 */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">
-              {isMangaJourney ? t('storyInput.runtimeLane.manga.videoRatio') : t('storyInput.runtimeLane.film.videoRatio')}
-            </h3>
+            <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">Tỉ lệ khung hình</h4>
             <RatioSelector
               value={videoRatio}
               onChange={(value) => onVideoRatioChange?.(value)}
@@ -627,70 +634,39 @@ export default function NovelInputStage({
             />
           </div>
 
-          {/* 视觉风格 */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">
-              {isMangaJourney ? t('storyInput.runtimeLane.manga.visualStyle') : t('storyInput.runtimeLane.film.visualStyle')}
-            </h3>
-            <StyleSelector
-              value={artStyle}
-              onChange={(value) => onArtStyleChange?.(value)}
-              options={ART_STYLES}
-            />
-          </div>
-        </div>
-        <p className="text-xs text-[var(--glass-text-tertiary)] mt-4 text-center">
-          {t("storyInput.moreConfig")}
-        </p>
-      </div>
-
-      {/* VAT-121 batch 2: demo-facing visual direction */}
-      <div className="glass-surface p-6 space-y-5">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-[var(--glass-text-muted)] tracking-[0.01em]">Visual Direction (Demo Ready)</h3>
-          <p className="text-xs text-[var(--glass-text-tertiary)]">
-            Chọn nhanh 3 thành phần: <span className="font-medium">Style</span> + <span className="font-medium">Character mood</span> + <span className="font-medium">Environment</span>.
-            {' '}Thiết lập được giữ lại để tránh mất context khi reload.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 p-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-xs text-[var(--glass-text-secondary)]">
-              Route model: {providerFirstModels.openaiCompat.length > 0 ? 'OpenAI-compatible' : providerFirstModels.geminiCompat.length > 0 ? 'Gemini-compatible' : 'Default'}
-            </p>
-            <p className="text-xs text-[var(--glass-text-tertiary)]">Image models: {providerFirstModels.total}</p>
-          </div>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {styleGalleryCards.map((style) => {
-              const selected = style.value === artStyle
-              return (
-                <button
-                  key={style.value}
-                  type="button"
-                  onClick={() => onArtStyleChange?.(style.value)}
-                  className={`rounded-xl border p-3 text-left transition-all ${selected
-                    ? 'border-[var(--glass-accent-from)] bg-[var(--glass-tone-info-bg)]/30 shadow-[0_8px_24px_rgba(79,128,255,0.15)]'
-                    : 'border-[var(--glass-stroke-soft)] hover:bg-[var(--glass-bg-muted)]/30'
-                    }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg">{style.preview}</span>
-                    {selected && <AppIcon name="check" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />}
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-[var(--glass-text-primary)]">{style.label}</div>
-                  <div className="mt-1 text-[11px] text-[var(--glass-text-tertiary)]">{selected ? 'Đang dùng cho cảnh mới' : style.providerHint}</div>
-                </button>
-              )
-            })}
+            <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">Visual style</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {styleGalleryCards.map((style) => {
+                const selected = style.value === artStyle
+                return (
+                  <button
+                    key={style.value}
+                    type="button"
+                    onClick={() => onArtStyleChange?.(style.value)}
+                    className={`rounded-xl border p-3 text-left transition-all ${selected
+                      ? 'border-[var(--glass-accent-from)] bg-[var(--glass-tone-info-bg)]/30 shadow-[0_8px_24px_rgba(79,128,255,0.15)]'
+                      : 'border-[var(--glass-stroke-soft)] hover:bg-[var(--glass-bg-muted)]/30'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg">{style.preview}</span>
+                      {selected && <AppIcon name="check" className="w-4 h-4 text-[var(--glass-tone-info-fg)]" />}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-[var(--glass-text-primary)]">{style.label}</div>
+                    <div className="mt-1 text-[11px] text-[var(--glass-text-tertiary)]">{selected ? 'Đang áp cho script demo' : style.providerHint}</div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div className="rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 p-4 space-y-3">
             <div>
-              <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">Character mood</h4>
-              <p className="text-xs text-[var(--glass-text-tertiary)] mt-1">Giúp model hiểu cảm giác nhân vật ở các shot đầu.</p>
+              <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">Định hướng nhân vật</h4>
+              <p className="text-xs text-[var(--glass-text-tertiary)] mt-1">Tối ưu cảm xúc/nhận diện cho những cảnh mở đầu để khách thấy rõ concept.</p>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {characterStrategies.map((strategy) => {
@@ -721,8 +697,8 @@ export default function NovelInputStage({
 
           <div className="rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 p-4 space-y-3">
             <div>
-              <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">Environment preset</h4>
-              <p className="text-xs text-[var(--glass-text-tertiary)] mt-1">Chọn background tone để storyboard nhìn thuyết phục hơn khi demo.</p>
+              <h4 className="text-sm font-semibold text-[var(--glass-text-primary)]">Bối cảnh trình diễn</h4>
+              <p className="text-xs text-[var(--glass-text-tertiary)] mt-1">Khớp mood visual với thông điệp sản phẩm để demo thuyết phục hơn.</p>
             </div>
             <div className="grid grid-cols-1 gap-2">
               {environmentGallery.map((environment) => {
@@ -761,6 +737,12 @@ export default function NovelInputStage({
             </div>
           </div>
         </div>
+
+        {isMangaJourney && (
+          <div className="rounded-xl border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/10 px-3 py-2 text-xs text-[var(--glass-text-tertiary)]">
+            Tip: Manga/Webtoon lane đã có thêm Quick Manga controls phía trên để tối ưu continuity theo chapter.
+          </div>
+        )}
       </div>
 
       {/* 旁白开关 + 操作按钮 */}
@@ -800,7 +782,7 @@ export default function NovelInputStage({
             <TaskStatusInline state={stageSwitchingState} className="text-white [&>span]:text-white [&_svg]:text-white" />
           ) : (
             <>
-              <span>{t("smartImport.manualCreate.button")}</span>
+              <span>{isMangaJourney ? 'Tạo Script Demo (Manga)' : 'Tạo Script Demo (Film)'}</span>
               <AppIcon name="arrowRight" className="w-5 h-5" />
             </>
           )}
