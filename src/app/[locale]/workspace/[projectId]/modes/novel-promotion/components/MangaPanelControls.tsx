@@ -61,7 +61,7 @@ const STORY_KIT_THUMBNAILS: Record<string, string> = {
   cliffhanger: '/assets/manga-webtoon/preset-templates/05_busy_day_witch.webp',
 }
 
-const STORY_KITS: Array<{
+export const STORY_KITS: Array<{
   id: string
   label: string
   helper: string
