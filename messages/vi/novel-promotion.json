@@ -6,10 +6,10 @@
     "video": "Băng hình",
     "editor": "Trình chỉnh sửa AI",
     "editorComingSoon": "Sắp có, hãy theo dõi chúng tôi để cập nhật",
-    "mangaKickoff": "Manga kickoff",
-    "panelScript": "Panel script",
-    "panelBoard": "Panel board",
-    "webtoonPanels": "Webtoon panel"
+    "mangaKickoff": "Khởi tạo Manga",
+    "panelScript": "Kịch bản phân khung",
+    "panelBoard": "Bảng phân khung",
+    "webtoonPanels": "Khung Webtoon"
   },
   "buttons": {
     "assetLibrary": "Thư viện nội dung",
