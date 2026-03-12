@@ -21,7 +21,7 @@ export default function WorkspaceStageContent({
 
       {currentStage === 'storyboard' && <StoryboardStage />}
 
-      {currentStage === 'videos' && <VideoStageRoute />}
+      {(currentStage === 'videos' || currentStage === 'panels') && <VideoStageRoute />}
 
       {currentStage === 'voice' && <VoiceStageRoute />}
     </div>

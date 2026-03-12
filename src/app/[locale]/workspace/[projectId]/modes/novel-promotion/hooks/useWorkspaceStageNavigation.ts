@@ -62,7 +62,7 @@ export function useWorkspaceStageNavigation({
       { id: 'config', icon: 'M', label: t('stages.mangaKickoff'), status: getStageStatus('config') },
       { id: 'script', icon: 'P', label: t('stages.panelScript'), status: getStageStatus('assets') },
       { id: 'storyboard', icon: 'B', label: t('stages.panelBoard'), status: getStageStatus('storyboard') },
-      { id: 'videos', icon: 'W', label: t('stages.webtoonPanels'), status: getStageStatus('videos') },
+      { id: 'panels', icon: 'W', label: t('stages.webtoonPanels'), status: getStageStatus('videos') },
       {
         id: 'editor',
         icon: 'E',

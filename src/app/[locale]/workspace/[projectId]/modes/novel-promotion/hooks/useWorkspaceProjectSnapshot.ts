@@ -55,7 +55,9 @@ export function useWorkspaceProjectSnapshot({
       projectCharacters: projectData?.characters || [],
       projectLocations: projectData?.locations || [],
       episodeStoryboards: episode?.storyboards || [],
-      currentStage: urlStage === 'editor' ? 'videos' : (urlStage || 'config'),
+      currentStage: urlStage === 'editor'
+        ? 'videos'
+        : (urlStage === 'panels' ? 'panels' : (urlStage || 'config')),
       globalAssetText: projectData?.globalAssetText || '',
       novelText: episode?.novelText || '',
       analysisModel: projectData?.analysisModel,

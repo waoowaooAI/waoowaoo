@@ -20,7 +20,7 @@ export default function StoryboardStage() {
       clips={clips}
       videoRatio={runtime.videoRatio || '9:16'}
       onBack={() => runtime.onStageChange('script')}
-      onNext={async () => runtime.onStageChange('videos')}
+      onNext={async () => runtime.onStageChange(runtime.journeyType === 'manga_webtoon' ? 'panels' : 'videos')}
       isTransitioning={runtime.isTransitioning}
     />
   )
