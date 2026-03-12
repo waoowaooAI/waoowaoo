@@ -42,6 +42,7 @@ export interface VideoStageShellProps {
   defaultVideoModel: string
   capabilityOverrides: CapabilitySelections
   videoRatio?: string
+  journeyType?: 'film_video' | 'manga_webtoon'
   userVideoModels?: VideoModelOption[]
   onGenerateVideo: (
     storyboardId: string,

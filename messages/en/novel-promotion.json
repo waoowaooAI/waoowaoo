@@ -15,7 +15,8 @@
     "assetLibrary": "Asset Library",
     "settings": "Settings",
     "refreshData": "Refresh Data",
-    "enterVideoGeneration": "Enter Video Generation →"
+    "enterVideoGeneration": "Enter Video Generation →",
+    "enterPanelMotion": "Enter Panel Motion →"
   },
   "smartImport": {
     "title": "Start Your Creative Journey",

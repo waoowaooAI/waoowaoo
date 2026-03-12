@@ -72,6 +72,8 @@
   },
   "toolbar": {
     "title": "成片生成",
+    "titlePanels": "面板动效生成",
+    "generateAllPanels": "生成全部面板动效",
     "filter": "筛选",
     "viewAll": "查看全部",
     "showGenerated": "已生成",

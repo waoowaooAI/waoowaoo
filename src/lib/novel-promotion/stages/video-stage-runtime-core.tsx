@@ -64,6 +64,7 @@ export function useVideoStageRuntime({
   defaultVideoModel,
   capabilityOverrides,
   videoRatio = '16:9',
+  journeyType = 'film_video',
   userVideoModels,
   onGenerateVideo,
   onGenerateAllVideos,
@@ -375,6 +376,7 @@ export function useVideoStageRuntime({
         onBack={onBack}
         onEnterEditor={onEnterEditor}
         videosReady={videosWithUrl > 0}
+        journeyType={journeyType}
       />
 
       <VideoTimelinePanel

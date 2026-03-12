@@ -72,6 +72,8 @@
     },
     "toolbar": {
         "title": "비디오 생성",
+        "titlePanels": "패널 모션 생성",
+        "generateAllPanels": "모든 패널 모션 생성",
         "filter": "필터",
         "viewAll": "모두 보기",
         "showGenerated": "생성됨",

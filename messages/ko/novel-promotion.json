@@ -15,7 +15,8 @@
     "assetLibrary": "자산 라이브러리",
     "settings": "설정",
     "refreshData": "데이터 새로 고침",
-    "enterVideoGeneration": "비디오 생성 입력 →"
+    "enterVideoGeneration": "비디오 생성 입력 →",
+    "enterPanelMotion": "패널 모션으로 이동 →"
   },
   "smartImport": {
     "title": "창의적인 여정을 시작하세요",

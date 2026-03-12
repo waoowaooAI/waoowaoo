@@ -72,6 +72,8 @@
   },
   "toolbar": {
     "title": "Video Generation",
+    "titlePanels": "Panel Motion",
+    "generateAllPanels": "Generate All Panel Motions",
     "filter": "Filter",
     "viewAll": "View All",
     "showGenerated": "Generated",

@@ -72,6 +72,8 @@
     },
     "toolbar": {
         "title": "Tạo video",
+        "titlePanels": "Tạo chuyển động panel",
+        "generateAllPanels": "Tạo chuyển động cho tất cả panel",
         "filter": "Lọc",
         "viewAll": "Xem tất cả",
         "showGenerated": "Đã tạo",

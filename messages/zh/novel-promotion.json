@@ -15,7 +15,8 @@
     "assetLibrary": "资产库",
     "settings": "配置",
     "refreshData": "刷新项目数据",
-    "enterVideoGeneration": "进入视频生成 →"
+    "enterVideoGeneration": "进入视频生成 →",
+    "enterPanelMotion": "进入面板动效 →"
   },
   "smartImport": {
     "title": "开启你的创作之旅",

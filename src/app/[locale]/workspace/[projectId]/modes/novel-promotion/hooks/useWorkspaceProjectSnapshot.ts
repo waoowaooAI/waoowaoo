@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { NovelPromotionWorkspaceProps } from '../types'
 import type { CapabilitySelections } from '@/lib/model-config-contract'
+import { normalizeWorkspaceStage } from '@/lib/workspace/stage-alias'
 import type {
   QuickMangaColorMode,
   QuickMangaLayout,
@@ -55,9 +56,7 @@ export function useWorkspaceProjectSnapshot({
       projectCharacters: projectData?.characters || [],
       projectLocations: projectData?.locations || [],
       episodeStoryboards: episode?.storyboards || [],
-      currentStage: urlStage === 'editor'
-        ? 'videos'
-        : (urlStage === 'panels' ? 'panels' : (urlStage || 'config')),
+      currentStage: normalizeWorkspaceStage(urlStage),
       globalAssetText: projectData?.globalAssetText || '',
       novelText: episode?.novelText || '',
       analysisModel: projectData?.analysisModel,

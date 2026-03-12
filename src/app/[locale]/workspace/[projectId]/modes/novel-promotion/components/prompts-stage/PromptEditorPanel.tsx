@@ -18,7 +18,12 @@ export default function PromptEditorPanel({ runtime }: PromptEditorPanelProps) {
     handleAppendSubmit,
     isAnyTaskRunning,
     onNext,
+    journeyType,
   } = runtime
+
+  const nextStageLabel = journeyType === 'manga_webtoon'
+    ? tNovelPromotion('buttons.enterPanelMotion')
+    : tNovelPromotion('buttons.enterVideoGeneration')
 
   return (
     <>
@@ -57,7 +62,7 @@ export default function PromptEditorPanel({ runtime }: PromptEditorPanelProps) {
           disabled={isAnyTaskRunning}
           className="glass-btn-base px-6 py-2 bg-[var(--glass-accent-from)] text-white hover:bg-[var(--glass-accent-to)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {tNovelPromotion('buttons.enterVideoGeneration')}
+          {nextStageLabel}
         </button>
       </div>
     </>

@@ -16,6 +16,7 @@ interface VideoToolbarProps {
   onBack: () => void
   onEnterEditor?: () => void  // 进入剪辑器
   videosReady?: boolean  // 是否有视频可以剪辑
+  journeyType?: 'film_video' | 'manga_webtoon'
 }
 
 export default function VideoToolbar({
@@ -29,9 +30,14 @@ export default function VideoToolbar({
   onDownloadAll,
   onBack,
   onEnterEditor,
-  videosReady = false
+  videosReady = false,
+  journeyType = 'film_video',
 }: VideoToolbarProps) {
   const t = useTranslations('video')
+  const isMangaJourney = journeyType === 'manga_webtoon'
+  const titleLabel = isMangaJourney ? t('toolbar.titlePanels') : t('toolbar.title')
+  const generateAllLabel = isMangaJourney ? t('toolbar.generateAllPanels') : t('toolbar.generateAll')
+
   const videoTaskRunningState = isAnyTaskRunning
     ? resolveTaskPresentationState({
       phase: 'processing',
@@ -53,7 +59,7 @@ export default function VideoToolbar({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-[var(--glass-text-secondary)]">
-             {t('toolbar.title')}
+             {titleLabel}
           </span>
           <span className="text-sm text-[var(--glass-text-tertiary)]">
             {t('toolbar.totalShots', { count: totalPanels })}
@@ -79,7 +85,7 @@ export default function VideoToolbar({
             ) : (
               <>
                 <AppIcon name="plus" className="w-4 h-4" />
-                <span>{t('toolbar.generateAll')}</span>
+                <span>{generateAllLabel}</span>
               </>
             )}
           </button>

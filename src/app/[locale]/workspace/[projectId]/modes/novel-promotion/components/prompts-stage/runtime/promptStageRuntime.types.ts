@@ -12,6 +12,7 @@ export interface PromptsStageShellProps {
   isBatchSubmitting?: boolean
   onBack?: () => void
   onNext: () => void
+  journeyType?: 'film_video' | 'manga_webtoon'
   onUpdatePrompt: (shotId: string, field: 'imagePrompt', value: string) => Promise<void>
   artStyle: string
   assetLibraryCharacters: AssetLibraryCharacter[]

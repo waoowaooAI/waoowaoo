@@ -13,10 +13,9 @@ import NovelPromotionWorkspace from './modes/novel-promotion/NovelPromotionWorks
 import SmartImportWizard, { SplitEpisode } from './modes/novel-promotion/components/SmartImportWizard'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { resolveSelectedEpisodeId } from './episode-selection'
+import { normalizeWorkspaceStage, type WorkspaceStage } from '@/lib/workspace/stage-alias'
 
-// 有效的stage值
-const VALID_STAGES = ['config', 'script', 'assets', 'text-storyboard', 'storyboard', 'videos', 'panels', 'voice', 'editor'] as const
-type Stage = typeof VALID_STAGES[number]
+type Stage = WorkspaceStage
 
 interface Episode {
   id: string
@@ -54,7 +53,7 @@ export default function ProjectDetailPage() {
   // 从URL读取参数
   const urlStage = searchParams.get('stage') as Stage | null
   const urlEpisodeId = searchParams.get('episode') ?? null
-  const currentUrlStage = urlStage && VALID_STAGES.includes(urlStage) ? urlStage : null
+  const currentUrlStage = urlStage
 
   // 🔥 React Query 数据获取
   const queryClient = useQueryClient()
@@ -87,9 +86,8 @@ export default function ProjectDetailPage() {
 
   // Stage 状态完全由 URL 控制，不再从数据库同步
   // 如果 URL 没有 stage 参数，默认使用 'config'
-  // 🚧 剪辑阶段 (editor) 暂时禁用，自动重定向到成片阶段 (videos)
-  const canonicalStage = currentUrlStage === 'panels' ? 'videos' : currentUrlStage
-  const effectiveStage = canonicalStage === 'editor' ? 'videos' : (canonicalStage || 'config')
+  // 🚧 编辑阶段 (editor) 暂时禁用，自动回退到 videos；保留 panels alias 以维持 Manga/Webtoon lane identity
+  const effectiveStage = normalizeWorkspaceStage(currentUrlStage)
 
   // 获取剧集列表
   const novelPromotionData = project?.novelPromotionData as NovelPromotionData | undefined
