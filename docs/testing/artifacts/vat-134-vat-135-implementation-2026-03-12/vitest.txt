@@ -1,0 +1,16 @@
+
+ RUN  v2.1.9 /Users/mrcagents/Work/projects/VAT
+
+ ✓ tests/unit/workspace/webtoon-panel-controls.test.ts (13 tests) 4ms
+ ✓ tests/unit/workspace/manga-vocabulary-pass.test.ts (3 tests) 5ms
+ ✓ tests/unit/workspace/stage-navigation-lane.test.ts (2 tests) 1ms
+ ✓ tests/unit/workspace/storytelling-prompt-kit.test.ts (2 tests) 2ms
+ ✓ tests/unit/workspace/manga-lane-vocabulary.test.ts (2 tests) 2ms
+ ✓ tests/unit/workspace/storytelling-prompt-kit-order.test.ts (2 tests) 2ms
+ ✓ tests/unit/workspace/stage-alias.test.ts (4 tests) 1ms
+
+ Test Files  7 passed (7)
+      Tests  28 passed (28)
+   Start at  23:01:38
+   Duration  1.55s (transform 240ms, setup 18ms, collect 331ms, tests 18ms, environment 1ms, prepare 186ms)
+

@@ -21,6 +21,7 @@ import {
   planWebtoonQuickActionMutation,
   WEBTOON_PANEL_QUICK_ACTIONS,
 } from '@/lib/workspace/webtoon-panel-controls'
+import { orderStorytellingPromptKits } from '@/lib/workspace/storytelling-prompt-kit'
 
 interface MangaPanelControlsProps {
   projectId: string
@@ -436,7 +437,7 @@ export default function MangaPanelControls({
       <div className="space-y-2">
         <p className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wide">Storytelling prompt kit</p>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {STORY_KITS.map((kit) => {
+          {orderStorytellingPromptKits(STORY_KITS).map((kit) => {
             const active = isStoryKitActive(kit)
             const thumbnailPath = STORY_KIT_THUMBNAILS[kit.id]
 
