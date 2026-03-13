@@ -1,0 +1,38 @@
+{
+  "targetImprovementPct": 30,
+  "comparisons": [
+    {
+      "flowId": "manga_quickstart_blank",
+      "label": "Manga quickstart / blank",
+      "baselineMs": 10000,
+      "candidateMs": 6500,
+      "deltaMs": 3500,
+      "improvementPct": 35,
+      "meetsTarget": true
+    },
+    {
+      "flowId": "manga_template_story_text",
+      "label": "Manga template / story text",
+      "baselineMs": 14000,
+      "candidateMs": 10000,
+      "deltaMs": 4000,
+      "improvementPct": 28.57,
+      "meetsTarget": false
+    },
+    {
+      "flowId": "manga_legacy_quickmanga_bridge",
+      "label": "Legacy quickManga bridge",
+      "baselineMs": 12000,
+      "candidateMs": 9500,
+      "deltaMs": 2500,
+      "improvementPct": 20.83,
+      "meetsTarget": false
+    }
+  ],
+  "overall": {
+    "flowCount": 3,
+    "metCount": 1,
+    "allMet": false,
+    "avgImprovementPct": 28.13
+  }
+}

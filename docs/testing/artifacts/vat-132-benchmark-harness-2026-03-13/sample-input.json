@@ -1,0 +1,52 @@
+[
+  {
+    "flowId": "manga_quickstart_blank",
+    "label": "Manga quickstart / blank",
+    "baseline": {
+      "flowId": "manga_quickstart_blank",
+      "label": "baseline",
+      "startedAt": "2026-03-13T09:00:00.000Z",
+      "firstPanelAt": "2026-03-13T09:00:10.000Z",
+      "notes": "replace with real baseline capture"
+    },
+    "candidate": {
+      "flowId": "manga_quickstart_blank",
+      "label": "candidate",
+      "startedAt": "2026-03-13T09:10:00.000Z",
+      "firstPanelAt": "2026-03-13T09:10:06.500Z",
+      "notes": "replace with real candidate capture"
+    }
+  },
+  {
+    "flowId": "manga_template_story_text",
+    "label": "Manga template / story text",
+    "baseline": {
+      "flowId": "manga_template_story_text",
+      "label": "baseline",
+      "startedAt": "2026-03-13T09:20:00.000Z",
+      "firstPanelAt": "2026-03-13T09:20:14.000Z"
+    },
+    "candidate": {
+      "flowId": "manga_template_story_text",
+      "label": "candidate",
+      "startedAt": "2026-03-13T09:30:00.000Z",
+      "firstPanelAt": "2026-03-13T09:30:10.000Z"
+    }
+  },
+  {
+    "flowId": "manga_legacy_quickmanga_bridge",
+    "label": "Legacy quickManga bridge",
+    "baseline": {
+      "flowId": "manga_legacy_quickmanga_bridge",
+      "label": "baseline",
+      "startedAt": "2026-03-13T09:40:00.000Z",
+      "firstPanelAt": "2026-03-13T09:40:12.000Z"
+    },
+    "candidate": {
+      "flowId": "manga_legacy_quickmanga_bridge",
+      "label": "candidate",
+      "startedAt": "2026-03-13T09:50:00.000Z",
+      "firstPanelAt": "2026-03-13T09:50:09.500Z"
+    }
+  }
+]
