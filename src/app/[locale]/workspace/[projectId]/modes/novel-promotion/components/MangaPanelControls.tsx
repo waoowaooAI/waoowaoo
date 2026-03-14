@@ -310,6 +310,8 @@ export default function MangaPanelControls({
     return best?.score && best.score > 0 ? best.id : null
   }, [colorMode, layout, preset])
 
+  const shouldShowQuickActions = enabled && !!activeStoryboard
+
   const applyValues = (values: {
     preset: QuickMangaPreset
     layout: QuickMangaLayout
@@ -482,64 +484,70 @@ export default function MangaPanelControls({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wide">Webtoon panel quick actions (P1)</p>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-          {WEBTOON_PANEL_QUICK_ACTIONS.map((action) => (
-            <button
-              key={action.id}
-              type="button"
-              disabled={!canRunQuickAction(action.id)}
-              onClick={() => {
-                if (!activeStoryboard) return
-                if (action.id !== 'add' && !selectedPanelForActions) return
+      {shouldShowQuickActions ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wide">Webtoon panel quick actions (P1)</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {WEBTOON_PANEL_QUICK_ACTIONS.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                disabled={!canRunQuickAction(action.id)}
+                onClick={() => {
+                  if (!activeStoryboard) return
+                  if (action.id !== 'add' && !selectedPanelForActions) return
 
-                if (action.id === 'add' || action.id === 'duplicate' || action.id === 'split' || action.id === 'merge' || action.id === 'reorder') {
-                  void runQuickAction(action.id, async () => {
-                    const plan = planWebtoonQuickActionMutation({
-                      action: action.id,
-                      panels: activePanels.map(buildPanelLite),
-                      selectedPanelId: selectedPanelForActions?.id ?? null,
-                      fallbackStoryboardId: activeStoryboard.id,
-                    })
-
-                    for (const panelId of plan.deletePanelIds) {
-                      await deletePanelMutation.mutateAsync({ panelId })
-                    }
-
-                    for (const payload of plan.createPayloads) {
-                      await createPanelMutation.mutateAsync(payload)
-                    }
-
-                    if (typeof window !== 'undefined') {
-                      console.info('[VAT-133][quick-action-plan]', {
-                        action: plan.action,
-                        beforeOrder: plan.beforeOrder,
-                        expectedAfterOrder: plan.expectedAfterOrder,
-                        deletePanelIds: plan.deletePanelIds,
-                        createCount: plan.createPayloads.length,
+                  if (action.id === 'add' || action.id === 'duplicate' || action.id === 'split' || action.id === 'merge' || action.id === 'reorder') {
+                    void runQuickAction(action.id, async () => {
+                      const plan = planWebtoonQuickActionMutation({
+                        action: action.id,
+                        panels: activePanels.map(buildPanelLite),
+                        selectedPanelId: selectedPanelForActions?.id ?? null,
+                        fallbackStoryboardId: activeStoryboard.id,
                       })
-                    }
-                  })
-                }
-              }}
-              className="rounded-lg border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 px-3 py-2 text-left hover:bg-[var(--glass-bg-muted)]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label={`quick-action-${action.id}`}
-            >
-              <div className="text-xs font-semibold text-[var(--glass-text-primary)]">{action.label}</div>
-              <div className="mt-1 text-[11px] text-[var(--glass-text-tertiary)]">{action.helper}</div>
-            </button>
-          ))}
+
+                      for (const panelId of plan.deletePanelIds) {
+                        await deletePanelMutation.mutateAsync({ panelId })
+                      }
+
+                      for (const payload of plan.createPayloads) {
+                        await createPanelMutation.mutateAsync(payload)
+                      }
+
+                      if (typeof window !== 'undefined') {
+                        console.info('[VAT-133][quick-action-plan]', {
+                          action: plan.action,
+                          beforeOrder: plan.beforeOrder,
+                          expectedAfterOrder: plan.expectedAfterOrder,
+                          deletePanelIds: plan.deletePanelIds,
+                          createCount: plan.createPayloads.length,
+                        })
+                      }
+                    })
+                  }
+                }}
+                className="rounded-lg border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/15 px-3 py-2 text-left hover:bg-[var(--glass-bg-muted)]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={`quick-action-${action.id}`}
+              >
+                <div className="text-xs font-semibold text-[var(--glass-text-primary)]">{action.label}</div>
+                <div className="mt-1 text-[11px] text-[var(--glass-text-tertiary)]">{action.helper}</div>
+              </button>
+            ))}
+          </div>
+          <div className="text-[11px] text-[var(--glass-text-tertiary)]">
+            {activeStoryboard
+              ? `Target storyboard: ${activeStoryboard.id} · panels=${activePanels.length} · anchor=#${(selectedPanelForActions?.panelIndex ?? 0) + 1}`
+              : 'Chưa có storyboard/panel để thao tác quick actions.'}
+          </div>
+          {quickActionMessage ? (
+            <div className="text-[11px] text-[var(--glass-tone-info-fg)]">{quickActionMessage}</div>
+          ) : null}
         </div>
-        <div className="text-[11px] text-[var(--glass-text-tertiary)]">
-          {activeStoryboard
-            ? `Target storyboard: ${activeStoryboard.id} · panels=${activePanels.length} · anchor=#${(selectedPanelForActions?.panelIndex ?? 0) + 1}`
-            : 'Chưa có storyboard/panel để thao tác quick actions.'}
+      ) : (
+        <div className="rounded-xl border border-dashed border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-muted)]/10 p-3 text-[11px] text-[var(--glass-text-tertiary)]" data-vat133-quick-actions-gate="hidden">
+          Quick actions hidden until a storyboard is available in the signed-in runtime path.
         </div>
-        {quickActionMessage ? (
-          <div className="text-[11px] text-[var(--glass-tone-info-fg)]">{quickActionMessage}</div>
-        ) : null}
-      </div>
+      )}
 
       <div className="space-y-2">
         <p className="text-xs font-semibold text-[var(--glass-text-secondary)] uppercase tracking-wide">Scroll narrative preview (P0)</p>
