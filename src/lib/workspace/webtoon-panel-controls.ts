@@ -29,7 +29,7 @@ export interface WebtoonQuickActionPanelLite {
   videoPrompt?: string | null
 }
 
-export interface WebtoonQuickActionCreatePayload {
+export interface WebtoonQuickActionCreatePayload extends Record<string, unknown> {
   storyboardId: string
   shotType: string
   cameraMove: string

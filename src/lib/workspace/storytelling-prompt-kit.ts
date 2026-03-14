@@ -16,7 +16,7 @@ export type StorytellingPromptKitLite<TId extends string = string> = {
   id: TId
 }
 
-const ORDER_INDEX = new Map(STORYTELLING_PROMPT_KIT_PHASE_ORDER.map((id, index) => [id, index]))
+const ORDER_INDEX = new Map<string, number>(STORYTELLING_PROMPT_KIT_PHASE_ORDER.map((id, index) => [id, index]))
 
 export function orderStorytellingPromptKits<T extends StorytellingPromptKitLite>(kits: readonly T[]): T[] {
   return [...kits].sort((a, b) => {
