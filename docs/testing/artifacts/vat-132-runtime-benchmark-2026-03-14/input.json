@@ -1,0 +1,56 @@
+[
+  {
+    "flowId": "manga_quickstart_blank",
+    "label": "Manga quickstart / blank",
+    "baseline": {
+      "flowId": "manga_quickstart_blank",
+      "label": "baseline",
+      "startedAt": "2026-03-13T09:00:00.000Z",
+      "firstPanelAt": "2026-03-13T09:00:10.000Z",
+      "notes": "bootstrap sample baseline retained until historical production baseline is replaced"
+    },
+    "candidate": {
+      "flowId": "manga_quickstart_blank",
+      "label": "candidate",
+      "startedAt": "2026-03-14T16:39:14.599Z",
+      "firstPanelAt": "2026-03-14T16:48:15.175Z",
+      "notes": "real runtime execution; firstPanelAt updated to DB first panel persist timestamp"
+    }
+  },
+  {
+    "flowId": "manga_template_story_text",
+    "label": "Manga template / story text",
+    "baseline": {
+      "flowId": "manga_template_story_text",
+      "label": "baseline",
+      "startedAt": "2026-03-13T09:20:00.000Z",
+      "firstPanelAt": "2026-03-13T09:20:14.000Z",
+      "notes": "bootstrap sample baseline retained until historical production baseline is replaced"
+    },
+    "candidate": {
+      "flowId": "manga_template_story_text",
+      "label": "candidate",
+      "startedAt": "2026-03-14T16:55:21.703Z",
+      "firstPanelAt": "2026-03-14T16:57:24.709Z",
+      "notes": "real runtime execution; firstPanelAt updated to DB first panel persist timestamp"
+    }
+  },
+  {
+    "flowId": "manga_legacy_quickmanga_bridge",
+    "label": "Legacy quickManga bridge",
+    "baseline": {
+      "flowId": "manga_legacy_quickmanga_bridge",
+      "label": "baseline",
+      "startedAt": "2026-03-13T09:40:00.000Z",
+      "firstPanelAt": "2026-03-13T09:40:12.000Z",
+      "notes": "bootstrap sample baseline retained until historical production baseline is replaced"
+    },
+    "candidate": {
+      "flowId": "manga_legacy_quickmanga_bridge",
+      "label": "candidate",
+      "startedAt": "2026-03-14T18:05:42.238Z",
+      "firstPanelAt": "2026-03-14T18:06:34.206Z",
+      "notes": "real runtime rerun after legacy data repair; firstPanelAt updated to DB first panel persist timestamp"
+    }
+  }
+]
