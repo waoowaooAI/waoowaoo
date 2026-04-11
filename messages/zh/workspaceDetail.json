@@ -17,7 +17,7 @@
     "selectModelLabel": "默认分析模型",
     "selectModelPlaceholder": "请选择分析模型",
     "selectModelFirst": "请先选择分析模型",
-    "noModelOptions": "当前没有可用的文本模型，请先在个人设置中配置 Provider 和模型。",
+    "noModelOptions": "当前没有可用的文本模型，请先去个人设置的厂商资源池配置文本模型并开启模型。",
     "saveFailed": "保存默认分析模型失败，请稍后重试"
   },
   "sidebar": {

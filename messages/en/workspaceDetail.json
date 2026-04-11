@@ -17,7 +17,7 @@
     "selectModelLabel": "Default Analysis Model",
     "selectModelPlaceholder": "Select an analysis model",
     "selectModelFirst": "Please select an analysis model first",
-    "noModelOptions": "No text model is available. Configure your provider and models in Profile settings first.",
+    "noModelOptions": "No text model is available. Go to the provider pool in Profile settings, configure a text model, and enable it first.",
     "saveFailed": "Failed to save default analysis model. Please try again."
   },
   "sidebar": {

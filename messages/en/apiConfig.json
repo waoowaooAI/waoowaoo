@@ -79,6 +79,21 @@
     "corePlaceholder": "Required",
     "extPlaceholder": "Not enabled"
   },
+  "defaultModelEmptyState": {
+    "action": "Go To Provider Pool",
+    "llmTitle": "No text models available",
+    "llmDescription": "Go to the provider pool below, configure a text model, and enable it first.",
+    "imageTitle": "No image models available",
+    "imageDescription": "Go to the provider pool below, configure an image model, and enable it first.",
+    "videoTitle": "No video models available",
+    "videoDescription": "Go to the provider pool below, configure a video model, and enable it first.",
+    "audioTitle": "No audio models available",
+    "audioDescription": "Go to the provider pool below, configure an audio model, and enable it first.",
+    "lipsyncTitle": "No lip-sync models available",
+    "lipsyncDescription": "Go to the provider pool below, configure a lip-sync model, and enable it first.",
+    "voiceDesignTitle": "No voice design models available",
+    "voiceDesignDescription": "Go to the provider pool below, configure a voice design model, and enable it first."
+  },
   "imageModelTip": "We recommend using Google's Banana series models. Other image models currently have limited generation quality.",
   "customProviderTip": "This project is currently in beta. Due to varying custom API formats across providers, custom API compatibility is still limited. We recommend using the built-in official APIs. Future updates will expand compatibility with more providers.",
   "providerPool": "Provider Pool",

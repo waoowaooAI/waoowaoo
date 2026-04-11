@@ -122,7 +122,7 @@ export function ApiConfigProviderList({
 
   return (
     <>
-      <div className="space-y-4">
+      <div id="provider-pool-section" className="space-y-4 scroll-mt-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <span className="glass-surface-soft inline-flex h-7 w-7 items-center justify-center rounded-lg text-[var(--glass-text-secondary)]">

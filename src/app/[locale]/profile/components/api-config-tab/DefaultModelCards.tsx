@@ -5,6 +5,10 @@ import { AppIcon } from '@/components/ui/icons'
 import type { AppIconName } from '@/components/ui/icons'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
 import type { CapabilityValue, ModelCapabilities } from '@/lib/model-config-contract'
+import {
+    getDefaultModelEmptyStateText,
+    type DefaultModelEmptyStateType,
+} from './default-model-empty-state'
 
 // ---------- types ----------
 type ModelType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync' | 'voicedesign'
@@ -96,6 +100,43 @@ function computeCapabilityFields(current: ModelOption | null, modelType: keyof M
         }))
 }
 
+function EmptyModelState({
+    modelType,
+    t,
+    onScrollToProviderPool,
+}: {
+    modelType: DefaultModelEmptyStateType
+    t: (key: string) => string
+    onScrollToProviderPool: () => void
+}) {
+    const content = getDefaultModelEmptyStateText(modelType, t)
+
+    return (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    <AppIcon name="alert" className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-[var(--glass-text-primary)]">
+                        {content.title}
+                    </p>
+                    <p className="mt-1 text-[12px] leading-relaxed text-[var(--glass-text-secondary)]">
+                        {content.description}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={onScrollToProviderPool}
+                        className="mt-3 glass-btn-base glass-btn-secondary px-3 py-1.5 text-[12px] font-medium"
+                    >
+                        {t('defaultModelEmptyState.action')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 // ---------- sub-components ----------
 
 /** Smart model selector: ModelCapabilityDropdown for llm/image/video, native select for others */
@@ -109,6 +150,7 @@ function SmartSelector({
     locale,
     t,
     props,
+    onScrollToProviderPool,
 }: {
     field: DefaultModelField
     modelType: ModelType
@@ -119,8 +161,19 @@ function SmartSelector({
     locale: string
     t: (key: string) => string
     props: DefaultModelCardsProps
+    onScrollToProviderPool: () => void
 }) {
     const capabilityFields = computeCapabilityFields(current, modelType as keyof ModelCapabilities)
+
+    if (options.length === 0) {
+        return (
+            <EmptyModelState
+                modelType={modelType}
+                t={t}
+                onScrollToProviderPool={onScrollToProviderPool}
+            />
+        )
+    }
 
     if (modelType === 'video' || modelType === 'image' || modelType === 'llm') {
         return (
@@ -199,7 +252,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
         encodeModelKey,
         getProviderDisplayName,
         locale,
-        updateDefaultModel,
         extractCapabilityFieldsFromModel,
         workflowConcurrency,
         handleWorkflowConcurrencyChange,
@@ -211,6 +263,13 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
     const pipelineGlobalOptions = getEnabledModelsByType('image')
     const pipelineGlobalCurrent = pipelineGlobalOptions.find((opt) => opt.modelKey === pipelineGlobalKey) ?? null
     const pipelineGlobalCapFields = computeCapabilityFields(pipelineGlobalCurrent, 'image')
+    const handleScrollToProviderPool = useCallback(() => {
+        if (typeof document === 'undefined') return
+        document.getElementById('provider-pool-section')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        })
+    }, [])
 
     const handlePipelineGlobalChange = useCallback((newModelKey: string) => {
         setPipelineGlobalKey(newModelKey)
@@ -312,6 +371,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={textModel.options} normalizedKey={textModel.normalizedKey} current={textModel.current}
                             placeholder={t('defaultModelSection.corePlaceholder')}
                             locale={locale} t={t} props={allProps}
+                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
 
@@ -342,6 +402,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={videoModel.options} normalizedKey={videoModel.normalizedKey} current={videoModel.current}
                             placeholder={t('defaultModelSection.corePlaceholder')}
                             locale={locale} t={t} props={allProps}
+                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                 </div>
@@ -372,53 +433,64 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                         <AppIcon name="alert" className="w-4 h-4 shrink-0 mt-0.5" />
                         <span className="text-[12px] leading-relaxed">{t('imageModelTip')}</span>
                     </div>
-                    {/* Batch config header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-indigo-500/10">
-                        <div>
-                            <div className="text-[14px] font-semibold text-[var(--glass-text-primary)]">{t('defaultModelSection.unifiedOverride')}</div>
-                            <div className="text-[12px] text-[var(--glass-text-tertiary)] mt-0.5">{t('defaultModelSection.unifiedOverrideHint')}</div>
-                        </div>
-                        <div className="w-full sm:w-[280px]">
-                            <ModelCapabilityDropdown
-                                models={pipelineGlobalOptions.map((opt) => ({
-                                    value: opt.modelKey,
-                                    label: opt.name,
-                                    provider: opt.provider,
-                                    providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
-                                }))}
-                                value={pipelineGlobalKey || undefined}
-                                onModelChange={handlePipelineGlobalChange}
-                                capabilityFields={pipelineGlobalCapFields.map((d) => ({
-                                    ...d,
-                                    label: allProps.toCapabilityFieldLabel(d.field),
-                                }))}
-                                capabilityOverrides={pipelineGlobalCapOverrides}
-                                onCapabilityChange={handlePipelineGlobalCapChange}
-                                placeholder={t('defaultModelSection.unifiedOverridePlaceholder')}
-                            />
-                        </div>
-                    </div>
-
-                    {/* 4 pipeline nodes */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {pipelineItems.map((item) => {
-                            const resolved = resolveModel(item.field, item.modelType, defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
-                            return (
-                                <div key={item.field} className="glass-surface p-4 rounded-2xl shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent flex flex-col gap-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <AppIcon name={item.icon} className="w-4 h-4 text-[var(--glass-text-tertiary)]" />
-                                        <span className="text-[13px] font-semibold text-[var(--glass-text-secondary)]">{t(item.titleKey)}</span>
-                                    </div>
-                                    <SmartSelector
-                                        field={item.field} modelType={item.modelType}
-                                        options={resolved.options} normalizedKey={resolved.normalizedKey} current={resolved.current}
-                                        placeholder={t('defaultModelSection.followUnified')}
-                                        locale={locale} t={t} props={allProps}
+                    {pipelineGlobalOptions.length === 0 ? (
+                        <EmptyModelState
+                            modelType="image"
+                            t={t}
+                            onScrollToProviderPool={handleScrollToProviderPool}
+                        />
+                    ) : (
+                        <>
+                            {/* Batch config header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-indigo-500/10">
+                                <div>
+                                    <div className="text-[14px] font-semibold text-[var(--glass-text-primary)]">{t('defaultModelSection.unifiedOverride')}</div>
+                                    <div className="text-[12px] text-[var(--glass-text-tertiary)] mt-0.5">{t('defaultModelSection.unifiedOverrideHint')}</div>
+                                </div>
+                                <div className="w-full sm:w-[280px]">
+                                    <ModelCapabilityDropdown
+                                        models={pipelineGlobalOptions.map((opt) => ({
+                                            value: opt.modelKey,
+                                            label: opt.name,
+                                            provider: opt.provider,
+                                            providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
+                                        }))}
+                                        value={pipelineGlobalKey || undefined}
+                                        onModelChange={handlePipelineGlobalChange}
+                                        capabilityFields={pipelineGlobalCapFields.map((d) => ({
+                                            ...d,
+                                            label: allProps.toCapabilityFieldLabel(d.field),
+                                        }))}
+                                        capabilityOverrides={pipelineGlobalCapOverrides}
+                                        onCapabilityChange={handlePipelineGlobalCapChange}
+                                        placeholder={t('defaultModelSection.unifiedOverridePlaceholder')}
                                     />
                                 </div>
-                            )
-                        })}
-                    </div>
+                            </div>
+
+                            {/* 4 pipeline nodes */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {pipelineItems.map((item) => {
+                                    const resolved = resolveModel(item.field, item.modelType, defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
+                                    return (
+                                        <div key={item.field} className="glass-surface p-4 rounded-2xl shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent flex flex-col gap-3">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <AppIcon name={item.icon} className="w-4 h-4 text-[var(--glass-text-tertiary)]" />
+                                                <span className="text-[13px] font-semibold text-[var(--glass-text-secondary)]">{t(item.titleKey)}</span>
+                                            </div>
+                                            <SmartSelector
+                                                field={item.field} modelType={item.modelType}
+                                                options={resolved.options} normalizedKey={resolved.normalizedKey} current={resolved.current}
+                                                placeholder={t('defaultModelSection.followUnified')}
+                                                locale={locale} t={t} props={allProps}
+                                                onScrollToProviderPool={handleScrollToProviderPool}
+                                            />
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* ===== Section 3: Extensions ===== */}
@@ -435,6 +507,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={lipsyncModel.options} normalizedKey={lipsyncModel.normalizedKey} current={lipsyncModel.current}
                             placeholder={t('defaultModelSection.extPlaceholder')}
                             locale={locale} t={t} props={allProps}
+                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                     {/* TTS */}
@@ -445,6 +518,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={audioModel.options} normalizedKey={audioModel.normalizedKey} current={audioModel.current}
                             placeholder={t('defaultModelSection.extPlaceholder')}
                             locale={locale} t={t} props={allProps}
+                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                     {/* Voice Design */}
@@ -455,6 +529,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={voiceDesignModel.options} normalizedKey={voiceDesignModel.normalizedKey} current={voiceDesignModel.current}
                             placeholder={t('defaultModelSection.extPlaceholder')}
                             locale={locale} t={t} props={allProps}
+                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                 </div>
