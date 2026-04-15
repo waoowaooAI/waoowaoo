@@ -68,7 +68,7 @@ describe('script-to-storyboard skill workflow', () => {
         },
       ],
       novelText: '完整文本',
-      novelPromotionData: {
+      projectData: {
         characters: [{ name: '角色A', appearances: [] }],
         locations: [{ name: '场景A', images: [] }],
       },
@@ -148,7 +148,7 @@ describe('script-to-storyboard skill workflow', () => {
         },
       ],
       novelText: '完整文本',
-      novelPromotionData: {
+      projectData: {
         characters: [{ name: '角色A', appearances: [] }],
         locations: [{ name: '场景A', images: [] }],
       },

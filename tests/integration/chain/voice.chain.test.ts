@@ -95,7 +95,7 @@ describe('chain contract - voice queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionVoiceLine',
+      targetType: 'ProjectVoiceLine',
       targetId: 'line-1',
       payload: { lineId: 'line-1', episodeId: 'episode-1' },
       userId: 'user-1',
@@ -142,7 +142,7 @@ describe('chain contract - voice queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionVoiceLine',
+      targetType: 'ProjectVoiceLine',
       targetId: 'line-1',
       payload: {
         lineId: 'line-1',

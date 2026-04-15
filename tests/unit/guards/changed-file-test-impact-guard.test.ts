@@ -4,10 +4,10 @@ import { inspectChangedFiles } from '../../../scripts/guards/changed-file-test-i
 describe('changed-file-test-impact-guard', () => {
   it('requires api changes to be paired with contract, system, or regression tests', () => {
     const violations = inspectChangedFiles([
-      'src/app/api/novel-promotion/[projectId]/generate-image/route.ts',
+      'src/app/api/projects/[projectId]/generate-image/route.ts',
     ])
     expect(violations).toEqual([
-      'api: changing src/app/api/** requires a matching contract, system, or regression test change; sources=src/app/api/novel-promotion/[projectId]/generate-image/route.ts',
+      'api: changing src/app/api/** requires a matching contract, system, or regression test change; sources=src/app/api/projects/[projectId]/generate-image/route.ts',
     ])
   })
 

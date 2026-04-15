@@ -14,8 +14,8 @@ const CANARY_FILES = {
 }
 
 const TEMPLATE_TOKEN_REQUIREMENTS = {
-  'novel-promotion/agent_clip': ['start', 'end', 'summary', 'location', 'characters'],
-  'novel-promotion/screenplay_conversion': [
+  'project-workflow/agent_clip': ['start', 'end', 'summary', 'location', 'characters'],
+  'project-workflow/screenplay_conversion': [
     'clip_id',
     'original_text',
     'scenes',
@@ -26,7 +26,7 @@ const TEMPLATE_TOKEN_REQUIREMENTS = {
     'dialogue',
     'voiceover',
   ],
-  'novel-promotion/agent_storyboard_plan': [
+  'project-workflow/agent_storyboard_plan': [
     'panel_number',
     'description',
     'characters',
@@ -34,18 +34,7 @@ const TEMPLATE_TOKEN_REQUIREMENTS = {
     'scene_type',
     'source_text',
   ],
-  'novel-promotion/agent_storyboard_detail': [
-    'panel_number',
-    'description',
-    'characters',
-    'location',
-    'scene_type',
-    'source_text',
-    'shot_type',
-    'camera_move',
-    'video_prompt',
-  ],
-  'novel-promotion/agent_storyboard_insert': [
+  'project-workflow/agent_storyboard_detail': [
     'panel_number',
     'description',
     'characters',
@@ -56,7 +45,18 @@ const TEMPLATE_TOKEN_REQUIREMENTS = {
     'camera_move',
     'video_prompt',
   ],
-  'novel-promotion/voice_analysis': [
+  'project-workflow/agent_storyboard_insert': [
+    'panel_number',
+    'description',
+    'characters',
+    'location',
+    'scene_type',
+    'source_text',
+    'shot_type',
+    'camera_move',
+    'video_prompt',
+  ],
+  'project-workflow/voice_analysis': [
     'lineIndex',
     'speaker',
     'content',

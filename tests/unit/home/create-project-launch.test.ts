@@ -46,7 +46,7 @@ describe('createHomeProjectLaunch', () => {
         name: '开场白',
       }),
     })
-    expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/novel-promotion/project-1', {
+    expect(apiFetch).toHaveBeenNthCalledWith(2, '/api/projects/project-1/config', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -54,7 +54,7 @@ describe('createHomeProjectLaunch', () => {
         artStyle: 'american-comic',
       }),
     })
-    expect(apiFetch).toHaveBeenNthCalledWith(3, '/api/novel-promotion/project-1/episodes', {
+    expect(apiFetch).toHaveBeenNthCalledWith(3, '/api/projects/project-1/episodes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

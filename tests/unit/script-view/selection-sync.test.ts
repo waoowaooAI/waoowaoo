@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   reuseStringArrayIfEqual,
   reuseStringSetIfEqual,
-} from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/script-view/selection-sync'
+} from '@/features/project-workspace/components/script-view/selection-sync'
 
 describe('script view selection sync', () => {
   it('reuses the previous array reference when ids are unchanged', () => {

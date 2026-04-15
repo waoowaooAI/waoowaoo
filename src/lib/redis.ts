@@ -15,8 +15,6 @@ const REDIS_PORT = Number.parseInt(process.env.REDIS_PORT || '6379', 10) || 6379
 const REDIS_USERNAME = process.env.REDIS_USERNAME
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD
 const REDIS_TLS = process.env.REDIS_TLS === 'true'
-const IS_TEST_ENV = process.env.NODE_ENV === 'test'
-
 function buildBaseConfig() {
   return {
     host: REDIS_HOST,
@@ -25,7 +23,7 @@ function buildBaseConfig() {
     password: REDIS_PASSWORD,
     tls: REDIS_TLS ? {} : undefined,
     enableReadyCheck: true,
-    lazyConnect: IS_TEST_ENV,
+    lazyConnect: true,
     retryStrategy(times: number) {
       // Exponential backoff capped at 30s.
       return Math.min(2 ** Math.min(times, 10) * 100, 30_000)
@@ -62,8 +60,38 @@ if (!globalForRedis.__waoowaooRedis) {
   globalForRedis.__waoowaooRedis = singleton
 }
 
-export const redis = singleton.app || (singleton.app = createAppRedis())
-export const queueRedis = singleton.queue || (singleton.queue = createQueueRedis())
+function getAppRedis() {
+  return singleton.app || (singleton.app = createAppRedis())
+}
+
+function getQueueRedis() {
+  return singleton.queue || (singleton.queue = createQueueRedis())
+}
+
+function createLazyRedisProxy(getClient: () => Redis) {
+  return new Proxy({} as Redis, {
+    get(_target, prop, receiver) {
+      const client = getClient() as unknown as Record<PropertyKey, unknown>
+      const value = Reflect.get(client, prop, receiver)
+      return typeof value === 'function' ? value.bind(client) : value
+    },
+    set(_target, prop, value, receiver) {
+      return Reflect.set(getClient() as unknown as Record<PropertyKey, unknown>, prop, value, receiver)
+    },
+    has(_target, prop) {
+      return prop in (getClient() as unknown as Record<PropertyKey, unknown>)
+    },
+    ownKeys() {
+      return Reflect.ownKeys(getClient() as unknown as Record<PropertyKey, unknown>)
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      return Reflect.getOwnPropertyDescriptor(getClient() as unknown as Record<PropertyKey, unknown>, prop)
+    },
+  })
+}
+
+export const redis = createLazyRedisProxy(getAppRedis)
+export const queueRedis = createLazyRedisProxy(getQueueRedis)
 
 export function createSubscriber() {
   const client = new Redis({

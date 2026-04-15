@@ -45,7 +45,7 @@ model CharacterAppearance {
   previousDescriptions String?                 @db.Text // 上一次的描述词数组（用于撤回）
   imageMediaId         String?
   imageMedia           MediaObject?            @relation("CharacterAppearanceImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
-  character            NovelPromotionCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  character            ProjectCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@unique([characterId, appearanceIndex])
   @@index([characterId])
@@ -67,8 +67,8 @@ model LocationImage {
   previousDescription String?                  @db.Text // 上一次的描述词（用于撤回）
   imageMediaId        String?
   imageMedia          MediaObject?             @relation("LocationImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
-  location            NovelPromotionLocation   @relation("LocationImages", fields: [locationId], references: [id], onDelete: Cascade)
-  selectedByLocations NovelPromotionLocation[] @relation("SelectedLocationImage")
+  location            ProjectLocation   @relation("LocationImages", fields: [locationId], references: [id], onDelete: Cascade)
+  selectedByLocations ProjectLocation[] @relation("SelectedLocationImage")
 
   @@unique([locationId, imageIndex])
   @@index([locationId])
@@ -76,16 +76,16 @@ model LocationImage {
   @@map("location_images")
 }
 
-model NovelPromotionCharacter {
+model ProjectCharacter {
   id                      String                @id @default(uuid())
-  novelPromotionProjectId String
+  projectId               String
   name                    String
   aliases                 String?               @db.Text
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @default(now()) @updatedAt
   customVoiceUrl          String?               @db.Text
   customVoiceMediaId      String?
-  customVoiceMedia        MediaObject?          @relation("NovelPromotionCharacterVoiceMedia", fields: [customVoiceMediaId], references: [id], onDelete: SetNull)
+  customVoiceMedia        MediaObject?          @relation("ProjectCharacterVoiceMedia", fields: [customVoiceMediaId], references: [id], onDelete: SetNull)
   voiceId                 String?
   voiceType               String?
   profileData             String?               @db.Text
@@ -93,16 +93,16 @@ model NovelPromotionCharacter {
   introduction            String?               @db.Text // 角色介绍（身份、关系、称呼映射，如"我"对应此角色）
   sourceGlobalCharacterId String? // 🆕 来源全局角色ID（复制时记录）
   appearances             CharacterAppearance[]
-  novelPromotionProject   NovelPromotionProject @relation(fields: [novelPromotionProjectId], references: [id], onDelete: Cascade)
+  project                 Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@index([novelPromotionProjectId])
+  @@index([projectId])
   @@index([customVoiceMediaId])
-  @@map("novel_promotion_characters")
+  @@map("project_characters")
 }
 
-model NovelPromotionLocation {
+model ProjectLocation {
   id                      String                @id @default(uuid())
-  novelPromotionProjectId String
+  projectId               String
   name                    String
   summary                 String?               @db.Text // 场景简要描述（用途/人物关联）
   assetKind               String                @default("location")
@@ -112,37 +112,37 @@ model NovelPromotionLocation {
   selectedImageId         String?
   selectedImage           LocationImage?        @relation("SelectedLocationImage", fields: [selectedImageId], references: [id], onDelete: SetNull)
   images                  LocationImage[]       @relation("LocationImages")
-  novelPromotionProject   NovelPromotionProject @relation(fields: [novelPromotionProjectId], references: [id], onDelete: Cascade)
+  project                 Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@index([novelPromotionProjectId])
-  @@map("novel_promotion_locations")
+  @@index([projectId])
+  @@map("project_locations")
 }
 
-model NovelPromotionEpisode {
+model ProjectEpisode {
   id                      String                     @id @default(uuid())
-  novelPromotionProjectId String
+  projectId               String
   episodeNumber           Int
   name                    String
   description             String?                    @db.Text
   novelText               String?                    @db.Text
   audioUrl                String?                    @db.Text
   audioMediaId            String?
-  audioMedia              MediaObject?               @relation("NovelPromotionEpisodeAudioMedia", fields: [audioMediaId], references: [id], onDelete: SetNull)
+  audioMedia              MediaObject?               @relation("ProjectEpisodeAudioMedia", fields: [audioMediaId], references: [id], onDelete: SetNull)
   srtContent              String?                    @db.Text
   createdAt               DateTime                   @default(now())
   updatedAt               DateTime                   @default(now()) @updatedAt
   speakerVoices           String?                    @db.Text
-  clips                   NovelPromotionClip[]
-  novelPromotionProject   NovelPromotionProject      @relation(fields: [novelPromotionProjectId], references: [id], onDelete: Cascade)
-  shots                   NovelPromotionShot[]
-  storyboards             NovelPromotionStoryboard[]
-  voiceLines              NovelPromotionVoiceLine[]
+  clips                   ProjectClip[]
+  project                 Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  shots                   ProjectShot[]
+  storyboards             ProjectStoryboard[]
+  voiceLines              ProjectVoiceLine[]
   editorProject           VideoEditorProject?
 
-  @@unique([novelPromotionProjectId, episodeNumber])
-  @@index([novelPromotionProjectId])
+  @@unique([projectId, episodeNumber])
+  @@index([projectId])
   @@index([audioMediaId])
-  @@map("novel_promotion_episodes")
+  @@map("project_episodes")
 }
 
 // 视频编辑器项目 - 存储剪辑数据
@@ -155,12 +155,12 @@ model VideoEditorProject {
   outputUrl    String?               @db.Text
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @default(now()) @updatedAt
-  episode      NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  episode      ProjectEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 
   @@map("video_editor_projects")
 }
 
-model NovelPromotionClip {
+model ProjectClip {
   id         String                    @id @default(uuid())
   episodeId  String
   start      Int?
@@ -177,15 +177,15 @@ model NovelPromotionClip {
   shotCount  Int?
   startText  String?                   @db.Text
   screenplay String?                   @db.Text
-  episode    NovelPromotionEpisode     @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  shots      NovelPromotionShot[]
-  storyboard NovelPromotionStoryboard?
+  episode    ProjectEpisode     @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  shots      ProjectShot[]
+  storyboard ProjectStoryboard?
 
   @@index([episodeId])
-  @@map("novel_promotion_clips")
+  @@map("project_clips")
 }
 
-model NovelPromotionPanel {
+model ProjectPanel {
   id                   String                    @id @default(uuid())
   storyboardId         String
   panelIndex           Int
@@ -203,14 +203,14 @@ model NovelPromotionPanel {
   imagePrompt          String?                   @db.Text
   imageUrl             String?                   @db.Text
   imageMediaId         String?
-  imageMedia           MediaObject?              @relation("NovelPromotionPanelImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
+  imageMedia           MediaObject?              @relation("ProjectPanelImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
   imageHistory         String?                   @db.Text
   videoPrompt          String?                   @db.Text
   firstLastFramePrompt String?                   @db.Text
   videoUrl             String?                   @db.Text
   videoGenerationMode  String?                   @db.Text // 视频生成方式：normal | firstlastframe
   videoMediaId         String?
-  videoMedia           MediaObject?              @relation("NovelPromotionPanelVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
+  videoMedia           MediaObject?              @relation("ProjectPanelVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
   createdAt            DateTime                  @default(now())
   updatedAt            DateTime                  @default(now()) @updatedAt
   sceneType            String?
@@ -219,17 +219,17 @@ model NovelPromotionPanel {
   lipSyncTaskId        String?
   lipSyncVideoUrl      String?
   lipSyncVideoMediaId  String?
-  lipSyncVideoMedia    MediaObject?              @relation("NovelPromotionPanelLipSyncVideoMedia", fields: [lipSyncVideoMediaId], references: [id], onDelete: SetNull)
+  lipSyncVideoMedia    MediaObject?              @relation("ProjectPanelLipSyncVideoMedia", fields: [lipSyncVideoMediaId], references: [id], onDelete: SetNull)
   sketchImageUrl       String?                   @db.Text
   sketchImageMediaId   String?
-  sketchImageMedia     MediaObject?              @relation("NovelPromotionPanelSketchMedia", fields: [sketchImageMediaId], references: [id], onDelete: SetNull)
+  sketchImageMedia     MediaObject?              @relation("ProjectPanelSketchMedia", fields: [sketchImageMediaId], references: [id], onDelete: SetNull)
   photographyRules     String?                   @db.Text
   actingNotes          String?                   @db.Text // 演技指导数据 JSON
   previousImageUrl     String?                   @db.Text
   previousImageMediaId String?
-  previousImageMedia   MediaObject?              @relation("NovelPromotionPanelPreviousImageMedia", fields: [previousImageMediaId], references: [id], onDelete: SetNull)
-  storyboard           NovelPromotionStoryboard  @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
-  matchedVoiceLines    NovelPromotionVoiceLine[]
+  previousImageMedia   MediaObject?              @relation("ProjectPanelPreviousImageMedia", fields: [previousImageMediaId], references: [id], onDelete: SetNull)
+  storyboard           ProjectStoryboard  @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
+  matchedVoiceLines    ProjectVoiceLine[]
 
   @@unique([storyboardId, panelIndex])
   @@index([storyboardId])
@@ -238,38 +238,7 @@ model NovelPromotionPanel {
   @@index([lipSyncVideoMediaId])
   @@index([sketchImageMediaId])
   @@index([previousImageMediaId])
-  @@map("novel_promotion_panels")
-}
-
-model NovelPromotionProject {
-  id                  String                    @id @default(uuid())
-  projectId           String                    @unique
-  createdAt           DateTime                  @default(now())
-  updatedAt           DateTime                  @default(now()) @updatedAt
-  analysisModel       String? // 用户配置的分析模型（nullable，必须配置后才能使用）
-  imageModel          String? // 用户配置的图片模型
-  videoModel          String? // 用户配置的视频模型
-  audioModel          String? // 用户配置的语音模型
-  videoRatio          String                    @default("9:16")
-  globalAssetText     String?                   @db.Text
-  artStyle            String                    @default("american-comic")
-  artStylePrompt      String?                   @db.Text
-  characterModel      String? // 用户配置的角色图片模型
-  locationModel       String? // 用户配置的场景图片模型
-  storyboardModel     String? // 用户配置的分镜图片模型
-  editModel           String? // 用户配置的修图/编辑模型
-  videoResolution     String                    @default("720p")
-  capabilityOverrides String?                   @db.Text
-  workflowMode        String                    @default("srt")
-  lastEpisodeId       String?
-  imageResolution     String                    @default("2K")
-  importStatus        String?
-  characters          NovelPromotionCharacter[]
-  episodes            NovelPromotionEpisode[]
-  locations           NovelPromotionLocation[]
-  project             Project                   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("novel_promotion_projects")
+  @@map("project_panels")
 }
 
 model ProjectCommand {
@@ -398,7 +367,7 @@ model ProjectAssistantThread {
   @@map("project_assistant_threads")
 }
 
-model NovelPromotionShot {
+model ProjectShot {
   id           String                @id @default(uuid())
   episodeId    String
   clipId       String?
@@ -417,21 +386,21 @@ model NovelPromotionShot {
   zhSummarize  String?               @db.Text
   imageUrl     String?               @db.Text
   imageMediaId String?
-  imageMedia   MediaObject?          @relation("NovelPromotionShotImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
+  imageMedia   MediaObject?          @relation("ProjectShotImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
   createdAt    DateTime              @default(now())
   updatedAt    DateTime              @default(now()) @updatedAt
   pov          String?               @db.Text
-  clip         NovelPromotionClip?   @relation(fields: [clipId], references: [id], onDelete: Cascade)
-  episode      NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  clip         ProjectClip?   @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  episode      ProjectEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 
   @@index([clipId])
   @@index([episodeId])
   @@index([shotId])
   @@index([imageMediaId])
-  @@map("novel_promotion_shots")
+  @@map("project_shots")
 }
 
-model NovelPromotionStoryboard {
+model ProjectStoryboard {
   id                  String                @id @default(uuid())
   episodeId           String
   clipId              String                @unique
@@ -444,14 +413,14 @@ model NovelPromotionStoryboard {
   candidateImages     String?               @db.Text
   lastError           String?
   photographyPlan     String?               @db.Text
-  panels              NovelPromotionPanel[]
-  clip                NovelPromotionClip    @relation(fields: [clipId], references: [id], onDelete: Cascade)
-  episode             NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  panels              ProjectPanel[]
+  clip                ProjectClip    @relation(fields: [clipId], references: [id], onDelete: Cascade)
+  episode             ProjectEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
   supplementaryPanels SupplementaryPanel[]
 
   @@index([clipId])
   @@index([episodeId])
-  @@map("novel_promotion_storyboards")
+  @@map("project_storyboards")
 }
 
 model SupplementaryPanel {
@@ -468,7 +437,7 @@ model SupplementaryPanel {
   location      String?                  @db.Text
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @default(now()) @updatedAt
-  storyboard    NovelPromotionStoryboard @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
+  storyboard    ProjectStoryboard @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
 
   @@index([storyboardId])
   @@index([imageMediaId])
@@ -480,16 +449,35 @@ model Project {
   name               String
   description        String?                  @db.Text
   userId             String
+  analysisModel      String?
+  imageModel         String?
+  videoModel         String?
+  audioModel         String?
+  videoRatio         String                   @default("9:16")
+  globalAssetText    String?                  @db.LongText
+  artStyle           String                   @default("american-comic")
+  artStylePrompt     String?                  @db.LongText
+  characterModel     String?
+  locationModel      String?
+  storyboardModel    String?
+  editModel          String?
+  videoResolution    String                   @default("720p")
+  capabilityOverrides String?                 @db.LongText
+  lastEpisodeId      String?
+  imageResolution    String                   @default("2K")
+  importStatus       String?
   createdAt          DateTime                 @default(now())
   updatedAt          DateTime                 @default(now()) @updatedAt
   lastAccessedAt     DateTime?
-  novelPromotionData NovelPromotionProject?
   user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   usageCosts         UsageCost[]
   commands           ProjectCommand[]
   executionPlans     ExecutionPlan[]
   planApprovals      PlanApproval[]
   assistantThreads   ProjectAssistantThread[]
+  episodes           ProjectEpisode[]
+  characters         ProjectCharacter[]
+  locations          ProjectLocation[]
 
   @@index([userId])
   @@map("projects")
@@ -611,7 +599,7 @@ model VerificationToken {
   @@map("verificationtoken")
 }
 
-model NovelPromotionVoiceLine {
+model ProjectVoiceLine {
   id                  String                @id @default(uuid())
   episodeId           String
   lineIndex           Int
@@ -620,7 +608,7 @@ model NovelPromotionVoiceLine {
   voicePresetId       String?
   audioUrl            String?               @db.Text
   audioMediaId        String?
-  audioMedia          MediaObject?          @relation("NovelPromotionVoiceLineAudioMedia", fields: [audioMediaId], references: [id], onDelete: SetNull)
+  audioMedia          MediaObject?          @relation("ProjectVoiceLineAudioMedia", fields: [audioMediaId], references: [id], onDelete: SetNull)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @default(now()) @updatedAt
   emotionPrompt       String?               @db.Text
@@ -629,14 +617,14 @@ model NovelPromotionVoiceLine {
   matchedStoryboardId String?
   audioDuration       Int?
   matchedPanelId      String?
-  episode             NovelPromotionEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  matchedPanel        NovelPromotionPanel?  @relation(fields: [matchedPanelId], references: [id])
+  episode             ProjectEpisode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  matchedPanel        ProjectPanel?  @relation(fields: [matchedPanelId], references: [id])
 
   @@unique([episodeId, lineIndex])
   @@index([episodeId])
   @@index([matchedPanelId])
   @@index([audioMediaId])
-  @@map("novel_promotion_voice_lines")
+  @@map("project_voice_lines")
 }
 
 model VoicePreset {
@@ -952,7 +940,7 @@ model GlobalAssetFolder {
   @@map("global_asset_folders")
 }
 
-// 全局角色（结构与 NovelPromotionCharacter 一致）
+// 全局角色（结构与 ProjectCharacter 一致）
 model GlobalCharacter {
   id                 String       @id @default(uuid())
   userId             String
@@ -1012,7 +1000,7 @@ model GlobalCharacterAppearance {
   @@map("global_character_appearances")
 }
 
-// 全局场景（结构与 NovelPromotionLocation 一致）
+// 全局场景（结构与 ProjectLocation 一致）
 model GlobalLocation {
   id        String   @id @default(uuid())
   userId    String
@@ -1102,16 +1090,16 @@ model MediaObject {
 
   characterAppearanceImages             CharacterAppearance[]       @relation("CharacterAppearanceImageMedia")
   locationImages                        LocationImage[]             @relation("LocationImageMedia")
-  novelPromotionCharacterVoices         NovelPromotionCharacter[]   @relation("NovelPromotionCharacterVoiceMedia")
-  novelPromotionEpisodeAudios           NovelPromotionEpisode[]     @relation("NovelPromotionEpisodeAudioMedia")
-  novelPromotionPanelImages             NovelPromotionPanel[]       @relation("NovelPromotionPanelImageMedia")
-  novelPromotionPanelVideos             NovelPromotionPanel[]       @relation("NovelPromotionPanelVideoMedia")
-  novelPromotionPanelLipSyncVideos      NovelPromotionPanel[]       @relation("NovelPromotionPanelLipSyncVideoMedia")
-  novelPromotionPanelSketchImages       NovelPromotionPanel[]       @relation("NovelPromotionPanelSketchMedia")
-  novelPromotionPanelPreviousImages     NovelPromotionPanel[]       @relation("NovelPromotionPanelPreviousImageMedia")
-  novelPromotionShotImages              NovelPromotionShot[]        @relation("NovelPromotionShotImageMedia")
+  projectCharacterVoices         ProjectCharacter[]   @relation("ProjectCharacterVoiceMedia")
+  projectEpisodeAudios           ProjectEpisode[]     @relation("ProjectEpisodeAudioMedia")
+  projectPanelImages             ProjectPanel[]       @relation("ProjectPanelImageMedia")
+  projectPanelVideos             ProjectPanel[]       @relation("ProjectPanelVideoMedia")
+  projectPanelLipSyncVideos      ProjectPanel[]       @relation("ProjectPanelLipSyncVideoMedia")
+  projectPanelSketchImages       ProjectPanel[]       @relation("ProjectPanelSketchMedia")
+  projectPanelPreviousImages     ProjectPanel[]       @relation("ProjectPanelPreviousImageMedia")
+  projectShotImages              ProjectShot[]        @relation("ProjectShotImageMedia")
   supplementaryPanelImages              SupplementaryPanel[]        @relation("SupplementaryPanelImageMedia")
-  novelPromotionVoiceLineAudios         NovelPromotionVoiceLine[]   @relation("NovelPromotionVoiceLineAudioMedia")
+  projectVoiceLineAudios         ProjectVoiceLine[]   @relation("ProjectVoiceLineAudioMedia")
   voicePresetAudios                     VoicePreset[]               @relation("VoicePresetAudioMedia")
   globalCharacterVoices                 GlobalCharacter[]           @relation("GlobalCharacterVoiceMedia")
   globalCharacterAppearanceImages       GlobalCharacterAppearance[] @relation("GlobalCharacterAppearanceImageMedia")

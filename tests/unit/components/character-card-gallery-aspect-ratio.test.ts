@@ -39,7 +39,7 @@ const TestIntlProvider = NextIntlClientProvider as React.ComponentType<{
 describe('CharacterCardGallery aspect ratio', () => {
   it('renders the single-image slot at a fixed 3:2 ratio', async () => {
     Reflect.set(globalThis, 'React', React)
-    const { default: CharacterCardGallery } = await import('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/character-card/CharacterCardGallery')
+    const { default: CharacterCardGallery } = await import('@/features/project-workspace/components/assets/character-card/CharacterCardGallery')
 
     const html = renderToStaticMarkup(
       createElement(

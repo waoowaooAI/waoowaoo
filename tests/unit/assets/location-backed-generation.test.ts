@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canGenerateLocationBackedAsset, resolveLocationBackedGenerateType } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/location-backed-asset'
+import { canGenerateLocationBackedAsset, resolveLocationBackedGenerateType } from '@/features/project-workspace/components/assets/location-backed-asset'
 
 describe('location-backed asset generation rules', () => {
   it('requires props to have a visual description before generation', () => {

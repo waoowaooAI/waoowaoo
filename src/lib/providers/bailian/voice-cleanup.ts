@@ -79,9 +79,9 @@ function parseSpeakerVoiceBindings(raw: string | null | undefined): BailianVoice
 }
 
 export async function collectProjectBailianManagedVoiceIds(projectId: string): Promise<string[]> {
-  const novelProject = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
-    select: {
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
       characters: {
         select: {
           voiceId: true,
@@ -95,16 +95,16 @@ export async function collectProjectBailianManagedVoiceIds(projectId: string): P
       },
     },
   })
-  if (!novelProject) return []
+  if (!project) return []
 
   const bindings: BailianVoiceBinding[] = []
-  for (const character of novelProject.characters) {
+  for (const character of project.characters) {
     bindings.push({
       voiceId: character.voiceId,
       voiceType: character.voiceType,
     })
   }
-  for (const episode of novelProject.episodes) {
+  for (const episode of project.episodes) {
     bindings.push(...parseSpeakerVoiceBindings(episode.speakerVoices))
   }
   return collectBailianManagedVoiceIds(bindings)
@@ -118,19 +118,17 @@ async function findReferencedVoiceIds(params: {
   const scope = params.scope
   const referenced = new Set<string>()
 
-  const novelCharacters = await prisma.novelPromotionCharacter.findMany({
+  const novelCharacters = await prisma.projectCharacter.findMany({
     where: {
       voiceId: { in: voiceIds },
       ...(scope.excludeNovelCharacterId
         ? { id: { not: scope.excludeNovelCharacterId } }
         : {}),
-      novelPromotionProject: {
-        project: {
-          userId: scope.userId,
-          ...(scope.excludeProjectId
-            ? { id: { not: scope.excludeProjectId } }
-            : {}),
-        },
+      project: {
+        userId: scope.userId,
+        ...(scope.excludeProjectId
+          ? { id: { not: scope.excludeProjectId } }
+          : {}),
       },
     },
     select: { voiceId: true },
@@ -167,16 +165,14 @@ async function findReferencedVoiceIds(params: {
     if (voiceId) referenced.add(voiceId)
   }
 
-  const episodes = await prisma.novelPromotionEpisode.findMany({
+  const episodes = await prisma.projectEpisode.findMany({
     where: {
       speakerVoices: { not: null },
-      novelPromotionProject: {
-        project: {
-          userId: scope.userId,
-          ...(scope.excludeProjectId
-            ? { id: { not: scope.excludeProjectId } }
-            : {}),
-        },
+      project: {
+        userId: scope.userId,
+        ...(scope.excludeProjectId
+          ? { id: { not: scope.excludeProjectId } }
+          : {}),
       },
     },
     select: { speakerVoices: true },
@@ -246,4 +242,3 @@ export async function cleanupUnreferencedBailianVoices(params: {
     deletedVoiceIds,
   }
 }
-

@@ -51,8 +51,8 @@ function parsePanelCharacters(value: string | null): string {
 
 export async function handleAnalyzeShotVariantsTask(job: Job<TaskJobData>, payload: AnyObj) {
   const panelId = readRequiredString(payload.panelId, 'panelId')
-  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
-  const panel = await prisma.novelPromotionPanel.findUnique({
+  const projectWorkflow = await resolveAnalysisModel(job.data.projectId, job.data.userId)
+  const panel = await prisma.projectPanel.findUnique({
     where: { id: panelId },
     select: {
       id: true,
@@ -101,7 +101,7 @@ export async function handleAnalyzeShotVariantsTask(job: Job<TaskJobData>, paylo
         async () =>
           await executeAiVisionStep({
             userId: job.data.userId,
-            model: novelData.analysisModel,
+            model: projectWorkflow.analysisModel,
             prompt,
             imageUrls: [imageUrl],
             reasoning: true,

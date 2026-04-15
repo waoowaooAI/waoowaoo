@@ -4,9 +4,9 @@ import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
-  novelPromotionProject: { findUnique: vi.fn() },
-  novelPromotionEpisode: { findUnique: vi.fn() },
-  novelPromotionClip: { update: vi.fn(async () => ({})) },
+  userPreference: { findUnique: vi.fn() },
+  projectEpisode: { findUnique: vi.fn() },
+  projectClip: { update: vi.fn(async () => ({})) },
 }))
 
 const llmMock = vi.hoisted(() => ({
@@ -64,7 +64,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       locale: 'zh',
       projectId: 'project-1',
       episodeId,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload,
       userId: 'user-1',
@@ -79,18 +79,14 @@ describe('worker screenplay-convert behavior', () => {
     prismaMock.project.findUnique.mockResolvedValue({
       id: 'project-1',
       name: 'Project One',
-    })
-
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
       analysisModel: 'llm::analysis-1',
       characters: [{ name: 'Hero' }],
       locations: [{ name: 'Old Town' }],
     })
 
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+    prismaMock.projectEpisode.findUnique.mockResolvedValue({
       id: 'episode-1',
-      novelPromotionProjectId: 'np-project-1',
+      projectId: 'project-1',
       clips: [
         {
           id: 'clip-1',
@@ -117,7 +113,7 @@ describe('worker screenplay-convert behavior', () => {
       totalScenes: 1,
     }))
 
-    expect(prismaMock.novelPromotionClip.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectClip.update).toHaveBeenCalledWith({
       where: { id: 'clip-1' },
       data: {
         screenplay: JSON.stringify({

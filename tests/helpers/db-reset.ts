@@ -28,26 +28,25 @@ export async function resetAssetHubState() {
   await prisma.globalAssetFolder.deleteMany()
 }
 
-export async function resetNovelPromotionState() {
-  await prisma.novelPromotionVoiceLine.deleteMany()
-  await prisma.novelPromotionPanel.deleteMany()
+export async function resetProjectWorkflowState() {
+  await prisma.projectVoiceLine.deleteMany()
+  await prisma.projectPanel.deleteMany()
   await prisma.supplementaryPanel.deleteMany()
-  await prisma.novelPromotionStoryboard.deleteMany()
-  await prisma.novelPromotionShot.deleteMany()
-  await prisma.novelPromotionClip.deleteMany()
+  await prisma.projectStoryboard.deleteMany()
+  await prisma.projectShot.deleteMany()
+  await prisma.projectClip.deleteMany()
   await prisma.characterAppearance.deleteMany()
   await prisma.locationImage.deleteMany()
-  await prisma.novelPromotionCharacter.deleteMany()
-  await prisma.novelPromotionLocation.deleteMany()
+  await prisma.projectCharacter.deleteMany()
+  await prisma.projectLocation.deleteMany()
   await prisma.videoEditorProject.deleteMany()
-  await prisma.novelPromotionEpisode.deleteMany()
-  await prisma.novelPromotionProject.deleteMany()
+  await prisma.projectEpisode.deleteMany()
 }
 
 export async function resetSystemState() {
   await resetTaskState()
   await resetAssetHubState()
-  await resetNovelPromotionState()
+  await resetProjectWorkflowState()
   await prisma.usageCost.deleteMany()
   await prisma.project.deleteMany()
   await prisma.userPreference.deleteMany()

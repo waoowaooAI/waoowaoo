@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { applyRunStreamEvent } from './state-machine'
 import { subscribeRecoveredRun } from './recovered-run-subscription'
 import { executeRunRequest } from './run-request-executor'

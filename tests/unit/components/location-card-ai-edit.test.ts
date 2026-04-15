@@ -16,15 +16,15 @@ vi.mock('@/lib/query/mutations', () => ({
   useUploadProjectLocationImage: () => uploadMutationMock,
 }))
 
-vi.mock('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/location-card/LocationCardHeader', () => ({
+vi.mock('@/features/project-workspace/components/assets/location-card/LocationCardHeader', () => ({
   default: () => createElement('div', null),
 }))
 
-vi.mock('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/location-card/LocationCardActions', () => ({
+vi.mock('@/features/project-workspace/components/assets/location-card/LocationCardActions', () => ({
   default: () => createElement('div', null),
 }))
 
-vi.mock('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/location-card/LocationImageList', () => ({
+vi.mock('@/features/project-workspace/components/assets/location-card/LocationImageList', () => ({
   default: locationImageListMock,
 }))
 
@@ -92,7 +92,7 @@ describe('LocationCard AI edit button', () => {
   it('uses the shared AI edit button style in single-image mode', async () => {
     locationImageListMock.mockClear()
     Reflect.set(globalThis, 'React', React)
-    const { default: LocationCard } = await import('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/LocationCard')
+    const { default: LocationCard } = await import('@/features/project-workspace/components/assets/LocationCard')
     const html = renderToStaticMarkup(
       createElement(
         TestIntlProvider,
@@ -142,7 +142,7 @@ describe('LocationCard AI edit button', () => {
   it('passes a square image slot to project location cards', async () => {
     locationImageListMock.mockClear()
     Reflect.set(globalThis, 'React', React)
-    const { default: LocationCard } = await import('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/LocationCard')
+    const { default: LocationCard } = await import('@/features/project-workspace/components/assets/LocationCard')
     renderToStaticMarkup(
       createElement(
         TestIntlProvider,

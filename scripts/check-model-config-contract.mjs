@@ -305,7 +305,7 @@ async function main() {
       invalidCustomModelShape: 0,
       invalidCapabilities: 0,
     },
-    novelPromotionProject: {
+    project: {
       total: 0,
       invalidModelKeyFields: 0,
     },
@@ -407,7 +407,7 @@ async function main() {
     }
   }
 
-  const projects = await prisma.novelPromotionProject.findMany({
+  const projects = await prisma.project.findMany({
     select: {
       id: true,
       analysisModel: true,
@@ -420,14 +420,14 @@ async function main() {
   })
 
   for (const project of projects) {
-    summary.novelPromotionProject.total += 1
+    summary.project.total += 1
     for (const field of MODEL_FIELDS) {
       const rawValue = project[field]
       if (!rawValue) continue
       if (!parseModelKeyStrict(rawValue)) {
-        summary.novelPromotionProject.invalidModelKeyFields += 1
+        summary.project.invalidModelKeyFields += 1
         addSample(summary, {
-          table: 'novelPromotionProject',
+          table: 'project',
           rowId: project.id,
           field,
           reason: 'model field is not provider::modelId',
@@ -443,7 +443,7 @@ async function main() {
     || summary.userPreference.invalidCustomModelsJson > 0
     || summary.userPreference.invalidCustomModelShape > 0
     || summary.userPreference.invalidCapabilities > 0
-    || summary.novelPromotionProject.invalidModelKeyFields > 0
+    || summary.project.invalidModelKeyFields > 0
 
   if (hasViolations) {
     process.exitCode = 1

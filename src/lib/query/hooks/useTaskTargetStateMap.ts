@@ -115,7 +115,7 @@ function matchesTaskTypeWhitelist(
 }
 
 function shouldTraceMergeTarget(targetType: string) {
-  return targetType === 'NovelPromotionPanel'
+  return targetType === 'ProjectPanel'
 }
 
 function logMergeDecision(params: {

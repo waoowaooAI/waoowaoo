@@ -12,7 +12,7 @@ export function useListProjectEpisodeVideoUrls(projectId: string) {
       panelPreferences: Record<string, boolean>
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/video-urls`,
+        `/api/projects/${projectId}/video-urls`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -34,7 +34,7 @@ export function useUpdateProjectPanelLink(projectId: string) {
       linked: boolean
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/panel-link`,
+        `/api/projects/${projectId}/panel-link`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -64,7 +64,7 @@ export function useUpdateProjectPanelVideoPrompt(projectId: string) {
       field?: 'videoPrompt' | 'firstLastFramePrompt'
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/panel`,
+        `/api/projects/${projectId}/panel`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

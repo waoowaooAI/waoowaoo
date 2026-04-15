@@ -4,7 +4,7 @@ import { deleteObject } from '@/lib/storage'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 
 export async function confirmProjectLocationBackedSelection(assetId: string): Promise<{ success: true }> {
-  const location = await prisma.novelPromotionLocation.findUnique({
+  const location = await prisma.projectLocation.findUnique({
     where: { id: assetId },
     include: { images: { orderBy: { imageIndex: 'asc' } } },
   })
@@ -27,7 +27,7 @@ export async function confirmProjectLocationBackedSelection(assetId: string): Pr
             isSelected: true,
           },
         })
-        await tx.novelPromotionLocation.update({
+        await tx.projectLocation.update({
           where: { id: assetId },
           data: { selectedImageId: onlyImage.id },
         })
@@ -65,7 +65,7 @@ export async function confirmProjectLocationBackedSelection(assetId: string): Pr
         isSelected: true,
       },
     })
-    await tx.novelPromotionLocation.update({
+    await tx.projectLocation.update({
       where: { id: assetId },
       data: { selectedImageId: selectedImage.id },
     })

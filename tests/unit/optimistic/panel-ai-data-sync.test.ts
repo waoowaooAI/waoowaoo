@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   serializeStructuredJsonField,
   syncPanelCharacterDependentJson,
-} from '@/lib/novel-promotion/panel-ai-data-sync'
+} from '@/lib/project-workflow/panel-ai-data-sync'
 
 describe('panel ai data sync helpers', () => {
   it('removes deleted character from acting notes and photography rules', () => {

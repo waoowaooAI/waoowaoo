@@ -24,14 +24,14 @@ export function useScriptToStoryboardRunStream({ projectId, episodeId }: UseScri
   return useRunStreamState<ScriptToStoryboardRunParams>({
     projectId,
     endpoint: (pid) => `/api/projects/${pid}/commands`,
-    storageKeyPrefix: 'novel-promotion:script-to-storyboard-run',
+    storageKeyPrefix: 'project-workflow:script-to-storyboard-run',
     storageScopeKey: episodeId || undefined,
     resolveActiveRunId: async ({ projectId: pid, storageScopeKey }) => {
       if (!storageScopeKey) return null
       const search = new URLSearchParams({
         projectId: pid,
         workflowType: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: storageScopeKey,
         episodeId: storageScopeKey,
         limit: '20',

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
   },
 }))
@@ -75,7 +75,7 @@ function buildJob(payload: Record<string, unknown>): Job<TaskJobData> {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       payload,
       userId: 'user-1',
@@ -87,7 +87,7 @@ describe('worker shot-ai-variants behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     persistMock.resolveAnalysisModel.mockResolvedValue({ id: 'np-1', analysisModel: 'llm::analysis-1' })
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValue({
+    prismaMock.projectPanel.findUnique.mockResolvedValue({
       id: 'panel-1',
       panelNumber: 3,
       imageUrl: 'images/panel-1.png',
@@ -103,7 +103,7 @@ describe('worker shot-ai-variants behavior', () => {
   })
 
   it('panel not found -> explicit error', async () => {
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValueOnce(null)
+    prismaMock.projectPanel.findUnique.mockResolvedValueOnce(null)
     const job = buildJob({ panelId: 'panel-404' })
 
     await expect(handleAnalyzeShotVariantsTask(job, job.data.payload as Record<string, unknown>)).rejects.toThrow('Panel not found')

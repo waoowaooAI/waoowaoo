@@ -1,17 +1,17 @@
 import fs from 'fs'
 import path from 'path'
-import analyzeCharactersSkillPackage from '@skills/novel-promotion/analyze-characters'
-import analyzeLocationsSkillPackage from '@skills/novel-promotion/analyze-locations'
-import analyzePropsSkillPackage from '@skills/novel-promotion/analyze-props'
-import generateScreenplaySkillPackage from '@skills/novel-promotion/generate-screenplay'
-import generateVoiceLinesSkillPackage from '@skills/novel-promotion/generate-voice-lines'
-import planStoryboardPhase1SkillPackage from '@skills/novel-promotion/plan-storyboard-phase1'
-import refineActingSkillPackage from '@skills/novel-promotion/refine-acting'
-import refineCinematographySkillPackage from '@skills/novel-promotion/refine-cinematography'
-import refineStoryboardDetailSkillPackage from '@skills/novel-promotion/refine-storyboard-detail'
-import splitClipsSkillPackage from '@skills/novel-promotion/split-clips'
-import scriptToStoryboardWorkflowPackage from '@skills/novel-promotion/workflows/script-to-storyboard'
-import storyToScriptWorkflowPackage from '@skills/novel-promotion/workflows/story-to-script'
+import analyzeCharactersSkillPackage from '@skills/project-workflow/analyze-characters'
+import analyzeLocationsSkillPackage from '@skills/project-workflow/analyze-locations'
+import analyzePropsSkillPackage from '@skills/project-workflow/analyze-props'
+import generateScreenplaySkillPackage from '@skills/project-workflow/generate-screenplay'
+import generateVoiceLinesSkillPackage from '@skills/project-workflow/generate-voice-lines'
+import planStoryboardPhase1SkillPackage from '@skills/project-workflow/plan-storyboard-phase1'
+import refineActingSkillPackage from '@skills/project-workflow/refine-acting'
+import refineCinematographySkillPackage from '@skills/project-workflow/refine-cinematography'
+import refineStoryboardDetailSkillPackage from '@skills/project-workflow/refine-storyboard-detail'
+import splitClipsSkillPackage from '@skills/project-workflow/split-clips'
+import scriptToStoryboardWorkflowPackage from '@skills/project-workflow/workflows/script-to-storyboard'
+import storyToScriptWorkflowPackage from '@skills/project-workflow/workflows/story-to-script'
 import type {
   SkillCatalogEntry,
   SkillPackage,
@@ -19,27 +19,75 @@ import type {
   WorkflowPackageId,
   WorkflowSkillId,
 } from './types'
+import {
+  PROJECT_WORKFLOW_SKILL_IDS,
+  PROJECT_WORKFLOW_IDS,
+} from './project-workflow-machine'
 
-const skillPackages: Record<WorkflowSkillId, SkillPackage> = {
-  'analyze-characters': analyzeCharactersSkillPackage,
-  'analyze-locations': analyzeLocationsSkillPackage,
-  'analyze-props': analyzePropsSkillPackage,
-  'split-clips': splitClipsSkillPackage,
-  'generate-screenplay': generateScreenplaySkillPackage,
-  'plan-storyboard-phase1': planStoryboardPhase1SkillPackage,
-  'refine-cinematography': refineCinematographySkillPackage,
-  'refine-acting': refineActingSkillPackage,
-  'refine-storyboard-detail': refineStoryboardDetailSkillPackage,
-  'generate-voice-lines': generateVoiceLinesSkillPackage,
+const importedSkillPackages = [
+  analyzeCharactersSkillPackage,
+  analyzeLocationsSkillPackage,
+  analyzePropsSkillPackage,
+  splitClipsSkillPackage,
+  generateScreenplaySkillPackage,
+  planStoryboardPhase1SkillPackage,
+  refineCinematographySkillPackage,
+  refineActingSkillPackage,
+  refineStoryboardDetailSkillPackage,
+  generateVoiceLinesSkillPackage,
+] satisfies SkillPackage[]
+
+const importedWorkflowPackages = [
+  storyToScriptWorkflowPackage,
+  scriptToStoryboardWorkflowPackage,
+] satisfies WorkflowPackage[]
+
+function buildOrderedPackageRecord<TId extends string, TPackage>(
+  expectedIds: TId[],
+  packages: TPackage[],
+  resolveId: (pkg: TPackage) => TId,
+): Record<TId, TPackage> {
+  if (packages.length !== expectedIds.length) {
+    throw new Error(`Package registry length mismatch. expected=${expectedIds.length} actual=${packages.length}`)
+  }
+
+  const packageMap = new Map<TId, TPackage>()
+  for (const pkg of packages) {
+    const id = resolveId(pkg)
+    if (!expectedIds.includes(id)) {
+      throw new Error(`Package registry contains unexpected id: ${id}`)
+    }
+    if (packageMap.has(id)) {
+      throw new Error(`Package registry contains duplicate id: ${id}`)
+    }
+    packageMap.set(id, pkg)
+  }
+
+  const orderedEntries = expectedIds.map((id) => {
+    const pkg = packageMap.get(id)
+    if (!pkg) {
+      throw new Error(`Package registry is missing id: ${id}`)
+    }
+    return [id, pkg] as const
+  })
+
+  return Object.fromEntries(orderedEntries) as Record<TId, TPackage>
 }
 
-const workflowPackages: Record<WorkflowPackageId, WorkflowPackage> = {
-  'story-to-script': storyToScriptWorkflowPackage,
-  'script-to-storyboard': scriptToStoryboardWorkflowPackage,
-}
+const skillPackages = buildOrderedPackageRecord(
+  PROJECT_WORKFLOW_SKILL_IDS,
+  importedSkillPackages,
+  (pkg) => pkg.metadata.id,
+)
+
+const workflowPackages = buildOrderedPackageRecord(
+  PROJECT_WORKFLOW_IDS,
+  importedWorkflowPackages,
+  (pkg) => pkg.manifest.id,
+)
 
 function skillsRoot(): string {
-  return path.resolve(process.cwd(), 'skills', 'novel-promotion')
+  return path.resolve(process.cwd(), 'skills', 'project-workflow')
 }
 
 function walkFiles(rootDir: string): string[] {
@@ -65,7 +113,7 @@ export function getSkillPackage(skillId: WorkflowSkillId): SkillPackage {
 }
 
 export function listSkillPackages(): SkillPackage[] {
-  return Object.values(skillPackages)
+  return PROJECT_WORKFLOW_SKILL_IDS.map((skillId) => skillPackages[skillId])
 }
 
 export function getWorkflowPackage(workflowId: WorkflowPackageId): WorkflowPackage {
@@ -73,7 +121,7 @@ export function getWorkflowPackage(workflowId: WorkflowPackageId): WorkflowPacka
 }
 
 export function listWorkflowPackages(): WorkflowPackage[] {
-  return Object.values(workflowPackages)
+  return PROJECT_WORKFLOW_IDS.map((workflowId) => workflowPackages[workflowId])
 }
 
 export function findWorkflowSkillPackageByLegacyStepId(stepId: string): SkillPackage | null {

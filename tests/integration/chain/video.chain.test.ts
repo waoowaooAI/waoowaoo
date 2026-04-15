@@ -43,12 +43,12 @@ const concurrencyGateMock = vi.hoisted(() => ({
 }))
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     update: vi.fn(async () => undefined),
   },
-  novelPromotionVoiceLine: {
+  projectVoiceLine: {
     findUnique: vi.fn(),
   },
 }))
@@ -110,11 +110,11 @@ describe('chain contract - video queue behavior', () => {
     vi.clearAllMocks()
     queueState.addCallsByQueue.clear()
     workerState.processor = null
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValue({
+    prismaMock.projectPanel.findUnique.mockResolvedValue({
       id: 'panel-1',
       videoUrl: 'cos/base-video.mp4',
     })
-    prismaMock.novelPromotionVoiceLine.findUnique.mockResolvedValue({
+    prismaMock.projectVoiceLine.findUnique.mockResolvedValue({
       id: 'line-1',
       audioUrl: 'cos/line-1.mp3',
     })
@@ -129,7 +129,7 @@ describe('chain contract - video queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       payload: { videoModel: 'fal::video-model' },
       userId: 'user-1',
@@ -152,7 +152,7 @@ describe('chain contract - video queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       payload: { voiceLineId: 'line-1', lipSyncModel: 'fal::lipsync-model' },
       userId: 'user-1',
@@ -176,7 +176,7 @@ describe('chain contract - video queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       payload: { voiceLineId: 'line-1', lipSyncModel: 'fal::lipsync-model' },
       userId: 'user-1',
@@ -192,7 +192,7 @@ describe('chain contract - video queue behavior', () => {
       voiceLineId: 'line-1',
       lipSyncVideoUrl: 'cos/lip-sync/video.mp4',
     })
-    expect(prismaMock.novelPromotionPanel.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
       where: { id: 'panel-1' },
       data: {
         lipSyncVideoUrl: 'cos/lip-sync/video.mp4',

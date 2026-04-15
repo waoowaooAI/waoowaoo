@@ -37,14 +37,11 @@ function removeLocationFromProject(
     previous: Project | undefined,
     locationId: string,
 ): Project | undefined {
-    if (!previous?.novelPromotionData) return previous
-    const currentLocations = previous.novelPromotionData.locations || []
+    if (!previous) return previous
+    const currentLocations = previous.locations || []
     return {
         ...previous,
-        novelPromotionData: {
-            ...previous.novelPromotionData,
-            locations: currentLocations.filter((location) => location.id !== locationId),
-        },
+        locations: currentLocations.filter((location) => location.id !== locationId),
     }
 }
 
@@ -56,7 +53,7 @@ export function useDeleteProjectLocation(projectId: string) {
     return useMutation({
         mutationFn: async (locationId: string) => {
             await requestVoidWithError(
-                `/api/novel-promotion/${projectId}/location?id=${encodeURIComponent(locationId)}`,
+                `/api/projects/${projectId}/location?id=${encodeURIComponent(locationId)}`,
                 { method: 'DELETE' },
                 'Failed to delete location',
             )
@@ -157,7 +154,7 @@ export function useUpdateProjectLocationDescription(projectId: string) {
             imageIndex?: number
             availableSlots?: LocationAvailableSlot[]
         }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/location`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/location`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -190,7 +187,7 @@ export function useAiModifyProjectLocationDescription(projectId: string) {
             imageIndex?: number
         }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/ai-modify-location`,
+                `/api/projects/${projectId}/ai-modify-location`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -222,7 +219,7 @@ export function useAiModifyProjectPropDescription(projectId: string) {
             modifyInstruction: string
         }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/ai-modify-prop`,
+                `/api/projects/${projectId}/ai-modify-prop`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -248,7 +245,7 @@ export function useAiCreateProjectLocation(projectId: string) {
     return useMutation({
         mutationFn: async (payload: { userInstruction: string }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/ai-create-location`,
+                `/api/projects/${projectId}/ai-create-location`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -279,7 +276,7 @@ export function useCreateProjectLocation(projectId: string) {
             availableSlots?: LocationAvailableSlot[]
         }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/location`,
+                `/api/projects/${projectId}/location`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

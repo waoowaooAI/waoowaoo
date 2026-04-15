@@ -83,7 +83,7 @@ export const GET = apiHandler(async (request: NextRequest) => {
             })
             : Promise.resolve([]),
         episodeIds.length > 0
-            ? prisma.novelPromotionEpisode.findMany({
+            ? prisma.projectEpisode.findMany({
                 where: { id: { in: episodeIds } },
                 select: { id: true, episodeNumber: true, name: true },
             })

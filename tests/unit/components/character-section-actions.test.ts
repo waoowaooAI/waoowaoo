@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { NextIntlClientProvider } from 'next-intl'
 import type { AbstractIntlMessages } from 'next-intl'
-import CharacterSection from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/CharacterSection'
+import CharacterSection from '@/features/project-workspace/components/assets/CharacterSection'
 
 const useProjectAssetsMock = vi.hoisted(() => vi.fn())
 const characterCardMock = vi.hoisted(() => vi.fn((_props: unknown) => null))
@@ -14,12 +14,12 @@ vi.mock('@/lib/query/hooks/useProjectAssets', () => ({
   useProjectAssets: (projectId: string | null) => useProjectAssetsMock(projectId),
 }))
 
-vi.mock('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/CharacterCard', () => ({
+vi.mock('@/features/project-workspace/components/assets/CharacterCard', () => ({
   __esModule: true,
   default: (props: unknown) => characterCardMock(props),
 }))
 
-vi.mock('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/CharacterProfileCard', () => ({
+vi.mock('@/features/project-workspace/components/assets/CharacterProfileCard', () => ({
   __esModule: true,
   default: () => null,
 }))

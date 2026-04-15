@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { applyRunStreamEvent, getStageOutput } from '@/lib/query/hooks/run-stream/state-machine'
 
 function applySequence(events: RunStreamEvent[]) {

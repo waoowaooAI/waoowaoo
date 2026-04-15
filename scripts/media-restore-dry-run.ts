@@ -39,10 +39,10 @@ async function readExpectedCounts(backupDir: string): Promise<CountMap> {
 async function currentCounts(): Promise<CountMap> {
   const entries: Array<[string, string]> = [
     ['projects', 'projects'],
-    ['novel_promotion_projects', 'novel_promotion_projects'],
-    ['novel_promotion_episodes', 'novel_promotion_episodes'],
-    ['novel_promotion_panels', 'novel_promotion_panels'],
-    ['novel_promotion_voice_lines', 'novel_promotion_voice_lines'],
+    ['projects', 'projects'],
+    ['project_episodes', 'project_episodes'],
+    ['project_panels', 'project_panels'],
+    ['project_voice_lines', 'project_voice_lines'],
     ['global_characters', 'global_characters'],
     ['global_character_appearances', 'global_character_appearances'],
     ['global_locations', 'global_locations'],

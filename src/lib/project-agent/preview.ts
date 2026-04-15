@@ -4,7 +4,7 @@ import type { ScriptPreviewPartData, StoryboardPreviewPartData } from './types'
 export async function loadScriptPreview(params: {
   episodeId: string
 }): Promise<ScriptPreviewPartData> {
-  const clips = await prisma.novelPromotionClip.findMany({
+  const clips = await prisma.projectClip.findMany({
     where: { episodeId: params.episodeId },
     orderBy: { createdAt: 'asc' },
     select: {
@@ -41,7 +41,7 @@ export async function loadStoryboardPreview(params: {
   episodeId: string
 }): Promise<StoryboardPreviewPartData> {
   const [storyboards, voiceLineCount] = await Promise.all([
-    prisma.novelPromotionStoryboard.findMany({
+    prisma.projectStoryboard.findMany({
       where: { episodeId: params.episodeId },
       orderBy: { createdAt: 'asc' },
       take: 6,
@@ -63,7 +63,7 @@ export async function loadStoryboardPreview(params: {
         },
       },
     }),
-    prisma.novelPromotionVoiceLine.count({
+    prisma.projectVoiceLine.count({
       where: { episodeId: params.episodeId },
     }),
   ])

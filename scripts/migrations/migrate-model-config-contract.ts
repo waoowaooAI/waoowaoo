@@ -44,7 +44,7 @@ type ProjectRow = {
 }
 
 type MigrationIssue = {
-  table: 'userPreference' | 'novelPromotionProject'
+  table: 'userPreference' | 'project'
   rowId: string
   userId?: string
   field: string
@@ -71,7 +71,7 @@ type MigrationReport = {
     updatedCustomModels: number
     updatedDefaultFields: number
   }
-  novelPromotionProject: {
+  project: {
     scanned: number
     updated: number
     updatedFields: number
@@ -323,7 +323,7 @@ async function main() {
       updatedCustomModels: 0,
       updatedDefaultFields: 0,
     },
-    novelPromotionProject: {
+    project: {
       scanned: 0,
       updated: 0,
       updatedFields: 0,
@@ -424,7 +424,7 @@ async function main() {
     }
   }
 
-  const projects = await prisma.novelPromotionProject.findMany({
+  const projects = await prisma.project.findMany({
     select: {
       id: true,
       projectId: true,
@@ -443,7 +443,7 @@ async function main() {
   })
 
   for (const row of projects as ProjectRow[]) {
-    report.novelPromotionProject.scanned += 1
+    report.project.scanned += 1
     const mappingByModelId = userMappings.get(row.project.userId) || new Map<string, string[]>()
     const updateData: Partial<Record<ModelField, string | null>> = {}
 
@@ -451,7 +451,7 @@ async function main() {
       const normalizedField = normalizeModelFieldValue(row[field], field, mappingByModelId)
       if (normalizedField.issue) {
         addIssue(report, {
-          table: 'novelPromotionProject',
+          table: 'project',
           rowId: row.id,
           userId: row.project.userId,
           ...normalizedField.issue,
@@ -459,14 +459,14 @@ async function main() {
       }
       if (normalizedField.changed) {
         updateData[field] = normalizedField.nextValue
-        report.novelPromotionProject.updatedFields += 1
+        report.project.updatedFields += 1
       }
     }
 
     if (Object.keys(updateData).length > 0) {
-      report.novelPromotionProject.updated += 1
+      report.project.updated += 1
       if (APPLY) {
-        await prisma.novelPromotionProject.update({
+        await prisma.project.update({
           where: { id: row.id },
           data: updateData,
         })
@@ -483,7 +483,7 @@ async function main() {
   process.stdout.write(
     `[migrate-model-config-contract] mode=${report.mode} ` +
     `prefs=${report.userPreference.scanned}/${report.userPreference.updated} ` +
-    `projects=${report.novelPromotionProject.scanned}/${report.novelPromotionProject.updated} ` +
+    `projects=${report.project.scanned}/${report.project.updated} ` +
     `issues=${report.issues.length} report=${absoluteReportPath}\n`,
   )
 }

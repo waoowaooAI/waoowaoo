@@ -1,5 +1,5 @@
 import type { MutableRefObject } from 'react'
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { isAsyncTaskResponse } from '@/lib/task/client'
 import { resolveTaskErrorMessage } from '@/lib/task/error-message'
 import { toObject, toTerminalRunResult } from './event-parser'

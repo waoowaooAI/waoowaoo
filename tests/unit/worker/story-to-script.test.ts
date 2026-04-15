@@ -4,10 +4,10 @@ import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
-  novelPromotionProject: { findUnique: vi.fn() },
-  novelPromotionEpisode: { findUnique: vi.fn() },
+  userPreference: { findUnique: vi.fn() },
+  projectEpisode: { findUnique: vi.fn() },
   $transaction: vi.fn(),
-  novelPromotionClip: { update: vi.fn(async () => ({})) },
+  projectClip: { update: vi.fn(async () => ({})) },
   locationImage: { createMany: vi.fn(async () => ({ count: 0 })) },
 }))
 
@@ -28,11 +28,14 @@ const configMock = vi.hoisted(() => ({
 const workflowMock = vi.hoisted(() => ({
   runStoryToScriptSkillWorkflow: vi.fn(),
 }))
-const helperMock = vi.hoisted(() => ({
-  persistAnalyzedCharacters: vi.fn(async () => [{ id: 'character-new-1' }]),
-  persistAnalyzedLocations: vi.fn(async () => [{ id: 'location-new-1' }]),
-  persistAnalyzedProps: vi.fn(async () => [{ id: 'prop-new-1' }]),
-  persistClips: vi.fn(async () => [{ clipKey: 'clip-1', id: 'clip-row-1' }]),
+const domainMock = vi.hoisted(() => ({
+  persistStoryToScriptWorkflowResults: vi.fn(async () => ({
+    createdCharacters: [{ id: 'character-new-1' }],
+    createdLocations: [{ id: 'location-new-1' }],
+    createdProps: [{ id: 'prop-new-1' }],
+    createdClipRows: [{ clipKey: 'clip-1', id: 'clip-row-1', version: '2026-04-14T00:00:00.000Z' }],
+  })),
+  persistRetryScreenplayResult: vi.fn(async () => ({ clipId: 'clip-row-1' })),
 }))
 const workflowLeaseMock = vi.hoisted(() => ({
   assertWorkflowRunActive: vi.fn(async () => undefined),
@@ -85,13 +88,9 @@ vi.mock('@/lib/workers/handlers/story-to-script-helpers', () => ({
   asString: (value: unknown) => (typeof value === 'string' ? value : ''),
   parseEffort: vi.fn(() => null),
   parseTemperature: vi.fn(() => 0.7),
-  persistAnalyzedCharacters: helperMock.persistAnalyzedCharacters,
-  persistAnalyzedLocations: helperMock.persistAnalyzedLocations,
-  persistAnalyzedProps: helperMock.persistAnalyzedProps,
-  persistClips: helperMock.persistClips,
-  resolveClipRecordId: (clipIdMap: Map<string, string>, clipId: string) => clipIdMap.get(clipId) ?? null,
 }))
 vi.mock('@/lib/run-runtime/workflow-lease', () => workflowLeaseMock)
+vi.mock('@/lib/domain/screenplay/service', () => domainMock)
 
 import { handleStoryToScriptTask } from '@/lib/workers/handlers/story-to-script'
 
@@ -115,7 +114,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       locale: 'zh',
       projectId: 'project-1',
       episodeId,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload: normalizedPayload,
       userId: 'user-1',
@@ -131,18 +130,14 @@ describe('worker story-to-script behavior', () => {
     prismaMock.project.findUnique.mockResolvedValue({
       id: 'project-1',
       name: 'Project One',
-    })
-
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
       analysisModel: 'llm::analysis-1',
       characters: [{ id: 'char-1', name: 'Hero', introduction: 'hero intro' }],
       locations: [{ id: 'loc-1', name: 'Old Town', summary: 'town', assetKind: 'location' }],
     })
 
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+    prismaMock.projectEpisode.findUnique.mockResolvedValue({
       id: 'episode-1',
-      novelPromotionProjectId: 'np-project-1',
+      projectId: 'project-1',
       novelText: 'episode text',
     })
 
@@ -161,7 +156,7 @@ describe('worker story-to-script behavior', () => {
       locationsLibName: 'Market',
       propsLibName: 'Knife',
       charactersIntroduction: 'intro',
-      clipList: [{ clipId: 'clip-1', content: 'clip content', props: ['Knife'] }],
+      clipList: [{ id: 'clip-1', startText: 'a', endText: 'b', summary: 'clip summary', location: null, content: 'clip content', props: ['Knife'], characters: [], matchLevel: 'exact', matchConfidence: 1 }],
       screenplayResults: [
         {
           clipId: 'clip-1',
@@ -198,17 +193,16 @@ describe('worker story-to-script behavior', () => {
       persistedClips: 1,
     })
 
-    expect(helperMock.persistClips).toHaveBeenCalledWith(expect.objectContaining({
+    expect(domainMock.persistStoryToScriptWorkflowResults).toHaveBeenCalledWith(expect.objectContaining({
+      projectId: 'project-1',
       episodeId: 'episode-1',
-      clipList: [{ clipId: 'clip-1', content: 'clip content', props: ['Knife'] }],
+      clipList: [{ id: 'clip-1', startText: 'a', endText: 'b', summary: 'clip summary', location: null, content: 'clip content', props: ['Knife'], characters: [], matchLevel: 'exact', matchConfidence: 1 }],
+      mutation: expect.objectContaining({
+        workflowId: 'story-to-script',
+        runId: 'run-test-story',
+        taskId: 'task-story-to-script-1',
+      }),
     }))
-
-    expect(prismaMock.novelPromotionClip.update).toHaveBeenCalledWith({
-      where: { id: 'clip-row-1' },
-      data: {
-        screenplay: JSON.stringify({ scenes: [{ shot: 'close-up' }] }),
-      },
-    })
   })
 
   it('orchestrator partial failure summary -> throws explicit error', async () => {

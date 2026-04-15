@@ -4,9 +4,9 @@ import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
-  novelPromotionProject: { findUnique: vi.fn() },
-  novelPromotionEpisode: { findUnique: vi.fn() },
-  novelPromotionClip: {
+  userPreference: { findUnique: vi.fn() },
+  projectEpisode: { findUnique: vi.fn() },
+  projectClip: {
     findMany: vi.fn(async () => []),
     update: vi.fn(async () => ({ id: 'clip-row-1' })),
     deleteMany: vi.fn(async () => ({})),
@@ -48,7 +48,7 @@ vi.mock('@/lib/prompt-i18n', () => ({
   PROMPT_IDS: { NP_AGENT_CLIP: 'np_agent_clip' },
   buildPrompt: vi.fn(() => 'clip-split-prompt'),
 }))
-vi.mock('@/lib/novel-promotion/story-to-script/clip-matching', () => ({
+vi.mock('@/lib/project-workflow/story-to-script/clip-matching', () => ({
   createClipContentMatcher: (content: string) => ({
     matchBoundary: (start: string, end: string, fromIndex = 0) => {
       const startIndex = content.indexOf(start, fromIndex)
@@ -73,7 +73,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       locale: 'zh',
       projectId: 'project-1',
       episodeId,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload,
       userId: 'user-1',
@@ -85,22 +85,20 @@ describe('worker clips-build behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    prismaMock.project.findUnique.mockResolvedValue({ id: 'project-1' })
-
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: 'project-1',
       analysisModel: 'llm::analysis-1',
       characters: [{ id: 'char-1', name: 'Hero' }],
       locations: [{ id: 'loc-1', name: 'Old Town' }],
     })
 
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+    prismaMock.projectEpisode.findUnique.mockResolvedValue({
       id: 'episode-1',
       name: '第一集',
-      novelPromotionProjectId: 'np-project-1',
+      projectId: 'project-1',
       novelText: 'A START one END B START two END C',
     })
-    prismaMock.novelPromotionClip.findMany.mockResolvedValue([])
+    prismaMock.projectClip.findMany.mockResolvedValue([])
 
     llmMock.getCompletionContent.mockReturnValue(
       JSON.stringify([
@@ -129,7 +127,7 @@ describe('worker clips-build behavior', () => {
       count: 1,
     })
 
-    expect(prismaMock.novelPromotionClip.create).toHaveBeenCalledWith({
+    expect(prismaMock.projectClip.create).toHaveBeenCalledWith({
       data: {
         episodeId: 'episode-1',
         startText: 'START one',

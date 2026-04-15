@@ -29,7 +29,7 @@ function buildJob(type: TaskJobData['type'], payload: Record<string, unknown>): 
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       payload,
       userId: 'user-1',

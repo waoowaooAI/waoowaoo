@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
     update: vi.fn(async () => ({})),
   },
@@ -83,7 +83,7 @@ function buildJob(
       locale,
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-new',
       payload,
       userId: 'user-1',
@@ -95,7 +95,7 @@ describe('worker panel-variant-task-handler behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    prismaMock.novelPromotionPanel.findUnique.mockImplementation(async (args: { where: { id: string } }) => {
+    prismaMock.projectPanel.findUnique.mockImplementation(async (args: { where: { id: string } }) => {
       if (args.where.id === 'panel-new') {
         return {
           id: 'panel-new',
@@ -153,7 +153,7 @@ describe('worker panel-variant-task-handler behavior', () => {
       }),
     )
 
-    expect(prismaMock.novelPromotionPanel.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
       where: { id: 'panel-new' },
       data: { imageUrl: 'cos/panel-variant-new.png' },
     })

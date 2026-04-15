@@ -88,7 +88,7 @@ describe('system - generate video', () => {
     mockAuthenticated(seeded.user.id)
     workers = await startSystemWorkers(['video'])
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/generate-video/route')
+    const mod = await import('@/app/api/projects/[projectId]/generate-video/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -109,7 +109,7 @@ describe('system - generate video', () => {
     expect(task.type).toBe('video_panel')
     expect(task.externalId).toBe('video-ext-1')
 
-    const panel = await prisma.novelPromotionPanel.findUnique({
+    const panel = await prisma.projectPanel.findUnique({
       where: { id: seeded.panel.id },
       select: { videoUrl: true },
     })

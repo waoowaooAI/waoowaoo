@@ -68,7 +68,7 @@ type SessionAsset = {
     }
 }
 
-type NovelPromotionAssetData = {
+type ProjectAssetData = {
     analysisModel: string
     characters: CharacterAsset[]
     locations: LocationAsset[]
@@ -244,7 +244,7 @@ function parseJsonResponse<T extends JsonRecord>(responseText: string, clipId: s
 // ========== Phase 1: 基础分镜规划 ==========
 export async function executePhase1(
     clip: ClipAsset,
-    novelPromotionData: NovelPromotionAssetData,
+    projectData: ProjectAssetData,
     session: SessionAsset,
     projectId: string,
     projectName: string,
@@ -264,19 +264,19 @@ export async function executePhase1(
     const clipProps = parseClipProps(clip.props)
 
     // 构建资产信息
-    const charactersLibName = novelPromotionData.characters.map((c) => c.name).join(', ') || '无'
-    const locationsLibName = novelPromotionData.locations.map((l) => l.name).join(', ') || '无'
-    const filteredAppearanceList = getFilteredAppearanceList(novelPromotionData.characters, clipCharacters)
-    const filteredFullDescription = getFilteredFullDescription(novelPromotionData.characters, clipCharacters)
+    const charactersLibName = projectData.characters.map((c) => c.name).join(', ') || '无'
+    const locationsLibName = projectData.locations.map((l) => l.name).join(', ') || '无'
+    const filteredAppearanceList = getFilteredAppearanceList(projectData.characters, clipCharacters)
+    const filteredFullDescription = getFilteredFullDescription(projectData.characters, clipCharacters)
     const filteredPropsDescription = compileAssetPromptFragments(buildPromptAssetContext({
         characters: [],
         locations: [],
-        props: novelPromotionData.props || [],
+        props: projectData.props || [],
         clipCharacters: [],
         clipLocation: null,
         clipProps,
     })).propsDescriptionText
-    const charactersIntroduction = buildCharactersIntroduction(novelPromotionData.characters)
+    const charactersIntroduction = buildCharactersIntroduction(projectData.characters)
 
     // 构建clip JSON
     const clipJson = JSON.stringify({
@@ -313,7 +313,7 @@ export async function executePhase1(
     logAIAnalysis(session.user.id, session.user.name, projectId, projectName, {
         action: 'STORYBOARD_PHASE1_PROMPT',
         input: { 片段标识: clipId, 完整提示词: planPrompt },
-        model: novelPromotionData.analysisModel
+        model: projectData.analysisModel
     })
 
     // 调用AI（失败后重试一次）
@@ -323,7 +323,7 @@ export async function executePhase1(
         try {
             const planResult = await executeAiTextStep({
                 userId: session.user.id,
-                model: novelPromotionData.analysisModel,
+                model: projectData.analysisModel,
                 messages: [{ role: 'user', content: planPrompt }],
                 reasoning: true,
                 projectId,
@@ -378,7 +378,7 @@ export async function executePhase1(
             总分镜数: planPanels.length,
             第一阶段完整结果: planPanels
         },
-        model: novelPromotionData.analysisModel
+        model: projectData.analysisModel
     })
 
     _ulogInfo(`[Phase 1] Clip ${clipId}: 生成 ${planPanels.length} 个基础分镜`)
@@ -390,7 +390,7 @@ export async function executePhase1(
 export async function executePhase2(
     clip: ClipAsset,
     planPanels: StoryboardPanel[],
-    novelPromotionData: NovelPromotionAssetData,
+    projectData: ProjectAssetData,
     session: SessionAsset,
     projectId: string,
     projectName: string,
@@ -409,16 +409,16 @@ export async function executePhase2(
     const clipLocation = clip.location || null
     const clipProps = parseClipProps(clip.props)
 
-    const filteredFullDescription = getFilteredFullDescription(novelPromotionData.characters, clipCharacters)
+    const filteredFullDescription = getFilteredFullDescription(projectData.characters, clipCharacters)
     const filteredLocationsDescription = getFilteredLocationsDescription(
-        novelPromotionData.locations,
+        projectData.locations,
         clipLocation,
         locale,
     )
     const filteredPropsDescription = compileAssetPromptFragments(buildPromptAssetContext({
         characters: [],
         locations: [],
-        props: novelPromotionData.props || [],
+        props: projectData.props || [],
         clipCharacters: [],
         clipLocation: null,
         clipProps,
@@ -440,7 +440,7 @@ export async function executePhase2(
         try {
             const cinematographerResult = await executeAiTextStep({
                 userId: session.user.id,
-                model: novelPromotionData.analysisModel,
+                model: projectData.analysisModel,
                 messages: [{ role: 'user', content: cinematographerPrompt }],
                 reasoning: true,
                 projectId,
@@ -471,7 +471,7 @@ export async function executePhase2(
                     摄影规则数量: photographyRules.length,
                     摄影规则: photographyRules
                 },
-                model: novelPromotionData.analysisModel
+                model: projectData.analysisModel
             })
 
             // 成功，跳出循环
@@ -490,7 +490,7 @@ export async function executePhase2(
 export async function executePhase2Acting(
     clip: ClipAsset,
     planPanels: StoryboardPanel[],
-    novelPromotionData: NovelPromotionAssetData,
+    projectData: ProjectAssetData,
     session: SessionAsset,
     projectId: string,
     projectName: string,
@@ -510,7 +510,7 @@ export async function executePhase2Acting(
     // 解析clip数据
     const clipCharacters = parseClipCharacters(clip.characters)
 
-    const filteredFullDescription = getFilteredFullDescription(novelPromotionData.characters, clipCharacters)
+    const filteredFullDescription = getFilteredFullDescription(projectData.characters, clipCharacters)
 
     // 构建提示词
     const actingPrompt = actingPromptTemplate
@@ -526,7 +526,7 @@ export async function executePhase2Acting(
         try {
             const actingResult = await executeAiTextStep({
                 userId: session.user.id,
-                model: novelPromotionData.analysisModel,
+                model: projectData.analysisModel,
                 messages: [{ role: 'user', content: actingPrompt }],
                 reasoning: true,
                 projectId,
@@ -557,7 +557,7 @@ export async function executePhase2Acting(
                     演技指导数量: actingDirections.length,
                     演技指导: actingDirections
                 },
-                model: novelPromotionData.analysisModel
+                model: projectData.analysisModel
             })
 
             // 成功，跳出循环
@@ -577,7 +577,7 @@ export async function executePhase3(
     clip: ClipAsset,
     planPanels: StoryboardPanel[],
     photographyRules: PhotographyRule[],
-    novelPromotionData: NovelPromotionAssetData,
+    projectData: ProjectAssetData,
     session: SessionAsset,
     projectId: string,
     projectName: string,
@@ -596,16 +596,16 @@ export async function executePhase3(
     const clipLocation = clip.location || null
     const clipProps = parseClipProps(clip.props)
 
-    const filteredFullDescription = getFilteredFullDescription(novelPromotionData.characters, clipCharacters)
+    const filteredFullDescription = getFilteredFullDescription(projectData.characters, clipCharacters)
     const filteredLocationsDescription = getFilteredLocationsDescription(
-        novelPromotionData.locations,
+        projectData.locations,
         clipLocation,
         locale,
     )
     const filteredPropsDescription = compileAssetPromptFragments(buildPromptAssetContext({
         characters: [],
         locations: [],
-        props: novelPromotionData.props || [],
+        props: projectData.props || [],
         clipCharacters: [],
         clipLocation: null,
         clipProps,
@@ -622,7 +622,7 @@ export async function executePhase3(
     logAIAnalysis(session.user.id, session.user.name, projectId, projectName, {
         action: 'STORYBOARD_PHASE3_PROMPT',
         input: { 片段标识: clipId, 完整提示词: detailPrompt },
-        model: novelPromotionData.analysisModel
+        model: projectData.analysisModel
     })
 
     void photographyRules
@@ -633,7 +633,7 @@ export async function executePhase3(
         try {
             const detailResult = await executeAiTextStep({
                 userId: session.user.id,
-                model: novelPromotionData.analysisModel,
+                model: projectData.analysisModel,
                 messages: [{ role: 'user', content: detailPrompt }],
                 reasoning: true,
                 projectId,
@@ -661,7 +661,7 @@ export async function executePhase3(
                     总分镜数: finalPanels.length,
                     第三阶段完整结果_过滤前: finalPanels
                 },
-                model: novelPromotionData.analysisModel
+                model: projectData.analysisModel
             })
 
             // 过滤掉"无"的空分镜
@@ -686,7 +686,7 @@ export async function executePhase3(
                     过滤后有效数: finalPanels.length,
                     最终有效分镜: finalPanels
                 },
-                model: novelPromotionData.analysisModel
+                model: projectData.analysisModel
             })
 
             // 成功，跳出循环

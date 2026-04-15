@@ -26,7 +26,7 @@ describe('task service dedupe + orphan recovery', () => {
         userId: user.id,
         projectId: project.id,
         type: TASK_TYPE.VOICE_LINE,
-        targetType: 'NovelPromotionVoiceLine',
+        targetType: 'ProjectVoiceLine',
         targetId: 'line-1',
         status: TASK_STATUS.QUEUED,
         payload: {
@@ -43,7 +43,7 @@ describe('task service dedupe + orphan recovery', () => {
       userId: user.id,
       projectId: project.id,
       type: TASK_TYPE.VOICE_LINE,
-      targetType: 'NovelPromotionVoiceLine',
+      targetType: 'ProjectVoiceLine',
       targetId: 'line-1',
       payload: {
         episodeId: 'episode-1',
@@ -66,7 +66,7 @@ describe('task service dedupe + orphan recovery', () => {
         userId: user.id,
         projectId: project.id,
         type: TASK_TYPE.VIDEO_PANEL,
-        targetType: 'NovelPromotionPanel',
+        targetType: 'ProjectPanel',
         targetId: 'panel-1',
         status: TASK_STATUS.QUEUED,
         payload: {
@@ -84,7 +84,7 @@ describe('task service dedupe + orphan recovery', () => {
       userId: user.id,
       projectId: project.id,
       type: TASK_TYPE.VIDEO_PANEL,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       payload: {
         storyboardId: 'storyboard-1',
@@ -113,7 +113,7 @@ describe('task service dedupe + orphan recovery', () => {
         userId: user.id,
         projectId: project.id,
         type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: 'episode-1',
         status: TASK_STATUS.QUEUED,
         payload: {
@@ -128,7 +128,7 @@ describe('task service dedupe + orphan recovery', () => {
       userId: user.id,
       projectId: project.id,
       type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload: {
         episodeId: 'episode-1',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { lockModalPageScroll } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/storyboard/modal-scroll-lock'
+import { lockModalPageScroll } from '@/features/project-workspace/components/storyboard/modal-scroll-lock'
 
 describe('modal scroll lock', () => {
   it('locks page scroll while modal is open and restores previous styles on cleanup', () => {

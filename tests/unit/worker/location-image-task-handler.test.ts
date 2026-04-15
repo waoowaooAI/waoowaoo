@@ -13,7 +13,7 @@ const prismaMock = vi.hoisted(() => ({
     findUnique: vi.fn(),
     update: vi.fn(async () => ({})),
   },
-  novelPromotionLocation: {
+  projectLocation: {
     findUnique: vi.fn(),
     findMany: vi.fn(async () => []),
   },
@@ -69,7 +69,7 @@ describe('worker location-image-task-handler behavior', () => {
       location: { name: 'Old Town' },
     })
 
-    prismaMock.novelPromotionLocation.findUnique.mockResolvedValue({
+    prismaMock.projectLocation.findUnique.mockResolvedValue({
       id: 'location-1',
       name: 'Old Town',
       images: [
@@ -153,7 +153,7 @@ describe('worker location-image-task-handler behavior', () => {
 
   it('honors requested count when location already has more slots', async () => {
     prismaMock.locationImage.findUnique.mockResolvedValueOnce(null)
-    prismaMock.novelPromotionLocation.findUnique.mockResolvedValueOnce({
+    prismaMock.projectLocation.findUnique.mockResolvedValueOnce({
       id: 'location-1',
       name: 'Old Town',
       images: [

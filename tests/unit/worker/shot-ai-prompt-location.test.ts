@@ -39,7 +39,7 @@ function buildJob(payload: Record<string, unknown>): Job<TaskJobData> {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionLocation',
+      targetType: 'ProjectLocation',
       targetId: 'location-1',
       payload,
       userId: 'user-1',

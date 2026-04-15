@@ -3,7 +3,7 @@ import type {
   RunStreamEvent,
   RunStreamLane,
   RunStreamStatus,
-} from '@/lib/novel-promotion/run-stream/types'
+} from '@/lib/project-workflow/run-stream/types'
 import type {
   RunState,
   RunStepState,

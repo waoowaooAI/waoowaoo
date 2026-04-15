@@ -60,29 +60,29 @@ export function useSSE({ projectId, episodeId, enabled = true, onEvent }: UseSSE
         return
       }
 
-      if (targetType === 'CharacterAppearance' || targetType === 'NovelPromotionCharacter') {
+      if (targetType === 'CharacterAppearance' || targetType === 'ProjectCharacter') {
         queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.characters(projectId) })
         queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) })
         return
       }
-      if (targetType === 'LocationImage' || targetType === 'NovelPromotionLocation') {
+      if (targetType === 'LocationImage' || targetType === 'ProjectLocation') {
         queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.locations(projectId) })
         queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) })
         return
       }
-      if (targetType === 'NovelPromotionVoiceLine') {
+      if (targetType === 'ProjectVoiceLine') {
         invalidateEpisodeScoped(resolvedEpisodeId)
         return
       }
       if (
-        targetType === 'NovelPromotionPanel' ||
-        targetType === 'NovelPromotionStoryboard' ||
-        targetType === 'NovelPromotionShot'
+        targetType === 'ProjectPanel' ||
+        targetType === 'ProjectStoryboard' ||
+        targetType === 'ProjectShot'
       ) {
         invalidateEpisodeScoped(resolvedEpisodeId)
         return
       }
-      if (targetType === 'NovelPromotionEpisode') {
+      if (targetType === 'ProjectEpisode') {
         invalidateEpisodeScoped(resolvedEpisodeId)
         queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
         return

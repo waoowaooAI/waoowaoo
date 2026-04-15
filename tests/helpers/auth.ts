@@ -82,7 +82,7 @@ export function installAuthMocks() {
       return {
         session: state.session,
         project: { id: projectId, userId: state.session.user.id, name: 'project' },
-        novelData: { id: 'novel-data-id' },
+        projectData: { id: 'project-data-id' },
       }
     },
     requireProjectAuthLight: async (projectId: string) => {

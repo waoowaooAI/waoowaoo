@@ -45,7 +45,7 @@ describe('api contract - runs list route', () => {
     const { GET } = await import('@/app/api/runs/route')
 
     const req = buildMockRequest({
-      path: '/api/runs?projectId=project-1&workflowType=story_to_script_run&targetType=NovelPromotionEpisode&targetId=episode-1&episodeId=episode-1&status=queued&status=running&status=canceling&limit=20',
+      path: '/api/runs?projectId=project-1&workflowType=story_to_script_run&targetType=ProjectEpisode&targetId=episode-1&episodeId=episode-1&status=queued&status=running&status=canceling&limit=20',
       method: 'GET',
     })
     const res = await GET(req, emptyRouteContext)
@@ -55,7 +55,7 @@ describe('api contract - runs list route', () => {
       userId: 'user-1',
       projectId: 'project-1',
       workflowType: 'story_to_script_run',
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       episodeId: 'episode-1',
       statuses: ['queued', 'running', 'canceling'],
@@ -69,7 +69,7 @@ describe('api contract - runs list route', () => {
     const { GET } = await import('@/app/api/runs/route')
 
     const req = buildMockRequest({
-      path: '/api/runs?projectId=project-1&workflowType=story_to_script_run&targetType=NovelPromotionEpisode&targetId=episode-1&status=completed&limit=20',
+      path: '/api/runs?projectId=project-1&workflowType=story_to_script_run&targetType=ProjectEpisode&targetId=episode-1&status=completed&limit=20',
       method: 'GET',
     })
     const res = await GET(req, emptyRouteContext)

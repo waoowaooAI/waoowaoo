@@ -15,9 +15,9 @@ export async function resolveAnalysisModel(projectId: string, userId: string): P
   id: string
   analysisModel: string
 }> {
-  const [novelData, userPreference] = await Promise.all([
-    prisma.novelPromotionProject.findUnique({
-      where: { projectId },
+  const [project, userPreference] = await Promise.all([
+    prisma.project.findUnique({
+      where: { id: projectId },
       select: { id: true, analysisModel: true },
     }),
     prisma.userPreference.findUnique({
@@ -25,22 +25,22 @@ export async function resolveAnalysisModel(projectId: string, userId: string): P
       select: { analysisModel: true },
     }),
   ])
-  if (!novelData) throw new Error('Novel promotion project not found')
+  if (!project) throw new Error('Project not found')
 
   // 优先读项目配置，fallback 到用户全局设置
   const analysisModel =
-    normalizeModelKey(novelData.analysisModel) ??
+    normalizeModelKey(project.analysisModel) ??
     normalizeModelKey(userPreference?.analysisModel)
   if (!analysisModel) throw new Error('请先在项目设置中配置分析模型')
 
-  return { id: novelData.id, analysisModel }
+  return { id: project.id, analysisModel }
 }
 
-export async function requireProjectLocation(locationId: string, projectInternalId: string) {
-  const location = await prisma.novelPromotionLocation.findFirst({
+export async function requireProjectLocation(locationId: string, projectId: string) {
+  const location = await prisma.projectLocation.findFirst({
     where: {
       id: locationId,
-      novelPromotionProjectId: projectInternalId,
+      projectId,
     },
     select: {
       id: true,
@@ -76,7 +76,7 @@ export async function persistLocationDescription(params: {
     },
   })
 
-  return await prisma.novelPromotionLocation.findUnique({
+  return await prisma.projectLocation.findUnique({
     where: { id: params.locationId },
     include: { images: { orderBy: { imageIndex: 'asc' } } },
   })

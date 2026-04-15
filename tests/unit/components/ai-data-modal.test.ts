@@ -2,7 +2,7 @@ import * as React from 'react'
 import { createElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import AIDataModal from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/storyboard/AIDataModal'
+import AIDataModal from '@/features/project-workspace/components/storyboard/AIDataModal'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,

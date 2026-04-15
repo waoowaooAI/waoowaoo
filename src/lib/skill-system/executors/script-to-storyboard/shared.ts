@@ -1,1 +1,1 @@
-export * from '@skills/novel-promotion/_shared/script-to-storyboard-runtime'
+export * from '@skills/project-workflow/_shared/script-to-storyboard-runtime'

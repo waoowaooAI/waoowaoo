@@ -17,7 +17,7 @@ export async function seedMinimalDomainState() {
   const novelProject = await createFixtureNovelProject(project.id)
   const episode = await createFixtureEpisode(novelProject.id)
 
-  const clip = await prisma.novelPromotionClip.create({
+  const clip = await prisma.projectClip.create({
     data: {
       episodeId: episode.id,
       summary: 'seed clip',
@@ -28,7 +28,7 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const storyboard = await prisma.novelPromotionStoryboard.create({
+  const storyboard = await prisma.projectStoryboard.create({
     data: {
       episodeId: episode.id,
       clipId: clip.id,
@@ -36,7 +36,7 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const panel = await prisma.novelPromotionPanel.create({
+  const panel = await prisma.projectPanel.create({
     data: {
       storyboardId: storyboard.id,
       panelIndex: 0,
@@ -51,9 +51,9 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const character = await prisma.novelPromotionCharacter.create({
+  const character = await prisma.projectCharacter.create({
     data: {
-      novelPromotionProjectId: novelProject.id,
+      projectId: project.id,
       name: 'Narrator',
     },
   })
@@ -70,9 +70,9 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const location = await prisma.novelPromotionLocation.create({
+  const location = await prisma.projectLocation.create({
     data: {
-      novelPromotionProjectId: novelProject.id,
+      projectId: project.id,
       name: 'Office',
       summary: 'Office summary',
     },
@@ -88,7 +88,7 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const voiceLine = await prisma.novelPromotionVoiceLine.create({
+  const voiceLine = await prisma.projectVoiceLine.create({
     data: {
       episodeId: episode.id,
       lineIndex: 1,
@@ -100,7 +100,7 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  await prisma.novelPromotionEpisode.update({
+  await prisma.projectEpisode.update({
     where: { id: episode.id },
     data: {
       speakerVoices: JSON.stringify({
@@ -113,7 +113,7 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const secondaryPanel = await prisma.novelPromotionPanel.create({
+  const secondaryPanel = await prisma.projectPanel.create({
     data: {
       storyboardId: storyboard.id,
       panelIndex: 1,
@@ -127,15 +127,15 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  await prisma.novelPromotionStoryboard.update({
+  await prisma.projectStoryboard.update({
     where: { id: storyboard.id },
     data: { panelCount: 2 },
   })
 
-  const foreignStoryboard = await prisma.novelPromotionStoryboard.create({
+  const foreignStoryboard = await prisma.projectStoryboard.create({
     data: {
       episodeId: episode.id,
-      clipId: (await prisma.novelPromotionClip.create({
+      clipId: (await prisma.projectClip.create({
         data: {
           episodeId: episode.id,
           summary: 'foreign clip',
@@ -149,7 +149,7 @@ export async function seedMinimalDomainState() {
     },
   })
 
-  const foreignPanel = await prisma.novelPromotionPanel.create({
+  const foreignPanel = await prisma.projectPanel.create({
     data: {
       id: `panel-foreign-${nextSuffix()}`,
       storyboardId: foreignStoryboard.id,

@@ -24,7 +24,7 @@ import {
   buildPromptAssetContext,
   compileAssetPromptFragments,
 } from '@/lib/assets/services/asset-prompt-context'
-import { composeSkillPrompt, type SkillLocale } from '@skills/novel-promotion/_shared/prompt-runtime'
+import { composeSkillPrompt, type SkillLocale } from '@skills/project-workflow/_shared/prompt-runtime'
 
 type StoryboardClipInput = {
   id: string
@@ -338,7 +338,7 @@ export async function runScriptToStoryboardAtomicRetry(params: {
   clip: StoryboardClipInput
   clipIndex: number
   totalClipCount: number
-  novelPromotionData: {
+  projectData: {
     characters: CharacterAsset[]
     locations: LocationAsset[]
     props?: PropAsset[]
@@ -348,16 +348,16 @@ export async function runScriptToStoryboardAtomicRetry(params: {
   const clipCharacters = parseClipCharacters(params.clip.characters)
   const clipLocation = params.clip.location || null
   const clipProps = parseClipProps(params.clip.props ?? null)
-  const filteredFullDescription = getFilteredFullDescription(params.novelPromotionData.characters || [], clipCharacters)
+  const filteredFullDescription = getFilteredFullDescription(params.projectData.characters || [], clipCharacters)
   const filteredLocationsDescription = getFilteredLocationsDescription(
-    params.novelPromotionData.locations || [],
+    params.projectData.locations || [],
     clipLocation,
     params.locale ?? 'zh',
   )
   const filteredPropsDescription = compileAssetPromptFragments(buildPromptAssetContext({
     characters: [],
     locations: [],
-    props: params.novelPromotionData.props || [],
+    props: params.projectData.props || [],
     clipCharacters: [],
     clipLocation: null,
     clipProps,
@@ -404,10 +404,10 @@ export async function runScriptToStoryboardAtomicRetry(params: {
     if (!clipContent) {
       throw new Error(`Clip ${formatClipId(params.clip)} content is empty`)
     }
-    const filteredAppearanceList = getFilteredAppearanceList(params.novelPromotionData.characters || [], clipCharacters)
-    const charactersLibName = (params.novelPromotionData.characters || []).map((item) => item.name).join(', ') || '无'
-    const locationsLibName = (params.novelPromotionData.locations || []).map((item) => item.name).join(', ') || '无'
-    const charactersIntroduction = buildCharactersIntroduction(params.novelPromotionData.characters || [])
+    const filteredAppearanceList = getFilteredAppearanceList(params.projectData.characters || [], clipCharacters)
+    const charactersLibName = (params.projectData.characters || []).map((item) => item.name).join(', ') || '无'
+    const locationsLibName = (params.projectData.locations || []).map((item) => item.name).join(', ') || '无'
+    const charactersIntroduction = buildCharactersIntroduction(params.projectData.characters || [])
     const clipJson = JSON.stringify(
       {
         id: params.clip.id,

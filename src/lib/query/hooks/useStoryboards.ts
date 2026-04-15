@@ -62,17 +62,17 @@ interface BatchVideoGenerationParams {
 /**
  * 获取分镜数据
  */
-export function useStoryboards(episodeId: string | null) {
+export function useStoryboards(projectId: string | null, episodeId: string | null) {
     return useQuery({
         queryKey: queryKeys.storyboards.all(episodeId || ''),
         queryFn: async () => {
-            if (!episodeId) throw new Error('Episode ID is required')
-            const res = await apiFetch(`/api/novel-promotion/episodes/${episodeId}/storyboards`)
+            if (!projectId || !episodeId) throw new Error('Project ID and Episode ID are required')
+            const res = await apiFetch(`/api/projects/${projectId}/storyboards?episodeId=${episodeId}`)
             if (!res.ok) throw new Error('Failed to fetch storyboards')
             const data = await res.json()
             return data as StoryboardData
         },
-        enabled: !!episodeId,
+        enabled: !!projectId && !!episodeId,
     })
 }
 
@@ -87,7 +87,7 @@ export function useRegeneratePanelImage(projectId: string | null, episodeId: str
     return useMutation({
         mutationFn: async ({ panelId }: { panelId: string }) => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
+            const res = await apiFetch(`/api/projects/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ panelId }),
@@ -123,7 +123,7 @@ export function useModifyPanelImage(projectId: string | null, episodeId: string 
             extraImageUrls?: string[]
         }) => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/modify-panel-image`, {
+            const res = await apiFetch(`/api/projects/${projectId}/modify-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(params),
@@ -195,7 +195,7 @@ export function useGenerateVideo(projectId: string | null, episodeId: string | n
                 requestBody.generationOptions = params.generationOptions
             }
 
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/generate-video`, {
+            const res = await apiFetch(`/api/projects/${projectId}/generate-video`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
@@ -210,7 +210,7 @@ export function useGenerateVideo(projectId: string | null, episodeId: string | n
             if (!panelId) return
             upsertTaskTargetOverlay(queryClient, {
                 projectId,
-                targetType: 'NovelPromotionPanel',
+                targetType: 'ProjectPanel',
                 targetId: panelId,
                 intent: 'generate',
             })
@@ -219,7 +219,7 @@ export function useGenerateVideo(projectId: string | null, episodeId: string | n
             if (!projectId || !panelId) return
             clearTaskTargetOverlay(queryClient, {
                 projectId,
-                targetType: 'NovelPromotionPanel',
+                targetType: 'ProjectPanel',
                 targetId: panelId,
             })
         },
@@ -260,7 +260,7 @@ export function useBatchGenerateVideos(projectId: string | null, episodeId: stri
                 requestBody.generationOptions = params.generationOptions
             }
 
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/generate-video`, {
+            const res = await apiFetch(`/api/projects/${projectId}/generate-video`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
@@ -285,15 +285,16 @@ export function useBatchGenerateVideos(projectId: string | null, episodeId: stri
 /**
  * 选择分镜候选图
  */
-export function useSelectPanelCandidate(episodeId: string | null) {
+export function useSelectPanelCandidate(projectId: string | null, episodeId: string | null) {
     const queryClient = useQueryClient()
 
     return useMutation({
         mutationFn: async ({ panelId, candidateId }: { panelId: string; candidateId: string }) => {
-            const res = await apiFetch(`/api/novel-promotion/panels/${panelId}/select-candidate`, {
+            if (!projectId) throw new Error('Project ID is required')
+            const res = await apiFetch(`/api/projects/${projectId}/panel/select-candidate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ candidateId }),
+                body: JSON.stringify({ panelId, candidateId }),
             })
             if (!res.ok) {
                 const error = await res.json()
@@ -335,7 +336,7 @@ export function useLipSync(projectId: string | null, episodeId: string | null) {
             voiceLineId: string
             panelId?: string
         }) => {
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/lip-sync`, {
+            const res = await apiFetch(`/api/projects/${projectId}/lip-sync`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -358,7 +359,7 @@ export function useLipSync(projectId: string | null, episodeId: string | null) {
             if (!panelId) return
             upsertTaskTargetOverlay(queryClient, {
                 projectId,
-                targetType: 'NovelPromotionPanel',
+                targetType: 'ProjectPanel',
                 targetId: panelId,
                 intent: 'generate',
             })
@@ -367,7 +368,7 @@ export function useLipSync(projectId: string | null, episodeId: string | null) {
             if (!projectId || !panelId) return
             clearTaskTargetOverlay(queryClient, {
                 projectId,
-                targetType: 'NovelPromotionPanel',
+                targetType: 'ProjectPanel',
                 targetId: panelId,
             })
         },

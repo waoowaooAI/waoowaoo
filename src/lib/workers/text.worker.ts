@@ -7,8 +7,8 @@ import type { LLMStreamKind } from '@/lib/llm-observe/types'
 import { QUEUE_NAME } from '@/lib/task/queues'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
-import { resolveInsertPanelUserInput } from '@/lib/novel-promotion/insert-panel'
-import { buildInsertPanelLocationsDescription } from '@/lib/novel-promotion/insert-panel-prompt-context'
+import { resolveInsertPanelUserInput } from '@/lib/project-workflow/insert-panel'
+import { buildInsertPanelLocationsDescription } from '@/lib/project-workflow/insert-panel-prompt-context'
 import {
   executePhase1,
   executePhase2,
@@ -250,7 +250,7 @@ async function runStoryboardPhasesForClip(params: {
     props?: string | null
     screenplay: string | null
   }
-  novelPromotionData: {
+  projectData: {
     analysisModel: string
     characters: CharacterAsset[]
     locations: LocationAsset[]
@@ -264,7 +264,7 @@ async function runStoryboardPhasesForClip(params: {
   const session = { user: { id: params.userId, name: 'Worker' } }
   const phase1 = await executePhase1(
     params.clip,
-    params.novelPromotionData,
+    params.projectData,
     session,
     params.projectId,
     params.projectName,
@@ -274,7 +274,7 @@ async function runStoryboardPhasesForClip(params: {
     executePhase2(
       params.clip,
       phase1.planPanels || [],
-      params.novelPromotionData,
+      params.projectData,
       session,
       params.projectId,
       params.projectName,
@@ -283,7 +283,7 @@ async function runStoryboardPhasesForClip(params: {
     executePhase2Acting(
       params.clip,
       phase1.planPanels || [],
-      params.novelPromotionData,
+      params.projectData,
       session,
       params.projectId,
       params.projectName,
@@ -293,7 +293,7 @@ async function runStoryboardPhasesForClip(params: {
       params.clip,
       phase1.planPanels || [],
       [],
-      params.novelPromotionData,
+      params.projectData,
       session,
       params.projectId,
       params.projectName,
@@ -336,7 +336,7 @@ async function handleRegenerateStoryboardTextTask(job: Job<TaskJobData>) {
 
   if (!storyboardId) throw new Error('regenerate_storyboard_text requires storyboardId')
 
-  const storyboard = await prisma.novelPromotionStoryboard.findUnique({
+  const storyboard = await prisma.projectStoryboard.findUnique({
     where: { id: storyboardId },
     include: { clip: true, episode: true },
   })
@@ -346,20 +346,20 @@ async function handleRegenerateStoryboardTextTask(job: Job<TaskJobData>) {
   const project = await prisma.project.findUnique({ where: { id: projectId } })
   if (!project) throw new Error('Project not found')
 
-  const novelPromotionData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: { include: { appearances: { orderBy: { appearanceIndex: 'asc' } } } },
       locations: { include: { images: { orderBy: { imageIndex: 'asc' } } } },
     },
   })
-  if (!novelPromotionData) throw new Error('Novel promotion data not found')
-  if (!novelPromotionData.analysisModel) throw new Error('Analysis model not configured')
-  const normalizedNovelPromotionData = {
-    ...novelPromotionData,
-    analysisModel: novelPromotionData.analysisModel,
-    locations: novelPromotionData.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop'),
-    props: novelPromotionData.locations
+  if (!projectWorkflow) throw new Error('Project not found')
+  if (!projectWorkflow.analysisModel) throw new Error('Analysis model not configured')
+  const projectData = {
+    ...projectWorkflow,
+    analysisModel: projectWorkflow.analysisModel,
+    locations: projectWorkflow.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop'),
+    props: projectWorkflow.locations
       .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
       .map((item) => ({ name: item.name, summary: item.summary })),
   }
@@ -376,7 +376,7 @@ async function handleRegenerateStoryboardTextTask(job: Job<TaskJobData>) {
           ...storyboard.clip,
           props: readNullableText(storyboard.clip as unknown as Record<string, unknown>, 'props'),
         },
-        novelPromotionData: normalizedNovelPromotionData,
+        projectData,
         projectId,
         projectName: project.name,
         userId,
@@ -389,11 +389,11 @@ async function handleRegenerateStoryboardTextTask(job: Job<TaskJobData>) {
 
   await assertTaskActive(job, 'regenerate_storyboard_transaction')
   await prisma.$transaction(async (tx) => {
-    const panelModel = tx.novelPromotionPanel as unknown as {
+    const panelModel = tx.projectPanel as unknown as {
       create: (args: { data: Record<string, unknown> }) => Promise<unknown>
     }
-    await tx.novelPromotionPanel.deleteMany({ where: { storyboardId } })
-    await tx.novelPromotionStoryboard.update({
+    await tx.projectPanel.deleteMany({ where: { storyboardId } })
+    await tx.projectStoryboard.update({
       where: { id: storyboardId },
       data: { panelCount: finalPanels.length, updatedAt: new Date() },
     })
@@ -443,7 +443,7 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
     throw new Error('insert_panel requires storyboardId/insertAfterPanelId')
   }
 
-  const storyboard = await prisma.novelPromotionStoryboard.findUnique({
+  const storyboard = await prisma.projectStoryboard.findUnique({
     where: { id: storyboardId },
     include: {
       clip: true,
@@ -460,14 +460,14 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
   const analysisModel = projectModels.analysisModel
   if (!analysisModel) throw new Error('Analysis model not configured')
 
-  const projectData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId: job.data.projectId },
+  const projectData = await prisma.project.findUnique({
+    where: { id: job.data.projectId },
     include: {
       characters: { include: { appearances: { orderBy: { appearanceIndex: 'asc' } } } },
       locations: { include: { images: { orderBy: { imageIndex: 'asc' } } } },
     },
   })
-  if (!projectData) throw new Error('Novel promotion data not found')
+  if (!projectData) throw new Error('Project not found')
   const projectLocations = (projectData.locations || []).filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop')
   const projectProps = (projectData.locations || []).filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
 
@@ -594,25 +594,25 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
 
   await assertTaskActive(job, 'insert_panel_transaction')
   const newPanel = await prisma.$transaction(async (tx) => {
-    const panelModel = tx.novelPromotionPanel as unknown as {
+    const panelModel = tx.projectPanel as unknown as {
       create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; panelIndex: number }>
     }
     // Two-phase reindexing to avoid unique constraint collision on (storyboardId, panelIndex)
     // Phase A: shift affected panels to negative indices to clear the positive namespace
-    const affectedPanels = await tx.novelPromotionPanel.findMany({
+    const affectedPanels = await tx.projectPanel.findMany({
       where: { storyboardId, panelIndex: { gt: prevPanel.panelIndex } },
       select: { id: true, panelIndex: true },
       orderBy: { panelIndex: 'asc' },
     })
     for (const p of affectedPanels) {
-      await tx.novelPromotionPanel.update({
+      await tx.projectPanel.update({
         where: { id: p.id },
         data: { panelIndex: -(p.panelIndex + 1) },
       })
     }
     // Phase B: set affected panels to their final positive indices
     for (const p of affectedPanels) {
-      await tx.novelPromotionPanel.update({
+      await tx.projectPanel.update({
         where: { id: p.id },
         data: { panelIndex: p.panelIndex + 1 },
       })
@@ -635,7 +635,7 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
       },
     })
 
-    await tx.novelPromotionStoryboard.update({
+    await tx.projectStoryboard.update({
       where: { id: storyboardId },
       data: { panelCount: { increment: 1 }, updatedAt: new Date() },
     })

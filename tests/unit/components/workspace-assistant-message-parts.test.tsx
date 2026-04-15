@@ -8,7 +8,7 @@ import {
   WorkflowPlanDataCard,
   WorkflowStatusCard,
   WorkspaceAssistantToolCallCard,
-} from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/workspace-assistant/WorkspaceAssistantRenderers'
+} from '@/features/project-workspace/components/workspace-assistant/WorkspaceAssistantRenderers'
 import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
 
 function buildRunStreamView(): RunStreamView {

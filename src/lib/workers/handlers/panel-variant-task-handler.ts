@@ -209,10 +209,10 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
   }
 
   // Panel 已在 API route 中创建，这里只需获取它
-  const newPanel = await prisma.novelPromotionPanel.findUnique({ where: { id: newPanelId } })
+  const newPanel = await prisma.projectPanel.findUnique({ where: { id: newPanelId } })
   if (!newPanel) throw new Error('New panel not found (should have been created by API route)')
 
-  const sourcePanel = await prisma.novelPromotionPanel.findUnique({ where: { id: sourcePanelId } })
+  const sourcePanel = await prisma.projectPanel.findUnique({ where: { id: sourcePanelId } })
   if (!sourcePanel) throw new Error('Source panel not found')
 
   const projectData = await resolveNovelData(job.data.projectId)
@@ -281,7 +281,7 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
   const cosKey = await uploadImageSourceToCos(source, 'panel-variant', newPanel.id)
 
   await assertTaskActive(job, 'persist_panel_variant')
-  await prisma.novelPromotionPanel.update({
+  await prisma.projectPanel.update({
     where: { id: newPanel.id },
     data: { imageUrl: cosKey },
   })

@@ -42,7 +42,7 @@ export function useDesignProjectVoice(projectId: string) {
             language: 'zh'
         }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/voice-design`,
+                `/api/projects/${projectId}/voice-design`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -74,17 +74,17 @@ export function useFetchProjectVoiceStageData(projectId: string) {
         }> => {
             const [linesData, voicesData, speakersData] = await Promise.all([
                 requestJsonWithError<{ voiceLines?: ProjectVoiceLine[] }>(
-                    `/api/novel-promotion/${projectId}/voice-lines?episodeId=${episodeId}`,
+                    `/api/projects/${projectId}/voice-lines?episodeId=${episodeId}`,
                     { method: 'GET' },
                     '获取台词失败',
                 ),
                 requestJsonWithError<{ speakerVoices?: Record<string, SpeakerVoiceEntry> }>(
-                    `/api/novel-promotion/${projectId}/speaker-voice?episodeId=${episodeId}`,
+                    `/api/projects/${projectId}/speaker-voice?episodeId=${episodeId}`,
                     { method: 'GET' },
                     '获取角色音色失败',
                 ),
                 requestJsonWithError<{ speakers?: string[] }>(
-                    `/api/novel-promotion/${projectId}/voice-lines?speakersOnly=1`,
+                    `/api/projects/${projectId}/voice-lines?speakersOnly=1`,
                     { method: 'GET' },
                     '获取说话人失败',
                 ),
@@ -107,7 +107,7 @@ export function useAnalyzeProjectVoice(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/voice-analyze`,
+                `/api/projects/${projectId}/voice-analyze`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -136,7 +136,7 @@ export function useGenerateProjectVoice(projectId: string) {
             all?: boolean
         }) =>
             await requestJsonWithError<GenerateProjectVoiceResponse>(
-                `/api/novel-promotion/${projectId}/voice-generate`,
+                `/api/projects/${projectId}/voice-generate`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -160,7 +160,7 @@ export function useCreateProjectVoiceLine(projectId: string) {
             matchedPanelId?: string | null
         }) =>
             await requestJsonWithError<{ voiceLine: ProjectVoiceLine }>(
-                `/api/novel-promotion/${projectId}/voice-lines`,
+                `/api/projects/${projectId}/voice-lines`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -179,7 +179,7 @@ export function useUpdateProjectVoiceLine(projectId: string) {
     return useMutation({
         mutationFn: async (payload: Record<string, unknown>) =>
             await requestJsonWithError<{ voiceLine: ProjectVoiceLine }>(
-                `/api/novel-promotion/${projectId}/voice-lines`,
+                `/api/projects/${projectId}/voice-lines`,
                 {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -198,7 +198,7 @@ export function useDeleteProjectVoiceLine(projectId: string) {
     return useMutation({
         mutationFn: async ({ lineId }: { lineId: string }) => {
             await requestVoidWithError(
-                `/api/novel-promotion/${projectId}/voice-lines?lineId=${lineId}`,
+                `/api/projects/${projectId}/voice-lines?lineId=${lineId}`,
                 { method: 'DELETE' },
                 'delete failed',
             )
@@ -215,7 +215,7 @@ export function useDownloadProjectVoices(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) =>
             await requestBlobWithError(
-                `/api/novel-promotion/${projectId}/download-voices?episodeId=${episodeId}`,
+                `/api/projects/${projectId}/download-voices?episodeId=${episodeId}`,
                 { method: 'GET' },
                 'download failed',
             ),
@@ -233,7 +233,7 @@ export function useUpdateSpeakerVoice(projectId: string) {
             speaker: string
         } & SpeakerVoicePatch) =>
             await requestJsonWithError<{ success: boolean }>(
-                `/api/novel-promotion/${projectId}/speaker-voice`,
+                `/api/projects/${projectId}/speaker-voice`,
                 {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },

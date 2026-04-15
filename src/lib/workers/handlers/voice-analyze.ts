@@ -42,17 +42,15 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
     throw new Error('Project not found')
   }
 
-  const novelPromotionData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
     },
   })
-  if (!novelPromotionData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
 
-  const episode = await prisma.novelPromotionEpisode.findUnique({
+  const episode = await prisma.projectEpisode.findUnique({
     where: { id: episodeId },
     include: {
       storyboards: {
@@ -69,7 +67,7 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
   if (!episode) {
     throw new Error('Episode not found')
   }
-  if (episode.novelPromotionProjectId !== novelPromotionData.id) {
+  if (episode.projectId !== projectId) {
     throw new Error('Episode does not belong to this project')
   }
 
@@ -81,13 +79,13 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
   const analysisModel = await resolveAnalysisModel({
     userId: job.data.userId,
     inputModel: payload.model,
-    projectAnalysisModel: novelPromotionData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
 
-  const charactersLibName = novelPromotionData.characters.length > 0
-    ? novelPromotionData.characters.map((c) => c.name).join('、')
+  const charactersLibName = projectWorkflow.characters.length > 0
+    ? projectWorkflow.characters.map((c) => c.name).join('、')
     : '无'
-  const charactersIntroduction = buildCharactersIntroduction(novelPromotionData.characters)
+  const charactersIntroduction = buildCharactersIntroduction(projectWorkflow.characters)
   const storyboardJson = buildStoryboardJson(episode.storyboards || [])
   const promptTemplate = buildPrompt({
     promptId: PROMPT_IDS.NP_VOICE_ANALYSIS,
@@ -237,7 +235,7 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
   await assertTaskActive(job, 'voice_analyze_persist')
 
   const createdVoiceLines = await prisma.$transaction(async (tx) => {
-    const voiceLineModel = tx.novelPromotionVoiceLine as unknown as {
+    const voiceLineModel = tx.projectVoiceLine as unknown as {
       upsert?: (args: unknown) => Promise<{
         id: string
         speaker: string
@@ -298,7 +296,7 @@ export async function handleVoiceAnalyzeTask(job: Job<TaskJobData>) {
               data: upsertArgs.create,
               select: upsertArgs.select,
             })
-            : (() => { throw new Error('novelPromotionVoiceLine.upsert unavailable') })()
+            : (() => { throw new Error('projectVoiceLine.upsert unavailable') })()
         )
       created.push(voiceLine)
     }

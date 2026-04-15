@@ -41,17 +41,17 @@ export interface MatchedVoiceLinesData {
 /**
  * 获取语音数据
  */
-export function useVoiceLines(episodeId: string | null) {
+export function useVoiceLines(projectId: string | null, episodeId: string | null) {
     return useQuery({
         queryKey: queryKeys.voiceLines.all(episodeId || ''),
         queryFn: async () => {
-            if (!episodeId) throw new Error('Episode ID is required')
-            const res = await apiFetch(`/api/novel-promotion/episodes/${episodeId}/voice-lines`)
+            if (!projectId || !episodeId) throw new Error('Project ID and Episode ID are required')
+            const res = await apiFetch(`/api/projects/${projectId}/voice-lines?episodeId=${episodeId}`)
             if (!res.ok) throw new Error('Failed to fetch voice lines')
             const data = await res.json()
             return data as VoiceLinesData
         },
-        enabled: !!episodeId,
+        enabled: !!projectId && !!episodeId,
     })
 }
 
@@ -63,7 +63,7 @@ export function useMatchedVoiceLines(projectId: string | null, episodeId: string
         queryKey: queryKeys.voiceLines.matched(projectId || '', episodeId || ''),
         queryFn: async () => {
             if (!projectId || !episodeId) throw new Error('Project ID and Episode ID are required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/voice-lines?episodeId=${episodeId}`)
+            const res = await apiFetch(`/api/projects/${projectId}/voice-lines?episodeId=${episodeId}`)
             if (!res.ok) throw new Error('Failed to fetch matched voice lines')
             const data = await res.json()
             return data as MatchedVoiceLinesData
@@ -83,10 +83,10 @@ export function useGenerateVoice(projectId: string | null, episodeId: string | n
     return useMutation({
         mutationFn: async ({ lineId }: { lineId: string }) => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/generate-voice`, {
+            const res = await apiFetch(`/api/projects/${projectId}/voice-generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ lineId }),
+                body: JSON.stringify({ episodeId, lineId }),
             })
             if (!res.ok) {
                 const error = await res.json()
@@ -111,10 +111,11 @@ export function useBatchGenerateVoices(projectId: string | null, episodeId: stri
     return useMutation({
         mutationFn: async ({ lineIds }: { lineIds: string[] }) => {
             if (!projectId) throw new Error('Project ID is required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/batch-generate-voices`, {
+            if (!episodeId) throw new Error('Episode ID is required')
+            const res = await apiFetch(`/api/projects/${projectId}/voice-generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ lineIds }),
+                body: JSON.stringify({ episodeId, all: true, lineIds }),
             })
             if (!res.ok) {
                 const error = await res.json()
@@ -133,15 +134,16 @@ export function useBatchGenerateVoices(projectId: string | null, episodeId: stri
 /**
  * 更新语音文本
  */
-export function useUpdateVoiceText(episodeId: string | null) {
+export function useUpdateVoiceText(projectId: string | null, episodeId: string | null) {
     const queryClient = useQueryClient()
 
     return useMutation({
         mutationFn: async ({ lineId, text }: { lineId: string; text: string }) => {
-            const res = await apiFetch(`/api/novel-promotion/voice-lines/${lineId}`, {
+            if (!projectId) throw new Error('Project ID is required')
+            const res = await apiFetch(`/api/projects/${projectId}/voice-lines`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text }),
+                body: JSON.stringify({ lineId, content: text }),
             })
             if (!res.ok) {
                 const error = await res.json()

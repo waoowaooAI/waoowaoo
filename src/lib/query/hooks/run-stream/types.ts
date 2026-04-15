@@ -1,4 +1,4 @@
-import type { RunStepStatus, RunStreamLane, RunStreamStatus } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStepStatus, RunStreamLane, RunStreamStatus } from '@/lib/project-workflow/run-stream/types'
 
 export type RunStepState = {
   id: string

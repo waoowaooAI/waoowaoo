@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { PanelEditData } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/PanelEditForm'
+import type { PanelEditData } from '@/features/project-workspace/components/PanelEditForm'
 import {
   PanelSaveCoordinator,
   type PanelSaveState,
-} from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/storyboard/hooks/panel-save-coordinator'
+} from '@/features/project-workspace/components/storyboard/hooks/panel-save-coordinator'
 
 function buildSnapshot(description: string): PanelEditData {
   return {

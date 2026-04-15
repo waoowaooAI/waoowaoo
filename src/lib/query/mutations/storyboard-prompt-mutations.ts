@@ -21,7 +21,7 @@ export function useAiModifyProjectShotPrompt(projectId: string) {
             }>
         }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/ai-modify-shot-prompt`,
+                `/api/projects/${projectId}/ai-modify-shot-prompt`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -51,7 +51,7 @@ export function useAnalyzeProjectShotVariants(projectId: string) {
     return useMutation({
         mutationFn: async (payload: { panelId: string }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/analyze-shot-variants`,
+                `/api/projects/${projectId}/analyze-shot-variants`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -91,7 +91,7 @@ export function useUpdateProjectPhotographyPlan(projectId: string) {
             photographyPlan: string
         }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/photography-plan`,
+                `/api/projects/${projectId}/photography-plan`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -114,7 +114,7 @@ export function useUpdateProjectPanelActingNotes(projectId: string) {
             actingNotes: string
         }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/panel`,
+                `/api/projects/${projectId}/panel`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -141,7 +141,7 @@ export function useSelectProjectPanelCandidate(projectId: string) {
             selectedImageUrl?: string
         }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/panel/select-candidate`,
+                `/api/projects/${projectId}/panel/select-candidate`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

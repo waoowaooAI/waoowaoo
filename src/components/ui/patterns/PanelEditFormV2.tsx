@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import type { PanelEditData } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/PanelEditForm'
+import type { PanelEditData } from '@/features/project-workspace/components/PanelEditForm'
 import {
   GlassChip,
   GlassField,

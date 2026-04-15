@@ -16,7 +16,7 @@ export function useUploadProjectCharacterVoice(projectId: string) {
             formData.append('file', file)
             formData.append('characterId', characterId)
 
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/character-voice`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/character-voice`, {
                 method: 'POST',
                 body: formData
             }, 'Failed to upload voice')
@@ -77,7 +77,7 @@ export function useSaveProjectDesignedVoice(projectId: string) {
             voiceId: string
             audioBase64: string
         }) => {
-            return await requestJsonWithError<{ audioUrl?: string }>(`/api/novel-promotion/${projectId}/character-voice`, {
+            return await requestJsonWithError<{ audioUrl?: string }>(`/api/projects/${projectId}/character-voice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

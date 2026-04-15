@@ -21,18 +21,18 @@ export const MEDIA_MODEL_MAPPINGS: MediaModelMapping[] = [
     fields: [{ legacyField: 'imageUrl', mediaIdField: 'imageMediaId' }],
   },
   {
-    model: 'novelPromotionCharacter',
-    tableName: 'novel_promotion_characters',
+    model: 'projectCharacter',
+    tableName: 'project_characters',
     fields: [{ legacyField: 'customVoiceUrl', mediaIdField: 'customVoiceMediaId' }],
   },
   {
-    model: 'novelPromotionEpisode',
-    tableName: 'novel_promotion_episodes',
+    model: 'projectEpisode',
+    tableName: 'project_episodes',
     fields: [{ legacyField: 'audioUrl', mediaIdField: 'audioMediaId' }],
   },
   {
-    model: 'novelPromotionPanel',
-    tableName: 'novel_promotion_panels',
+    model: 'projectPanel',
+    tableName: 'project_panels',
     fields: [
       { legacyField: 'imageUrl', mediaIdField: 'imageMediaId' },
       { legacyField: 'videoUrl', mediaIdField: 'videoMediaId' },
@@ -42,8 +42,8 @@ export const MEDIA_MODEL_MAPPINGS: MediaModelMapping[] = [
     ],
   },
   {
-    model: 'novelPromotionShot',
-    tableName: 'novel_promotion_shots',
+    model: 'projectShot',
+    tableName: 'project_shots',
     fields: [{ legacyField: 'imageUrl', mediaIdField: 'imageMediaId' }],
   },
   {
@@ -52,8 +52,8 @@ export const MEDIA_MODEL_MAPPINGS: MediaModelMapping[] = [
     fields: [{ legacyField: 'imageUrl', mediaIdField: 'imageMediaId' }],
   },
   {
-    model: 'novelPromotionVoiceLine',
-    tableName: 'novel_promotion_voice_lines',
+    model: 'projectVoiceLine',
+    tableName: 'project_voice_lines',
     fields: [{ legacyField: 'audioUrl', mediaIdField: 'audioMediaId' }],
   },
   {

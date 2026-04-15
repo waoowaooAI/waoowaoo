@@ -1,4 +1,4 @@
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { apiFetch } from '@/lib/api-fetch'
 
 type JsonRecord = Record<string, unknown>

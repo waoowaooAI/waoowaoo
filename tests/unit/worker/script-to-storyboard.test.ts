@@ -97,7 +97,7 @@ const runScriptToStoryboardSkillWorkflowMock = vi.hoisted(() =>
     ],
   })),
 )
-const persistStoryboardOutputsMock = vi.hoisted(() => vi.fn())
+const persistStoryboardWorkflowOutputsMock = vi.hoisted(() => vi.fn())
 const parseStoryboardRetryTargetMock = vi.hoisted(() => vi.fn())
 const runScriptToStoryboardAtomicRetryMock = vi.hoisted(() => vi.fn())
 const workflowLeaseMock = vi.hoisted(() => ({
@@ -117,10 +117,8 @@ const prismaMock = vi.hoisted(() => ({
   project: {
     findUnique: vi.fn(),
   },
-  novelPromotionProject: {
-    findUnique: vi.fn(),
-  },
-  novelPromotionEpisode: {
+  userPreference: { findUnique: vi.fn() },
+  projectEpisode: {
     findUnique: vi.fn(),
   },
   $transaction: vi.fn(),
@@ -214,7 +212,6 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-helpers', () => ({
   },
   parseEffort: vi.fn(() => null),
   parseTemperature: vi.fn(() => 0.7),
-  persistStoryboardOutputs: persistStoryboardOutputsMock,
   toPositiveInt: (value: unknown) => {
     if (typeof value !== 'number' || !Number.isFinite(value)) return null
     const n = Math.floor(value)
@@ -226,6 +223,9 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-atomic-retry', () => ({
   runScriptToStoryboardAtomicRetry: runScriptToStoryboardAtomicRetryMock,
 }))
 vi.mock('@/lib/run-runtime/workflow-lease', () => workflowLeaseMock)
+vi.mock('@/lib/domain/storyboard/service', () => ({
+  persistStoryboardWorkflowOutputs: persistStoryboardWorkflowOutputsMock,
+}))
 
 import { handleScriptToStoryboardTask } from '@/lib/workers/handlers/script-to-storyboard'
 
@@ -249,7 +249,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       locale: 'zh',
       projectId: 'project-1',
       episodeId,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload: normalizedPayload,
       userId: 'user-1',
@@ -268,18 +268,14 @@ describe('worker script-to-storyboard behavior', () => {
     prismaMock.project.findUnique.mockResolvedValue({
       id: 'project-1',
       name: 'Project One',
-    })
-
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
       analysisModel: 'llm::analysis-model',
       characters: [{ id: 'char-1', name: 'Narrator' }],
       locations: [{ id: 'loc-1', name: 'Office' }],
     })
 
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+    prismaMock.projectEpisode.findUnique.mockResolvedValue({
       id: 'episode-1',
-      novelPromotionProjectId: 'np-project-1',
+      projectId: 'project-1',
       novelText: 'A complete chapter text for voice analyze.',
       clips: [
         {
@@ -294,7 +290,7 @@ describe('worker script-to-storyboard behavior', () => {
 
     prismaMock.$transaction.mockReset()
 
-    persistStoryboardOutputsMock.mockImplementation(async ({ voiceLineRows }: { voiceLineRows: VoiceLineInput[] | null }) => {
+    persistStoryboardWorkflowOutputsMock.mockImplementation(async ({ voiceLineRows }: { voiceLineRows: VoiceLineInput[] | null }) => {
       const rows = voiceLineRows || []
       txState.createdRows = rows.map((row) => ({
         episodeId: 'episode-1',
@@ -471,7 +467,7 @@ describe('worker script-to-storyboard behavior', () => {
     })
     expect(runScriptToStoryboardAtomicRetryMock).toHaveBeenCalledTimes(1)
     expect(runScriptToStoryboardSkillWorkflowMock).not.toHaveBeenCalled()
-    expect(persistStoryboardOutputsMock).toHaveBeenCalledWith({
+    expect(persistStoryboardWorkflowOutputsMock).toHaveBeenCalledWith({
       episodeId: 'episode-1',
       clipPanels: [
         {
@@ -487,6 +483,11 @@ describe('worker script-to-storyboard behavior', () => {
         },
       ],
       voiceLineRows: null,
+      mutation: expect.objectContaining({
+        workflowId: 'script-to-storyboard',
+        runId: 'run-test-storyboard',
+        taskId: 'task-1',
+      }),
     })
   })
 })

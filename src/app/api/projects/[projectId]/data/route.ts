@@ -4,10 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { attachMediaFieldsToProject } from '@/lib/media/attach'
-
-function readAssetKind(value: Record<string, unknown>): string {
-  return typeof value.assetKind === 'string' ? value.assetKind : 'location'
-}
+import { buildProjectReadModel } from '@/lib/projects/build-project-read-model'
 
 /**
  * 统一的项目数据加载API
@@ -44,16 +41,12 @@ export const GET = apiHandler(async (
     data: { lastAccessedAt: new Date() }
   }).catch(err => _ulogError('更新访问时间失败:', err))
 
-  // ⚡ 并行执行：加载 novel-promotion 数据
-  // 注意：characters/locations 延迟加载，首次只获取 episodes 列表
-  const novelPromotionData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWithWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
-      // 剧集列表（基础信息）- 首页必需
       episodes: {
         orderBy: { episodeNumber: 'asc' }
       },
-      // ⚡ 角色和场景数据 - 资产显示必需
       characters: {
         include: {
           appearances: true
@@ -69,24 +62,13 @@ export const GET = apiHandler(async (
     }
   })
 
-  if (!novelPromotionData) {
+  if (!projectWithWorkflow) {
     throw new ApiError('NOT_FOUND')
   }
 
   // 转换为稳定媒体 URL（并保留兼容字段）
-  const novelPromotionDataWithSignedUrls = await attachMediaFieldsToProject(novelPromotionData)
-  const filteredNovelPromotionData = {
-    ...novelPromotionDataWithSignedUrls,
-    locations: (novelPromotionDataWithSignedUrls.locations || []).filter((item) => readAssetKind(item) !== 'prop'),
-    props: (novelPromotionDataWithSignedUrls.locations || []).filter((item) => readAssetKind(item) === 'prop'),
-  }
-
-  const fullProject = {
-    ...project,
-    novelPromotionData: filteredNovelPromotionData
-    // 🔥 不再用 userPreference 覆盖任何字段
-    // editModel 等配置应该直接使用 novelPromotionData 中的值
-  }
+  const projectWithSignedUrls = await attachMediaFieldsToProject(projectWithWorkflow)
+  const fullProject = buildProjectReadModel(projectWithWorkflow, projectWithSignedUrls)
 
   return NextResponse.json({ project: fullProject })
 })

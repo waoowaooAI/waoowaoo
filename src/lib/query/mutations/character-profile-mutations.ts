@@ -20,7 +20,7 @@ export function useUpdateProjectCharacterIntroduction(projectId: string) {
             characterId: string
             introduction: string
         }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/character`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/character`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ characterId, introduction }),
@@ -48,7 +48,7 @@ export function useAiModifyProjectAppearanceDescription(projectId: string) {
             modifyInstruction: string
         }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/ai-modify-appearance`,
+                `/api/projects/${projectId}/ai-modify-appearance`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -74,7 +74,7 @@ export function useAiCreateProjectCharacter(projectId: string) {
     return useMutation({
         mutationFn: async (payload: { userInstruction: string }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/ai-create-character`,
+                `/api/projects/${projectId}/ai-create-character`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -115,7 +115,7 @@ export function useExtractProjectReferenceCharacterDescription(projectId: string
     return useMutation({
         mutationFn: async (referenceImageUrls: string[]) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/reference-to-character`,
+                `/api/projects/${projectId}/reference-to-character`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -150,7 +150,7 @@ export function useCreateProjectCharacter(projectId: string) {
             count?: number
         }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/character`,
+                `/api/projects/${projectId}/character`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -178,7 +178,7 @@ export function useCreateProjectCharacterAppearance(projectId: string) {
             description: string
         }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/character/appearance`,
+                `/api/projects/${projectId}/character/appearance`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -201,7 +201,7 @@ export function useConfirmProjectCharacterSelection(projectId: string) {
     return useMutation({
         mutationFn: async ({ characterId, appearanceId }: { characterId: string; appearanceId: string }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/character/confirm-selection`,
+                `/api/projects/${projectId}/character/confirm-selection`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -228,7 +228,7 @@ export function useConfirmProjectCharacterProfile(projectId: string) {
             generateImage?: boolean
         }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/character-profile/confirm`,
+                `/api/projects/${projectId}/character-profile/confirm`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -261,7 +261,7 @@ export function useBatchConfirmProjectCharacterProfiles(projectId: string) {
     return useMutation({
         mutationFn: async () => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/character-profile/batch-confirm`,
+                `/api/projects/${projectId}/character-profile/batch-confirm`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

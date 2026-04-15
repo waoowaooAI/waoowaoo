@@ -1,5 +1,6 @@
 import type { UIMessage } from 'ai'
 import type { CommandExecutionResult } from '@/lib/command-center/types'
+import type { WorkflowCanonicalEvent } from '@/lib/agent/events/workflow-events'
 import type { ProjectContextSnapshot } from '@/lib/project-context/types'
 import type { WorkflowPackageId, WorkflowSkillId } from '@/lib/skill-system/types'
 
@@ -17,6 +18,7 @@ export interface WorkflowPlanPartData {
   planId: string
   summary: string
   requiresApproval: boolean
+  event?: WorkflowCanonicalEvent | null
   steps: Array<{
     skillId: string
     title: string
@@ -29,6 +31,7 @@ export interface ApprovalRequestPartData {
   planId: string
   summary: string
   reasons: string[]
+  event?: WorkflowCanonicalEvent | null
 }
 
 export interface WorkflowStatusPartData {
@@ -38,6 +41,7 @@ export interface WorkflowStatusPartData {
   runId?: string | null
   status: CommandExecutionResult['status']
   activeSkillId?: WorkflowSkillId | null
+  event?: WorkflowCanonicalEvent | null
 }
 
 export interface ScriptPreviewPartData {
@@ -81,6 +85,7 @@ export interface ProjectAssistantContextSnapshot {
     artStyle: string
     videoRatio: string
   }
+  workflow?: ProjectContextSnapshot['workflow']
 }
 
 export interface ProjectAssistantThreadSnapshot {

@@ -21,14 +21,6 @@ export async function createFixtureProject(userId: string) {
     data: {
       userId,
       name: `project_${id}`,
-    },
-  })
-}
-
-export async function createFixtureNovelProject(projectId: string) {
-  return await prisma.novelPromotionProject.create({
-    data: {
-      projectId,
       analysisModel: 'openrouter::anthropic/claude-sonnet-4',
       characterModel: 'fal::banana/character',
       locationModel: 'fal::banana/location',
@@ -38,6 +30,22 @@ export async function createFixtureNovelProject(projectId: string) {
       videoRatio: '9:16',
       imageResolution: '2K',
     },
+  })
+}
+
+export async function createFixtureNovelProject(projectId: string) {
+  return await prisma.project.update({
+    where: { id: projectId },
+    data: {
+      analysisModel: 'openrouter::anthropic/claude-sonnet-4',
+      characterModel: 'fal::banana/character',
+      locationModel: 'fal::banana/location',
+      storyboardModel: 'fal::banana/storyboard',
+      editModel: 'fal::banana/edit',
+      videoModel: 'fal::seedance/video',
+      videoRatio: '9:16',
+      imageResolution: '2K',
+    }
   })
 }
 
@@ -86,10 +94,10 @@ export async function createFixtureGlobalLocationImage(locationId: string, image
   })
 }
 
-export async function createFixtureEpisode(novelPromotionProjectId: string, episodeNumber = 1) {
-  return await prisma.novelPromotionEpisode.create({
+export async function createFixtureEpisode(projectId: string, episodeNumber = 1) {
+  return await prisma.projectEpisode.create({
     data: {
-      novelPromotionProjectId,
+      projectId,
       episodeNumber,
       name: `Episode ${episodeNumber}`,
       novelText: 'test novel text',

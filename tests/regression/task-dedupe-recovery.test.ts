@@ -26,7 +26,7 @@ describe('regression - task dedupe recovery', () => {
         userId: user.id,
         projectId: project.id,
         type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: 'episode-regression-1',
         status: TASK_STATUS.QUEUED,
         payload: { episodeId: 'episode-regression-1' },
@@ -39,7 +39,7 @@ describe('regression - task dedupe recovery', () => {
       userId: user.id,
       projectId: project.id,
       type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-regression-1',
       payload: {
         episodeId: 'episode-regression-1',
@@ -67,7 +67,7 @@ describe('regression - task dedupe recovery', () => {
         userId: user.id,
         projectId: project.id,
         type: TASK_TYPE.VIDEO_PANEL,
-        targetType: 'NovelPromotionPanel',
+        targetType: 'ProjectPanel',
         targetId: 'panel-regression-1',
         status: TASK_STATUS.QUEUED,
         payload: {
@@ -85,7 +85,7 @@ describe('regression - task dedupe recovery', () => {
       userId: user.id,
       projectId: project.id,
       type: TASK_TYPE.VIDEO_PANEL,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-regression-1',
       payload: {
         storyboardId: 'storyboard-regression-1',

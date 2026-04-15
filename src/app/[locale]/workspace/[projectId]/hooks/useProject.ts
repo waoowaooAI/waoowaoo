@@ -90,15 +90,12 @@ export function useProject(projectId: string) {
         if (res.ok) {
           const assets = await res.json()
           setProject(prev => {
-            if (!prev?.novelPromotionData) return prev
+            if (!prev) return prev
             return {
               ...prev,
-              novelPromotionData: {
-                ...prev.novelPromotionData,
-                characters: assets.characters || [],
-                locations: assets.locations || [],
-                props: assets.props || [],
-              }
+              characters: assets.characters || [],
+              locations: assets.locations || [],
+              props: assets.props || [],
             }
           })
           setAssetsLoaded(true)

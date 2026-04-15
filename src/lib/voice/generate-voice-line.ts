@@ -167,7 +167,7 @@ export async function generateVoiceLine(params: {
 }) {
   const checkCancelled = params.checkCancelled
 
-  const line = await prisma.novelPromotionVoiceLine.findUnique({
+  const line = await prisma.projectVoiceLine.findUnique({
     where: { id: params.lineId },
     select: {
       id: true,
@@ -188,18 +188,18 @@ export async function generateVoiceLine(params: {
   }
 
   const [projectData, episode] = await Promise.all([
-    prisma.novelPromotionProject.findUnique({
-      where: { projectId: params.projectId },
+    prisma.project.findUnique({
+      where: { id: params.projectId },
       include: { characters: true },
     }),
-    prisma.novelPromotionEpisode.findUnique({
+    prisma.projectEpisode.findUnique({
       where: { id: episodeId },
       select: { speakerVoices: true },
     }),
   ])
 
   if (!projectData) {
-    throw new Error('Novel promotion project not found')
+    throw new Error('Project not found')
   }
 
   const speakerVoices: SpeakerVoiceMap = parseSpeakerVoiceMap(episode?.speakerVoices)
@@ -270,7 +270,7 @@ export async function generateVoiceLine(params: {
 
   await checkCancelled?.()
 
-  await prisma.novelPromotionVoiceLine.update({
+  await prisma.projectVoiceLine.update({
     where: { id: line.id },
     data: {
       audioUrl: cosKey,

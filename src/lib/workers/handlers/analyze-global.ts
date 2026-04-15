@@ -36,8 +36,8 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
     throw new Error('Project not found')
   }
 
-  const novelData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
       locations: true,
@@ -51,20 +51,18 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
       },
     },
   })
-  if (!novelData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
 
   const analysisModel = await resolveAnalysisModel({
     userId: job.data.userId,
-    projectAnalysisModel: novelData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
 
   let allContent = ''
-  if (readText(novelData.globalAssetText).trim()) {
-    allContent += `【全局设定】\n${readText(novelData.globalAssetText)}\n\n`
+  if (readText(projectWorkflow.globalAssetText).trim()) {
+    allContent += `【全局设定】\n${readText(projectWorkflow.globalAssetText)}\n\n`
   }
-  for (const ep of novelData.episodes) {
+  for (const ep of projectWorkflow.episodes || []) {
     const text = readText(ep.novelText)
     if (!text.trim()) continue
     allContent += `【${ep.name}】\n${text}\n\n`
@@ -75,23 +73,23 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
 
   const chunks = chunkContent(allContent, CHUNK_SIZE)
   const templates = loadAnalyzeGlobalPromptTemplates(job.data.locale)
-  const existingCharacters: CharacterBrief[] = novelData.characters.map((item) => ({
+  const existingCharacters: CharacterBrief[] = projectWorkflow.characters.map((item) => ({
     id: item.id,
     name: item.name,
     aliases: parseAliases(item.aliases as string | null),
     introduction: readText((item as Record<string, unknown>).introduction),
   }))
   const existingCharacterNames = existingCharacters.flatMap((item) => [item.name, ...item.aliases])
-  const existingLocationNames = novelData.locations
+  const existingLocationNames = projectWorkflow.locations
     .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop')
     .map((item) => item.name)
-  const existingLocationInfo = novelData.locations
+  const existingLocationInfo = projectWorkflow.locations
     .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop')
     .map((item) => {
     const summary = readText(item.summary)
     return summary ? `${item.name}(${summary})` : item.name
   })
-  const existingPropNames = novelData.locations
+  const existingPropNames = projectWorkflow.locations
     .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
     .map((item) => item.name)
   const stats = createAnalyzeGlobalStats(chunks.length)
@@ -188,7 +186,7 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
       const propsData = safeParsePropsResponse(propResponse)
 
       await persistAnalyzeGlobalChunk({
-        projectInternalId: novelData.id,
+        projectId,
         charactersData,
         locationsData,
         propsData,

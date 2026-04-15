@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createAIDataModalDraftState,
   mergeAIDataModalDraftStateByDirty,
-} from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/storyboard/hooks/useAIDataModalState'
+} from '@/features/project-workspace/components/storyboard/hooks/useAIDataModalState'
 
 describe('useAIDataModalState optimistic sync helpers', () => {
   it('keeps dirty fields when server data refreshes', () => {

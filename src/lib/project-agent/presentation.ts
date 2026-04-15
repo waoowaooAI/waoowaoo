@@ -1,15 +1,11 @@
 import type { ArtifactType } from '@/lib/artifact-system/types'
 import type { PlanStep } from '@/lib/command-center/types'
 import type { ProjectContextSnapshot } from '@/lib/project-context/types'
+import { getWorkflowDisplayLabel, getProjectWorkflowMachine } from '@/lib/skill-system/project-workflow-machine'
 import type { WorkflowPackageId } from '@/lib/skill-system/types'
 import type {
   ProjectAssistantContextSnapshot,
 } from './types'
-
-const WORKFLOW_LABELS: Record<WorkflowPackageId, string> = {
-  'story-to-script': '故事到剧本',
-  'script-to-storyboard': '剧本到分镜',
-}
 
 const ARTIFACT_LABELS: Record<ArtifactType, string> = {
   'story.raw': '故事原文',
@@ -57,18 +53,16 @@ export function buildAssistantProjectContextSnapshot(
       artStyle: context.policy.artStyle,
       videoRatio: context.policy.videoRatio,
     },
+    workflow: context.workflow,
   }
 }
 
 export function buildWorkflowPlanSummary(workflowId: WorkflowPackageId): string {
-  return `${WORKFLOW_LABELS[workflowId]}执行计划`
+  return `${getWorkflowDisplayLabel(workflowId)}执行计划`
 }
 
 export function buildWorkflowApprovalSummary(workflowId: WorkflowPackageId): string {
-  if (workflowId === 'story-to-script') {
-    return '该流程会重新分析故事内容，并生成新的剧本结果。'
-  }
-  return '该流程会基于剧本重新生成分镜与台词结果。'
+  return getProjectWorkflowMachine(workflowId).approvalSummary
 }
 
 export function buildWorkflowApprovalReasons(steps: PlanStep[]): string[] {

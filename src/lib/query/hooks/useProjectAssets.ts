@@ -158,7 +158,7 @@ export function useProjectProps(projectId: string | null) {
  * 刷新项目资产
  * 🔥 同时刷新 projectAssets 和 projectData 两个缓存
  *    - projectAssets: 用于直接订阅 useProjectAssets 的组件
- *    - projectData: 用于 NovelPromotionWorkspace（通过 useProjectData 获取 characters/locations）
+ *    - projectData: 用于 ProjectWorkspace（通过 useProjectData 获取 characters/locations）
  */
 export function useRefreshProjectAssets(projectId: string | null) {
     const queryClient = useQueryClient()

@@ -20,20 +20,20 @@ import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './
 import type { TaskJobData } from '@/lib/task/types'
 import {
   asString,
-  type AnyObj,
   parseEffort,
   parseTemperature,
-  persistAnalyzedCharacters,
-  persistAnalyzedLocations,
-  persistAnalyzedProps,
-  persistClips,
-  resolveClipRecordId,
 } from './story-to-script-helpers'
-import { composeSkillPrompt, type SkillLocale } from '@skills/novel-promotion/_shared/prompt-runtime'
+import { composeSkillPrompt, type SkillLocale } from '@skills/project-workflow/_shared/prompt-runtime'
 import { resolveAnalysisModel } from './resolve-analysis-model'
 import { createArtifact, listArtifacts } from '@/lib/run-runtime/service'
 import { assertWorkflowRunActive, withWorkflowRunLease } from '@/lib/run-runtime/workflow-lease'
 import { parseScreenplayPayload } from './screenplay-convert-helpers'
+import {
+  persistRetryScreenplayResult,
+  persistStoryToScriptWorkflowResults,
+} from '@/lib/domain/screenplay/service'
+
+type AnyObj = Record<string, unknown>
 
 function readAssetKind(value: Record<string, unknown>): string {
   return typeof value.assetKind === 'string' ? value.assetKind : 'location'
@@ -103,33 +103,31 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
   // Register project name for per-project log file routing
   onProjectNameAvailable(projectId, project.name)
 
-  const novelData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
       locations: true,
     },
   })
-  if (!novelData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
 
-  const episode = await prisma.novelPromotionEpisode.findUnique({
+  const episode = await prisma.projectEpisode.findUnique({
     where: { id: episodeId },
     select: {
       id: true,
-      novelPromotionProjectId: true,
+      projectId: true,
       novelText: true,
     },
   })
-  if (!episode || episode.novelPromotionProjectId !== novelData.id) {
+  if (!episode || episode.projectId !== projectId) {
     throw new Error('Episode not found')
   }
 
   const model = await resolveAnalysisModel({
     userId: job.data.userId,
     inputModel,
-    projectAnalysisModel: novelData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
   const [llmCapabilityOptions, workflowConcurrency] = await Promise.all([
     resolveProjectModelCapabilityGenerationOptions({
@@ -159,6 +157,15 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
     : (typeof payloadMeta.runId === 'string' ? payloadMeta.runId.trim() : '')
   if (!runId) {
     throw new Error('runId is required for story_to_script pipeline')
+  }
+  const mutationContext = {
+    actor: 'workflow' as const,
+    workflowId: 'story-to-script' as const,
+    runId,
+    commandId: asString(payload.commandId).trim() || null,
+    planId: asString(payload.planId).trim() || null,
+    taskId: job.data.taskId,
+    idempotencyKey: `${runId}:${retryStepKey || 'full'}`,
   }
   const retryClipId = resolveRetryClipId(retryStepKey)
   if (retryStepKey && !retryClipId) {
@@ -366,39 +373,11 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
           },
         })
 
-        await prisma.$transaction(async (tx) => {
-          let clipRecord = await tx.novelPromotionClip.findFirst({
-            where: {
-              episodeId,
-              startText: asString(retryClip.startText) || null,
-              endText: asString(retryClip.endText) || null,
-            },
-            select: { id: true },
-          })
-          if (!clipRecord) {
-            const clipModel = tx.novelPromotionClip as unknown as {
-              create: (args: { data: Record<string, unknown>; select: { id: true } }) => Promise<{ id: string }>
-            }
-            clipRecord = await clipModel.create({
-              data: {
-                episodeId,
-                startText: asString(retryClip.startText) || null,
-                endText: asString(retryClip.endText) || null,
-                summary: asString(retryClip.summary),
-                location: asString(retryClip.location) || null,
-                characters: Array.isArray(retryClip.characters) ? JSON.stringify(retryClip.characters) : null,
-                props: Array.isArray(retryClip.props) ? JSON.stringify(retryClip.props) : null,
-                content: clipContent,
-              },
-              select: { id: true },
-            })
-          }
-          await tx.novelPromotionClip.update({
-            where: { id: clipRecord.id },
-            data: {
-              screenplay: JSON.stringify(screenplay),
-            },
-          })
+        await persistRetryScreenplayResult({
+          episodeId,
+          clip: retryClip,
+          screenplay,
+          mutation: mutationContext,
         })
 
         await reportTaskProgress(job, 96, {
@@ -435,14 +414,14 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
               concurrency: workflowConcurrency.analysis,
               locale,
               content,
-              baseCharacters: (novelData.characters || []).map((item) => item.name),
-              baseLocations: (novelData.locations || [])
+              baseCharacters: (projectWorkflow.characters || []).map((item) => item.name),
+              baseLocations: (projectWorkflow.locations || [])
                 .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop')
                 .map((item) => item.name),
-              baseProps: (novelData.locations || [])
+              baseProps: (projectWorkflow.locations || [])
                 .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
                 .map((item) => item.name),
-              baseCharacterIntroductions: (novelData.characters || []).map((item) => ({
+              baseCharacterIntroductions: (projectWorkflow.characters || []).map((item) => ({
                 name: item.name,
                 introduction: item.introduction || '',
               })),
@@ -527,7 +506,7 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
       })
       await assertRunActive('story_to_script_persist')
 
-      const episodeStillExists = await prisma.novelPromotionEpisode.findUnique({
+      const episodeStillExists = await prisma.projectEpisode.findUnique({
         where: { id: episodeId },
         select: { id: true },
       })
@@ -536,65 +515,31 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
       }
 
       const existingCharacterNames = new Set<string>(
-        (novelData.characters || []).map((item) => String(item.name || '').toLowerCase()),
+        (projectWorkflow.characters || []).map((item) => String(item.name || '').toLowerCase()),
       )
       const existingLocationNames = new Set<string>(
-        (novelData.locations || [])
+        (projectWorkflow.locations || [])
           .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop')
           .map((item) => String(item.name || '').toLowerCase()),
       )
       const existingPropNames = new Set<string>(
-        (novelData.locations || [])
+        (projectWorkflow.locations || [])
           .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
           .map((item) => String(item.name || '').toLowerCase()),
       )
 
-      const persistedResult = await prisma.$transaction(async (tx) => {
-        const createdCharacters = await persistAnalyzedCharacters({
-          projectInternalId: novelData.id,
-          existingNames: existingCharacterNames,
-          analyzedCharacters: result.analyzedCharacters,
-          db: tx,
-        })
-
-        const createdLocations = await persistAnalyzedLocations({
-          projectInternalId: novelData.id,
-          existingNames: existingLocationNames,
-          analyzedLocations: result.analyzedLocations,
-          db: tx,
-        })
-        const createdProps = await persistAnalyzedProps({
-          projectInternalId: novelData.id,
-          existingNames: existingPropNames,
-          analyzedProps: result.analyzedProps,
-          db: tx,
-        })
-
-        const createdClipRows = await persistClips({
-          episodeId,
-          clipList: result.clipList,
-          db: tx,
-        })
-        const clipIdMap = new Map(createdClipRows.map((item) => [item.clipKey, item.id]))
-
-        for (const screenplayResult of result.screenplayResults) {
-          if (!screenplayResult.success || !screenplayResult.screenplay) continue
-          const clipRecordId = resolveClipRecordId(clipIdMap, screenplayResult.clipId)
-          if (!clipRecordId) continue
-          await tx.novelPromotionClip.update({
-            where: { id: clipRecordId },
-            data: {
-              screenplay: JSON.stringify(screenplayResult.screenplay),
-            },
-          })
-        }
-
-        return {
-          createdCharacters,
-          createdLocations,
-          createdProps,
-          createdClipRows,
-        }
+      const persistedResult = await persistStoryToScriptWorkflowResults({
+        projectId,
+        episodeId,
+        existingCharacterNames,
+        existingLocationNames,
+        existingPropNames,
+        analyzedCharacters: result.analyzedCharacters,
+        analyzedLocations: result.analyzedLocations,
+        analyzedProps: result.analyzedProps,
+        clipList: result.clipList,
+        screenplayResults: result.screenplayResults,
+        mutation: mutationContext,
       })
 
       await reportTaskProgress(job, 96, {

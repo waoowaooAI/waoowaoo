@@ -3,7 +3,7 @@ import type { UIMessage } from 'ai'
 import {
   collectPendingApprovalActions,
   removeApprovalRequestFromMessages,
-} from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/workspace-assistant/approval-state'
+} from '@/features/project-workspace/components/workspace-assistant/approval-state'
 
 function buildMessages(): UIMessage[] {
   return [

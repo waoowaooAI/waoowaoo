@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { executeAiTextStep } from '@/lib/ai-runtime'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
-import { createClipContentMatcher } from '@/lib/novel-promotion/story-to-script/clip-matching'
+import { createClipContentMatcher } from '@/lib/project-workflow/story-to-script/clip-matching'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
@@ -35,11 +35,11 @@ const CLIP_BOUNDARY_SUFFIX = `
 export async function handleClipsBuildTask(job: Job<TaskJobData>) {
   const payload = (job.data.payload || {}) as Record<string, unknown>
   const projectId = job.data.projectId
-  const clipModel = prisma.novelPromotionClip as unknown as {
+  const clipModel = prisma.projectClip as unknown as {
     update: (args: { where: { id: string }; data: Record<string, unknown>; select: { id: true } }) => Promise<{ id: string }>
     create: (args: { data: Record<string, unknown>; select: { id: true } }) => Promise<{ id: string }>
-    findMany: typeof prisma.novelPromotionClip.findMany
-    deleteMany: typeof prisma.novelPromotionClip.deleteMany
+    findMany: typeof prisma.projectClip.findMany
+    deleteMany: typeof prisma.projectClip.deleteMany
   }
   const episodeId = readText(payload.episodeId || job.data.episodeId).trim()
   if (!episodeId) {
@@ -54,35 +54,33 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
     throw new Error('Project not found')
   }
 
-  const novelData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
       locations: true,
     },
   })
-  if (!novelData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
   const analysisModel = await resolveAnalysisModel({
     userId: job.data.userId,
     inputModel: payload.model,
-    projectAnalysisModel: novelData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
 
-  const episode = await prisma.novelPromotionEpisode.findUnique({
+  const episode = await prisma.projectEpisode.findUnique({
     where: { id: episodeId },
     select: {
       id: true,
       name: true,
       novelText: true,
-      novelPromotionProjectId: true,
+      projectId: true,
     },
   })
   if (!episode) {
     throw new Error('Episode not found')
   }
-  if (episode.novelPromotionProjectId !== novelData.id) {
+  if (episode.projectId !== projectId) {
     throw new Error('Episode does not belong to this project')
   }
 
@@ -91,16 +89,16 @@ export async function handleClipsBuildTask(job: Job<TaskJobData>) {
     throw new Error('No novel text to process')
   }
 
-  const locationsLibName = novelData.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop').length > 0
-    ? novelData.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop').map((item) => item.name).join('、')
+  const locationsLibName = projectWorkflow.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop').length > 0
+    ? projectWorkflow.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop').map((item) => item.name).join('、')
     : '无'
-  const charactersLibName = novelData.characters.length > 0
-    ? novelData.characters.map((item) => item.name).join('、')
+  const charactersLibName = projectWorkflow.characters.length > 0
+    ? projectWorkflow.characters.map((item) => item.name).join('、')
     : '无'
-  const propsLibName = novelData.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop').length > 0
-    ? novelData.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop').map((item) => item.name).join('、')
+  const propsLibName = projectWorkflow.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop').length > 0
+    ? projectWorkflow.locations.filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop').map((item) => item.name).join('、')
     : '无'
-  const charactersIntroduction = buildCharactersIntroduction(novelData.characters)
+  const charactersIntroduction = buildCharactersIntroduction(projectWorkflow.characters)
   const promptTemplateBase = buildPrompt({
     promptId: PROMPT_IDS.NP_AGENT_CLIP,
     locale: job.data.locale,

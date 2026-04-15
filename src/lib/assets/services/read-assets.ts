@@ -17,10 +17,9 @@ import {
 } from '@/lib/assets/services/location-backed-assets'
 
 async function readProjectAssets(projectId: string): Promise<AssetSummary[]> {
-  const project = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
     select: {
-      id: true,
       characters: {
         include: {
           appearances: {
@@ -36,8 +35,8 @@ async function readProjectAssets(projectId: string): Promise<AssetSummary[]> {
   }
 
   const [locations, props] = await Promise.all([
-    listProjectLocationBackedAssets(project.id, 'location'),
-    listProjectLocationBackedAssets(project.id, 'prop'),
+    listProjectLocationBackedAssets(projectId, 'location'),
+    listProjectLocationBackedAssets(projectId, 'prop'),
   ])
 
   const withMedia = await attachMediaFieldsToProject({

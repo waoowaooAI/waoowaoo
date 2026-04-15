@@ -93,7 +93,7 @@ export async function hasLocationImageOutput(params: {
 
 export async function hasPanelImageOutput(panelId: string | null | undefined) {
   if (!isNonEmptyString(panelId)) return false
-  const panel = await prisma.novelPromotionPanel.findUnique({
+  const panel = await prisma.projectPanel.findUnique({
     where: { id: panelId },
     select: {
       imageUrl: true,
@@ -106,7 +106,7 @@ export async function hasPanelImageOutput(panelId: string | null | undefined) {
 
 export async function hasPanelVideoOutput(panelId: string | null | undefined) {
   if (!isNonEmptyString(panelId)) return false
-  const panel = await prisma.novelPromotionPanel.findUnique({
+  const panel = await prisma.projectPanel.findUnique({
     where: { id: panelId },
     select: {
       videoUrl: true,
@@ -119,7 +119,7 @@ export async function hasPanelVideoOutput(panelId: string | null | undefined) {
 
 export async function hasPanelLipSyncOutput(panelId: string | null | undefined) {
   if (!isNonEmptyString(panelId)) return false
-  const panel = await prisma.novelPromotionPanel.findUnique({
+  const panel = await prisma.projectPanel.findUnique({
     where: { id: panelId },
     select: {
       lipSyncVideoUrl: true,
@@ -132,7 +132,7 @@ export async function hasPanelLipSyncOutput(panelId: string | null | undefined) 
 
 export async function hasVoiceLineAudioOutput(lineId: string | null | undefined) {
   if (!isNonEmptyString(lineId)) return false
-  const line = await prisma.novelPromotionVoiceLine.findUnique({
+  const line = await prisma.projectVoiceLine.findUnique({
     where: { id: lineId },
     select: {
       audioUrl: true,

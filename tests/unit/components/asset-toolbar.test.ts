@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { NextIntlClientProvider } from 'next-intl'
 import type { AbstractIntlMessages } from 'next-intl'
-import AssetToolbar from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/AssetToolbar'
+import AssetToolbar from '@/features/project-workspace/components/assets/AssetToolbar'
 
 vi.mock('@/lib/query/hooks', () => ({
   useProjectAssets: vi.fn(() => ({ data: { characters: [], locations: [], props: [] } })),

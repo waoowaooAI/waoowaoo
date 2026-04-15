@@ -19,7 +19,7 @@ describe('location-backed assets service', () => {
       .mockResolvedValueOnce([
         {
           id: 'location-1',
-          novelPromotionProjectId: 'novel-project-1',
+          projectId: 'project-1',
           name: 'Bronze Dagger',
           summary: 'Old bronze dagger',
           selectedImageId: null,
@@ -33,16 +33,15 @@ describe('location-backed assets service', () => {
   it('queries project location-backed assets with real schema column names', async () => {
     const mod = await import('@/lib/assets/services/location-backed-assets')
 
-    await mod.listProjectLocationBackedAssets('novel-project-1', 'prop')
+    await mod.listProjectLocationBackedAssets('project-1', 'prop')
 
     const assetQuery = prismaMock.$queryRaw.mock.calls[0]?.[0] as { strings?: ReadonlyArray<string>; sql?: string }
     const imageQuery = prismaMock.$queryRaw.mock.calls[1]?.[0] as { strings?: ReadonlyArray<string>; sql?: string }
     const assetSql = assetQuery.strings?.join(' ') ?? assetQuery.sql ?? ''
     const imageSql = imageQuery.strings?.join(' ') ?? imageQuery.sql ?? ''
 
-    expect(assetSql).toContain('FROM novel_promotion_locations')
-    expect(assetSql).toContain('novelPromotionProjectId')
-    expect(assetSql).not.toContain('projectId')
+    expect(assetSql).toContain('FROM project_locations')
+    expect(assetSql).toContain('projectId')
     expect(imageSql).toContain('FROM location_images')
     expect(imageSql).toContain('NULL AS previousImageMediaId')
   })
@@ -51,7 +50,7 @@ describe('location-backed assets service', () => {
     const mod = await import('@/lib/assets/services/location-backed-assets')
 
     const result = await mod.createProjectLocationBackedAsset({
-      novelPromotionProjectId: 'novel-project-1',
+      projectId: 'project-1',
       name: 'Bronze Dagger',
       summary: 'Old bronze dagger',
       initialDescription: 'A bronze dagger with a carved handle and weathered blade',

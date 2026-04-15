@@ -62,7 +62,7 @@ if (refetchIntervalMsHits.length > 0) {
 }
 
 const voiceStagePath =
-  'src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/VoiceStage.tsx'
+  'src/features/project-workspace/components/VoiceStage.tsx'
 const voiceStageText = readFile(voiceStagePath)
 if (voiceStageText.includes('setInterval(')) {
   fail('VoiceStage must not use timer polling', [voiceStagePath])

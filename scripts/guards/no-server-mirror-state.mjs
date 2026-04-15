@@ -6,7 +6,7 @@ import process from 'process'
 
 const root = process.cwd()
 const scanRoots = [
-  'src/app/[locale]/workspace/[projectId]/modes/novel-promotion',
+  'src/features/project-workspace',
 ]
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'])
 

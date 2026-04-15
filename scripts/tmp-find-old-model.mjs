@@ -20,17 +20,17 @@ for (const [k, v] of Object.entries(pref || {})) {
 }
 if (!found) console.log('  (clean)');
 
-// 2. Check novelPromotionData JSON for any reference
+// 2. Check projectData JSON for any reference
 const projects = await p.project.findMany({
     where: { userId },
-    select: { id: true, name: true, novelPromotionData: true }
+    select: { id: true, name: true, projectData: true }
 });
-console.log('\n=== Project novelPromotionData ===');
+console.log('\n=== Project projectData ===');
 for (const proj of projects) {
-    const data = JSON.stringify(proj.novelPromotionData || {});
+    const data = JSON.stringify(proj.projectData || {});
     if (data.includes(needle)) {
         // Find which keys reference it
-        const parsed = proj.novelPromotionData;
+        const parsed = proj.projectData;
         for (const [k, v] of Object.entries(parsed || {})) {
             if (typeof v === 'string' && v.includes(needle)) {
                 console.log('  FOUND in project', proj.id, '(' + proj.name + ') field:', k, '=', v);

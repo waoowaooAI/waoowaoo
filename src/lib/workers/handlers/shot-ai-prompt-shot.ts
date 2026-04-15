@@ -17,7 +17,7 @@ export async function handleModifyShotPromptTask(job: Job<TaskJobData>, payload:
   const currentVideoPrompt = readText(payload.currentVideoPrompt)
   const modifyInstruction = readRequiredString(payload.modifyInstruction, 'modifyInstruction')
   const referencedAssets = Array.isArray(payload.referencedAssets) ? payload.referencedAssets : []
-  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
+  const projectWorkflow = await resolveAnalysisModel(job.data.projectId, job.data.userId)
 
   const assetDescriptions = referencedAssets
     .map((asset) => {
@@ -52,7 +52,7 @@ export async function handleModifyShotPromptTask(job: Job<TaskJobData>, payload:
 
   const responseText = await runShotPromptCompletion({
     job,
-    model: novelData.analysisModel,
+    model: projectWorkflow.analysisModel,
     prompt: finalPrompt,
     action: 'ai_modify_shot_prompt',
     streamContextKey: 'ai_modify_shot_prompt',

@@ -7,7 +7,7 @@ import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-strea
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { getUserModelConfig } from '@/lib/config-service'
-import { createTextMarkerMatcher } from '@/lib/novel-promotion/story-to-script/clip-matching'
+import { createTextMarkerMatcher } from '@/lib/project-workflow/story-to-script/clip-matching'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import type { TaskJobData } from '@/lib/task/types'
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompt-i18n'
@@ -73,12 +73,12 @@ export async function handleEpisodeSplitTask(job: Job<TaskJobData>) {
     throw new Error('Project not found')
   }
 
-  const novelProject = await prisma.novelPromotionProject.findFirst({
-    where: { projectId },
+  const projectConfig = await prisma.project.findUnique({
+    where: { id: projectId },
     select: { id: true },
   })
-  if (!novelProject) {
-    throw new Error('Novel promotion data not found')
+  if (!projectConfig) {
+    throw new Error('Project not found')
   }
 
   const userConfig = await getUserModelConfig(job.data.userId)

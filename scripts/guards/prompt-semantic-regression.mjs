@@ -11,16 +11,16 @@ const singlePlaceholderPattern = /\{([A-Za-z0-9_]+)\}/g
 const doublePlaceholderPattern = /\{\{([A-Za-z0-9_]+)\}\}/g
 
 const criticalTemplateTokens = new Map([
-  ['novel-promotion/voice_analysis', ['"lineIndex"', '"speaker"', '"content"', '"emotionStrength"', '"matchedPanel"']],
-  ['novel-promotion/agent_storyboard_plan', ['"panel_number"', '"description"', '"characters"', '"location"', '"scene_type"', '"source_text"', '"shot_type"', '"camera_move"', '"video_prompt"']],
-  ['novel-promotion/agent_storyboard_detail', ['"panel_number"', '"description"', '"characters"', '"location"', '"scene_type"', '"source_text"', '"shot_type"', '"camera_move"', '"video_prompt"']],
-  ['novel-promotion/agent_storyboard_insert', ['"panel_number"', '"description"', '"characters"', '"location"', '"scene_type"', '"source_text"', '"shot_type"', '"camera_move"', '"video_prompt"']],
-  ['novel-promotion/screenplay_conversion', ['"clip_id"', '"scenes"', '"heading"', '"content"', '"dialogue"', '"voiceover"']],
-  ['novel-promotion/select_location', ['"locations"', '"name"', '"summary"', '"descriptions"']],
-  ['novel-promotion/episode_split', ['"analysis"', '"episodes"', '"startMarker"', '"endMarker"', '"validation"']],
-  ['novel-promotion/image_prompt_modify', ['"image_prompt"', '"video_prompt"']],
-  ['novel-promotion/character_create', ['"prompt"']],
-  ['novel-promotion/location_create', ['"prompt"']],
+  ['project-workflow/voice_analysis', ['"lineIndex"', '"speaker"', '"content"', '"emotionStrength"', '"matchedPanel"']],
+  ['project-workflow/agent_storyboard_plan', ['"panel_number"', '"description"', '"characters"', '"location"', '"scene_type"', '"source_text"', '"shot_type"', '"camera_move"', '"video_prompt"']],
+  ['project-workflow/agent_storyboard_detail', ['"panel_number"', '"description"', '"characters"', '"location"', '"scene_type"', '"source_text"', '"shot_type"', '"camera_move"', '"video_prompt"']],
+  ['project-workflow/agent_storyboard_insert', ['"panel_number"', '"description"', '"characters"', '"location"', '"scene_type"', '"source_text"', '"shot_type"', '"camera_move"', '"video_prompt"']],
+  ['project-workflow/screenplay_conversion', ['"clip_id"', '"scenes"', '"heading"', '"content"', '"dialogue"', '"voiceover"']],
+  ['project-workflow/select_location', ['"locations"', '"name"', '"summary"', '"descriptions"']],
+  ['project-workflow/episode_split', ['"analysis"', '"episodes"', '"startMarker"', '"endMarker"', '"validation"']],
+  ['project-workflow/image_prompt_modify', ['"image_prompt"', '"video_prompt"']],
+  ['project-workflow/character_create', ['"prompt"']],
+  ['project-workflow/location_create', ['"prompt"']],
 ])
 
 function fail(title, details = []) {

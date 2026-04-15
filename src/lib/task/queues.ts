@@ -19,27 +19,47 @@ const defaultJobOptions: JobsOptions = {
   },
 }
 
-export const imageQueue = new Queue<TaskJobData>(QUEUE_NAME.IMAGE, {
-  connection: queueRedis,
-  defaultJobOptions,
-})
+type QueueSingleton = Partial<Record<QueueType, Queue<TaskJobData>>>
 
-export const videoQueue = new Queue<TaskJobData>(QUEUE_NAME.VIDEO, {
-  connection: queueRedis,
-  defaultJobOptions,
-})
+const globalForQueues = globalThis as typeof globalThis & {
+  __waoowaooQueues?: QueueSingleton
+}
 
-export const voiceQueue = new Queue<TaskJobData>(QUEUE_NAME.VOICE, {
-  connection: queueRedis,
-  defaultJobOptions,
-})
+const queueSingleton = globalForQueues.__waoowaooQueues || {}
+if (!globalForQueues.__waoowaooQueues) {
+  globalForQueues.__waoowaooQueues = queueSingleton
+}
 
-export const textQueue = new Queue<TaskJobData>(QUEUE_NAME.TEXT, {
-  connection: queueRedis,
-  defaultJobOptions,
-})
+function getOrCreateQueue(type: QueueType, name: string) {
+  const existing = queueSingleton[type]
+  if (existing) return existing
+  const queue = new Queue<TaskJobData>(name, {
+    connection: queueRedis,
+    defaultJobOptions,
+  })
+  queueSingleton[type] = queue
+  return queue
+}
 
-const ALL_QUEUES = [imageQueue, videoQueue, voiceQueue, textQueue]
+export function getImageQueue() {
+  return getOrCreateQueue('image', QUEUE_NAME.IMAGE)
+}
+
+export function getVideoQueue() {
+  return getOrCreateQueue('video', QUEUE_NAME.VIDEO)
+}
+
+export function getVoiceQueue() {
+  return getOrCreateQueue('voice', QUEUE_NAME.VOICE)
+}
+
+export function getTextQueue() {
+  return getOrCreateQueue('text', QUEUE_NAME.TEXT)
+}
+
+export function getAllQueues() {
+  return [getImageQueue(), getVideoQueue(), getVoiceQueue(), getTextQueue()]
+}
 
 const IMAGE_TYPES = new Set<TaskType>([
   TASK_TYPE.IMAGE_PANEL,
@@ -74,14 +94,14 @@ export function getQueueTypeByTaskType(type: TaskType): QueueType {
 export function getQueueByType(type: QueueType) {
   switch (type) {
     case 'image':
-      return imageQueue
+      return getImageQueue()
     case 'video':
-      return videoQueue
+      return getVideoQueue()
     case 'voice':
-      return voiceQueue
+      return getVoiceQueue()
     case 'text':
     default:
-      return textQueue
+      return getTextQueue()
   }
 }
 
@@ -101,7 +121,7 @@ export async function addTaskJob(data: TaskJobData, opts?: JobsOptions) {
 }
 
 export async function removeTaskJob(taskId: string) {
-  for (const queue of ALL_QUEUES) {
+  for (const queue of getAllQueues()) {
     const job = await queue.getJob(taskId)
     if (!job) continue
     await job.remove()

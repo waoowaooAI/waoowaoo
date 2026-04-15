@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionVoiceLine: {
+  project: {
+    findUnique: vi.fn(),
+  },
+  projectVoiceLine: {
     findUnique: vi.fn(),
     update: vi.fn(async () => undefined),
   },
-  novelPromotionProject: {
-    findUnique: vi.fn(),
-  },
-  novelPromotionEpisode: {
+  projectEpisode: {
     findUnique: vi.fn(),
   },
 }))
@@ -71,7 +71,7 @@ describe('generate voice line with bailian provider', () => {
     vi.clearAllMocks()
     const audioBytes = Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
-    prismaMock.novelPromotionVoiceLine.findUnique.mockResolvedValue({
+    prismaMock.projectVoiceLine.findUnique.mockResolvedValue({
       id: 'line-1',
       episodeId: 'episode-1',
       speaker: 'Narrator',
@@ -79,10 +79,11 @@ describe('generate voice line with bailian provider', () => {
       emotionPrompt: null,
       emotionStrength: null,
     })
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: 'project-1',
       characters: [],
     })
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+    prismaMock.projectEpisode.findUnique.mockResolvedValue({
       speakerVoices: JSON.stringify({
         Narrator: {
           audioUrl: 'voice/reference.wav',
@@ -127,7 +128,7 @@ describe('generate voice line with bailian provider', () => {
       languageType: 'Chinese',
     }, 'bl-key')
     expect(uploadObjectMock).toHaveBeenCalledTimes(1)
-    expect(prismaMock.novelPromotionVoiceLine.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectVoiceLine.update).toHaveBeenCalledWith({
       where: { id: 'line-1' },
       data: {
         audioUrl: 'voice/storage/line-1.wav',
@@ -143,7 +144,7 @@ describe('generate voice line with bailian provider', () => {
   })
 
   it('fails explicitly when bailian speaker binding only has uploaded audio', async () => {
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValueOnce({
+    prismaMock.projectEpisode.findUnique.mockResolvedValueOnce({
       speakerVoices: JSON.stringify({
         Narrator: {
           audioUrl: 'voice/reference.wav',

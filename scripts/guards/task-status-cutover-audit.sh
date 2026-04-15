@@ -84,9 +84,9 @@ run_zero_match_check \
 run_usetasktargetstates_check
 
 run_zero_match_check \
-  "禁止 novel-promotion/asset-hub/shared-assets 中 useState(false) 作为生成态命名" \
+  "禁止 project-workflow/asset-hub/shared-assets 中 useState(false) 作为生成态命名" \
   "const \\[[^\\]]*(Generating|Regenerating|WaitingForGeneration|AnalyzingAssets|GeneratingAll|CopyingFromGlobal)[^\\]]*\\]\\s*=\\s*useState\\(false\\)" \
-  "src/app/[locale]/workspace/[projectId]/modes/novel-promotion" \
+  "src/features/project-workspace" \
   "src/app/[locale]/workspace/asset-hub" \
   "src/components/shared/assets"
 

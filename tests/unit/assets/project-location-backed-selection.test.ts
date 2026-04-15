@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const deleteObjectMock = vi.hoisted(() => vi.fn())
 const resolveStorageKeyFromMediaValueMock = vi.hoisted(() => vi.fn())
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionLocation: {
+  projectLocation: {
     findUnique: vi.fn(),
     update: vi.fn(),
   },
@@ -35,23 +35,23 @@ describe('project location-backed selection service', () => {
           update: typeof prismaMock.locationImage.update
           deleteMany: typeof prismaMock.locationImage.deleteMany
         }
-        novelPromotionLocation: {
-          update: typeof prismaMock.novelPromotionLocation.update
+        projectLocation: {
+          update: typeof prismaMock.projectLocation.update
         }
       }) => Promise<void>,
     ) => callback({
       locationImage: prismaMock.locationImage,
-      novelPromotionLocation: prismaMock.novelPromotionLocation,
+      projectLocation: prismaMock.projectLocation,
     }))
     resolveStorageKeyFromMediaValueMock.mockImplementation(async (value: string) => `key:${value}`)
     deleteObjectMock.mockResolvedValue(undefined)
     prismaMock.locationImage.deleteMany.mockResolvedValue({ count: 1 })
     prismaMock.locationImage.update.mockResolvedValue(undefined)
-    prismaMock.novelPromotionLocation.update.mockResolvedValue(undefined)
+    prismaMock.projectLocation.update.mockResolvedValue(undefined)
   })
 
   it('confirms a prop selection by keeping only the selected render', async () => {
-    prismaMock.novelPromotionLocation.findUnique.mockResolvedValue({
+    prismaMock.projectLocation.findUnique.mockResolvedValue({
       id: 'prop-1',
       selectedImageId: 'prop-image-2',
       images: [
@@ -90,14 +90,14 @@ describe('project location-backed selection service', () => {
         isSelected: true,
       },
     })
-    expect(prismaMock.novelPromotionLocation.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectLocation.update).toHaveBeenCalledWith({
       where: { id: 'prop-1' },
       data: { selectedImageId: 'prop-image-2' },
     })
   })
 
   it('fails explicitly when confirming without a selected prop render', async () => {
-    prismaMock.novelPromotionLocation.findUnique.mockResolvedValue({
+    prismaMock.projectLocation.findUnique.mockResolvedValue({
       id: 'prop-1',
       selectedImageId: null,
       images: [

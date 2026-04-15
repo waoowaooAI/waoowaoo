@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { NextIntlClientProvider } from 'next-intl'
 import type { AbstractIntlMessages } from 'next-intl'
-import ScriptViewAssetsPanel from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/script-view/ScriptViewAssetsPanel'
+import ScriptViewAssetsPanel from '@/features/project-workspace/components/script-view/ScriptViewAssetsPanel'
 
 const messages = {
   scriptView: {
@@ -34,7 +34,7 @@ const messages = {
       primary: '初始形象',
     },
   },
-  novelPromotion: {
+  projectWorkflow: {
     buttons: {
       assetLibrary: '资产库',
     },

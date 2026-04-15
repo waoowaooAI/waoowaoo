@@ -65,7 +65,7 @@ function buildJob(params: {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: params.episodeId !== undefined ? params.episodeId : 'episode-1',
-      targetType: params.targetType ?? 'NovelPromotionVoiceLine',
+      targetType: params.targetType ?? 'ProjectVoiceLine',
       targetId: params.targetId ?? 'line-1',
       payload: params.payload ?? {},
       userId: 'user-1',
@@ -141,7 +141,7 @@ describe('worker voice processor behavior', () => {
 
     const designJob = buildJob({
       type: TASK_TYPE.VOICE_DESIGN,
-      targetType: 'NovelPromotionVoiceDesign',
+      targetType: 'ProjectVoiceDesign',
       targetId: 'voice-design-1',
     })
 

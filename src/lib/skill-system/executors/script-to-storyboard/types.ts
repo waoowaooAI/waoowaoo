@@ -8,4 +8,4 @@ export type {
   ScriptToStoryboardStepOutput,
   ScriptToStoryboardWorkflowInput,
   ScriptToStoryboardWorkflowResult,
-} from '@skills/novel-promotion/_shared/script-to-storyboard-types'
+} from '@skills/project-workflow/_shared/script-to-storyboard-types'

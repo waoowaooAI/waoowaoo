@@ -15,7 +15,13 @@ async function diagnoseProject(projectId: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
-      novelPromotionData: true
+      locations: {
+        include: {
+          images: {
+            orderBy: { imageIndex: 'asc' },
+          },
+        },
+      },
     }
   })
   
@@ -25,36 +31,13 @@ async function diagnoseProject(projectId: string) {
   }
   
   console.log(`  名称: ${project.name}`)
-  console.log(`  模式: ${project.mode}`)
   console.log(`  用户ID: ${project.userId}`)
+  console.log(`  视频比例: ${project.videoRatio || '未设置'}`)
+  console.log(`  画风提示: ${project.artStylePrompt || '未设置'}`)
 
-  // 2. 检查 NovelPromotionProject
-  console.log('\n2️⃣ 小说推广项目配置:')
-  const novelData = project.novelPromotionData
-  if (!novelData) {
-    console.log('  ❌ novelPromotionData 未创建')
-  } else {
-    console.log(`  ID: ${novelData.id}`)
-    console.log(`  视频比例: ${novelData.videoRatio || '未设置'}`)
-    console.log(`  画风提示: ${novelData.artStylePrompt || '未设置'}`)
-  }
-
-  // 3. 检查场景和场景图片
-  console.log('\n3️⃣ 场景资产:')
-  const novelProjectId = novelData?.id
-  if (!novelProjectId) {
-    console.log('  ❌ 无法获取 novelPromotionProject ID')
-    process.exit(1)
-  }
-  
-  const locations = await prisma.novelPromotionLocation.findMany({
-    where: { novelPromotionProjectId: novelProjectId },
-    include: {
-      images: {
-        orderBy: { imageIndex: 'asc' }
-      }
-    }
-  })
+  // 2. 检查场景和场景图片
+  console.log('\n2️⃣ 场景资产:')
+  const locations = project.locations
   
   console.log(`  场景数量: ${locations.length}`)
   
@@ -86,8 +69,8 @@ async function diagnoseProject(projectId: string) {
     }
   }
 
-  // 4. 检查最近的任务
-  console.log('\n4️⃣ 最近的任务:')
+  // 3. 检查最近的任务
+  console.log('\n3️⃣ 最近的任务:')
   const tasks = await prisma.task.findMany({
     where: { projectId },
     orderBy: { createdAt: 'desc' },

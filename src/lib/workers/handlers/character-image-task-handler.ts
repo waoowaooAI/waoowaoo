@@ -63,7 +63,7 @@ interface CharacterImageDb {
     findFirst(args: Record<string, unknown>): Promise<PrimaryAppearanceRecord | null>
     update(args: Record<string, unknown>): Promise<unknown>
   }
-  novelPromotionCharacter: {
+  projectCharacter: {
     findUnique(args: Record<string, unknown>): Promise<CharacterRecord | null>
   }
 }
@@ -94,7 +94,7 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
 
   const characterId = typeof payload.id === 'string' ? payload.id : null
   if (!appearance && characterId) {
-    const character = await db.novelPromotionCharacter.findUnique({
+    const character = await db.projectCharacter.findUnique({
       where: { id: characterId },
       include: { appearances: { orderBy: { appearanceIndex: 'asc' } } },
     })

@@ -6,8 +6,8 @@ const userId = '3d84c341-87d7-4165-971d-a3f6c576aa21';
 const needle = 'gemini-compatible:5b127c32-136e-4e5a-af74-8bae3e28be7a';
 const modelFields = ['characterModel', 'locationModel', 'storyboardModel', 'editModel'];
 
-// novelPromotionData is a relation, query directly
-const npProjects = await p.novelPromotionProject.findMany({
+// projectData is a relation, query directly
+const npProjects = await p.project.findMany({
     where: { project: { userId } },
     select: { id: true, projectId: true, characterModel: true, locationModel: true, storyboardModel: true, editModel: true, project: { select: { name: true } } }
 });
@@ -26,7 +26,7 @@ for (const np of npProjects) {
     }
 
     if (cleanedFields.length > 0) {
-        await p.novelPromotionProject.update({
+        await p.project.update({
             where: { id: np.id },
             data: updates
         });

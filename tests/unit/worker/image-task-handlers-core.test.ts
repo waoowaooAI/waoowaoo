@@ -33,13 +33,10 @@ const prismaMock = vi.hoisted(() => ({
     findFirst: vi.fn(),
     update: vi.fn(async () => ({})),
   },
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     update: vi.fn(async () => ({})),
-  },
-  novelPromotionProject: {
-    findUnique: vi.fn(),
   },
 }))
 
@@ -67,7 +64,7 @@ function buildJob(payload: Record<string, unknown>): Job<TaskJobData> {
       type: TASK_TYPE.MODIFY_ASSET_IMAGE,
       locale: 'zh',
       projectId: 'project-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'target-1',
       payload,
       userId: 'user-1',
@@ -162,7 +159,7 @@ describe('worker image-task-handlers-core', () => {
   })
 
   it('updates storyboard panel image and keeps candidateImages reset', async () => {
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValue({
+    prismaMock.projectPanel.findUnique.mockResolvedValue({
       id: 'panel-1',
       storyboardId: 'storyboard-1',
       panelIndex: 0,
@@ -200,7 +197,7 @@ describe('worker image-task-handlers-core', () => {
       }),
     )
 
-    const panelUpdateCall = prismaMock.novelPromotionPanel.update.mock.calls.at(-1) as [unknown] | undefined
+    const panelUpdateCall = prismaMock.projectPanel.update.mock.calls.at(-1) as [unknown] | undefined
     const updateArg = panelUpdateCall?.[0]
     const updateData = readUpdateData(updateArg)
     expect(updateData.previousImageUrl).toBe('cos/panel-old.png')

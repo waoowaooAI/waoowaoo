@@ -57,31 +57,29 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     throw new Error('Project not found')
   }
 
-  const novelData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
       locations: true,
     },
   })
-  if (!novelData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
   const analysisModel = await resolveAnalysisModel({
     userId: job.data.userId,
     inputModel: payload.model,
-    projectAnalysisModel: novelData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
 
-  const firstEpisode = await prisma.novelPromotionEpisode.findFirst({
-    where: { novelPromotionProjectId: novelData.id },
+  const firstEpisode = await prisma.projectEpisode.findFirst({
+    where: { projectId: project.id },
     orderBy: { createdAt: 'asc' },
     select: {
       novelText: true,
     },
   })
 
-  let contentToAnalyze = readText(novelData.globalAssetText) || readText(firstEpisode?.novelText)
+  let contentToAnalyze = readText(projectWorkflow.globalAssetText) || readText(firstEpisode?.novelText)
   if (!contentToAnalyze.trim()) {
     throw new Error('请先填写全局资产设定或剧本内容')
   }
@@ -91,12 +89,12 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     contentToAnalyze = contentToAnalyze.substring(0, maxContentLength)
   }
 
-  const charactersLibName = (novelData.characters || []).map((item) => item.name).join(', ')
-  const locationsLibName = (novelData.locations || [])
+  const charactersLibName = (projectWorkflow.characters || []).map((item) => item.name).join(', ')
+  const locationsLibName = (projectWorkflow.locations || [])
     .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop')
     .map((item) => item.name)
     .join(', ')
-  const propsLibName = (novelData.locations || [])
+  const propsLibName = (projectWorkflow.locations || [])
     .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
     .map((item) => item.name)
     .join(', ')
@@ -254,7 +252,7 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     const name = readText(item.name).trim()
     if (!name) continue
 
-    const existsInLibrary = (novelData.characters || []).some(
+    const existsInLibrary = (projectWorkflow.characters || []).some(
       (character) => nameMatchesWithAlias(character.name, name),
     )
     if (existsInLibrary) continue
@@ -274,9 +272,9 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
       age_range: item.age_range,
     }
 
-    const created = await prisma.novelPromotionCharacter.create({
+    const created = await prisma.projectCharacter.create({
       data: {
-        novelPromotionProjectId: novelData.id,
+        projectId: project.id,
         name,
         aliases: JSON.stringify(toStringArray(item.aliases)),
         profileData: JSON.stringify(profileData),
@@ -303,14 +301,14 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     const isInvalid = invalidKeywords.some((keyword) => name.includes(keyword) || firstDescription.includes(keyword))
     if (isInvalid) continue
 
-    const existsInLibrary = (novelData.locations || []).some(
+    const existsInLibrary = (projectWorkflow.locations || []).some(
       (location) => readAssetKind(location as unknown as Record<string, unknown>) !== 'prop' && nameMatchesWithAlias(location.name, name),
     )
     if (existsInLibrary) continue
 
-    const created = await prisma.novelPromotionLocation.create({
+    const created = await prisma.projectLocation.create({
       data: {
-        novelPromotionProjectId: novelData.id,
+        projectId: project.id,
         name,
         summary: readText(item.summary) || null,
       },
@@ -330,7 +328,7 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
   }
 
   const existingPropNameSet = new Set(
-    (novelData.locations || [])
+    (projectWorkflow.locations || [])
       .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
       .map((item) => item.name.toLowerCase()),
   )
@@ -348,9 +346,9 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     const normalizedName = name.toLowerCase()
     if (existingPropNameSet.has(normalizedName)) continue
 
-    const created = await prisma.novelPromotionLocation.create({
+    const created = await prisma.projectLocation.create({
       data: {
-        novelPromotionProjectId: novelData.id,
+        projectId: project.id,
         name,
         summary,
         assetKind: 'prop',
@@ -367,10 +365,10 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
     createdProps.push(created)
   }
 
-  await prisma.novelPromotionProject.update({
-    where: { id: novelData.id },
+  await prisma.project.update({
+    where: { id: project.id },
     data: {
-      artStylePrompt: getArtStylePrompt(novelData.artStyle, job.data.locale) || '',
+      artStylePrompt: getArtStylePrompt(projectWorkflow.artStyle, job.data.locale) || '',
     },
   })
 

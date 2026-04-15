@@ -102,14 +102,14 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-helpers', async () => {
       return textState.voiceLineResults
     }),
     persistStoryboardsAndPanels: vi.fn(async (input: { episodeId: string }) => {
-      const clip = await prisma.novelPromotionClip.findFirst({
+      const clip = await prisma.projectClip.findFirst({
         where: { episodeId: input.episodeId },
         orderBy: { createdAt: 'asc' },
       })
       if (!clip) {
         throw new Error(`TEST_CLIP_NOT_FOUND: ${input.episodeId}`)
       }
-      const storyboard = await prisma.novelPromotionStoryboard.create({
+      const storyboard = await prisma.projectStoryboard.create({
         data: {
           id: 'storyboard-1',
           episodeId: input.episodeId,
@@ -117,7 +117,7 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-helpers', async () => {
           panelCount: 1,
         },
       })
-      const panel = await prisma.novelPromotionPanel.create({
+      const panel = await prisma.projectPanel.create({
         data: {
           id: 'panel-1',
           storyboardId: storyboard.id,
@@ -156,7 +156,7 @@ async function seedScriptToStoryboardState() {
   const project = await createFixtureProject(user.id)
   const novelProject = await createFixtureNovelProject(project.id)
   const episode = await createFixtureEpisode(novelProject.id)
-  const clip = await prisma.novelPromotionClip.create({
+  const clip = await prisma.projectClip.create({
     data: {
       episodeId: episode.id,
       summary: 'script clip',
@@ -166,15 +166,15 @@ async function seedScriptToStoryboardState() {
       characters: JSON.stringify(['Narrator']),
     },
   })
-  await prisma.novelPromotionCharacter.create({
+  await prisma.projectCharacter.create({
     data: {
-      novelPromotionProjectId: novelProject.id,
+      projectId: project.id,
       name: 'Narrator',
     },
   })
-  await prisma.novelPromotionLocation.create({
+  await prisma.projectLocation.create({
     data: {
-      novelPromotionProjectId: novelProject.id,
+      projectId: project.id,
       name: 'Office',
       summary: 'Office',
     },
@@ -221,7 +221,7 @@ describe('system - text workflows', () => {
     ]
     workers = await startSystemWorkers(['text'])
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/script-to-storyboard-stream/route')
+    const mod = await import('@/app/api/projects/[projectId]/script-to-storyboard-stream/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -240,13 +240,13 @@ describe('system - text workflows', () => {
       voiceLineCount: 1,
     }))
 
-    const storyboards = await prisma.novelPromotionStoryboard.findMany({
+    const storyboards = await prisma.projectStoryboard.findMany({
       where: { episodeId: seeded.episode.id },
       select: { id: true, panelCount: true },
     })
     expect(storyboards.length).toBeGreaterThan(0)
 
-    const persistedVoiceLines = await prisma.novelPromotionVoiceLine.findMany({
+    const persistedVoiceLines = await prisma.projectVoiceLine.findMany({
       where: { episodeId: seeded.episode.id },
       orderBy: { lineIndex: 'asc' },
       select: {
@@ -293,7 +293,7 @@ describe('system - text workflows', () => {
     textState.parseFailureCount = 1
     workers = await startSystemWorkers(['text'])
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/script-to-storyboard-stream/route')
+    const mod = await import('@/app/api/projects/[projectId]/script-to-storyboard-stream/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -308,7 +308,7 @@ describe('system - text workflows', () => {
       voiceLineCount: 1,
     }))
 
-    const voiceLines = await prisma.novelPromotionVoiceLine.findMany({
+    const voiceLines = await prisma.projectVoiceLine.findMany({
       where: { episodeId: seeded.episode.id },
       select: { content: true },
     })
@@ -321,11 +321,11 @@ describe('system - text workflows', () => {
     textState.aiResults = [{ text: 'not-json' }]
     workers = await startSystemWorkers(['text'])
 
-    const beforeCount = await prisma.novelPromotionPanel.count({
+    const beforeCount = await prisma.projectPanel.count({
       where: { storyboardId: seeded.storyboard.id },
     })
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/insert-panel/route')
+    const mod = await import('@/app/api/projects/[projectId]/insert-panel/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -342,7 +342,7 @@ describe('system - text workflows', () => {
     const task = await waitForTaskTerminalState(json.taskId, { timeoutMs: 20_000 })
     expect(task.status).toBe('failed')
 
-    const afterCount = await prisma.novelPromotionPanel.count({
+    const afterCount = await prisma.projectPanel.count({
       where: { storyboardId: seeded.storyboard.id },
     })
     expect(afterCount).toBe(beforeCount)

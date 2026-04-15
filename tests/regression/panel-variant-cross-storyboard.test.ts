@@ -15,11 +15,11 @@ describe('regression - panel variant cross storyboard safety', () => {
     const seeded = await seedMinimalDomainState()
     mockAuthenticated(seeded.user.id)
 
-    const beforeCount = await prisma.novelPromotionPanel.count({
+    const beforeCount = await prisma.projectPanel.count({
       where: { storyboardId: seeded.storyboard.id },
     })
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/panel-variant/route')
+    const mod = await import('@/app/api/projects/[projectId]/panel-variant/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -40,7 +40,7 @@ describe('regression - panel variant cross storyboard safety', () => {
     const json = await response.json() as { error?: { code?: string } }
     expect(json.error?.code).toBe('INVALID_PARAMS')
 
-    const afterCount = await prisma.novelPromotionPanel.count({
+    const afterCount = await prisma.projectPanel.count({
       where: { storyboardId: seeded.storyboard.id },
     })
     expect(afterCount).toBe(beforeCount)

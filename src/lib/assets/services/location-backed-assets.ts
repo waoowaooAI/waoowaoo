@@ -10,7 +10,7 @@ export type LocationBackedAssetKind = 'location' | 'prop'
 
 type ProjectLocationBackedAssetRow = {
   id: string
-  novelPromotionProjectId: string
+  projectId: string
   name: string
   summary: string | null
   selectedImageId: string | null
@@ -133,20 +133,20 @@ async function readGlobalLocationBackedImages(locationIds: string[]): Promise<Ma
 }
 
 export async function listProjectLocationBackedAssets(
-  novelPromotionProjectId: string,
+  projectId: string,
   kind: LocationBackedAssetKind,
 ): Promise<ProjectLocationBackedAssetRecord[]> {
   const rows = await prisma.$queryRaw<ProjectLocationBackedAssetRow[]>(Prisma.sql`
     SELECT
       id,
-      novelPromotionProjectId,
+      projectId,
       name,
       summary,
       selectedImageId,
       sourceGlobalLocationId,
       assetKind
-    FROM novel_promotion_locations
-    WHERE novelPromotionProjectId = ${novelPromotionProjectId}
+    FROM project_locations
+    WHERE projectId = ${projectId}
       AND assetKind = ${kind}
     ORDER BY createdAt ASC
   `)
@@ -188,7 +188,7 @@ export async function listGlobalLocationBackedAssets(input: {
 }
 
 export async function createProjectLocationBackedAsset(input: {
-  novelPromotionProjectId: string
+  projectId: string
   name: string
   summary: string
   initialDescription?: string
@@ -196,9 +196,9 @@ export async function createProjectLocationBackedAsset(input: {
 }): Promise<{ id: string }> {
   const id = randomUUID()
   await prisma.$executeRaw(Prisma.sql`
-    INSERT INTO novel_promotion_locations (
+    INSERT INTO project_locations (
       id,
-      novelPromotionProjectId,
+      projectId,
       name,
       summary,
       selectedImageId,
@@ -208,7 +208,7 @@ export async function createProjectLocationBackedAsset(input: {
       updatedAt
     ) VALUES (
       ${id},
-      ${input.novelPromotionProjectId},
+      ${input.projectId},
       ${input.name},
       ${input.summary},
       NULL,
@@ -327,7 +327,7 @@ export async function seedGlobalLocationBackedImageSlots(input: {
 export async function deleteProjectLocationBackedAsset(assetId: string): Promise<void> {
   await prisma.$transaction([
     prisma.$executeRaw(Prisma.sql`DELETE FROM location_images WHERE locationId = ${assetId}`),
-    prisma.$executeRaw(Prisma.sql`DELETE FROM novel_promotion_locations WHERE id = ${assetId}`),
+    prisma.$executeRaw(Prisma.sql`DELETE FROM project_locations WHERE id = ${assetId}`),
   ])
 }
 

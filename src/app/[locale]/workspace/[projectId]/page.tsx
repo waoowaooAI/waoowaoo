@@ -10,8 +10,8 @@ import Navbar from '@/components/Navbar'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { useProjectData, useEpisodeData, useUserModels } from '@/lib/query/hooks'
 import { queryKeys } from '@/lib/query/keys'
-import NovelPromotionWorkspace from './modes/novel-promotion/NovelPromotionWorkspace'
-import SmartImportWizard, { SplitEpisode } from './modes/novel-promotion/components/SmartImportWizard'
+import ProjectWorkspace from '@/features/project-workspace/ProjectWorkspace'
+import SmartImportWizard, { SplitEpisode } from '@/features/project-workspace/components/SmartImportWizard'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { resolveSelectedEpisodeId } from './episode-selection'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
@@ -33,11 +33,6 @@ interface Episode {
   audioUrl?: string | null
   srtContent?: string | null
   createdAt: string
-}
-
-type NovelPromotionData = {
-  episodes?: Episode[]
-  importStatus?: string
 }
 
 /**
@@ -112,14 +107,16 @@ export default function ProjectDetailPage() {
   const effectiveStage = currentUrlStage === 'editor' ? 'videos' : (currentUrlStage || 'config')
 
   // 获取剧集列表
-  const novelPromotionData = project?.novelPromotionData as NovelPromotionData | undefined
   const episodes = useMemo<Episode[]>(() => {
     const getNum = (name: string) => { const m = name.match(/\d+/); return m ? parseInt(m[0], 10) : Infinity }
-    return [...(novelPromotionData?.episodes ?? [])].sort((a, b) => {
+    return (project?.episodes ?? []).map((episode) => ({
+      ...episode,
+      createdAt: typeof episode.createdAt === 'string' ? episode.createdAt : episode.createdAt.toISOString(),
+    })).sort((a, b) => {
       const diff = getNum(a.name) - getNum(b.name)
       return diff !== 0 ? diff : a.name.localeCompare(b.name, 'zh')
     })
-  }, [novelPromotionData?.episodes])
+  }, [project?.episodes])
 
   // 剧集导航状态单源：URL（无本地副本）
   const selectedEpisodeId = useMemo(
@@ -134,7 +131,7 @@ export default function ProjectDetailPage() {
   )
 
   // 获取导入状态
-  const importStatus = novelPromotionData?.importStatus
+  const importStatus = project?.importStatus
 
   // 零状态：无剧集且非导入中 → 自动创建第一集
   const isZeroState = episodes.length === 0
@@ -203,7 +200,7 @@ export default function ProjectDetailPage() {
 
   // 创建剧集
   const handleCreateEpisode = async (name: string, description?: string) => {
-    const res = await apiFetch(`/api/novel-promotion/${projectId}/episodes`, {
+    const res = await apiFetch(`/api/projects/${projectId}/episodes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, description })
@@ -233,8 +230,7 @@ export default function ProjectDetailPage() {
       // 刷新后重新获取最新的剧集列表
       const res = await apiFetch(`/api/projects/${projectId}/data`)
       const data = await res.json()
-      // API 返回结构是 { project: { novelPromotionData: { episodes: [...] } } }
-      const newEpisodes = data?.project?.novelPromotionData?.episodes || []
+      const newEpisodes = data?.project?.episodes || []
       _ulogInfo('[Page] 获取到新剧集:', newEpisodes.length, '个')
 
       // 如果有剧集，进入第一个
@@ -262,7 +258,7 @@ export default function ProjectDetailPage() {
 
   // 重命名剧集
   const handleRenameEpisode = async (episodeId: string, newName: string) => {
-    const res = await apiFetch(`/api/novel-promotion/${projectId}/episodes/${episodeId}`, {
+    const res = await apiFetch(`/api/projects/${projectId}/episodes/${episodeId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newName })
@@ -282,7 +278,7 @@ export default function ProjectDetailPage() {
 
   // 删除剧集
   const handleDeleteEpisode = async (episodeId: string) => {
-    const res = await apiFetch(`/api/novel-promotion/${projectId}/episodes/${episodeId}`, {
+    const res = await apiFetch(`/api/projects/${projectId}/episodes/${episodeId}`, {
       method: 'DELETE',
     })
     if (!res.ok) {
@@ -341,8 +337,7 @@ export default function ProjectDetailPage() {
   // 条件：正在加载 或 (有剧集但episode数据未准备好)
   // 排除：如果要显示导入向导，则不需要等待剧集数据
   const isInitializing = loading ||
-    (!shouldShowImportWizard && !isGlobalAssetsView && episodes.length > 0 && (!selectedEpisodeId || !currentEpisode)) ||
-    (project && !project.novelPromotionData)
+    (!shouldShowImportWizard && !isGlobalAssetsView && episodes.length > 0 && (!selectedEpisodeId || !currentEpisode))
   const initLoadingState = resolveTaskPresentationState({
     phase: 'processing',
     intent: 'generate',
@@ -390,11 +385,11 @@ export default function ProjectDetailPage() {
       {/* 主内容区 - 占满全部宽度 */}
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-8">
-          {isGlobalAssetsView && project.novelPromotionData ? (
+          {isGlobalAssetsView ? (
             // 全局资产视图（确保数据准备好）
             <div>
               <h1 className="text-2xl font-bold text-[var(--glass-text-primary)] mb-6">{t('globalAssets')}</h1>
-              <NovelPromotionWorkspace
+              <ProjectWorkspace
                 project={project}
                 projectId={projectId}
                 viewMode="global-assets"
@@ -508,7 +503,7 @@ export default function ProjectDetailPage() {
             )
           ) : selectedEpisodeId && currentEpisode ? (
             // 剧集工作区（确保所有数据都准备好）
-            <NovelPromotionWorkspace
+            <ProjectWorkspace
               project={project}
               projectId={projectId}
               episodeId={selectedEpisodeId}

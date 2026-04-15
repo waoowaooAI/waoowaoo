@@ -78,7 +78,7 @@ describe('task publisher direct run event boundary', () => {
       projectId: 'project-1',
       userId: 'user-1',
       taskType: 'story_to_script_run',
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       episodeId: 'episode-1',
       payload: {

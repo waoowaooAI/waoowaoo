@@ -64,12 +64,12 @@ const mustIncludeRules: Rule[] = [
     message: 'video.worker.ts must normalize last frame to base64',
   },
   {
-    file: 'src/app/api/novel-promotion/[projectId]/modify-asset-image/route.ts',
+    file: 'src/app/api/projects/[projectId]/modify-asset-image/route.ts',
     pattern: /sanitizeImageInputsForTaskPayload/,
     message: 'modify-asset-image route must sanitize image inputs',
   },
   {
-    file: 'src/app/api/novel-promotion/[projectId]/modify-storyboard-image/route.ts',
+    file: 'src/app/api/projects/[projectId]/modify-storyboard-image/route.ts',
     pattern: /sanitizeImageInputsForTaskPayload/,
     message: 'modify-storyboard-image route must sanitize image inputs',
   },
@@ -84,17 +84,17 @@ const mustIncludeRules: Rule[] = [
     message: 'ImagePreviewModal must use shared image-url helpers',
   },
   {
-    file: 'src/lib/novel-promotion/stages/video-stage-runtime-core.tsx',
+    file: 'src/lib/project-workflow/stages/video-stage-runtime-core.tsx',
     pattern: /onPreviewImage=\{setPreviewImage\}/,
     message: 'Video stage runtime must wire preview callback to VideoPanelCard',
   },
   {
-    file: 'src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video/panel-card/types.ts',
+    file: 'src/features/project-workspace/components/video/panel-card/types.ts',
     pattern: /onPreviewImage\?:\s*\(imageUrl:\s*string\)\s*=>\s*void/,
     message: 'VideoPanelCard runtime props must expose onPreviewImage',
   },
   {
-    file: 'src/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/video/panel-card/VideoPanelCardHeader.tsx',
+    file: 'src/features/project-workspace/components/video/panel-card/VideoPanelCardHeader.tsx',
     pattern: /className="absolute left-1\/2 top-1\/2 z-10 h-16 w-16 -translate-x-1\/2 -translate-y-1\/2 rounded-full"/,
     message: 'VideoPanelCard play trigger must be centered small button (preview/play separation)',
   },

@@ -162,7 +162,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
   const panelId = pickFirstString(payload.panelId, job.data.targetId)
   if (!panelId) throw new Error('panelId missing')
 
-  const panel = await prisma.novelPromotionPanel.findUnique({
+  const panel = await prisma.projectPanel.findUnique({
     where: { id: panelId },
   })
 
@@ -264,7 +264,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
 
   await assertTaskActive(job, 'persist_panel_image')
   if (isFirstGeneration) {
-    await prisma.novelPromotionPanel.update({
+    await prisma.projectPanel.update({
       where: { id: panel.id },
       data: {
         imageUrl: candidates[0] || null,
@@ -272,7 +272,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       },
     })
   } else {
-    await prisma.novelPromotionPanel.update({
+    await prisma.projectPanel.update({
       where: { id: panel.id },
       data: {
         previousImageUrl: panel.imageUrl,

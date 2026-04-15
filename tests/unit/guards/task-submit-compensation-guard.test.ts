@@ -17,7 +17,7 @@ describe('task submit compensation guard', () => {
     `
 
     expect(
-      inspectTaskSubmitCompensation('src/app/api/novel-promotion/[projectId]/panel-variant/route.ts', content),
+      inspectTaskSubmitCompensation('src/app/api/projects/[projectId]/panel-variant/route.ts', content),
     ).toEqual([])
   })
 

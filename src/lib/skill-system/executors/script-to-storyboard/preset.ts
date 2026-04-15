@@ -1,4 +1,4 @@
-import { runScriptToStoryboardWorkflowPackage } from '@skills/novel-promotion/workflows/script-to-storyboard/execute'
+import { runScriptToStoryboardWorkflowPackage } from '@skills/project-workflow/workflows/script-to-storyboard/execute'
 import type {
   ScriptToStoryboardWorkflowInput,
   ScriptToStoryboardWorkflowResult,

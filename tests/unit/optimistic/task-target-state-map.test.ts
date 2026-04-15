@@ -69,7 +69,7 @@ describe('task target state map behavior', () => {
         updatedAt: null,
       },
       {
-        targetType: 'NovelPromotionPanel',
+        targetType: 'ProjectPanel',
         targetId: 'panel-1',
         phase: 'processing',
         runningTaskId: 'task-api-panel',
@@ -99,8 +99,8 @@ describe('task target state map behavior', () => {
         lastError: null,
         expiresAt: Date.now() + 30_000,
       },
-      'NovelPromotionPanel:panel-1': {
-        targetType: 'NovelPromotionPanel',
+      'ProjectPanel:panel-1': {
+        targetType: 'ProjectPanel',
         targetId: 'panel-1',
         phase: 'queued',
         runningTaskId: 'task-ov-2',
@@ -122,7 +122,7 @@ describe('task target state map behavior', () => {
 
     const result = useTaskTargetStateMap('project-1', [
       { targetType: 'CharacterAppearance', targetId: 'appearance-1', types: ['IMAGE_CHARACTER'] },
-      { targetType: 'NovelPromotionPanel', targetId: 'panel-1', types: ['IMAGE_PANEL'] },
+      { targetType: 'ProjectPanel', targetId: 'panel-1', types: ['IMAGE_PANEL'] },
     ])
 
     const firstCall = runtime.useQueryCalls[0]
@@ -137,7 +137,7 @@ describe('task target state map behavior', () => {
     expect(appearance?.runningTaskType).toBe('IMAGE_CHARACTER')
     expect(appearance?.runningTaskId).toBe('task-ov-1')
 
-    const panel = result.getState('NovelPromotionPanel', 'panel-1')
+    const panel = result.getState('ProjectPanel', 'panel-1')
     expect(panel?.phase).toBe('processing')
     expect(panel?.runningTaskType).toBe('IMAGE_PANEL')
     expect(panel?.runningTaskId).toBe('task-api-panel')
@@ -146,7 +146,7 @@ describe('task target state map behavior', () => {
   it('allows newer overlay to override completed state for immediate rerun feedback', async () => {
     runtime.apiStates = [
       {
-        targetType: 'NovelPromotionPanel',
+        targetType: 'ProjectPanel',
         targetId: 'panel-2',
         phase: 'completed',
         runningTaskId: null,
@@ -161,8 +161,8 @@ describe('task target state map behavior', () => {
       },
     ]
     runtime.overlayStates = {
-      'NovelPromotionPanel:panel-2': {
-        targetType: 'NovelPromotionPanel',
+      'ProjectPanel:panel-2': {
+        targetType: 'ProjectPanel',
         targetId: 'panel-2',
         phase: 'queued',
         runningTaskId: 'task-overlay-new',
@@ -181,10 +181,10 @@ describe('task target state map behavior', () => {
     const { useTaskTargetStateMap } = await import('@/lib/query/hooks/useTaskTargetStateMap')
 
     const result = useTaskTargetStateMap('project-1', [
-      { targetType: 'NovelPromotionPanel', targetId: 'panel-2', types: ['VIDEO_PANEL'] },
+      { targetType: 'ProjectPanel', targetId: 'panel-2', types: ['VIDEO_PANEL'] },
     ])
 
-    const state = result.getState('NovelPromotionPanel', 'panel-2')
+    const state = result.getState('ProjectPanel', 'panel-2')
     expect(state?.phase).toBe('queued')
     expect(state?.runningTaskId).toBe('task-overlay-new')
     expect(state?.runningTaskType).toBe('VIDEO_PANEL')
@@ -193,7 +193,7 @@ describe('task target state map behavior', () => {
   it('allows active overlay to override completed state even with timestamp skew', async () => {
     runtime.apiStates = [
       {
-        targetType: 'NovelPromotionPanel',
+        targetType: 'ProjectPanel',
         targetId: 'panel-3',
         phase: 'completed',
         runningTaskId: null,
@@ -208,8 +208,8 @@ describe('task target state map behavior', () => {
       },
     ]
     runtime.overlayStates = {
-      'NovelPromotionPanel:panel-3': {
-        targetType: 'NovelPromotionPanel',
+      'ProjectPanel:panel-3': {
+        targetType: 'ProjectPanel',
         targetId: 'panel-3',
         phase: 'queued',
         runningTaskId: 'task-overlay-old',
@@ -228,10 +228,10 @@ describe('task target state map behavior', () => {
     const { useTaskTargetStateMap } = await import('@/lib/query/hooks/useTaskTargetStateMap')
 
     const result = useTaskTargetStateMap('project-1', [
-      { targetType: 'NovelPromotionPanel', targetId: 'panel-3', types: ['VIDEO_PANEL'] },
+      { targetType: 'ProjectPanel', targetId: 'panel-3', types: ['VIDEO_PANEL'] },
     ])
 
-    const state = result.getState('NovelPromotionPanel', 'panel-3')
+    const state = result.getState('ProjectPanel', 'panel-3')
     expect(state?.phase).toBe('queued')
     expect(state?.runningTaskId).toBe('task-overlay-old')
     expect(state?.runningTaskType).toBe('VIDEO_PANEL')
@@ -240,7 +240,7 @@ describe('task target state map behavior', () => {
   it('matches task type whitelist case-insensitively', async () => {
     runtime.apiStates = [
       {
-        targetType: 'NovelPromotionPanel',
+        targetType: 'ProjectPanel',
         targetId: 'panel-4',
         phase: 'idle',
         runningTaskId: null,
@@ -255,8 +255,8 @@ describe('task target state map behavior', () => {
       },
     ]
     runtime.overlayStates = {
-      'NovelPromotionPanel:panel-4': {
-        targetType: 'NovelPromotionPanel',
+      'ProjectPanel:panel-4': {
+        targetType: 'ProjectPanel',
         targetId: 'panel-4',
         phase: 'processing',
         runningTaskId: 'task-overlay-upper',
@@ -275,10 +275,10 @@ describe('task target state map behavior', () => {
     const { useTaskTargetStateMap } = await import('@/lib/query/hooks/useTaskTargetStateMap')
 
     const result = useTaskTargetStateMap('project-1', [
-      { targetType: 'NovelPromotionPanel', targetId: 'panel-4', types: ['video_panel'] },
+      { targetType: 'ProjectPanel', targetId: 'panel-4', types: ['video_panel'] },
     ])
 
-    const state = result.getState('NovelPromotionPanel', 'panel-4')
+    const state = result.getState('ProjectPanel', 'panel-4')
     expect(state?.phase).toBe('processing')
     expect(state?.runningTaskType).toBe('VIDEO_PANEL')
     expect(state?.runningTaskId).toBe('task-overlay-upper')

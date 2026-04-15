@@ -45,7 +45,7 @@ export const GET = apiHandler(async (
   }).catch(err => _ulogError('更新访问时间失败:', err))
 
   // 这个 API 只返回基础项目信息
-  // 项目附属业务数据通过各自的 API 获取（如 /api/novel-promotion/[projectId]）
+  // 项目附属业务数据通过各自的 API 获取（如 /api/projects/[projectId]）
   const projectWithSignedUrls = addSignedUrlsToProject(project)
 
   return NextResponse.json({ project: projectWithSignedUrls })
@@ -100,23 +100,19 @@ export const PATCH = apiHandler(async (
 async function collectProjectCOSKeys(projectId: string): Promise<string[]> {
   const keys: string[] = []
 
-  // 获取 NovelPromotionProject
-  const novelPromotion = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
-      // 角色及其形象图片
       characters: {
         include: {
           appearances: true
         }
       },
-      // 场景及其图片
       locations: {
         include: {
           images: true
         }
       },
-      // 剧集（包含音频、分镜等）
       episodes: {
         include: {
           storyboards: {
@@ -129,10 +125,10 @@ async function collectProjectCOSKeys(projectId: string): Promise<string[]> {
     }
   })
 
-  if (!novelPromotion) return keys
+  if (!project) return keys
 
   // 1. 收集角色形象图片
-  for (const character of novelPromotion.characters) {
+  for (const character of project.characters) {
     for (const appearance of character.appearances) {
       const key = await resolveStorageKeyFromMediaValue(appearance.imageUrl)
       if (key) keys.push(key)
@@ -140,7 +136,7 @@ async function collectProjectCOSKeys(projectId: string): Promise<string[]> {
   }
 
   // 2. 收集场景图片
-  for (const location of novelPromotion.locations) {
+  for (const location of project.locations) {
     for (const image of location.images) {
       const key = await resolveStorageKeyFromMediaValue(image.imageUrl)
       if (key) keys.push(key)
@@ -148,7 +144,7 @@ async function collectProjectCOSKeys(projectId: string): Promise<string[]> {
   }
 
   // 3. 收集剧集相关文件
-  for (const episode of novelPromotion.episodes) {
+  for (const episode of project.episodes) {
     // 音频文件
     const audioKey = await resolveStorageKeyFromMediaValue(episode.audioUrl)
     if (audioKey) keys.push(audioKey)

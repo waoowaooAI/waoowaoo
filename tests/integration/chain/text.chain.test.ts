@@ -16,9 +16,6 @@ const prismaMock = vi.hoisted(() => ({
   project: {
     findUnique: vi.fn(async () => ({ id: 'project-1' })),
   },
-  novelPromotionProject: {
-    findFirst: vi.fn(async () => ({ id: 'np-project-1' })),
-  },
 }))
 
 const llmMock = vi.hoisted(() => ({
@@ -83,7 +80,7 @@ vi.mock('@/lib/prompt-i18n', () => ({
   PROMPT_IDS: { NP_EPISODE_SPLIT: 'np_episode_split' },
   buildPrompt: vi.fn(() => 'episode-split-prompt'),
 }))
-vi.mock('@/lib/novel-promotion/story-to-script/clip-matching', () => ({
+vi.mock('@/lib/project-workflow/story-to-script/clip-matching', () => ({
   createTextMarkerMatcher: (content: string) => ({
     matchMarker: (marker: string, fromIndex = 0) => {
       const startIndex = content.indexOf(marker, fromIndex)
@@ -112,7 +109,7 @@ describe('chain contract - text queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload: { episodeId: 'episode-1' },
       userId: 'user-1',
@@ -135,7 +132,7 @@ describe('chain contract - text queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload: { episodeId: 'episode-1' },
       userId: 'user-1',
@@ -158,7 +155,7 @@ describe('chain contract - text queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: null,
-      targetType: 'NovelPromotionProject',
+      targetType: 'Project',
       targetId: 'project-1',
       payload: { referenceImageUrl: 'https://example.com/ref.png' },
       userId: 'user-1',
@@ -188,7 +185,7 @@ describe('chain contract - text queue behavior', () => {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: null,
-      targetType: 'NovelPromotionProject',
+      targetType: 'Project',
       targetId: 'project-1',
       payload: { content },
       userId: 'user-1',

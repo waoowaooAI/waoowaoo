@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
-import { apiHandler, ApiError } from '@/lib/api-errors'
+import { requireProjectAuthLight, isErrorResponse } from '@/lib/api-auth'
+import { apiHandler } from '@/lib/api-errors'
 import { attachMediaFieldsToProject } from '@/lib/media/attach'
 
 function readAssetKind(value: Record<string, unknown>): string {
@@ -9,8 +9,8 @@ function readAssetKind(value: Record<string, unknown>): string {
 }
 
 /**
- * ⚡ 延迟加载 API - 获取项目的 characters 和 locations 资产
- * 用于资产管理页面，避免首次加载时的性能开销
+ * GET - 获取项目资产（角色 + 场景）
+ * 🔥 V6.5: 为 useProjectAssets hook 提供统一的资产数据接口
  */
 export const GET = apiHandler(async (
     request: NextRequest,
@@ -19,51 +19,43 @@ export const GET = apiHandler(async (
     const { projectId } = await context.params
 
     // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
+    const authResult = await requireProjectAuthLight(projectId)
     if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
 
-    // 验证项目所有权
-    const project = await prisma.project.findUnique({
+    // 获取项目的角色和场景数据
+    const projectWithAssets = await prisma.project.findUnique({
         where: { id: projectId },
-        select: { userId: true }
-    })
-
-    if (!project) {
-        throw new ApiError('NOT_FOUND')
-    }
-
-    if (project.userId !== session.user.id) {
-        throw new ApiError('FORBIDDEN')
-    }
-
-    // 获取 characters 和 locations（包含嵌套数据）
-    const novelPromotionData = await prisma.novelPromotionProject.findUnique({
-        where: { projectId },
         include: {
             characters: {
-                include: { appearances: { orderBy: { appearanceIndex: 'asc' } } },
+                include: {
+                    appearances: {
+                        orderBy: { appearanceIndex: 'asc' }
+                    }
+                },
                 orderBy: { createdAt: 'asc' }
             },
             locations: {
-                include: { images: { orderBy: { imageIndex: 'asc' } } },
+                include: {
+                    images: {
+                        orderBy: { imageIndex: 'asc' }
+                    }
+                },
                 orderBy: { createdAt: 'asc' }
             }
         }
     })
 
-    if (!novelPromotionData) {
-        throw new ApiError('NOT_FOUND')
+    if (!projectWithAssets) {
+        return NextResponse.json({ characters: [], locations: [], props: [] })
     }
 
-    // 转换为稳定媒体 URL（并保留兼容字段）
-    const dataWithSignedUrls = await attachMediaFieldsToProject(novelPromotionData)
-
-    const locations = (dataWithSignedUrls.locations || []).filter((item) => readAssetKind(item) !== 'prop')
-    const props = (dataWithSignedUrls.locations || []).filter((item) => readAssetKind(item) === 'prop')
+    // 为资产添加稳定媒体 URL（并保留兼容字段）
+    const withSignedUrls = await attachMediaFieldsToProject(projectWithAssets)
+    const locations = (withSignedUrls.locations || []).filter((item) => readAssetKind(item as Record<string, unknown>) !== 'prop')
+    const props = (withSignedUrls.locations || []).filter((item) => readAssetKind(item as Record<string, unknown>) === 'prop')
 
     return NextResponse.json({
-        characters: dataWithSignedUrls.characters || [],
+        characters: withSignedUrls.characters || [],
         locations,
         props,
     })

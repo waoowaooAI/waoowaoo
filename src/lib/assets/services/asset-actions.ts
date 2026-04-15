@@ -247,7 +247,7 @@ async function submitProjectAssetGenerateTask(input: AssetGenerateInput) {
   const imageIndex = toNumber(input.body.imageIndex)
 
   if (normalizedKind === 'location' && imageIndex === null) {
-    const location = await prisma.novelPromotionLocation.findUnique({
+    const location = await prisma.projectLocation.findUnique({
       where: { id: input.assetId },
       select: {
         name: true,
@@ -644,7 +644,7 @@ async function selectProjectAssetRender(input: AssetSelectInput) {
     return confirmProjectLocationBackedSelection(input.assetId)
   }
   const selectedIndex = toNumber(input.body.selectedIndex ?? input.body.imageIndex)
-  const location = await prisma.novelPromotionLocation.findUnique({
+  const location = await prisma.projectLocation.findUnique({
     where: { id: input.assetId },
     include: { images: { orderBy: { imageIndex: 'asc' } } },
   })
@@ -665,12 +665,12 @@ async function selectProjectAssetRender(input: AssetSelectInput) {
       where: { locationId_imageIndex: { locationId: input.assetId, imageIndex: selectedIndex } },
       data: { isSelected: true },
     })
-    await prisma.novelPromotionLocation.update({
+    await prisma.projectLocation.update({
       where: { id: input.assetId },
       data: { selectedImageId: updated.id },
     })
   } else {
-    await prisma.novelPromotionLocation.update({
+    await prisma.projectLocation.update({
       where: { id: input.assetId },
       data: { selectedImageId: null },
     })
@@ -769,7 +769,7 @@ async function revertProjectAssetRender(input: AssetRevertInput) {
     })
     return { success: true }
   }
-  const location = await prisma.novelPromotionLocation.findUnique({
+  const location = await prisma.projectLocation.findUnique({
     where: { id: input.assetId },
     include: { images: { orderBy: { imageIndex: 'asc' } } },
   })
@@ -815,7 +815,7 @@ async function copyCharacterFromGlobal(input: AssetCopyInput) {
     include: { appearances: true },
   })
   if (!globalCharacter) throw new ApiError('NOT_FOUND')
-  const projectCharacter = await prisma.novelPromotionCharacter.findUnique({
+  const projectCharacter = await prisma.projectCharacter.findUnique({
     where: { id: input.targetId },
     include: { appearances: true },
   })
@@ -849,7 +849,7 @@ async function copyCharacterFromGlobal(input: AssetCopyInput) {
       },
     })
   }
-  const character = await prisma.novelPromotionCharacter.update({
+  const character = await prisma.projectCharacter.update({
     where: { id: input.targetId },
     data: {
       sourceGlobalCharacterId: input.globalAssetId,
@@ -869,7 +869,7 @@ async function copyLocationFromGlobal(input: AssetCopyInput) {
     include: { images: true },
   })
   if (!globalLocation) throw new ApiError('NOT_FOUND')
-  const projectLocation = await prisma.novelPromotionLocation.findUnique({
+  const projectLocation = await prisma.projectLocation.findUnique({
     where: { id: input.targetId },
     include: { images: true },
   })
@@ -901,7 +901,7 @@ async function copyLocationFromGlobal(input: AssetCopyInput) {
   const selectedImageId = selectedFromGlobal
     ? copiedImages.find((image) => image.imageIndex === selectedFromGlobal.imageIndex)?.id
     : copiedImages.find((image) => image.imageUrl)?.id || null
-  const location = await prisma.novelPromotionLocation.update({
+  const location = await prisma.projectLocation.update({
     where: { id: input.targetId },
     data: {
       sourceGlobalLocationId: input.globalAssetId,
@@ -918,7 +918,7 @@ async function copyVoiceFromGlobal(input: AssetCopyInput) {
     where: { id: input.globalAssetId, userId: input.access.userId },
   })
   if (!globalVoice) throw new ApiError('NOT_FOUND')
-  const character = await prisma.novelPromotionCharacter.update({
+  const character = await prisma.projectCharacter.update({
     where: { id: input.targetId },
     data: {
       voiceId: globalVoice.voiceId,
@@ -1012,7 +1012,7 @@ async function updateProjectAsset(input: AssetUpdateInput) {
     if (input.body.voiceType !== undefined) updateData.voiceType = input.body.voiceType
     if (input.body.customVoiceUrl !== undefined) updateData.customVoiceUrl = input.body.customVoiceUrl
     if (input.body.profileConfirmed !== undefined) updateData.profileConfirmed = input.body.profileConfirmed
-    const character = await prisma.novelPromotionCharacter.update({
+    const character = await prisma.projectCharacter.update({
       where: { id: input.assetId },
       data: updateData,
     })
@@ -1022,7 +1022,7 @@ async function updateProjectAsset(input: AssetUpdateInput) {
     const updateData: Record<string, unknown> = {}
     if (input.body.name !== undefined) updateData.name = normalizeString(input.body.name)
     if (input.body.summary !== undefined) updateData.summary = normalizeString(input.body.summary) || null
-    const location = await prisma.novelPromotionLocation.update({
+    const location = await prisma.projectLocation.update({
       where: { id: input.assetId },
       data: updateData,
     })
@@ -1032,7 +1032,7 @@ async function updateProjectAsset(input: AssetUpdateInput) {
     const updateData: Record<string, unknown> = {}
     if (input.body.name !== undefined) updateData.name = normalizeString(input.body.name)
     if (input.body.summary !== undefined) updateData.summary = normalizeString(input.body.summary) || null
-    const prop = await prisma.novelPromotionLocation.update({
+    const prop = await prisma.projectLocation.update({
       where: { id: input.assetId },
       data: updateData,
     })
@@ -1165,15 +1165,8 @@ export async function createAsset(input: AssetCreateInput) {
     return { success: true, assetId: created.id }
   }
 
-  const project = await prisma.novelPromotionProject.findUnique({
-    where: { projectId: requireProjectId(input.access) },
-    select: { id: true },
-  })
-  if (!project) {
-    throw new ApiError('NOT_FOUND')
-  }
   const created = await createProjectLocationBackedAsset({
-    novelPromotionProjectId: project.id,
+    projectId: requireProjectId(input.access),
     name,
     summary,
     initialDescription: description,

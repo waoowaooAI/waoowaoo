@@ -30,10 +30,10 @@ async function handleConfirmProfile(
   const characterId = readRequiredString(payload.characterId, 'characterId')
   const project = await resolveProjectModel(job.data.projectId)
 
-  const character = await prisma.novelPromotionCharacter.findFirst({
+  const character = await prisma.projectCharacter.findFirst({
     where: {
       id: characterId,
-      novelPromotionProjectId: project.novelPromotionData!.id,
+      projectId: project.projectId,
     },
   })
   if (!character) {
@@ -47,7 +47,7 @@ async function handleConfirmProfile(
     }
     finalProfileData = stringifyProfileData(payload.profileData)
     await assertTaskActive(job, 'character_profile_confirm_update_profile')
-    await prisma.novelPromotionCharacter.update({
+    await prisma.projectCharacter.update({
       where: { id: characterId },
       data: { profileData: finalProfileData },
     })
@@ -91,7 +91,7 @@ async function handleConfirmProfile(
     async () =>
       await executeAiTextStep({
         userId: job.data.userId,
-        model: project.novelPromotionData!.analysisModel!,
+        model: project.analysisModel,
         messages: [{ role: 'user', content: promptTemplate }],
         temperature: 0.7,
         projectId: job.data.projectId,
@@ -166,7 +166,7 @@ async function handleConfirmProfile(
       })
     }
 
-    await tx.novelPromotionCharacter.update({
+    await tx.projectCharacter.update({
       where: { id: characterId },
       data: {
         profileData: finalProfileData,
@@ -197,9 +197,9 @@ async function handleConfirmProfile(
 async function handleBatchConfirmProfile(job: Job<TaskJobData>) {
   const project = await resolveProjectModel(job.data.projectId)
 
-  const unconfirmedCharacters = await prisma.novelPromotionCharacter.findMany({
+  const unconfirmedCharacters = await prisma.projectCharacter.findMany({
     where: {
-      novelPromotionProjectId: project.novelPromotionData!.id,
+      projectId: project.projectId,
       profileConfirmed: false,
       profileData: { not: null },
     },

@@ -149,7 +149,7 @@ export async function getProjectModelConfig(
   userId: string,
 ): Promise<ProjectModelConfig> {
   const [projectData, userPref] = await Promise.all([
-    prisma.novelPromotionProject.findUnique({ where: { projectId } }),
+    prisma.project.findUnique({ where: { id: projectId } }),
     prisma.userPreference.findUnique({ where: { userId } }),
   ])
 
@@ -161,7 +161,7 @@ export async function getProjectModelConfig(
     editModel: extractModelKey(projectData?.editModel) || null,
     videoModel: extractModelKey(projectData?.videoModel) || null,
     audioModel: extractModelKey(projectData?.audioModel) || extractModelKey(userPref?.audioModel) || null,
-    videoRatio: projectData?.videoRatio || '16:9',
+    videoRatio: projectData?.videoRatio || '9:16',
     artStyle: projectData?.artStyle || null,
     capabilityDefaults: parseCapabilitySelections(userPref?.capabilityDefaults),
     capabilityOverrides: parseCapabilitySelections(projectData?.capabilityOverrides),

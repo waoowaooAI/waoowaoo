@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getAllClipsAssets, parseClipAssets } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/script-view/clip-asset-utils'
+import { getAllClipsAssets, parseClipAssets } from '@/features/project-workspace/components/script-view/clip-asset-utils'
 
 describe('clip asset utils', () => {
   it('parses prop names from clip JSON payloads', () => {

@@ -39,23 +39,21 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
     throw new Error('Project not found')
   }
 
-  const novelData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
       locations: true,
     },
   })
-  if (!novelData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
   const analysisModel = await resolveAnalysisModel({
     userId: job.data.userId,
     inputModel: payload.model,
-    projectAnalysisModel: novelData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
 
-  const episode = await prisma.novelPromotionEpisode.findUnique({
+  const episode = await prisma.projectEpisode.findUnique({
     where: { id: episodeId },
     include: {
       clips: {
@@ -66,7 +64,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
   if (!episode) {
     throw new Error('Episode not found')
   }
-  if (episode.novelPromotionProjectId !== novelData.id) {
+  if (episode.projectId !== projectId) {
     throw new Error('Episode does not belong to this project')
   }
   if (episode.clips.length === 0) {
@@ -74,9 +72,9 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
   }
 
   const screenplayPromptTemplate = getPromptTemplate(PROMPT_IDS.NP_SCREENPLAY_CONVERSION, job.data.locale)
-  const charactersLibName = novelData.characters.map((item) => item.name).join('、') || '无'
-  const locationsLibName = novelData.locations.map((item) => item.name).join('、') || '无'
-  const charactersIntroduction = buildCharactersIntroduction(novelData.characters)
+  const charactersLibName = projectWorkflow.characters.map((item) => item.name).join('、') || '无'
+  const locationsLibName = projectWorkflow.locations.map((item) => item.name).join('、') || '无'
+  const charactersIntroduction = buildCharactersIntroduction(projectWorkflow.characters)
 
   await reportTaskProgress(job, 10, {
     stage: 'screenplay_convert_prepare',
@@ -187,7 +185,7 @@ export async function handleScreenplayConvertTask(job: Job<TaskJobData>) {
           screenplay.clip_id = clip.id
           screenplay.original_text = clipContent
 
-          await prisma.novelPromotionClip.update({
+          await prisma.projectClip.update({
             where: { id: clip.id },
             data: {
               screenplay: JSON.stringify(screenplay),

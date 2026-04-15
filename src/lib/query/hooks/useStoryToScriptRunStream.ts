@@ -25,14 +25,14 @@ export function useStoryToScriptRunStream({ projectId, episodeId }: UseStoryToSc
   return useRunStreamState<StoryToScriptRunParams>({
     projectId,
     endpoint: (pid) => `/api/projects/${pid}/commands`,
-    storageKeyPrefix: 'novel-promotion:story-to-script-run',
+    storageKeyPrefix: 'project-workflow:story-to-script-run',
     storageScopeKey: episodeId || undefined,
     resolveActiveRunId: async ({ projectId: pid, storageScopeKey }) => {
       if (!storageScopeKey) return null
       const search = new URLSearchParams({
         projectId: pid,
         workflowType: TASK_TYPE.STORY_TO_SCRIPT_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: storageScopeKey,
         episodeId: storageScopeKey,
         limit: '20',

@@ -219,7 +219,7 @@ export function mapProjectCharacterToAsset(character: ProjectCharacterRecord): C
     profileConfirmed: character.profileConfirmed ?? null,
     profileTaskRefs: [
       {
-        targetType: 'NovelPromotionCharacter',
+        targetType: 'ProjectCharacter',
         targetId: character.id,
         types: ['character_profile_confirm', 'character_profile_batch_confirm'],
       },

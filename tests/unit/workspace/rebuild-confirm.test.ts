@@ -32,7 +32,7 @@ vi.mock('react', async () => {
 import {
   hasDownstreamStoryboardData,
   useRebuildConfirm,
-} from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/hooks/useRebuildConfirm'
+} from '@/features/project-workspace/hooks/useRebuildConfirm'
 
 function createDeferred<T>() {
   let resolve!: (value: T) => void

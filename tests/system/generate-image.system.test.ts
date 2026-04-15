@@ -60,7 +60,7 @@ describe('system - generate image', () => {
     mockAuthenticated(seeded.user.id)
     workers = await startSystemWorkers(['image'])
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/generate-image/route')
+    const mod = await import('@/app/api/projects/[projectId]/generate-image/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -110,7 +110,7 @@ describe('system - generate image', () => {
       select: { imageUrl: true, imageUrls: true, selectedIndex: true },
     })
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/generate-image/route')
+    const mod = await import('@/app/api/projects/[projectId]/generate-image/route')
     const response = await callRoute(
       mod.POST,
       'POST',

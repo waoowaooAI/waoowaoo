@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  PROJECT_WORKFLOW_SKILL_IDS,
+  PROJECT_WORKFLOW_IDS,
+} from '@/lib/skill-system/project-workflow-machine'
+import {
   discoverSkillDocuments,
   getWorkflowPackage,
   listSkillCatalogEntries,
@@ -14,24 +18,10 @@ describe('skill-system catalog', () => {
     const workflowPackages = listWorkflowPackages()
     const documents = discoverSkillDocuments()
 
-    expect(skillPackages.map((pkg) => pkg.metadata.id)).toEqual([
-      'analyze-characters',
-      'analyze-locations',
-      'analyze-props',
-      'split-clips',
-      'generate-screenplay',
-      'plan-storyboard-phase1',
-      'refine-cinematography',
-      'refine-acting',
-      'refine-storyboard-detail',
-      'generate-voice-lines',
-    ])
-    expect(workflowPackages.map((pkg) => pkg.manifest.id)).toEqual([
-      'story-to-script',
-      'script-to-storyboard',
-    ])
-    expect(documents.map((item) => item.path)).toContain('skills/novel-promotion/analyze-characters/SKILL.md')
-    expect(documents.map((item) => item.path)).toContain('skills/novel-promotion/workflows/story-to-script/WORKFLOW.md')
+    expect(skillPackages.map((pkg) => pkg.metadata.id)).toEqual(PROJECT_WORKFLOW_SKILL_IDS)
+    expect(workflowPackages.map((pkg) => pkg.manifest.id)).toEqual(PROJECT_WORKFLOW_IDS)
+    expect(documents.map((item) => item.path)).toContain('skills/project-workflow/analyze-characters/SKILL.md')
+    expect(documents.map((item) => item.path)).toContain('skills/project-workflow/workflows/story-to-script/WORKFLOW.md')
   })
 
   it('story-to-script workflow package uses fixed serial skill order', () => {
@@ -45,6 +35,43 @@ describe('skill-system catalog', () => {
       'generate-screenplay',
     ])
     expect(workflowPackage.manifest.requiresApproval).toBe(true)
+    expect(workflowPackage.steps.every((step) => step.executionKind === 'serial')).toBe(true)
+  })
+
+  it('script-to-storyboard workflow package exposes clip fan-out and episode join metadata', () => {
+    const workflowPackage = getWorkflowPackage('script-to-storyboard')
+
+    expect(workflowPackage.steps.map((step) => ({
+      skillId: step.skillId,
+      executionKind: step.executionKind,
+      scopeCollection: step.scopeCollection,
+    }))).toEqual([
+      {
+        skillId: 'plan-storyboard-phase1',
+        executionKind: 'map',
+        scopeCollection: 'clips',
+      },
+      {
+        skillId: 'refine-cinematography',
+        executionKind: 'map',
+        scopeCollection: 'clips',
+      },
+      {
+        skillId: 'refine-acting',
+        executionKind: 'map',
+        scopeCollection: 'clips',
+      },
+      {
+        skillId: 'refine-storyboard-detail',
+        executionKind: 'map',
+        scopeCollection: 'clips',
+      },
+      {
+        skillId: 'generate-voice-lines',
+        executionKind: 'join',
+        scopeCollection: 'episode',
+      },
+    ])
   })
 
   it('reads skill document content from repository source files', () => {

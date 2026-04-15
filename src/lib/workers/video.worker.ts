@@ -23,7 +23,7 @@ type AnyObj = Record<string, unknown>
 type VideoOptionValue = string | number | boolean
 type VideoOptionMap = Record<string, VideoOptionValue>
 type VideoGenerationMode = 'normal' | 'firstlastframe'
-type PanelRecord = NonNullable<Awaited<ReturnType<typeof prisma.novelPromotionPanel.findUnique>>>
+type PanelRecord = NonNullable<Awaited<ReturnType<typeof prisma.projectPanel.findUnique>>>
 
 function toDurationMs(value: number | null | undefined): number | undefined {
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
@@ -47,7 +47,7 @@ function extractGenerationOptions(payload: AnyObj): VideoOptionMap {
 }
 
 async function fetchPanelByStoryboardIndex(storyboardId: string, panelIndex: number) {
-  return await prisma.novelPromotionPanel.findFirst({
+  return await prisma.projectPanel.findFirst({
     where: {
       storyboardId,
       panelIndex,
@@ -58,9 +58,9 @@ async function fetchPanelByStoryboardIndex(storyboardId: string, panelIndex: num
 async function getPanelForVideoTask(job: Job<TaskJobData>) {
   const payload = (job.data.payload || {}) as AnyObj
 
-  // 优先使用 targetType=NovelPromotionPanel 直接定位
-  if (job.data.targetType === 'NovelPromotionPanel') {
-    const panel = await prisma.novelPromotionPanel.findUnique({ where: { id: job.data.targetId } })
+  // 优先使用 targetType=ProjectPanel 直接定位
+  if (job.data.targetType === 'ProjectPanel') {
+    const panel = await prisma.projectPanel.findUnique({ where: { id: job.data.targetId } })
     if (!panel) throw new Error('Panel not found')
     return panel
   }
@@ -206,7 +206,7 @@ async function handleVideoPanelTask(job: Job<TaskJobData>) {
   )
 
   await assertTaskActive(job, 'persist_panel_video')
-  await prisma.novelPromotionPanel.update({
+  await prisma.projectPanel.update({
     where: { id: panel.id },
     data: {
       videoUrl: cosKey,
@@ -228,8 +228,8 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
     : undefined
 
   let panel: PanelRecord | null = null
-  if (job.data.targetType === 'NovelPromotionPanel') {
-    panel = await prisma.novelPromotionPanel.findUnique({ where: { id: job.data.targetId } })
+  if (job.data.targetType === 'ProjectPanel') {
+    panel = await prisma.projectPanel.findUnique({ where: { id: job.data.targetId } })
   }
 
   if (
@@ -247,7 +247,7 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
   const voiceLineId = typeof payload.voiceLineId === 'string' ? payload.voiceLineId : null
   if (!voiceLineId) throw new Error('Lip-sync task missing voiceLineId')
 
-  const voiceLine = await prisma.novelPromotionVoiceLine.findUnique({ where: { id: voiceLineId } })
+  const voiceLine = await prisma.projectVoiceLine.findUnique({ where: { id: voiceLineId } })
   if (!voiceLine || !voiceLine.audioUrl) {
     throw new Error('Voice line or audioUrl not found')
   }
@@ -275,7 +275,7 @@ async function handleLipSyncTask(job: Job<TaskJobData>) {
   const cosKey = await uploadVideoSourceToCos(source, 'lip-sync', panel.id)
 
   await assertTaskActive(job, 'persist_lip_sync_video')
-  await prisma.novelPromotionPanel.update({
+  await prisma.projectPanel.update({
     where: { id: panel.id },
     data: {
       lipSyncVideoUrl: cosKey,

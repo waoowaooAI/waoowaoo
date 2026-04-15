@@ -77,6 +77,8 @@ export interface WorkflowStepDefinition {
   skillId: WorkflowSkillId
   title: string
   dependsOn: WorkflowSkillId[]
+  executionKind?: 'serial' | 'map' | 'join'
+  scopeCollection?: 'episode' | 'clips'
 }
 
 export interface WorkflowPackageManifest {

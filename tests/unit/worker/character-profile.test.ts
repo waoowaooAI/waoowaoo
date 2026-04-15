@@ -4,7 +4,7 @@ import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
   $transaction: vi.fn(),
-  novelPromotionCharacter: {
+  projectCharacter: {
     findFirst: vi.fn(),
     findMany: vi.fn(),
     update: vi.fn(async () => ({})),
@@ -22,11 +22,9 @@ const llmMock = vi.hoisted(() => ({
 
 const helperMock = vi.hoisted(() => ({
   resolveProjectModel: vi.fn(async () => ({
-    id: 'project-1',
-    novelPromotionData: {
-      id: 'np-project-1',
-      analysisModel: 'llm::analysis-1',
-    },
+    projectId: 'project-1',
+    workflowId: 'np-project-1',
+    analysisModel: 'llm::analysis-1',
   })),
 }))
 
@@ -80,7 +78,7 @@ function buildJob(type: TaskJobData['type'], payload: Record<string, unknown>): 
       locale: 'zh',
       projectId: 'project-1',
       episodeId: null,
-      targetType: 'NovelPromotionCharacter',
+      targetType: 'ProjectCharacter',
       targetId: 'character-1',
       payload,
       userId: 'user-1',
@@ -110,15 +108,15 @@ describe('worker character-profile behavior', () => {
       }),
     )
 
-    prismaMock.novelPromotionCharacter.findFirst.mockImplementation(async (args: { where: { id: string } }) => ({
+    prismaMock.projectCharacter.findFirst.mockImplementation(async (args: { where: { id: string } }) => ({
       id: args.where.id,
       name: args.where.id === 'character-2' ? 'Villain' : 'Hero',
       profileData: JSON.stringify({ archetype: 'lead' }),
       profileConfirmed: false,
-      novelPromotionProjectId: 'np-project-1',
+      projectId: 'project-1',
     }))
 
-    prismaMock.novelPromotionCharacter.findMany.mockResolvedValue([
+    prismaMock.projectCharacter.findMany.mockResolvedValue([
       {
         id: 'character-1',
         name: 'Hero',
@@ -155,7 +153,7 @@ describe('worker character-profile behavior', () => {
       }),
     })
 
-    expect(prismaMock.novelPromotionCharacter.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectCharacter.update).toHaveBeenCalledWith({
       where: { id: 'character-1' },
       data: {
         profileData: JSON.stringify({ archetype: 'lead' }),

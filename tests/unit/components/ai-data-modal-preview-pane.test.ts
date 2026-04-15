@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { copyPreviewJsonText } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/storyboard/AIDataModalPreviewPane'
+import { copyPreviewJsonText } from '@/features/project-workspace/components/storyboard/AIDataModalPreviewPane'
 
 describe('AIDataModalPreviewPane copy helper', () => {
   it('falls back to execCommand when clipboard api rejects', async () => {

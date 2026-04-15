@@ -197,7 +197,7 @@ describe('billing/submitter integration', () => {
         projectId: 'project-core',
         episodeId: 'episode-core',
         type: TASK_TYPE.STORY_TO_SCRIPT_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: 'episode-core',
         status: TASK_STATUS.QUEUED,
         payload: {
@@ -215,7 +215,7 @@ describe('billing/submitter integration', () => {
       workflowType: TASK_TYPE.STORY_TO_SCRIPT_RUN,
       taskType: TASK_TYPE.STORY_TO_SCRIPT_RUN,
       taskId: existingTask.id,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-core',
       input: {
         episodeId: 'episode-core',
@@ -241,7 +241,7 @@ describe('billing/submitter integration', () => {
       projectId: 'project-core',
       episodeId: 'episode-core',
       type: TASK_TYPE.STORY_TO_SCRIPT_RUN,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-core',
       payload: {
         episodeId: 'episode-core',
@@ -266,7 +266,7 @@ describe('billing/submitter integration', () => {
         projectId: 'project-core-retry',
         episodeId: 'episode-core-retry',
         type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: 'episode-core-retry',
         status: TASK_STATUS.FAILED,
         errorCode: 'TEST_FAILED',
@@ -287,7 +287,7 @@ describe('billing/submitter integration', () => {
       workflowType: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
       taskType: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
       taskId: failedTask.id,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-core-retry',
       input: {
         episodeId: 'episode-core-retry',
@@ -302,7 +302,7 @@ describe('billing/submitter integration', () => {
       projectId: 'project-core-retry',
       episodeId: 'episode-core-retry',
       type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-core-retry',
       payload: {
         episodeId: 'episode-core-retry',

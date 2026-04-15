@@ -15,6 +15,11 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import type { NextRequest } from 'next/server'
 import { getProviderConfig, getProviderKey } from '@/lib/api-config'
+import {
+  buildRunLifecycleCanonicalEvent,
+  buildWorkflowApprovalCanonicalEvent,
+  buildWorkflowPlanCanonicalEvent,
+} from '@/lib/agent/events/workflow-events'
 import { assembleProjectContext } from '@/lib/project-context/assembler'
 import { getUserModelConfig } from '@/lib/config-service'
 import { resolveLlmRuntimeModel } from '@/lib/llm/runtime-shared'
@@ -211,6 +216,11 @@ export async function createProjectAgentChatResponse(input: {
               planId: result.planId,
               summary: buildWorkflowPlanSummary(workflowId),
               requiresApproval: result.requiresApproval,
+              event: buildWorkflowPlanCanonicalEvent({
+                workflowId,
+                commandId: result.commandId,
+                planId: result.planId,
+              }),
               steps: result.steps.map((step) => ({
                 skillId: step.skillId,
                 title: step.title,
@@ -224,6 +234,11 @@ export async function createProjectAgentChatResponse(input: {
                 planId: result.planId,
                 summary: buildWorkflowApprovalSummary(workflowId),
                 reasons: buildWorkflowApprovalReasons(result.steps),
+                event: buildWorkflowApprovalCanonicalEvent({
+                  workflowId,
+                  planId: result.planId,
+                  status: 'pending',
+                }),
               }
               writeDataPart(writer, 'data-approval-request', approvalData)
             } else {
@@ -234,6 +249,13 @@ export async function createProjectAgentChatResponse(input: {
                 runId: result.linkedRunId,
                 status: result.status,
                 activeSkillId: result.steps[0]?.skillId as WorkflowStatusPartData['activeSkillId'],
+                event: result.linkedRunId
+                  ? buildRunLifecycleCanonicalEvent({
+                      workflowId,
+                      runId: result.linkedRunId,
+                      status: 'start',
+                    })
+                  : null,
               }
               writeDataPart(writer, 'data-workflow-status', statusData)
             }
@@ -259,6 +281,13 @@ export async function createProjectAgentChatResponse(input: {
               runId: result.linkedRunId,
               status: result.status,
               activeSkillId: result.steps[0]?.skillId as WorkflowStatusPartData['activeSkillId'],
+              event: result.linkedRunId
+                ? buildRunLifecycleCanonicalEvent({
+                    workflowId,
+                    runId: result.linkedRunId,
+                    status: 'start',
+                  })
+                : null,
             })
             return result
           },

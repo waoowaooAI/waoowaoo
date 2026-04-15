@@ -14,7 +14,7 @@ export async function handleModifyPropTask(job: Job<TaskJobData>, payload: AnyOb
   const propName = typeof payload.propName === 'string' && payload.propName.trim() ? payload.propName.trim() : '道具'
   const currentDescription = readRequiredString(payload.currentDescription, 'currentDescription')
   const modifyInstruction = readRequiredString(payload.modifyInstruction, 'modifyInstruction')
-  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
+  const projectWorkflow = await resolveAnalysisModel(job.data.projectId, job.data.userId)
 
   const finalPrompt = buildPrompt({
     promptId: PROMPT_IDS.NP_PROP_DESCRIPTION_UPDATE,
@@ -36,7 +36,7 @@ export async function handleModifyPropTask(job: Job<TaskJobData>, payload: AnyOb
 
   const responseText = await runShotPromptCompletion({
     job,
-    model: novelData.analysisModel,
+    model: projectWorkflow.analysisModel,
     prompt: finalPrompt,
     action: 'ai_modify_prop',
     streamContextKey: 'ai_modify_prop',

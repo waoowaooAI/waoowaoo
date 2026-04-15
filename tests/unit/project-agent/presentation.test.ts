@@ -29,6 +29,61 @@ describe('project agent presentation', () => {
       artStyle: 'realistic',
       videoRatio: '9:16',
     })
+    expect(snapshot.workflow).toBeUndefined()
+  })
+
+  it('passes through workflow snapshot so assistant sees the same latest state as GUI', () => {
+    const snapshot = buildAssistantProjectContextSnapshot({
+      projectId: 'project-1',
+      projectName: 'a',
+      episodeId: 'episode-1',
+      episodeName: '剧集 1',
+      currentStage: 'storyboard',
+      selectedScopeRef: 'clip:clip-1',
+      latestArtifacts: [],
+      activeRuns: [],
+      policy: {
+        projectId: 'project-1',
+        episodeId: 'episode-1',
+        videoRatio: '9:16',
+        artStyle: 'realistic',
+        analysisModel: 'google::gemini-3.1-flash-lite-preview',
+        overrides: {},
+      },
+      workflow: {
+        latestRunId: 'run-1',
+        episode: {
+          novelText: 'text',
+          clipCount: 2,
+          screenplayClipCount: 2,
+          storyboardCount: 1,
+          panelCount: 3,
+          voiceLineCount: 1,
+        },
+        clips: [
+          {
+            clipId: 'clip-1',
+            summary: 'summary',
+            screenplayReady: true,
+            storyboardReady: true,
+            panelCount: 3,
+          },
+        ],
+        panels: [
+          {
+            panelId: 'panel-1',
+            clipId: 'clip-1',
+            storyboardId: 'storyboard-1',
+            panelIndex: 0,
+            description: 'panel',
+          },
+        ],
+        approvals: [],
+      },
+    } satisfies ProjectContextSnapshot)
+
+    expect(snapshot.workflow?.episode?.panelCount).toBe(3)
+    expect(snapshot.workflow?.clips[0]?.storyboardReady).toBe(true)
   })
 
   it('builds concise chinese approval reasons instead of raw invalidation dumps', () => {

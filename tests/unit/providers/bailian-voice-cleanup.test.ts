@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionProject: {
+  project: {
     findUnique: vi.fn(),
   },
-  novelPromotionCharacter: {
+  projectCharacter: {
     findMany: vi.fn(),
   },
   globalCharacter: {
@@ -13,7 +13,7 @@ const prismaMock = vi.hoisted(() => ({
   globalVoice: {
     findMany: vi.fn(),
   },
-  novelPromotionEpisode: {
+  projectEpisode: {
     findMany: vi.fn(),
   },
 }))
@@ -43,10 +43,10 @@ import {
 describe('bailian voice cleanup', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    prismaMock.novelPromotionCharacter.findMany.mockResolvedValue([])
+    prismaMock.projectCharacter.findMany.mockResolvedValue([])
     prismaMock.globalCharacter.findMany.mockResolvedValue([])
     prismaMock.globalVoice.findMany.mockResolvedValue([])
-    prismaMock.novelPromotionEpisode.findMany.mockResolvedValue([])
+    prismaMock.projectEpisode.findMany.mockResolvedValue([])
     getProviderConfigMock.mockResolvedValue({
       apiKey: 'bl-key',
     })
@@ -96,7 +96,7 @@ describe('bailian voice cleanup', () => {
   })
 
   it('collects managed voice ids from project characters and speaker voices', async () => {
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
+    prismaMock.project.findUnique.mockResolvedValue({
       characters: [
         { voiceId: 'qwen-tts-vd-character', voiceType: 'qwen-designed' },
         { voiceId: 'plain-custom', voiceType: 'uploaded' },
@@ -115,4 +115,3 @@ describe('bailian voice cleanup', () => {
     expect(voiceIds).toEqual(['qwen-tts-vd-character', 'qwen-tts-vd-inline'])
   })
 })
-

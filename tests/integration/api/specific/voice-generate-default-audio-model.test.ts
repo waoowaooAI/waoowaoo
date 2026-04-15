@@ -13,7 +13,7 @@ const prismaMock = vi.hoisted(() => ({
   userPreference: {
     findUnique: vi.fn(async () => ({ audioModel: 'fal::fal-ai/index-tts-2/text-to-speech' })),
   },
-  novelPromotionProject: {
+  project: {
     findUnique: vi.fn<() => Promise<{
       id: string
       audioModel: string | null
@@ -26,13 +26,13 @@ const prismaMock = vi.hoisted(() => ({
       ],
     })),
   },
-  novelPromotionEpisode: {
+  projectEpisode: {
     findFirst: vi.fn(async () => ({
       id: 'episode-1',
       speakerVoices: '{}',
     })),
   },
-  novelPromotionVoiceLine: {
+  projectVoiceLine: {
     findFirst: vi.fn(async () => ({
       id: 'line-1',
       speaker: 'Narrator',
@@ -81,9 +81,9 @@ describe('api specific - voice generate default audio model', () => {
   })
 
   it('uses project audioModel when request does not provide one', async () => {
-    const mod = await import('@/app/api/novel-promotion/[projectId]/voice-generate/route')
+    const mod = await import('@/app/api/projects/[projectId]/voice-generate/route')
     const req = buildMockRequest({
-      path: '/api/novel-promotion/project-1/voice-generate',
+      path: '/api/projects/project-1/voice-generate',
       method: 'POST',
       body: {
         episodeId: 'episode-1',
@@ -105,9 +105,9 @@ describe('api specific - voice generate default audio model', () => {
   })
 
   it('request audioModel overrides user preference audioModel', async () => {
-    const mod = await import('@/app/api/novel-promotion/[projectId]/voice-generate/route')
+    const mod = await import('@/app/api/projects/[projectId]/voice-generate/route')
     const req = buildMockRequest({
-      path: '/api/novel-promotion/project-1/voice-generate',
+      path: '/api/projects/project-1/voice-generate',
       method: 'POST',
       body: {
         episodeId: 'episode-1',
@@ -126,7 +126,7 @@ describe('api specific - voice generate default audio model', () => {
   })
 
   it('falls back to user preference audioModel when project audioModel is empty', async () => {
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValueOnce({
+    prismaMock.project.findUnique.mockResolvedValueOnce({
       id: 'np-1',
       audioModel: null,
       characters: [
@@ -134,9 +134,9 @@ describe('api specific - voice generate default audio model', () => {
       ],
     })
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/voice-generate/route')
+    const mod = await import('@/app/api/projects/[projectId]/voice-generate/route')
     const req = buildMockRequest({
-      path: '/api/novel-promotion/project-1/voice-generate',
+      path: '/api/projects/project-1/voice-generate',
       method: 'POST',
       body: {
         episodeId: 'episode-1',
@@ -161,9 +161,9 @@ describe('api specific - voice generate default audio model', () => {
       mediaType: 'audio',
     })
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/voice-generate/route')
+    const mod = await import('@/app/api/projects/[projectId]/voice-generate/route')
     const req = buildMockRequest({
-      path: '/api/novel-promotion/project-1/voice-generate',
+      path: '/api/projects/project-1/voice-generate',
       method: 'POST',
       body: {
         episodeId: 'episode-1',

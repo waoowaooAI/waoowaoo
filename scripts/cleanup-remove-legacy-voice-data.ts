@@ -33,7 +33,7 @@ async function cleanupCharacterTable(records: CharacterVoiceRecord[], table: 'pr
   for (const row of records) {
     const nextVoiceType = normalizeVoiceType(row.customVoiceUrl)
     if (table === 'project') {
-      await prisma.novelPromotionCharacter.update({
+      await prisma.projectCharacter.update({
         where: { id: row.id },
         data: {
           voiceType: nextVoiceType,
@@ -126,7 +126,7 @@ async function main() {
   }
 
   const [projectCharacters, globalCharacters] = await Promise.all([
-    prisma.novelPromotionCharacter.findMany({
+    prisma.projectCharacter.findMany({
       where: { voiceType: 'azure' },
       select: {
         id: true,
@@ -145,7 +145,7 @@ async function main() {
   summary.projectCharactersUpdated = await cleanupCharacterTable(projectCharacters, 'project')
   summary.globalCharactersUpdated = await cleanupCharacterTable(globalCharacters, 'global')
 
-  const episodes = await prisma.novelPromotionEpisode.findMany({
+  const episodes = await prisma.projectEpisode.findMany({
     where: {
       speakerVoices: { not: null },
     },
@@ -168,7 +168,7 @@ async function main() {
     if (!normalized.changed) {
       continue
     }
-    await prisma.novelPromotionEpisode.update({
+    await prisma.projectEpisode.update({
       where: { id: row.id },
       data: {
         speakerVoices: normalized.next,

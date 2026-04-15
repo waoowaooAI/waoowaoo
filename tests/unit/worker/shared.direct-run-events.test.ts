@@ -98,7 +98,7 @@ function buildJob(taskType: TaskJobData['type']): Job<TaskJobData> {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       userId: 'user-1',
       payload: {

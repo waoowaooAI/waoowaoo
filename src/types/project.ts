@@ -130,22 +130,17 @@ export interface AssetLibraryLocation {
 }
 
 // ============================================
-// 小说推文模式类型
+// 项目工作流类型
 // ============================================
 
-// 工作流模式
-export type WorkflowMode = 'srt' | 'agent'
-
-// Clip类型（兼容SRT和Agent两种模式）
-export interface NovelPromotionClip {
+// Clip 类型
+export interface ProjectClip {
   id: string
 
-  // SRT模式字段
   start?: number
   end?: number
   duration?: number
 
-  // Agent模式字段
   startText?: string
   endText?: string
   shotCount?: number
@@ -159,7 +154,7 @@ export interface NovelPromotionClip {
   screenplay?: string | null  // 剧本JSON（Phase 0输出）
 }
 
-export interface NovelPromotionPanel {
+export interface ProjectPanel {
   id: string
   storyboardId: string
   panelIndex: number
@@ -198,7 +193,7 @@ export interface NovelPromotionPanel {
   imageErrorMessage?: string | null  // 图片生成错误消息
 }
 
-export interface NovelPromotionStoryboard {
+export interface ProjectStoryboard {
   id: string
   episodeId: string
   clipId: string
@@ -210,10 +205,10 @@ export interface NovelPromotionStoryboard {
   candidateImages?: string | null
   lastError?: string | null  // 最后一次生成失败的错误信息
   photographyPlan?: string | null  // 摄影方案JSON
-  panels?: NovelPromotionPanel[]
+  panels?: ProjectPanel[]
 }
 
-export interface NovelPromotionShot {
+export interface ProjectShot {
   id: string
   shotId: string
   srtStart: number
@@ -237,50 +232,47 @@ export interface NovelPromotionShot {
   imageTaskRunning?: boolean
 }
 
-export interface NovelPromotionProject {
+export interface ProjectEpisodeSummary {
   id: string
-  projectId: string
-  stage: string
-  globalAssetText: string | null
+  episodeNumber: number
+  name: string
+  description: string | null
   novelText: string | null
-  analysisModel: string
-  imageModel: string
-  characterModel: string
-  locationModel: string
-  storyboardModel: string
-  editModel: string
-  videoModel: string
-  audioModel: string
-  videoRatio: string
-  capabilityOverrides?: CapabilitySelections | string | null
-  workflowMode: WorkflowMode  // 新增：工作流模式
-  artStyle: string
-  artStylePrompt: string | null
   audioUrl: string | null
   media?: MediaRef | null
   srtContent: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ProjectWorkflowData {
+  globalAssetText: string | null
+  analysisModel: string | null
+  imageModel: string | null
+  characterModel: string | null
+  locationModel: string | null
+  storyboardModel: string | null
+  editModel: string | null
+  videoModel: string | null
+  audioModel: string | null
+  videoRatio: string | null
+  capabilityOverrides?: CapabilitySelections | string | null
+  artStyle: string | null
+  artStylePrompt: string | null
+  videoResolution?: string | null
+  imageResolution?: string | null
+  lastEpisodeId?: string | null
+  importStatus?: string | null
   characters?: Character[]
   locations?: Location[]
   props?: Prop[]
-  episodes?: Array<{
-    id: string
-    episodeNumber: number
-    name: string
-    description: string | null
-    novelText: string | null
-    audioUrl: string | null
-    srtContent: string | null
-    createdAt: Date
-    updatedAt: Date
-  }>
-  clips?: NovelPromotionClip[]
-  storyboards?: NovelPromotionStoryboard[]
-  shots?: NovelPromotionShot[]
+  episodes?: ProjectEpisodeSummary[]
+  clips?: ProjectClip[]
+  storyboards?: ProjectStoryboard[]
+  shots?: ProjectShot[]
 }
 
 // ============================================
-// 完整项目类型 (包含基础信息和模式数据)
+// 完整项目类型
 // ============================================
-export interface Project extends BaseProject {
-  novelPromotionData?: NovelPromotionProject
-}
+export interface Project extends BaseProject, ProjectWorkflowData {}

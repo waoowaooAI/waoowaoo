@@ -1,4 +1,4 @@
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { toTerminalRunResult } from './event-parser'
 import { fetchRunEventsPage, toRunStreamEventFromRunApi } from './run-event-adapter'
 import { apiFetch } from '@/lib/api-fetch'

@@ -22,9 +22,8 @@ import type { TaskJobData } from '@/lib/task/types'
 import {
   parseEffort,
   parseTemperature,
-  persistStoryboardOutputs,
 } from './script-to-storyboard-helpers'
-import type { SkillLocale } from '@skills/novel-promotion/_shared/prompt-runtime'
+import type { SkillLocale } from '@skills/project-workflow/_shared/prompt-runtime'
 import { resolveAnalysisModel } from './resolve-analysis-model'
 import { createArtifact } from '@/lib/run-runtime/service'
 import { assertWorkflowRunActive, withWorkflowRunLease } from '@/lib/run-runtime/workflow-lease'
@@ -32,6 +31,7 @@ import {
   parseStoryboardRetryTarget,
   runScriptToStoryboardAtomicRetry,
 } from './script-to-storyboard-atomic-retry'
+import { persistStoryboardWorkflowOutputs } from '@/lib/domain/storyboard/service'
 
 type AnyObj = Record<string, unknown>
 
@@ -102,24 +102,22 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   // Register project name for per-project log file routing
   onProjectNameAvailable(projectId, project.name)
 
-  const novelData = await prisma.novelPromotionProject.findUnique({
-    where: { projectId },
+  const projectWorkflow = await prisma.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: true,
       locations: true,
     },
   })
-  if (!novelData) {
-    throw new Error('Novel promotion data not found')
-  }
+  if (!projectWorkflow) throw new Error('Project not found')
 
-  const episode = await prisma.novelPromotionEpisode.findUnique({
+  const episode = await prisma.projectEpisode.findUnique({
     where: { id: episodeId },
     include: {
       clips: { orderBy: { createdAt: 'asc' } },
     },
   })
-  if (!episode || episode.novelPromotionProjectId !== novelData.id) {
+  if (!episode || episode.projectId !== projectId) {
     throw new Error('Episode not found')
   }
   const clips = episode.clips || []
@@ -142,7 +140,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   const model = await resolveAnalysisModel({
     userId: job.data.userId,
     inputModel,
-    projectAnalysisModel: novelData.analysisModel,
+    projectAnalysisModel: projectWorkflow.analysisModel,
   })
   const [llmCapabilityOptions, workflowConcurrency] = await Promise.all([
     resolveProjectModelCapabilityGenerationOptions({
@@ -165,6 +163,15 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
     : (typeof payloadMeta.runId === 'string' ? payloadMeta.runId.trim() : '')
   if (!runId) {
     throw new Error('runId is required for script_to_storyboard pipeline')
+  }
+  const mutationContext = {
+    actor: 'workflow' as const,
+    workflowId: 'script-to-storyboard' as const,
+    runId,
+    commandId: typeof payload.commandId === 'string' && payload.commandId.trim() ? payload.commandId.trim() : null,
+    planId: typeof payload.planId === 'string' && payload.planId.trim() ? payload.planId.trim() : null,
+    taskId: job.data.taskId,
+    idempotencyKey: `${runId}:${retryStepKey || 'full'}`,
   }
   const workerId = buildWorkflowWorkerId(job, 'script_to_storyboard')
   const assertRunActive = async (stage: string) => {
@@ -301,10 +308,10 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                   },
                   clipIndex,
                   totalClipCount: clips.length,
-                  novelPromotionData: {
-                    characters: novelData.characters || [],
-                    locations: (novelData.locations || []).filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop'),
-                    props: (novelData.locations || [])
+                  projectData: {
+                    characters: projectWorkflow.characters || [],
+                    locations: (projectWorkflow.locations || []).filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop'),
+                    props: (projectWorkflow.locations || [])
                       .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
                       .map((item) => ({ name: item.name, summary: item.summary })),
                   },
@@ -337,10 +344,10 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
                     props: readNullableText(clip as unknown as Record<string, unknown>, 'props'),
                     screenplay: clip.screenplay,
                   })),
-                  novelPromotionData: {
-                    characters: novelData.characters || [],
-                    locations: (novelData.locations || []).filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop'),
-                    props: (novelData.locations || [])
+                  projectData: {
+                    characters: projectWorkflow.characters || [],
+                    locations: (projectWorkflow.locations || []).filter((item) => readAssetKind(item as unknown as Record<string, unknown>) !== 'prop'),
+                    props: (projectWorkflow.locations || [])
                       .filter((item) => readAssetKind(item as unknown as Record<string, unknown>) === 'prop')
                       .map((item) => ({ name: item.name, summary: item.summary })),
                   },
@@ -432,10 +439,11 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
       await assertRunActive('script_to_storyboard_persist')
 
       if (skipVoiceAnalyze) {
-        const persisted = await persistStoryboardOutputs({
+        const persisted = await persistStoryboardWorkflowOutputs({
           episodeId,
           clipPanels: orchestratorResult.clipPanels,
           voiceLineRows: null,
+          mutation: mutationContext,
         })
         await reportTaskProgress(job, 96, {
           stage: 'script_to_storyboard_persist_done',
@@ -468,10 +476,11 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
       })
 
       await assertRunActive('script_to_storyboard_voice_persist')
-      const persisted = await persistStoryboardOutputs({
+      const persisted = await persistStoryboardWorkflowOutputs({
         episodeId,
         clipPanels: orchestratorResult.clipPanels,
         voiceLineRows: orchestratorResult.voiceLineRows,
+        mutation: mutationContext,
       })
 
       await reportTaskProgress(job, 96, {

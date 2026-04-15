@@ -81,25 +81,17 @@ export const GET = apiHandler(async (request: NextRequest) => {
   const projectIds = projects.map(p => p.id)
 
   // ⚡ 并行获取：费用 + 项目统计（章节数、图片数、视频数）
-  const [costsByProject, novelProjects] = await Promise.all([
+  const [costsByProject, projectEpisodes] = await Promise.all([
     // 一次性获取所有项目的费用（代替 N+1 查询）
     prisma.usageCost.groupBy({
       by: ['projectId'],
       where: { projectId: { in: projectIds } },
       _sum: { cost: true }
     }),
-    // 一次性获取所有项目的统计数据
-    prisma.novelPromotionProject.findMany({
-      where: { projectId: { in: projectIds } },
+    prisma.project.findMany({
+      where: { id: { in: projectIds } },
       select: {
-        projectId: true,
-        _count: {
-          select: {
-            episodes: true,
-            characters: true,
-            locations: true
-          }
-        },
+        id: true,
         episodes: {
           orderBy: { episodeNumber: 'asc' },
           select: {
@@ -137,11 +129,11 @@ export const GET = apiHandler(async (request: NextRequest) => {
 
   // 构建统计映射表 + 第一集预览
   const statsMap = new Map<string, { episodes: number; images: number; videos: number; panels: number; firstEpisodePreview: string | null }>(
-    novelProjects.map(np => {
+    projectEpisodes.map(projectEntry => {
       let imageCount = 0
       let videoCount = 0
       let panelCount = 0
-      for (const ep of np.episodes) {
+      for (const ep of projectEntry.episodes) {
         for (const sb of ep.storyboards) {
           panelCount += sb._count.panels
           for (const panel of sb.panels) {
@@ -151,10 +143,10 @@ export const GET = apiHandler(async (request: NextRequest) => {
         }
       }
       // 取第一集的 novelText 前 100 字作为预览
-      const firstEp = np.episodes[0]
+      const firstEp = projectEntry.episodes[0]
       const preview = firstEp?.novelText ? firstEp.novelText.slice(0, 100) : null
-      return [np.projectId, {
-        episodes: np._count.episodes,
+      return [projectEntry.id, {
+        episodes: projectEntry.episodes.length,
         images: imageCount,
         videos: videoCount,
         panels: panelCount,
@@ -208,23 +200,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
     where: { userId: session.user.id }
   })
 
-  // 创建基础项目
+  // 创建基础项目并直接写入项目级配置，不再创建模式外壳表
   const project = await prisma.project.create({
     data: {
       name: name.trim(),
       description: description?.trim() || null,
-      userId: session.user.id
-    }
-  })
-
-  // 创建 novel-promotion 数据表，使用用户偏好作为默认值
-  // 注意：不再自动创建默认剧集，由用户在选择界面决定：
-  // - 手动创作 → 创建第一个空白剧集
-  // - 智能导入 → AI 分析后批量创建剧集
-  // 🔥 artStylePrompt 通过实时查询获取，不再存储到数据库
-  await prisma.novelPromotionProject.create({
-    data: {
-      projectId: project.id,
+      userId: session.user.id,
       ...(userPreference && {
         analysisModel: userPreference.analysisModel,
         characterModel: userPreference.characterModel,
@@ -234,7 +215,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
         videoModel: userPreference.videoModel,
         audioModel: userPreference.audioModel,
         videoRatio: userPreference.videoRatio,
+        videoResolution: userPreference.videoResolution,
         artStyle: isArtStyleValue(userPreference.artStyle) ? userPreference.artStyle : 'american-comic',
+        imageResolution: userPreference.imageResolution,
       })
     }
   })

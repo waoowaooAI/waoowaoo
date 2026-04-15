@@ -56,7 +56,7 @@ interface MigrationSummary {
     updated: number
     migratedImageResolution: number
   }
-  novelPromotionProject: {
+  project: {
     scanned: number
     updated: number
     migratedImageResolution: number
@@ -208,7 +208,7 @@ async function migrateUserPreferences(summary: MigrationSummary) {
 }
 
 async function migrateProjects(summary: MigrationSummary) {
-  const rows = await prisma.novelPromotionProject.findMany({
+  const rows = await prisma.project.findMany({
     select: {
       id: true,
       projectId: true,
@@ -223,7 +223,7 @@ async function migrateProjects(summary: MigrationSummary) {
     },
   }) as ProjectRow[]
 
-  summary.novelPromotionProject.scanned = rows.length
+  summary.project.scanned = rows.length
 
   for (const row of rows) {
     const nextSelections = parseSelections(row.capabilityOverrides)
@@ -238,7 +238,7 @@ async function migrateProjects(summary: MigrationSummary) {
         selections: nextSelections,
       })) {
         changed = true
-        summary.novelPromotionProject.migratedImageResolution += 1
+        summary.project.migratedImageResolution += 1
       }
     }
 
@@ -250,15 +250,15 @@ async function migrateProjects(summary: MigrationSummary) {
         selections: nextSelections,
       })) {
         changed = true
-        summary.novelPromotionProject.migratedVideoResolution += 1
+        summary.project.migratedVideoResolution += 1
       }
     }
 
     if (!changed) continue
-    summary.novelPromotionProject.updated += 1
+    summary.project.updated += 1
 
     if (APPLY) {
-      await prisma.novelPromotionProject.update({
+      await prisma.project.update({
         where: { id: row.id },
         data: {
           capabilityOverrides: serializeSelections(nextSelections),
@@ -276,7 +276,7 @@ async function main() {
       updated: 0,
       migratedImageResolution: 0,
     },
-    novelPromotionProject: {
+    project: {
       scanned: 0,
       updated: 0,
       migratedImageResolution: 0,

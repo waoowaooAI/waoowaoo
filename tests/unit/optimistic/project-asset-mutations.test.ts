@@ -83,11 +83,9 @@ function buildAssets(selectedIndex: number | null): ProjectAssetsData {
 
 function buildProject(selectedIndex: number | null): Project {
   return {
-    novelPromotionData: {
-      characters: [buildCharacter(selectedIndex)],
-      locations: [],
-      props: [],
-    },
+    characters: [buildCharacter(selectedIndex)],
+    locations: [],
+    props: [],
   } as unknown as Project
 }
 
@@ -148,7 +146,7 @@ describe('project asset optimistic mutations', () => {
     expect(afterDeleteAssets?.characters).toHaveLength(0)
 
     const afterDeleteProject = queryClient.getQueryData<Project>(projectKey)
-    expect(afterDeleteProject?.novelPromotionData?.characters ?? []).toHaveLength(0)
+    expect(afterDeleteProject?.characters ?? []).toHaveLength(0)
 
     mutation.onError(new Error('delete failed'), 'character-1', context)
 

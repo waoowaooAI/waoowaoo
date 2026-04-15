@@ -1,4 +1,4 @@
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { parseSSEBlock } from './event-parser'
 
 function toStreamEvent(data: Record<string, unknown>, parsedEvent: string): RunStreamEvent {

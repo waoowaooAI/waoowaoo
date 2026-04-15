@@ -45,7 +45,7 @@ interface LocationImageTaskDb {
     findUnique(args: Record<string, unknown>): Promise<LocationImageRecord | null>
     update(args: Record<string, unknown>): Promise<unknown>
   }
-  novelPromotionLocation: {
+  projectLocation: {
     findUnique(args: Record<string, unknown>): Promise<LocationWithImages | null>
     findMany(args: Record<string, unknown>): Promise<LocationWithImages[]>
   }
@@ -88,7 +88,7 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
     if (payload.imageIndex !== undefined) {
       locationImages = [maybeLocationImage]
     } else {
-      const location = await db.novelPromotionLocation.findUnique({
+      const location = await db.projectLocation.findUnique({
         where: { id: maybeLocationImage.locationId },
         include: { images: { orderBy: { imageIndex: 'asc' } } },
       })
@@ -102,7 +102,7 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
     const locationId = pickFirstString(payload.id, payload.locationId, job.data.targetId)
     if (!locationId) throw new Error('Location id missing')
 
-    const location = await db.novelPromotionLocation.findUnique({
+    const location = await db.projectLocation.findUnique({
       where: { id: locationId },
       include: { images: { orderBy: { imageIndex: 'asc' } } },
     })
@@ -127,7 +127,7 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
   const missingLocationIds = Array.from(new Set(locationImages.map((it) => it.locationId)))
     .filter((id) => !locationNameMap[id])
   if (missingLocationIds.length > 0) {
-    const extras = await db.novelPromotionLocation.findMany({
+    const extras = await db.projectLocation.findMany({
       where: { id: { in: missingLocationIds } } as Record<string, unknown>,
     })
     for (const loc of extras) {

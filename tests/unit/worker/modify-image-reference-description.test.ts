@@ -50,13 +50,10 @@ const prismaMock = vi.hoisted(() => ({
     findFirst: vi.fn(),
     update: vi.fn(async () => ({})),
   },
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     update: vi.fn(async () => ({})),
-  },
-  novelPromotionProject: {
-    findUnique: vi.fn(),
   },
   globalCharacter: {
     findFirst: vi.fn(),

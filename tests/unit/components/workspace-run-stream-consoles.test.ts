@@ -2,7 +2,7 @@ import * as React from 'react'
 import { createElement } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import WorkspaceRunStreamConsoles from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/WorkspaceRunStreamConsoles'
+import WorkspaceRunStreamConsoles from '@/features/project-workspace/components/WorkspaceRunStreamConsoles'
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,

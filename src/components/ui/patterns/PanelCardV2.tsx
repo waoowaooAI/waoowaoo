@@ -1,8 +1,8 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import type { PanelEditData } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/PanelEditForm'
-import type { StoryboardPanel } from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/storyboard/hooks/useStoryboardState'
+import type { PanelEditData } from '@/features/project-workspace/components/PanelEditForm'
+import type { StoryboardPanel } from '@/features/project-workspace/components/storyboard/hooks/useStoryboardState'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
 import { GlassButton, GlassChip, GlassSurface } from '@/components/ui/primitives'
 import PanelEditFormV2 from './PanelEditFormV2'

@@ -153,10 +153,10 @@ async function buildStorageIndex(): Promise<{ storageType: string; rows: Storage
 async function snapshotTables(backupDir: string) {
   const tasks: SnapshotTask[] = [
     { name: 'projects', tableName: 'projects' },
-    { name: 'novel_promotion_projects', tableName: 'novel_promotion_projects' },
-    { name: 'novel_promotion_episodes', tableName: 'novel_promotion_episodes' },
-    { name: 'novel_promotion_panels', tableName: 'novel_promotion_panels' },
-    { name: 'novel_promotion_voice_lines', tableName: 'novel_promotion_voice_lines' },
+    { name: 'projects', tableName: 'projects' },
+    { name: 'project_episodes', tableName: 'project_episodes' },
+    { name: 'project_panels', tableName: 'project_panels' },
+    { name: 'project_voice_lines', tableName: 'project_voice_lines' },
     { name: 'global_characters', tableName: 'global_characters' },
     { name: 'global_character_appearances', tableName: 'global_character_appearances' },
     { name: 'global_locations', tableName: 'global_locations' },

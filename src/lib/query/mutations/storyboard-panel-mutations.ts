@@ -17,7 +17,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async ({ panelId, count }: { panelId: string; count?: number }) => {
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/regenerate-panel-image`, {
+            const res = await apiFetch(`/api/projects/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ panelId, count: count ?? 1 }),
@@ -39,7 +39,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
         onMutate: ({ panelId }) => {
             upsertTaskTargetOverlay(queryClient, {
                 projectId,
-                targetType: 'NovelPromotionPanel',
+                targetType: 'ProjectPanel',
                 targetId: panelId,
                 intent: 'regenerate',
             })
@@ -47,7 +47,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
         onError: (_error, { panelId }) => {
             clearTaskTargetOverlay(queryClient, {
                 projectId,
-                targetType: 'NovelPromotionPanel',
+                targetType: 'ProjectPanel',
                 targetId: panelId,
             })
         },
@@ -78,7 +78,7 @@ export function useModifyProjectStoryboardImage(projectId: string) {
                 appearanceName?: string
             }>
         }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/modify-storyboard-image`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/modify-storyboard-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -97,7 +97,7 @@ export function useModifyProjectStoryboardImage(projectId: string) {
 export function useDownloadProjectImages(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
-            const response = await apiFetch(`/api/novel-promotion/${projectId}/download-images?episodeId=${episodeId}`)
+            const response = await apiFetch(`/api/projects/${projectId}/download-images?episodeId=${episodeId}`)
             if (!response.ok) {
                 const error = await response.json().catch(() => ({}))
                 throw new Error(resolveTaskErrorMessage(error, '下载失败'))
@@ -117,7 +117,7 @@ export function useUpdateProjectPanel(projectId: string) {
     return useMutation({
         mutationFn: async (payload: Record<string, unknown>) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/panel`,
+                `/api/projects/${projectId}/panel`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -139,7 +139,7 @@ export function useCreateProjectPanel(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: Record<string, unknown>) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/panel`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/panel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -159,7 +159,7 @@ export function useDeleteProjectPanel(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async ({ panelId }: { panelId: string }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/panel?panelId=${panelId}`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/panel?panelId=${panelId}`, {
                 method: 'DELETE',
             }, '删除失败')
         },
@@ -178,7 +178,7 @@ export function useDeleteProjectStoryboardGroup(projectId: string) {
     return useMutation({
         mutationFn: async ({ storyboardId }: { storyboardId: string }) => {
             return await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/storyboard-group?storyboardId=${storyboardId}`,
+                `/api/projects/${projectId}/storyboard-group?storyboardId=${storyboardId}`,
                 { method: 'DELETE' },
                 '删除失败',
             )
@@ -197,7 +197,7 @@ export function useRegenerateProjectStoryboardText(projectId: string) {
     return useMutation({
         mutationFn: async ({ storyboardId }: { storyboardId: string }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/regenerate-storyboard-text`,
+                `/api/projects/${projectId}/regenerate-storyboard-text`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -218,7 +218,7 @@ export function useCreateProjectStoryboardGroup(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: { episodeId: string; insertIndex: number }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/storyboard-group`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/storyboard-group`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -238,7 +238,7 @@ export function useMoveProjectStoryboardGroup(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: { episodeId: string; clipId: string; direction: 'up' | 'down' }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/storyboard-group`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/storyboard-group`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -258,7 +258,7 @@ export function useInsertProjectPanel(projectId: string) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: { storyboardId: string; insertAfterPanelId: string; userInput: string }) => {
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/insert-panel`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/insert-panel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -291,7 +291,7 @@ export function useCreateProjectPanelVariant(projectId: string) {
             includeCharacterAssets: boolean
             includeLocationAsset: boolean
         }) => {
-            return await requestJsonWithError<{ panelId: string }>(`/api/novel-promotion/${projectId}/panel-variant`, {
+            return await requestJsonWithError<{ panelId: string }>(`/api/projects/${projectId}/panel-variant`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -311,7 +311,7 @@ export function useClearProjectStoryboardError(projectId: string) {
     return useMutation({
         mutationFn: async ({ storyboardId }: { storyboardId: string }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}/storyboards`,
+                `/api/projects/${projectId}/storyboards`,
                 {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },

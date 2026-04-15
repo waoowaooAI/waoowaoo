@@ -22,7 +22,7 @@ export function useListProjectEpisodes(projectId: string) {
           description?: string
           novelText?: string
         }>
-      }>(`/api/novel-promotion/${projectId}/episodes`, { method: 'GET' }, '获取剧集失败'),
+      }>(`/api/projects/${projectId}/episodes`, { method: 'GET' }, '获取剧集失败'),
   })
 }
 
@@ -33,7 +33,7 @@ export function useSplitProjectEpisodes(projectId: string) {
   return useMutation({
     mutationFn: async (payload: { content: string; async?: boolean }) => {
       const response = await requestTaskResponseWithError(
-        `/api/novel-promotion/${projectId}/episodes/split`,
+        `/api/projects/${projectId}/episodes/split`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,7 @@ export function useSplitProjectEpisodesByMarkers(projectId: string) {
           wordCount: number
         }>
       }>(
-        `/api/novel-promotion/${projectId}/episodes/split-by-markers`,
+        `/api/projects/${projectId}/episodes/split-by-markers`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -96,7 +96,7 @@ export function useSaveProjectEpisodesBatch(projectId: string) {
       triggerGlobalAnalysis?: boolean
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/episodes/batch`,
+        `/api/projects/${projectId}/episodes/batch`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -124,7 +124,7 @@ export function useUpdateProjectEpisodeField(projectId: string) {
       value: unknown
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/episodes/${episodeId}`,
+        `/api/projects/${projectId}/episodes/${episodeId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -151,18 +151,15 @@ export function useUpdateProjectEpisodeField(projectId: string) {
       })
 
       queryClient.setQueryData<Project | undefined>(projectQueryKey, (prev) => {
-        if (!prev?.novelPromotionData) return prev
-        const episodes = Array.isArray(prev.novelPromotionData.episodes)
-          ? prev.novelPromotionData.episodes.map((episode) =>
+        if (!prev) return prev
+        const episodes = Array.isArray(prev.episodes)
+          ? prev.episodes.map((episode) =>
               episode.id === variables.episodeId ? { ...episode, [variables.key]: variables.value } : episode,
             )
-          : prev.novelPromotionData.episodes
+          : prev.episodes
         return {
           ...prev,
-          novelPromotionData: {
-            ...prev.novelPromotionData,
-            episodes,
-          },
+          episodes,
         }
       })
 
@@ -201,7 +198,7 @@ export function useUpdateProjectClip(projectId: string) {
       episodeId?: string
     }) =>
       await requestJsonWithError(
-        `/api/novel-promotion/${projectId}/clips/${clipId}`,
+        `/api/projects/${projectId}/clips/${clipId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

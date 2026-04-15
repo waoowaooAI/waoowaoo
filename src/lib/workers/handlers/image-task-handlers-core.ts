@@ -272,7 +272,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
   if (type === 'storyboard') {
     const panelId = pickFirstString(payload.panelId, payload.targetId, job.data.targetId)
     let panel = panelId
-      ? await prisma.novelPromotionPanel.findUnique({
+      ? await prisma.projectPanel.findUnique({
         where: { id: panelId },
         select: {
           id: true,
@@ -286,7 +286,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
 
     const storyboardId = pickFirstString(payload.storyboardId)
     if (!panel && storyboardId && payload.panelIndex !== undefined) {
-      panel = await prisma.novelPromotionPanel.findFirst({
+      panel = await prisma.projectPanel.findFirst({
         where: {
           storyboardId,
           panelIndex: Number(payload.panelIndex),
@@ -350,7 +350,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const cosKey = await uploadImageSourceToCos(source, 'panel-modify', panel.id)
 
     await assertTaskActive(job, 'persist_storyboard_modify')
-    await prisma.novelPromotionPanel.update({
+    await prisma.projectPanel.update({
       where: { id: panel.id },
       data: {
         previousImageUrl: panel.imageUrl || panel.previousImageUrl || null,

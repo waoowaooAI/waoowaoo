@@ -29,7 +29,7 @@ function buildJob(): Job<TaskJobData> {
     locale: 'zh',
     projectId: 'project-1',
     userId: 'user-1',
-    targetType: 'NovelPromotionEpisode',
+    targetType: 'ProjectEpisode',
     targetId: 'episode-1',
     payload: {},
     trace: null,

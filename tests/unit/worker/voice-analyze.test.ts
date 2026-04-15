@@ -9,8 +9,8 @@ const txState = vi.hoisted(() => ({
 
 const prismaMock = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
-  novelPromotionProject: { findUnique: vi.fn() },
-  novelPromotionEpisode: { findUnique: vi.fn() },
+  userPreference: { findUnique: vi.fn() },
+  projectEpisode: { findUnique: vi.fn() },
   $transaction: vi.fn(),
 }))
 
@@ -68,7 +68,7 @@ function buildJob(payload: Record<string, unknown>, episodeId: string | null = '
       locale: 'zh',
       projectId: 'project-1',
       episodeId,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       payload,
       userId: 'user-1',
@@ -82,16 +82,15 @@ describe('worker voice-analyze behavior', () => {
     txState.createdRows = []
     txState.deletedWhereClauses = []
 
-    prismaMock.project.findUnique.mockResolvedValue({ id: 'project-1' })
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: 'project-1',
       analysisModel: 'llm::analysis-1',
       characters: [{ id: 'char-1', name: 'Hero' }],
     })
 
-    prismaMock.novelPromotionEpisode.findUnique.mockResolvedValue({
+    prismaMock.projectEpisode.findUnique.mockResolvedValue({
       id: 'episode-1',
-      novelPromotionProjectId: 'np-project-1',
+      projectId: 'project-1',
       novelText: '这是可以用于台词分析的文本',
       storyboards: [
         {
@@ -122,7 +121,7 @@ describe('worker voice-analyze behavior', () => {
     ])
 
     prismaMock.$transaction.mockImplementation(async (fn: (tx: {
-      novelPromotionVoiceLine: {
+      projectVoiceLine: {
         deleteMany: (args: { where: Record<string, unknown> }) => Promise<unknown>
         create: (args: { data: Record<string, unknown>; select: { id: boolean; speaker: boolean; matchedStoryboardId: boolean } }) => Promise<{
           id: string
@@ -132,7 +131,7 @@ describe('worker voice-analyze behavior', () => {
       }
     }) => Promise<unknown>) => {
       const tx = {
-        novelPromotionVoiceLine: {
+        projectVoiceLine: {
           deleteMany: async (args: { where: Record<string, unknown> }) => {
             txState.deletedWhereClauses.push(args.where)
             return undefined

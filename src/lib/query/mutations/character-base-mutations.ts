@@ -72,14 +72,11 @@ function applyCharacterSelectionToProject(
     appearanceId: string,
     selectedIndex: number | null,
 ): Project | undefined {
-    if (!previous?.novelPromotionData) return previous
-    const currentCharacters = previous.novelPromotionData.characters || []
+    if (!previous) return previous
+    const currentCharacters = previous.characters || []
     return {
         ...previous,
-        novelPromotionData: {
-            ...previous.novelPromotionData,
-            characters: applyCharacterSelectionToCharacters(currentCharacters, characterId, appearanceId, selectedIndex),
-        },
+        characters: applyCharacterSelectionToCharacters(currentCharacters, characterId, appearanceId, selectedIndex),
     }
 }
 
@@ -98,14 +95,11 @@ function removeCharacterFromProject(
     previous: Project | undefined,
     characterId: string,
 ): Project | undefined {
-    if (!previous?.novelPromotionData) return previous
-    const currentCharacters = previous.novelPromotionData.characters || []
+    if (!previous) return previous
+    const currentCharacters = previous.characters || []
     return {
         ...previous,
-        novelPromotionData: {
-            ...previous.novelPromotionData,
-            characters: currentCharacters.filter((character) => character.id !== characterId),
-        },
+        characters: currentCharacters.filter((character) => character.id !== characterId),
     }
 }
 
@@ -182,7 +176,7 @@ export function useUploadProjectCharacterImage(projectId: string) {
             if (imageIndex !== undefined) formData.append('imageIndex', imageIndex.toString())
             if (labelText) formData.append('labelText', labelText)
 
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/upload-asset-image`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/upload-asset-image`, {
                 method: 'POST',
                 body: formData
             }, 'Failed to upload image')
@@ -303,7 +297,7 @@ export function useDeleteProjectCharacter(projectId: string) {
     return useMutation({
         mutationFn: async (characterId: string) => {
             await requestVoidWithError(
-                `/api/novel-promotion/${projectId}/character?id=${encodeURIComponent(characterId)}`,
+                `/api/projects/${projectId}/character?id=${encodeURIComponent(characterId)}`,
                 { method: 'DELETE' },
                 'Failed to delete character',
             )
@@ -351,7 +345,7 @@ export function useDeleteProjectAppearance(projectId: string) {
     return useMutation({
         mutationFn: async ({ characterId, appearanceId }: { characterId: string; appearanceId: string }) => {
             await requestVoidWithError(
-                `/api/novel-promotion/${projectId}/character/appearance?characterId=${encodeURIComponent(characterId)}&appearanceId=${encodeURIComponent(appearanceId)}`,
+                `/api/projects/${projectId}/character/appearance?characterId=${encodeURIComponent(characterId)}&appearanceId=${encodeURIComponent(appearanceId)}`,
                 { method: 'DELETE' },
                 'Failed to delete appearance',
             )

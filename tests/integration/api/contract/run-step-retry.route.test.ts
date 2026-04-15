@@ -51,7 +51,7 @@ describe('api contract - run step retry route', () => {
       episodeId: 'episode-1',
       workflowType: 'story_to_script_run',
       taskType: 'story_to_script_run',
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-1',
       input: {
         episodeId: 'episode-1',

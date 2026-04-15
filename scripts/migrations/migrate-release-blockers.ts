@@ -68,7 +68,7 @@ type MigrationSummary = {
     providerCollisionsResolvedByBailian: number
     invalidModelFieldsCleared: number
   }
-  novelPromotionProject: {
+  project: {
     scanned: number
     updated: number
     migratedModelFields: number
@@ -717,7 +717,7 @@ async function migrateUserPreferences(summary: MigrationSummary): Promise<void> 
 }
 
 async function migrateNovelProjects(summary: MigrationSummary): Promise<void> {
-  const rows = await prisma.novelPromotionProject.findMany({
+  const rows = await prisma.project.findMany({
     select: {
       id: true,
       projectId: true,
@@ -731,7 +731,7 @@ async function migrateNovelProjects(summary: MigrationSummary): Promise<void> {
     },
   }) as NovelProjectRow[]
 
-  summary.novelPromotionProject.scanned = rows.length
+  summary.project.scanned = rows.length
 
   for (const row of rows) {
     const updateData: NovelProjectUpdateData = {}
@@ -743,10 +743,10 @@ async function migrateNovelProjects(summary: MigrationSummary): Promise<void> {
       updateData[field] = fieldResult.nextValue
       changed = true
       if (fieldResult.migrated) {
-        summary.novelPromotionProject.migratedModelFields += 1
+        summary.project.migratedModelFields += 1
       }
       if (fieldResult.clearedInvalid) {
-        summary.novelPromotionProject.invalidModelFieldsCleared += 1
+        summary.project.invalidModelFieldsCleared += 1
       }
     }
 
@@ -754,18 +754,18 @@ async function migrateNovelProjects(summary: MigrationSummary): Promise<void> {
     if (!capabilityResult.ok) {
       updateData.capabilityOverrides = null
       changed = changed || row.capabilityOverrides !== null
-      summary.novelPromotionProject.dirtyClearedCapabilityOverrides += 1
+      summary.project.dirtyClearedCapabilityOverrides += 1
     } else if (capabilityResult.changed) {
       updateData.capabilityOverrides = capabilityResult.nextRaw
       changed = true
-      summary.novelPromotionProject.migratedCapabilityOverrideKeys += capabilityResult.migratedKeys
+      summary.project.migratedCapabilityOverrideKeys += capabilityResult.migratedKeys
     }
 
     if (!changed) continue
-    summary.novelPromotionProject.updated += 1
+    summary.project.updated += 1
 
     if (APPLY) {
-      await prisma.novelPromotionProject.update({
+      await prisma.project.update({
         where: { id: row.id },
         data: updateData,
       })
@@ -831,7 +831,7 @@ async function main() {
       providerCollisionsResolvedByBailian: 0,
       invalidModelFieldsCleared: 0,
     },
-    novelPromotionProject: {
+    project: {
       scanned: 0,
       updated: 0,
       migratedModelFields: 0,

@@ -26,7 +26,7 @@ export function useAnalyzeProjectGlobalAssets(projectId: string) {
     return useMutation({
         mutationFn: async () => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/analyze-global`,
+                `/api/projects/${projectId}/analyze-global`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ export function useUpdateProjectConfig(projectId: string) {
     return useMutation({
         mutationFn: async ({ key, value }: { key: string; value: unknown }) =>
             await requestJsonWithError(
-                `/api/novel-promotion/${projectId}`,
+                `/api/projects/${projectId}/config`,
                 {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -100,13 +100,10 @@ export function useUpdateProjectConfig(projectId: string) {
             const previousProject = queryClient.getQueryData<Project>(projectQueryKey)
 
             queryClient.setQueryData<Project | undefined>(projectQueryKey, (prev) => {
-                if (!prev?.novelPromotionData) return prev
+                if (!prev) return prev
                 return {
                     ...prev,
-                    novelPromotionData: {
-                        ...prev.novelPromotionData,
-                        [key]: value,
-                    },
+                    [key]: value,
                 }
             })
 
@@ -133,7 +130,7 @@ export function useAnalyzeProjectAssets(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
             const response = await requestTaskResponseWithError(
-                `/api/novel-promotion/${projectId}/analyze`,
+                `/api/projects/${projectId}/analyze`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -160,7 +157,7 @@ export function useGetProjectStoryboardStats(projectId: string) {
     return useMutation({
         mutationFn: async ({ episodeId }: { episodeId: string }) => {
             const data = await requestJsonWithError<{ storyboards?: Array<{ panels?: unknown[] }> }>(
-                `/api/novel-promotion/${projectId}/storyboards?episodeId=${encodeURIComponent(episodeId)}`,
+                `/api/projects/${projectId}/storyboards?episodeId=${encodeURIComponent(episodeId)}`,
                 { method: 'GET' },
                 'storyboards check failed',
             )

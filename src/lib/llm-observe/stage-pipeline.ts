@@ -26,7 +26,7 @@ type LLMTaskFlowDefinition = {
 
 const FLOW_DEFINITIONS: ReadonlyArray<LLMTaskFlowDefinition> = [
   {
-    id: 'novel_promotion_generation',
+    id: 'project_generation',
     stages: [
       {
         id: TASK_TYPE.STORY_TO_SCRIPT_RUN,
@@ -41,7 +41,7 @@ const FLOW_DEFINITIONS: ReadonlyArray<LLMTaskFlowDefinition> = [
     ],
   },
   {
-    id: 'novel_promotion_ai_create_character',
+    id: 'project_ai_create_character',
     stages: [
       {
         id: TASK_TYPE.AI_CREATE_CHARACTER,
@@ -51,7 +51,7 @@ const FLOW_DEFINITIONS: ReadonlyArray<LLMTaskFlowDefinition> = [
     ],
   },
   {
-    id: 'novel_promotion_ai_create_location',
+    id: 'project_ai_create_location',
     stages: [
       {
         id: TASK_TYPE.AI_CREATE_LOCATION,

@@ -17,7 +17,7 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     risk: '字段映射漂移导致保存失败或误写',
     priority: 'P0',
     tests: [
-      'tests/integration/api/contract/crud-routes.test.ts',
+      'tests/integration/api/contract/asset-crud-routes.test.ts',
       'tests/integration/chain/text.chain.test.ts',
     ],
   },
@@ -40,7 +40,7 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     risk: '任务 payload 漂移、worker 写回错误实体',
     priority: 'P0',
     tests: [
-      'tests/integration/api/contract/direct-submit-routes.test.ts',
+      'tests/integration/api/contract/direct-submit-media-routes.test.ts',
       'tests/unit/worker/image-task-handlers-core.test.ts',
       'tests/integration/chain/image.chain.test.ts',
       'tests/system/generate-image.system.test.ts',
@@ -53,7 +53,7 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     risk: 'panel 定位错误、model 能力判断错误、状态错乱',
     priority: 'P0',
     tests: [
-      'tests/integration/api/contract/direct-submit-routes.test.ts',
+      'tests/integration/api/contract/direct-submit-media-routes.test.ts',
       'tests/unit/worker/video-worker.test.ts',
       'tests/integration/chain/video.chain.test.ts',
       'tests/system/generate-video.system.test.ts',
@@ -66,8 +66,8 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     risk: 'route 与 worker 契约分叉导致异步任务直接报错',
     priority: 'P0',
     tests: [
-      'tests/unit/novel-promotion/insert-panel-user-input.test.ts',
-      'tests/integration/api/contract/direct-submit-routes.test.ts',
+      'tests/unit/project-workflow/panel-stage-runtime.test.ts',
+      'tests/integration/api/contract/direct-submit-text-routes.test.ts',
       'tests/system/text-workflow.system.test.ts',
     ],
   },
@@ -78,8 +78,8 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     risk: '跨分镜误插入、创建脏 panel、参考图开关失效',
     priority: 'P0',
     tests: [
-      'tests/integration/api/specific/panel-variant-route.test.ts',
-      'tests/integration/api/contract/direct-submit-routes.test.ts',
+      'tests/integration/api/specific/panel-variant-selection.test.ts',
+      'tests/integration/api/contract/direct-submit-media-routes.test.ts',
       'tests/unit/worker/panel-variant-task-handler.test.ts',
       'tests/regression/panel-variant-cross-storyboard.test.ts',
     ],
@@ -105,7 +105,8 @@ export const REQUIREMENTS_MATRIX: ReadonlyArray<RequirementCoverageEntry> = [
     priority: 'P0',
     tests: [
       'tests/unit/helpers/task-state-service.test.ts',
-      'tests/integration/api/contract/task-infra-routes.test.ts',
+      'tests/integration/api/contract/task-queue-routes.test.ts',
+      'tests/integration/api/contract/task-run-routes.test.ts',
       'tests/integration/task/create-task-dedupe.integration.test.ts',
       'tests/unit/optimistic/sse-invalidation.test.ts',
     ],

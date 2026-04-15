@@ -85,7 +85,7 @@ export function useEpisodeData(projectId: string | null, episodeId: string | nul
         queryKey: queryKeys.episodeData(projectId || '', episodeId || ''),
         queryFn: async () => {
             if (!projectId || !episodeId) throw new Error('Project ID and Episode ID are required')
-            const res = await apiFetch(`/api/novel-promotion/${projectId}/episodes/${episodeId}`)
+            const res = await apiFetch(`/api/projects/${projectId}/episodes/${episodeId}`)
             if (!res.ok) {
                 const error = await res.json()
                 throw new Error(resolveTaskErrorMessage(error, 'Failed to load episode'))
@@ -104,7 +104,7 @@ export function useEpisodeData(projectId: string | null, episodeId: string | nul
 export function useEpisodes(projectId: string | null) {
     const { data: project } = useProjectData(projectId)
 
-    const episodes = project?.novelPromotionData?.episodes || []
+    const episodes = project?.episodes || []
     return { episodes, isLoading: !project }
 }
 

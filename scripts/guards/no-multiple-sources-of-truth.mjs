@@ -8,12 +8,12 @@ const root = process.cwd()
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'])
 
 const lineScanRoots = [
-  'src/app/[locale]/workspace/[projectId]/modes/novel-promotion',
+  'src/features/project-workspace',
   'src/lib/query/hooks',
 ]
 
 const fileScanRoots = [
-  'src/app/api/novel-promotion',
+  'src/app/api/projects',
   'src/lib/workers/handlers',
 ]
 
@@ -82,14 +82,14 @@ function collectFileViolations(fullPath) {
   const content = fs.readFileSync(fullPath, 'utf8')
   const violations = []
 
-  const updateCallRegex = /novelPromotionProject\.update\(\{[\s\S]*?\n\s*\}\)/g
+  const updateCallRegex = /project\.update\(\{[\s\S]*?\n\s*\}\)/g
   for (const match of content.matchAll(updateCallRegex)) {
     const block = match[0]
     const hasStageWrite = /\bdata\s*:\s*\{[\s\S]*?\bstage\s*:/.test(block)
     if (!hasStageWrite) continue
     const before = content.slice(0, match.index ?? 0)
     const lineNumber = before.split('\n').length
-    violations.push(`${relPath}:${lineNumber} forbidden: DB stage write in novelPromotionProject.update`)
+    violations.push(`${relPath}:${lineNumber} forbidden: DB stage write in project.update`)
   }
 
   return violations

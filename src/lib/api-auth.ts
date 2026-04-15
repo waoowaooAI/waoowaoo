@@ -82,7 +82,7 @@ interface AuthEpisodeLike {
 }
 
 /**
- * 基础 novelData 类型
+ * 基础 projectData 类型
  */
 export interface NovelDataBase {
     id: string
@@ -90,7 +90,7 @@ export interface NovelDataBase {
 }
 
 /**
- * 根据 include 选项推断的 novelData 类型
+ * 根据 include 选项推断的 projectData 类型
  */
 export type NovelDataWithIncludes<T extends ProjectAuthIncludes> = NovelDataBase
     & (T['characters'] extends true ? { characters: AuthCharacterLike[] } : Record<string, never>)
@@ -108,7 +108,7 @@ export interface ProjectAuthContextWithIncludes<T extends ProjectAuthIncludes = 
         name: string
         [key: string]: unknown
     }
-    novelData: NovelDataWithIncludes<T>
+    projectData: NovelDataWithIncludes<T>
 }
 
 /**
@@ -192,11 +192,11 @@ export async function requireAuth(): Promise<AuthSession> {
 
 /**
  * 验证项目访问权限
- * 包含：Session 验证 + 项目存在检查 + 所有权验证 + NovelPromotionData 检查
+ * 包含：Session 验证 + 项目存在检查 + 所有权验证 + 项目工作流数据检查
  * 
  * @param projectId 项目 ID
  * @param options 可选配置，支持按需加载关联数据
- * @returns 验证上下文（session, project, novelData）
+ * @returns 验证上下文（session, project, projectData）
  * @throws 返回对应的错误响应
  * 
  * @example
@@ -208,7 +208,7 @@ export async function requireAuth(): Promise<AuthSession> {
  * const authResult = await requireProjectAuth(projectId, {
  *   include: { characters: true, locations: true }
  * })
- * // authResult.novelData.characters 和 locations 自动可用
+ * // authResult.projectData.characters 和 locations 自动可用
  * ```
  */
 export async function requireProjectAuth<T extends ProjectAuthIncludes = ProjectAuthIncludes>(
@@ -223,27 +223,22 @@ export async function requireProjectAuth<T extends ProjectAuthIncludes = Project
     bindAuthLogContext(session, projectId)
 
     // 2. 构建动态 include 对象
-    const novelPromotionIncludes: Record<string, boolean> = {}
+    const projectIncludes: Record<string, boolean> = {}
     if (options?.include?.characters) {
-        novelPromotionIncludes.characters = true
+        projectIncludes.characters = true
     }
     if (options?.include?.locations) {
-        novelPromotionIncludes.locations = true
+        projectIncludes.locations = true
     }
     if (options?.include?.episodes) {
-        novelPromotionIncludes.episodes = true
+        projectIncludes.episodes = true
     }
-
-    // 3. 获取项目（包含 novelPromotionData 及其可选关联）
-    const hasIncludes = Object.keys(novelPromotionIncludes).length > 0
+    // 3. 获取项目基础信息
+    const hasIncludes = Object.keys(projectIncludes).length > 0
     const project = await withPrismaRetry(() =>
         prisma.project.findUnique({
             where: { id: projectId },
-            include: {
-                novelPromotionData: hasIncludes
-                    ? { include: novelPromotionIncludes }
-                    : true
-            }
+            ...(hasIncludes ? { include: projectIncludes } : {}),
         })
     )
 
@@ -257,13 +252,9 @@ export async function requireProjectAuth<T extends ProjectAuthIncludes = Project
         return forbidden()
     }
 
-    // 6. NovelPromotionData 检查
-    if (!project.novelPromotionData) {
-        return notFound('Novel promotion data')
-    }
-
     // 统一返回 modelKey（provider::modelId），禁止降级为纯 modelId
-    const rawNovelData = project.novelPromotionData as {
+    const rawProjectData = project as {
+        id: string
         analysisModel?: string | null
         characterModel?: string | null
         locationModel?: string | null
@@ -271,23 +262,29 @@ export async function requireProjectAuth<T extends ProjectAuthIncludes = Project
         editModel?: string | null
         videoModel?: string | null
         audioModel?: string | null
+        characters?: AuthCharacterLike[]
+        locations?: AuthLocationLike[]
+        episodes?: AuthEpisodeLike[]
         [key: string]: unknown
     }
-    const processedNovelData = {
-        ...rawNovelData,
-        analysisModel: extractModelKey(rawNovelData.analysisModel),
-        characterModel: extractModelKey(rawNovelData.characterModel),
-        locationModel: extractModelKey(rawNovelData.locationModel),
-        storyboardModel: extractModelKey(rawNovelData.storyboardModel),
-        editModel: extractModelKey(rawNovelData.editModel),
-        videoModel: extractModelKey(rawNovelData.videoModel),
-        audioModel: extractModelKey(rawNovelData.audioModel),
+    const processedProjectData = {
+        ...rawProjectData,
+        analysisModel: extractModelKey(rawProjectData.analysisModel),
+        characterModel: extractModelKey(rawProjectData.characterModel),
+        locationModel: extractModelKey(rawProjectData.locationModel),
+        storyboardModel: extractModelKey(rawProjectData.storyboardModel),
+        editModel: extractModelKey(rawProjectData.editModel),
+        videoModel: extractModelKey(rawProjectData.videoModel),
+        audioModel: extractModelKey(rawProjectData.audioModel),
+        ...(rawProjectData.characters ? { characters: rawProjectData.characters } : {}),
+        ...(rawProjectData.locations ? { locations: rawProjectData.locations } : {}),
+        ...(rawProjectData.episodes ? { episodes: rawProjectData.episodes } : {}),
     }
 
     return {
         session,
         project,
-        novelData: processedNovelData as unknown as NovelDataWithIncludes<T>
+        projectData: processedProjectData as unknown as NovelDataWithIncludes<T>
     }
 }
 
@@ -313,8 +310,8 @@ export async function requireUserAuth(): Promise<{ session: AuthSession } | Next
 }
 
 /**
- * 验证项目权限（不要求 NovelPromotionData）
- * 适用于某些不需要 novelPromotionData 的 API
+ * 验证项目权限（不要求项目工作流数据）
+ * 适用于某些只需要项目基本信息的 API
  */
 export async function requireProjectAuthLight(
     projectId: string

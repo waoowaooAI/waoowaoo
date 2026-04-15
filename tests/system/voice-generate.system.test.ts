@@ -33,7 +33,7 @@ vi.mock('@/lib/voice/generate-voice-line', async () => {
     generateVoiceLine: vi.fn(async (params: {
       lineId: string
     }) => {
-      await prisma.novelPromotionVoiceLine.update({
+      await prisma.projectVoiceLine.update({
         where: { id: params.lineId },
         data: {
           audioUrl: voiceState.audioUrl,
@@ -73,7 +73,7 @@ describe('system - voice generate', () => {
     mockAuthenticated(seeded.user.id)
     workers = await startSystemWorkers(['voice'])
 
-    const mod = await import('@/app/api/novel-promotion/[projectId]/voice-generate/route')
+    const mod = await import('@/app/api/projects/[projectId]/voice-generate/route')
     const response = await callRoute(
       mod.POST,
       'POST',
@@ -93,7 +93,7 @@ describe('system - voice generate', () => {
     expect(task.status).toBe('completed')
     expect(task.type).toBe('voice_line')
 
-    const voiceLine = await prisma.novelPromotionVoiceLine.findUnique({
+    const voiceLine = await prisma.projectVoiceLine.findUnique({
       where: { id: seeded.voiceLine.id },
       select: { audioUrl: true, audioDuration: true },
     })

@@ -14,6 +14,46 @@ export interface ProjectContextRunSummary {
   updatedAt: string
 }
 
+export interface ProjectContextApprovalSummary {
+  id: string
+  status: string
+  createdAt: string
+  linkedRunId: string | null
+}
+
+export interface ProjectContextEpisodeSnapshot {
+  novelText: string | null
+  clipCount: number
+  screenplayClipCount: number
+  storyboardCount: number
+  panelCount: number
+  voiceLineCount: number
+}
+
+export interface ProjectContextClipSnapshot {
+  clipId: string
+  summary: string
+  screenplayReady: boolean
+  storyboardReady: boolean
+  panelCount: number
+}
+
+export interface ProjectContextPanelSnapshot {
+  panelId: string
+  clipId: string
+  storyboardId: string
+  panelIndex: number
+  description: string | null
+}
+
+export interface ProjectContextWorkflowSnapshot {
+  latestRunId: string | null
+  episode: ProjectContextEpisodeSnapshot | null
+  clips: ProjectContextClipSnapshot[]
+  panels: ProjectContextPanelSnapshot[]
+  approvals: ProjectContextApprovalSummary[]
+}
+
 export interface ProjectContextSnapshot {
   projectId: string
   projectName: string
@@ -24,4 +64,5 @@ export interface ProjectContextSnapshot {
   latestArtifacts: ProjectContextArtifactSummary[]
   activeRuns: ProjectContextRunSummary[]
   policy: PolicySnapshot
+  workflow?: ProjectContextWorkflowSnapshot
 }

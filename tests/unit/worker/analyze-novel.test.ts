@@ -3,14 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
-  project: { findUnique: vi.fn() },
-  novelPromotionProject: {
-    findUnique: vi.fn(),
-    update: vi.fn(async () => ({})),
-  },
-  novelPromotionEpisode: { findFirst: vi.fn() },
-  novelPromotionCharacter: { create: vi.fn(async () => ({ id: 'char-new-1' })) },
-  novelPromotionLocation: { create: vi.fn(async () => ({ id: 'loc-new-1' })) },
+  project: { findUnique: vi.fn(), update: vi.fn(async () => ({})) },
+  userPreference: { findUnique: vi.fn() },
+  projectEpisode: { findFirst: vi.fn() },
+  projectCharacter: { create: vi.fn(async () => ({ id: 'char-new-1' })) },
+  projectLocation: { create: vi.fn(async () => ({ id: 'loc-new-1' })) },
   locationImage: {
     create: vi.fn(async () => ({})),
     createMany: vi.fn(async () => ({ count: 1 })),
@@ -72,8 +69,8 @@ function buildJob(): Job<TaskJobData> {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionProject',
-      targetId: 'np-project-1',
+      targetType: 'Project',
+      targetId: 'project-1',
       payload: {},
       userId: 'user-1',
     },
@@ -84,16 +81,12 @@ describe('worker analyze-novel behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    prismaMock.novelPromotionLocation.create
+    prismaMock.projectLocation.create
       .mockResolvedValueOnce({ id: 'loc-new-1' })
       .mockResolvedValueOnce({ id: 'prop-new-1' })
 
     prismaMock.project.findUnique.mockResolvedValue({
       id: 'project-1',
-    })
-
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
       analysisModel: 'llm::analysis-1',
       artStyle: 'cinematic',
       globalAssetText: '全局设定文本',
@@ -101,7 +94,7 @@ describe('worker analyze-novel behavior', () => {
       locations: [{ id: 'loc-existing', name: '已有场景', summary: 'old' }],
     })
 
-    prismaMock.novelPromotionEpisode.findFirst.mockResolvedValue({
+    prismaMock.projectEpisode.findFirst.mockResolvedValue({
       novelText: '首集内容',
     })
 
@@ -138,15 +131,15 @@ describe('worker analyze-novel behavior', () => {
   })
 
   it('no global text and no episode text -> explicit error', async () => {
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValueOnce({
-      id: 'np-project-1',
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: 'project-1',
       analysisModel: 'llm::analysis-1',
       artStyle: 'cinematic',
       globalAssetText: '',
       characters: [],
       locations: [],
     })
-    prismaMock.novelPromotionEpisode.findFirst.mockResolvedValueOnce({ novelText: '' })
+    prismaMock.projectEpisode.findFirst.mockResolvedValueOnce({ novelText: '' })
 
     await expect(handleAnalyzeNovelTask(buildJob())).rejects.toThrow('请先填写全局资产设定或剧本内容')
   })
@@ -164,20 +157,20 @@ describe('worker analyze-novel behavior', () => {
       propCount: 1,
     })
 
-    expect(prismaMock.novelPromotionCharacter.create).toHaveBeenCalledWith(
+    expect(prismaMock.projectCharacter.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          novelPromotionProjectId: 'np-project-1',
+          projectId: 'project-1',
           name: '新角色',
           aliases: JSON.stringify(['别名A']),
         }),
       }),
     )
 
-    expect(prismaMock.novelPromotionLocation.create).toHaveBeenCalledWith(
+    expect(prismaMock.projectLocation.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          novelPromotionProjectId: 'np-project-1',
+          projectId: 'project-1',
           name: '新地点',
           summary: '雨夜街道',
         }),
@@ -206,8 +199,8 @@ describe('worker analyze-novel behavior', () => {
       ],
     })
 
-    expect(prismaMock.novelPromotionProject.update).toHaveBeenCalledWith({
-      where: { id: 'np-project-1' },
+    expect(prismaMock.project.update).toHaveBeenCalledWith({
+      where: { id: 'project-1' },
       data: { artStylePrompt: 'cinematic style' },
     })
 

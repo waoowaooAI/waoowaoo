@@ -32,7 +32,7 @@ describe('regression - reusable active run reattach', () => {
         projectId: 'project-regression-run',
         episodeId: 'episode-regression-run',
         type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-        targetType: 'NovelPromotionEpisode',
+        targetType: 'ProjectEpisode',
         targetId: 'episode-regression-run',
         status: TASK_STATUS.FAILED,
         errorCode: 'TEST_FAILED',
@@ -53,7 +53,7 @@ describe('regression - reusable active run reattach', () => {
       workflowType: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
       taskType: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
       taskId: failedTask.id,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-regression-run',
       input: {
         episodeId: 'episode-regression-run',
@@ -68,7 +68,7 @@ describe('regression - reusable active run reattach', () => {
       projectId: 'project-regression-run',
       episodeId: 'episode-regression-run',
       type: TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN,
-      targetType: 'NovelPromotionEpisode',
+      targetType: 'ProjectEpisode',
       targetId: 'episode-regression-run',
       payload: {
         episodeId: 'episode-regression-run',

@@ -45,12 +45,12 @@ const concurrencyGateMock = vi.hoisted(() => ({
 }))
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     update: vi.fn(async () => undefined),
   },
-  novelPromotionVoiceLine: {
+  projectVoiceLine: {
     findUnique: vi.fn(),
   },
 }))
@@ -125,7 +125,7 @@ function buildJob(params: {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: params.targetType ?? 'NovelPromotionPanel',
+      targetType: params.targetType ?? 'ProjectPanel',
       targetId: params.targetId ?? 'panel-1',
       payload: params.payload ?? {},
       userId: 'user-1',
@@ -138,9 +138,9 @@ describe('worker video processor behavior', () => {
     vi.clearAllMocks()
     workerState.processor = null
 
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValue(buildPanel())
-    prismaMock.novelPromotionPanel.findFirst.mockResolvedValue(buildPanel())
-    prismaMock.novelPromotionVoiceLine.findUnique.mockResolvedValue({
+    prismaMock.projectPanel.findUnique.mockResolvedValue(buildPanel())
+    prismaMock.projectPanel.findFirst.mockResolvedValue(buildPanel())
+    prismaMock.projectVoiceLine.findUnique.mockResolvedValue({
       id: 'line-1',
       audioUrl: 'cos/line-1.mp3',
       audioDuration: 1200,
@@ -228,7 +228,7 @@ describe('worker video processor behavior', () => {
     const processor = workerState.processor
     expect(processor).toBeTruthy()
 
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValueOnce(null)
+    prismaMock.projectPanel.findUnique.mockResolvedValueOnce(null)
     const job = buildJob({
       type: TASK_TYPE.LIP_SYNC,
       payload: { voiceLineId: 'line-1' },
@@ -268,7 +268,7 @@ describe('worker video processor behavior', () => {
       }),
     )
 
-    expect(prismaMock.novelPromotionPanel.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
       where: { id: 'panel-1' },
       data: {
         lipSyncVideoUrl: 'cos/lip-sync/video.mp4',

@@ -19,8 +19,8 @@ export async function handleModifyLocationTask(job: Job<TaskJobData>, payload: A
   const imageIndex = Number.isFinite(imageIndexValue) ? Math.max(0, Math.floor(imageIndexValue)) : 0
   const currentDescription = readRequiredString(payload.currentDescription, 'currentDescription')
   const modifyInstruction = readRequiredString(payload.modifyInstruction, 'modifyInstruction')
-  const novelData = await resolveAnalysisModel(job.data.projectId, job.data.userId)
-  const location = await requireProjectLocation(locationId, novelData.id)
+  const projectWorkflow = await resolveAnalysisModel(job.data.projectId, job.data.userId)
+  const location = await requireProjectLocation(locationId, job.data.projectId)
 
   const finalPrompt = buildPrompt({
     promptId: PROMPT_IDS.NP_LOCATION_MODIFY,
@@ -41,7 +41,7 @@ export async function handleModifyLocationTask(job: Job<TaskJobData>, payload: A
 
   const responseText = await runShotPromptCompletion({
     job,
-    model: novelData.analysisModel,
+    model: projectWorkflow.analysisModel,
     prompt: finalPrompt,
     action: 'ai_modify_location',
     streamContextKey: 'ai_modify_location',

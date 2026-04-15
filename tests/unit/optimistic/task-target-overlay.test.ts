@@ -23,28 +23,28 @@ describe('task-target-overlay', () => {
   it('creates optimistic runningTaskId when onMutate omits it', () => {
     const queryClient = new QueryClient()
     const projectId = 'project-1'
-    const key = 'NovelPromotionPanel:panel-1'
+    const key = 'ProjectPanel:panel-1'
 
     upsertTaskTargetOverlay(queryClient, {
       projectId,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-1',
       runningTaskType: 'video_panel',
       intent: 'generate',
     })
 
     const overlay = getOverlay(queryClient, projectId, key)
-    expect(overlay?.runningTaskId).toMatch(/^optimistic:NovelPromotionPanel:panel-1:/)
+    expect(overlay?.runningTaskId).toMatch(/^optimistic:ProjectPanel:panel-1:/)
   })
 
   it('does not clear overlay on completed event from a different taskId', () => {
     const queryClient = new QueryClient()
     const projectId = 'project-1'
-    const key = 'NovelPromotionPanel:panel-2'
+    const key = 'ProjectPanel:panel-2'
 
     upsertTaskTargetOverlay(queryClient, {
       projectId,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-2',
       runningTaskId: 'task-new',
       runningTaskType: 'video_panel',
@@ -54,7 +54,7 @@ describe('task-target-overlay', () => {
     applyTaskLifecycleToOverlay(queryClient, {
       projectId,
       lifecycleType: TASK_EVENT_TYPE.COMPLETED,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-2',
       taskId: 'task-old',
       taskType: 'video_panel',
@@ -73,11 +73,11 @@ describe('task-target-overlay', () => {
   it('clears overlay on completed event from the same taskId', () => {
     const queryClient = new QueryClient()
     const projectId = 'project-1'
-    const key = 'NovelPromotionPanel:panel-3'
+    const key = 'ProjectPanel:panel-3'
 
     upsertTaskTargetOverlay(queryClient, {
       projectId,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-3',
       runningTaskId: 'task-3',
       runningTaskType: 'video_panel',
@@ -87,7 +87,7 @@ describe('task-target-overlay', () => {
     applyTaskLifecycleToOverlay(queryClient, {
       projectId,
       lifecycleType: TASK_EVENT_TYPE.COMPLETED,
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId: 'panel-3',
       taskId: 'task-3',
       taskType: 'video_panel',

@@ -30,9 +30,6 @@ const prismaMock = vi.hoisted(() => ({
       userId: 'user-1',
     })),
   },
-  novelPromotionProject: {
-    create: vi.fn(async () => ({ id: 'np-1', projectId: 'project-1' })),
-  },
 }))
 
 vi.mock('@/lib/api-auth', () => authMock)
@@ -45,7 +42,7 @@ describe('api specific - project create default audio model', () => {
     vi.clearAllMocks()
   })
 
-  it('copies user preference audioModel into the new novel promotion project', async () => {
+  it('copies user preference audioModel into the new project config fields', async () => {
     const mod = await import('@/app/api/projects/route')
     const req = buildMockRequest({
       path: '/api/projects',
@@ -59,16 +56,19 @@ describe('api specific - project create default audio model', () => {
     const res = await mod.POST(req, routeContext)
     expect(res.status).toBe(201)
     expect(prismaMock.project.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         name: 'Test Project',
         description: null,
         userId: 'user-1',
-      },
-    })
-    expect(prismaMock.novelPromotionProject.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        projectId: 'project-1',
+        analysisModel: 'llm::analysis',
+        characterModel: 'img::character',
+        locationModel: 'img::location',
+        storyboardModel: 'img::storyboard',
+        editModel: 'img::edit',
+        videoModel: 'video::model',
         audioModel: 'audio::tts',
+        videoRatio: '9:16',
+        artStyle: 'realistic',
       }),
     })
   })

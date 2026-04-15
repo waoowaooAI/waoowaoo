@@ -104,7 +104,7 @@ export async function createHomeProjectLaunch({
 
   const projectId = await readProjectId(projectResponse)
 
-  const configResponse = await apiFetch(`/api/novel-promotion/${projectId}`, {
+  const configResponse = await apiFetch(`/api/projects/${projectId}/config`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ videoRatio, artStyle }),
@@ -114,7 +114,7 @@ export async function createHomeProjectLaunch({
     throw new Error(await readApiErrorMessage(configResponse, 'Failed to save project config'))
   }
 
-  const episodeResponse = await apiFetch(`/api/novel-promotion/${projectId}/episodes`, {
+  const episodeResponse = await apiFetch(`/api/projects/${projectId}/episodes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

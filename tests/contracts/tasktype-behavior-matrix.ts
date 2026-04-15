@@ -89,9 +89,22 @@ function resolveApiContractByTaskType(taskType: TaskType): string {
     || taskType === 'asset_hub_modify'
     || taskType === 'regenerate_storyboard_text'
   ) {
-    return 'tests/integration/api/contract/direct-submit-routes.test.ts'
+    if (
+      taskType === 'insert_panel'
+      || taskType === 'regenerate_storyboard_text'
+    ) {
+      return 'tests/integration/api/contract/direct-submit-text-routes.test.ts'
+    }
+    if (
+      taskType === 'voice_line'
+      || taskType === 'voice_design'
+      || taskType === 'asset_hub_voice_design'
+    ) {
+      return 'tests/integration/api/contract/direct-submit-run-routes.test.ts'
+    }
+    return 'tests/integration/api/contract/direct-submit-media-routes.test.ts'
   }
-  return 'tests/integration/api/contract/task-infra-routes.test.ts'
+  return 'tests/integration/api/contract/task-queue-routes.test.ts'
 }
 
 export const TASKTYPE_BEHAVIOR_MATRIX: ReadonlyArray<TaskTypeBehaviorMatrixEntry> = TASK_TYPE_CATALOG.map((entry) => ({

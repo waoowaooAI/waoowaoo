@@ -6,9 +6,6 @@ const prismaMock = vi.hoisted(() => ({
   project: {
     findUnique: vi.fn(async () => ({ id: 'project-1' })),
   },
-  novelPromotionProject: {
-    findFirst: vi.fn(async () => ({ id: 'np-project-1' })),
-  },
 }))
 
 const llmClientMock = vi.hoisted(() => ({
@@ -64,7 +61,7 @@ vi.mock('@/lib/workers/shared', () => sharedMock)
 vi.mock('@/lib/workers/utils', () => utilsMock)
 vi.mock('@/lib/workers/handlers/llm-stream', () => llmStreamMock)
 vi.mock('@/lib/prompt-i18n', () => promptMock)
-vi.mock('@/lib/novel-promotion/story-to-script/clip-matching', () => ({
+vi.mock('@/lib/project-workflow/story-to-script/clip-matching', () => ({
   createTextMarkerMatcher: (content: string) => ({
     matchMarker: (marker: string, fromIndex = 0) => {
       const startIndex = content.indexOf(marker, fromIndex)
@@ -86,7 +83,7 @@ function buildJob(content: string): Job<TaskJobData> {
       type: TASK_TYPE.EPISODE_SPLIT_LLM,
       locale: 'zh',
       projectId: 'project-1',
-      targetType: 'NovelPromotionProject',
+      targetType: 'Project',
       targetId: 'project-1',
       payload: { content },
       userId: 'user-1',

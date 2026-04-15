@@ -4,7 +4,7 @@ import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
-  novelPromotionProject: { findUnique: vi.fn() },
+  userPreference: { findUnique: vi.fn() },
 }))
 
 const llmMock = vi.hoisted(() => ({
@@ -92,8 +92,8 @@ function buildJob(): Job<TaskJobData> {
       locale: 'zh',
       projectId: 'project-1',
       episodeId: null,
-      targetType: 'NovelPromotionProject',
-      targetId: 'np-project-1',
+      targetType: 'Project',
+      targetId: 'project-1',
       payload: {},
       userId: 'user-1',
     },
@@ -104,10 +104,8 @@ describe('worker analyze-global behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    prismaMock.project.findUnique.mockResolvedValue({ id: 'project-1' })
-
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValue({
-      id: 'np-project-1',
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: 'project-1',
       analysisModel: 'llm::analysis-1',
       globalAssetText: '全局设定',
       characters: [{ id: 'char-1', name: 'Hero', aliases: null, introduction: 'hero intro' }],
@@ -117,14 +115,15 @@ describe('worker analyze-global behavior', () => {
   })
 
   it('no analyzable content -> explicit error', async () => {
-    prismaMock.novelPromotionProject.findUnique.mockResolvedValueOnce({
-      id: 'np-project-1',
+    const emptyProject = {
+      id: 'project-1',
       analysisModel: 'llm::analysis-1',
       globalAssetText: '',
       characters: [],
       locations: [],
       episodes: [{ id: 'ep-1', name: '第一集', novelText: '' }],
-    })
+    }
+    prismaMock.project.findUnique.mockResolvedValue(emptyProject)
 
     await expect(handleAnalyzeGlobalTask(buildJob())).rejects.toThrow('没有可分析的内容')
   })

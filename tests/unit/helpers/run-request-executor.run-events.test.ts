@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { executeRunRequest } from '@/lib/query/hooks/run-stream/run-request-executor'
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 
 function jsonResponse(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -87,7 +87,7 @@ describe('run-request-executor run events path', () => {
       const captured: RunStreamEvent[] = []
       const controller = new AbortController()
       const result = await executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
+        endpointUrl: '/api/projects/project_1/story-to-script-stream',
         requestBody: { episodeId: 'episode_1' },
         controller,
         taskStreamTimeoutMs: 30_000,
@@ -129,7 +129,7 @@ describe('run-request-executor run events path', () => {
     try {
       const controller = new AbortController()
       await expect(executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
+        endpointUrl: '/api/projects/project_1/story-to-script-stream',
         requestBody: { episodeId: 'episode_1' },
         controller,
         taskStreamTimeoutMs: 30_000,
@@ -193,7 +193,7 @@ describe('run-request-executor run events path', () => {
       const controller = new AbortController()
       let settled = false
       const request = executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
+        endpointUrl: '/api/projects/project_1/story-to-script-stream',
         requestBody: { episodeId: 'episode_1' },
         controller,
         taskStreamTimeoutMs: 3_000,
@@ -253,7 +253,7 @@ describe('run-request-executor run events path', () => {
       const captured: RunStreamEvent[] = []
       const controller = new AbortController()
       const request = executeRunRequest({
-        endpointUrl: '/api/novel-promotion/project_1/story-to-script-stream',
+        endpointUrl: '/api/projects/project_1/story-to-script-stream',
         requestBody: { episodeId: 'episode_1' },
         controller,
         taskStreamTimeoutMs: 30_000,

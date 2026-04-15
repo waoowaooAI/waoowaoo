@@ -115,7 +115,7 @@ describe('script-to-storyboard atomic retry', () => {
       },
       clipIndex: 0,
       totalClipCount: 1,
-      novelPromotionData: {
+      projectData: {
         characters: [{ name: 'Narrator', appearances: [] }],
         locations: [{ name: 'Office', images: [{ description: 'room desc' }] }],
       },
@@ -205,7 +205,7 @@ describe('script-to-storyboard atomic retry', () => {
       },
       clipIndex: 0,
       totalClipCount: 1,
-      novelPromotionData: {
+      projectData: {
         characters: [{ name: 'Narrator', appearances: [] }],
         locations: [{ name: 'Office', images: [{ description: 'room desc' }] }],
       },

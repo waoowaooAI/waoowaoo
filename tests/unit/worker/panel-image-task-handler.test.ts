@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
-  novelPromotionPanel: {
+  projectPanel: {
     findUnique: vi.fn(),
     update: vi.fn(async () => ({})),
   },
@@ -86,7 +86,7 @@ function buildJob(payload: Record<string, unknown>, targetId = 'panel-1'): Job<T
       locale: 'zh',
       projectId: 'project-1',
       episodeId: 'episode-1',
-      targetType: 'NovelPromotionPanel',
+      targetType: 'ProjectPanel',
       targetId,
       payload,
       userId: 'user-1',
@@ -98,7 +98,7 @@ describe('worker panel-image-task-handler behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValue({
+    prismaMock.projectPanel.findUnique.mockResolvedValue({
       id: 'panel-1',
       storyboardId: 'storyboard-1',
       panelIndex: 0,
@@ -163,7 +163,7 @@ describe('worker panel-image-task-handler behavior', () => {
       }),
     }))
 
-    expect(prismaMock.novelPromotionPanel.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
       where: { id: 'panel-1' },
       data: {
         imageUrl: 'cos/panel-candidate-1.png',
@@ -176,7 +176,7 @@ describe('worker panel-image-task-handler behavior', () => {
     utilsMock.resolveImageSourceFromGeneration.mockReset()
     utilsMock.uploadImageSourceToCos.mockReset()
 
-    prismaMock.novelPromotionPanel.findUnique.mockResolvedValueOnce({
+    prismaMock.projectPanel.findUnique.mockResolvedValueOnce({
       id: 'panel-1',
       storyboardId: 'storyboard-1',
       panelIndex: 0,
@@ -206,7 +206,7 @@ describe('worker panel-image-task-handler behavior', () => {
       imageUrl: null,
     })
 
-    expect(prismaMock.novelPromotionPanel.update).toHaveBeenCalledWith({
+    expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
       where: { id: 'panel-1' },
       data: {
         previousImageUrl: 'cos/panel-old.png',

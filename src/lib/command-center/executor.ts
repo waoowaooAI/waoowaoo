@@ -356,7 +356,7 @@ async function dispatchCommandPlan(params: {
   const locale = resolveRequiredTaskLocale(params.request, params.command)
   const taskType = taskTypeForCommand(params.command)
   const payload = await resolveCommandTaskPayload(params.command, params.userId)
-  const targetType = 'NovelPromotionEpisode'
+  const targetType = 'ProjectEpisode'
   const targetId = params.command.episodeId || params.command.projectId
   const taskResult = await submitTask({
     userId: params.userId,

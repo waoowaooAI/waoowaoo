@@ -40,7 +40,7 @@ export function createAnalyzeGlobalStats(totalChunks: number): AnalyzeGlobalStat
 }
 
 export async function persistAnalyzeGlobalChunk(params: {
-  projectInternalId: string
+  projectId: string
   charactersData: AnalyzeGlobalCharactersData
   locationsData: AnalyzeGlobalLocationsData
   propsData: AnalyzeGlobalPropsData
@@ -81,9 +81,9 @@ export async function persistAnalyzeGlobalChunk(params: {
         age_range: char.age_range,
       }
 
-      const created = await prisma.novelPromotionCharacter.create({
+      const created = await prisma.projectCharacter.create({
         data: {
-          novelPromotionProjectId: params.projectInternalId,
+          projectId: params.projectId,
           name,
           aliases: JSON.stringify(aliases),
           introduction: readText(char.introduction),
@@ -136,7 +136,7 @@ export async function persistAnalyzeGlobalChunk(params: {
       }
 
       if (Object.keys(updateData).length > 0) {
-        await prisma.novelPromotionCharacter.update({
+        await prisma.projectCharacter.update({
           where: { id: existing.id },
           data: updateData,
         })
@@ -170,9 +170,9 @@ export async function persistAnalyzeGlobalChunk(params: {
       const cleanDescriptions = descriptions.map((item) => removeLocationPromptSuffix(item))
       const availableSlots = normalizeLocationAvailableSlots(loc.available_slots)
 
-      const created = await prisma.novelPromotionLocation.create({
+      const created = await prisma.projectLocation.create({
         data: {
-          novelPromotionProjectId: params.projectInternalId,
+          projectId: params.projectId,
           name,
           summary: summary || null,
         },
@@ -216,9 +216,9 @@ export async function persistAnalyzeGlobalChunk(params: {
     }
 
     try {
-      const created = await prisma.novelPromotionLocation.create({
+      const created = await prisma.projectLocation.create({
         data: {
-          novelPromotionProjectId: params.projectInternalId,
+          projectId: params.projectId,
           name,
           summary,
           assetKind: 'prop',

@@ -19,7 +19,7 @@ const prismaMock = vi.hoisted(() => ({
     findFirst: vi.fn(),
     update: vi.fn(async () => ({})),
   },
-  novelPromotionCharacter: {
+  projectCharacter: {
     findUnique: vi.fn(),
   },
 }))

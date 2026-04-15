@@ -60,14 +60,11 @@ function applyLocationSelectionToProject(
     locationId: string,
     selectedIndex: number | null,
 ): Project | undefined {
-    if (!previous?.novelPromotionData) return previous
-    const currentLocations = previous.novelPromotionData.locations || []
+    if (!previous) return previous
+    const currentLocations = previous.locations || []
     return {
         ...previous,
-        novelPromotionData: {
-            ...previous.novelPromotionData,
-            locations: applyLocationSelectionToLocations(currentLocations, locationId, selectedIndex),
-        },
+        locations: applyLocationSelectionToLocations(currentLocations, locationId, selectedIndex),
     }
 }
 
@@ -161,7 +158,7 @@ export function useUploadProjectLocationImage(projectId: string) {
             if (imageIndex !== undefined) formData.append('imageIndex', imageIndex.toString())
             if (labelText) formData.append('labelText', labelText)
 
-            return await requestJsonWithError(`/api/novel-promotion/${projectId}/upload-asset-image`, {
+            return await requestJsonWithError(`/api/projects/${projectId}/upload-asset-image`, {
                 method: 'POST',
                 body: formData
             }, 'Failed to upload image')

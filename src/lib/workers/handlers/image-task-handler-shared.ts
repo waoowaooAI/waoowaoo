@@ -57,8 +57,8 @@ export interface PanelCharacterReference {
   slot?: string
 }
 
-interface NovelDataDb {
-  novelPromotionProject: {
+interface ProjectDataDb {
+  project: {
     findUnique(args: Record<string, unknown>): Promise<NovelProjectData | null>
   }
 }
@@ -157,9 +157,9 @@ export async function generateProjectLabeledImageToStorage(params: {
 }
 
 export async function resolveNovelData(projectId: string) {
-  const db = prisma as unknown as NovelDataDb
-  const data = await db.novelPromotionProject.findUnique({
-    where: { projectId },
+  const db = prisma as unknown as ProjectDataDb
+  const data = await db.project.findUnique({
+    where: { id: projectId },
     include: {
       characters: { include: { appearances: { orderBy: { appearanceIndex: 'asc' } } } },
       locations: { include: { images: { orderBy: { imageIndex: 'asc' } } } },
@@ -167,7 +167,7 @@ export async function resolveNovelData(projectId: string) {
   })
 
   if (!data) {
-    throw new Error(`NovelPromotionProject not found: ${projectId}`)
+    throw new Error(`Project not found: ${projectId}`)
   }
 
   return data

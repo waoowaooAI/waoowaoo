@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { NextIntlClientProvider } from 'next-intl'
 import type { AbstractIntlMessages } from 'next-intl'
-import LocationSection from '@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/LocationSection'
+import LocationSection from '@/features/project-workspace/components/assets/LocationSection'
 
 const locationCardMock = vi.hoisted(() => vi.fn((_props: unknown) => null))
 const useProjectAssetsMock = vi.hoisted(() => vi.fn())
@@ -14,7 +14,7 @@ vi.mock('@/lib/query/hooks/useProjectAssets', () => ({
   useProjectAssets: (projectId: string | null) => useProjectAssetsMock(projectId),
 }))
 
-vi.mock('@/app/[locale]/workspace/[projectId]/modes/novel-promotion/components/assets/LocationCard', () => ({
+vi.mock('@/features/project-workspace/components/assets/LocationCard', () => ({
   default: (props: unknown) => locationCardMock(props),
 }))
 

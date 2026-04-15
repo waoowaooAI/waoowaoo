@@ -1,4 +1,4 @@
-import type { RunStreamEvent } from '@/lib/novel-promotion/run-stream/types'
+import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
 import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
 import { resolveTaskErrorMessage as resolveUnifiedTaskErrorMessage } from '@/lib/task/error-message'
 import type { RunResult } from './types'
