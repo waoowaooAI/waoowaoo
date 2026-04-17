@@ -308,6 +308,25 @@ model MutationEntry {
   @@map("mutation_entries")
 }
 
+model SavedSkill {
+  id        String   @id @default(uuid())
+  userId    String
+  projectId String?
+  name      String
+  summary   String?  @db.Text
+  kind      String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId, createdAt])
+  @@index([projectId, createdAt])
+  @@map("saved_skills")
+}
+
 model ExecutionPlan {
   id               String              @id @default(uuid())
   commandId        String              @unique
@@ -512,6 +531,7 @@ model Project {
   planApprovals      PlanApproval[]
   assistantThreads   ProjectAssistantThread[]
   mutationBatches    MutationBatch[]
+  savedSkills        SavedSkill[]
   episodes           ProjectEpisode[]
   characters         ProjectCharacter[]
   locations          ProjectLocation[]
@@ -582,6 +602,7 @@ model User {
   planApprovals           PlanApproval[]
   projectAssistantThreads ProjectAssistantThread[]
   mutationBatches         MutationBatch[]
+  savedSkills             SavedSkill[]
 
   @@map("user")
 }
