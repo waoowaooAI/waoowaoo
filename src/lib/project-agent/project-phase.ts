@@ -1,5 +1,5 @@
 import { TASK_TYPE } from '@/lib/task/types'
-import { assembleProjectContext } from '@/lib/project-context/assembler'
+import { assembleProjectProjectionLite } from '@/lib/project-projection/lite'
 
 export const PROJECT_PHASE = {
   DRAFT: 'draft',
@@ -72,24 +72,16 @@ export async function resolveProjectPhase(params: {
   episodeId?: string | null
   currentStage?: string | null
 }): Promise<ProjectPhaseSnapshot> {
-  const context = await assembleProjectContext({
+  const projection = await assembleProjectProjectionLite({
     projectId: params.projectId,
     userId: params.userId,
     episodeId: params.episodeId || null,
     currentStage: params.currentStage || null,
   })
 
-  const workflow = context.workflow
-  const episode = workflow?.episode || null
-  const progress = {
-    clipCount: episode?.clipCount || 0,
-    screenplayClipCount: episode?.screenplayClipCount || 0,
-    storyboardCount: episode?.storyboardCount || 0,
-    panelCount: episode?.panelCount || 0,
-    voiceLineCount: episode?.voiceLineCount || 0,
-  }
+  const progress = projection.progress
 
-  const activeWorkflowTypes = new Set(context.activeRuns.map((run) => run.workflowType))
+  const activeWorkflowTypes = new Set(projection.activeRuns.map((run) => run.workflowType))
   let phase: ProjectPhase = PROJECT_PHASE.DRAFT
 
   if (activeWorkflowTypes.has(TASK_TYPE.SCRIPT_TO_STORYBOARD_RUN)) {
@@ -107,8 +99,8 @@ export async function resolveProjectPhase(params: {
   return {
     phase,
     progress,
-    activeRunCount: context.activeRuns.length,
+    activeRunCount: projection.activeRuns.length,
     failedItems: [],
-    availableActions: resolveAvailableActions(phase, !!episode),
+    availableActions: resolveAvailableActions(phase, !!projection.episodeId),
   }
 }
