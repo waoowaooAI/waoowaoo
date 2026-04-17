@@ -6,6 +6,7 @@ import { executeProjectCommand, approveProjectPlan, listProjectCommands, rejectP
 import { listSkillCatalogEntries, listWorkflowPackages } from '@/lib/skill-system/catalog'
 import { loadScriptPreview, loadStoryboardPreview } from '@/lib/project-agent/preview'
 import { resolveProjectPhase } from '@/lib/project-agent/project-phase'
+import { assembleProjectProjectionLite } from '@/lib/project-projection/lite'
 import { submitAssetGenerateTask } from '@/lib/assets/services/asset-actions'
 import {
   buildAssistantProjectContextSnapshot,
@@ -64,6 +65,16 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         })
         return snapshot
       },
+    },
+    get_project_snapshot: {
+      description: 'Load a lightweight project snapshot projection suitable for planning and prompt context.',
+      inputSchema: z.object({}),
+      execute: async (ctx) => assembleProjectProjectionLite({
+        projectId: ctx.projectId,
+        userId: ctx.userId,
+        episodeId: ctx.context.episodeId || null,
+        currentStage: ctx.context.currentStage || null,
+      }),
     },
     get_project_context: {
       description: 'Load the current project and episode context snapshot.',
