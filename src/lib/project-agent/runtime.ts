@@ -14,9 +14,10 @@ import { createOpenAI } from '@ai-sdk/openai'
 import type { NextRequest } from 'next/server'
 import { getProviderConfig, getProviderKey } from '@/lib/api-config'
 import { createProjectAgentOperationRegistry } from '@/lib/operations/registry'
+import { writeOperationDataPart } from '@/lib/operations/types'
 import { getUserModelConfig } from '@/lib/config-service'
 import { resolveLlmRuntimeModel } from '@/lib/llm/runtime-shared'
-import type { ProjectAgentContext } from './types'
+import type { ConfirmationRequestPartData, ProjectAgentContext } from './types'
 import { resolveProjectPhase } from './project-phase'
 
 function normalizeProjectAgentContext(raw: unknown): ProjectAgentContext {
@@ -88,6 +89,7 @@ function buildProjectAgentSystemPrompt(params: {
     '对于 story-to-script 和 script-to-storyboard，只能通过固定 workflow package 执行。',
     'workflow package 内部 skills 顺序不可更改、不可跳过、不可合并。',
     '当用户要求执行这两条主流程时：先调用 create_workflow_plan，再等待审批；只有用户明确同意后才调用 approve_plan。',
+    '当 tool 需要 confirmed=true（会产生写入或计费 side effect）时，必须先向用户说明风险并等待用户明确回复“确认/同意”后再调用。',
     '你可以调用 get_project_phase、get_project_context、list_workflow_packages、create_workflow_plan、approve_plan、reject_plan、list_recent_commands、fetch_workflow_preview、get_task_status。',
     '回答简洁，用中文。',
     `projectId=${params.projectId}`,
@@ -141,13 +143,34 @@ export async function createProjectAgentChatResponse(input: {
           tool({
             description: operation.description,
             inputSchema: operation.inputSchema,
-            execute: async (args) => operation.execute({
+            execute: async (args) => {
+              if (operation.sideEffects?.requiresConfirmation) {
+                const confirmed = !!(args && typeof args === 'object' && (args as { confirmed?: unknown }).confirmed === true)
+                if (!confirmed) {
+                  writeOperationDataPart<ConfirmationRequestPartData>(writer, 'data-confirmation-request', {
+                    operationId,
+                    summary: operation.sideEffects.confirmationSummary
+                      || `执行 ${operationId} 会产生写入或计费副作用。请在确认后重试，并在参数中带 confirmed=true。`,
+                    argsHint: {
+                      ...(args && typeof args === 'object' && !Array.isArray(args) ? args as Record<string, unknown> : {}),
+                      confirmed: true,
+                    },
+                  })
+                  return {
+                    confirmationRequired: true,
+                    operationId,
+                  }
+                }
+              }
+
+              return operation.execute({
                 request: input.request,
                 userId: input.userId,
                 projectId: input.projectId,
                 context,
                 writer,
-              }, args),
+              }, args)
+            },
           }),
         ]),
       )

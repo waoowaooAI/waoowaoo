@@ -77,6 +77,12 @@ export interface ProjectPhasePartData {
   snapshot: ProjectPhaseSnapshot
 }
 
+export interface ConfirmationRequestPartData {
+  operationId: string
+  summary: string
+  argsHint?: Record<string, unknown> | null
+}
+
 export interface ProjectAssistantContextSnapshot {
   projectId: string
   projectName: string
@@ -107,6 +113,7 @@ export interface ProjectAssistantThreadSnapshot {
 
 export type WorkspaceAssistantPartType =
   | 'data-project-phase'
+  | 'data-confirmation-request'
   | 'data-workflow-plan'
   | 'data-approval-request'
   | 'data-workflow-status'

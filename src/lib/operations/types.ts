@@ -11,9 +11,22 @@ export interface ProjectAgentOperationContext {
   writer: UIMessageStreamWriter<UIMessage>
 }
 
+export type OperationMode = 'query' | 'act' | 'plan'
+
+export type OperationRiskLevel = 'none' | 'low' | 'medium' | 'high'
+
+export interface OperationSideEffects {
+  mode: OperationMode
+  risk: OperationRiskLevel
+  billable?: boolean
+  requiresConfirmation?: boolean
+  confirmationSummary?: string
+}
+
 export interface ProjectAgentOperationDefinition {
   description: string
   inputSchema: ZodTypeAny
+  sideEffects?: OperationSideEffects
   execute: (context: ProjectAgentOperationContext, input: ZodInfer<ZodTypeAny>) => Promise<unknown>
 }
 

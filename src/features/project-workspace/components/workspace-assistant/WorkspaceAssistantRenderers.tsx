@@ -11,6 +11,7 @@ import { useMemo, useState } from 'react'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import type {
   ApprovalRequestPartData,
+  ConfirmationRequestPartData,
   ProjectContextPartData,
   ProjectPhasePartData,
   ScriptPreviewPartData,
@@ -170,6 +171,18 @@ export function HiddenApprovalRequestDataCard(_: DataMessagePartProps<ApprovalRe
   return null
 }
 
+function ConfirmationRequestDataCard({ data }: DataMessagePartProps<ConfirmationRequestPartData>) {
+  return (
+    <div className="rounded-2xl border border-[var(--glass-tone-warn-fg)]/30 bg-[var(--glass-bg-muted)]/70 p-3 text-xs text-[var(--glass-text-secondary)]">
+      <div className="text-sm font-medium text-[var(--glass-text-primary)]">需要确认</div>
+      <div className="mt-1">{data.summary}</div>
+      <div className="mt-2 rounded-xl bg-[var(--glass-bg-surface)]/70 px-3 py-2 font-mono text-[10px] text-[var(--glass-text-tertiary)]">
+        operation: {data.operationId}
+      </div>
+    </div>
+  )
+}
+
 export function WorkflowPlanDataCard({ data }: DataMessagePartProps<WorkflowPlanPartData>) {
   return (
     <div className="rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/70 p-3">
@@ -299,6 +312,7 @@ export function useWorkspaceAssistantMessagePartComponents({
     data: {
       by_name: {
         'project-phase': ProjectPhaseDataCard,
+        'confirmation-request': ConfirmationRequestDataCard,
         'workflow-plan': WorkflowPlanDataCard,
         'approval-request': HiddenApprovalRequestDataCard,
         'workflow-status': (props) => (
