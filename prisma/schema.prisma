@@ -272,6 +272,42 @@ model ProjectCommand {
   @@map("project_commands")
 }
 
+model MutationBatch {
+  id          String         @id @default(uuid())
+  projectId   String
+  userId      String
+  source      String
+  operationId String?
+  summary     String?        @db.Text
+  status      String         @default("active") // active | reverted | failed
+  revertError String?        @db.Text
+  revertedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  entries     MutationEntry[]
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@index([userId, createdAt])
+  @@map("mutation_batches")
+}
+
+model MutationEntry {
+  id         String        @id @default(uuid())
+  batchId    String
+  kind       String
+  targetType String
+  targetId   String
+  payload    Json?
+  createdAt  DateTime      @default(now())
+  batch      MutationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([targetType, targetId])
+  @@map("mutation_entries")
+}
+
 model ExecutionPlan {
   id               String              @id @default(uuid())
   commandId        String              @unique
