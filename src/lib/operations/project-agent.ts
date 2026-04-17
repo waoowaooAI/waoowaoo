@@ -231,6 +231,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
   return {
     get_project_phase: {
       description: 'Resolve the current project phase, progress and available next actions.',
+      sideEffects: { mode: 'query', risk: 'none' },
       inputSchema: z.object({}),
       execute: async (ctx) => {
         const snapshot = await resolveProjectPhase({
@@ -248,6 +249,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     get_project_snapshot: {
       description: 'Load a lightweight project snapshot projection suitable for planning and prompt context.',
+      sideEffects: { mode: 'query', risk: 'low' },
       inputSchema: z.object({}),
       execute: async (ctx) => assembleProjectProjectionLite({
         projectId: ctx.projectId,
@@ -258,6 +260,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     get_project_context: {
       description: 'Load the current project and episode context snapshot.',
+      sideEffects: { mode: 'query', risk: 'low' },
       inputSchema: z.object({}),
       execute: async (ctx) => {
         const projectContext = await assembleProjectContext({
@@ -274,6 +277,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     list_workflow_packages: {
       description: 'List available workflow packages and skill catalog entries.',
+      sideEffects: { mode: 'query', risk: 'none' },
       inputSchema: z.object({}),
       execute: async () => ({
         workflows: listWorkflowPackages().map((workflowPackage) => ({
@@ -288,6 +292,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     create_workflow_plan: {
       description: 'Create a persisted command and plan for a fixed workflow package.',
+      sideEffects: { mode: 'plan', risk: 'low' },
       inputSchema: z.object({
         workflowId: z.enum(['story-to-script', 'script-to-storyboard']),
         episodeId: z.string().optional(),
@@ -362,9 +367,17 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     approve_plan: {
       description: 'Approve a pending workflow plan and enqueue execution.',
+      sideEffects: {
+        mode: 'plan',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        confirmationSummary: '将批准并执行 workflow plan（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
       inputSchema: z.object({
         planId: z.string().min(1),
         workflowId: z.enum(['story-to-script', 'script-to-storyboard']),
+        confirmed: z.boolean().optional(),
       }),
       execute: async (ctx, input) => {
         const result = await approveProjectPlan({
@@ -392,6 +405,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     reject_plan: {
       description: 'Reject a pending workflow plan.',
+      sideEffects: { mode: 'plan', risk: 'low' },
       inputSchema: z.object({
         planId: z.string().min(1),
         note: z.string().optional(),
@@ -403,6 +417,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     list_recent_commands: {
       description: 'List recent command and run status for the current project or episode.',
+      sideEffects: { mode: 'query', risk: 'low' },
       inputSchema: z.object({
         limit: z.number().int().positive().max(20).optional(),
       }),
@@ -415,6 +430,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     fetch_workflow_preview: {
       description: 'Load a rendered preview for the latest workflow artifacts.',
+      sideEffects: { mode: 'query', risk: 'low' },
       inputSchema: z.object({
         workflowId: z.enum(['story-to-script', 'script-to-storyboard']),
         episodeId: z.string().optional(),
@@ -436,6 +452,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     get_task_status: {
       description: 'Query task target states for one or more project targets.',
+      sideEffects: { mode: 'query', risk: 'none' },
       inputSchema: z.object({
         targets: z.array(taskTargetSchema).min(1).max(50),
       }),
