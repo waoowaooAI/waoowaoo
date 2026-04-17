@@ -1225,7 +1225,7 @@ tool 侧应优先新增 `get_project_snapshot`（或等价命名）并在 prompt
 
 第一批只做最需要的，不追求一次铺满全部领域：
 
-v1（已落地/已打通，tool surface 目前 21 个）：
+v1（已落地/已打通，tool surface 目前 22 个）：
 
 - `get_project_phase`
 - `get_project_snapshot`
@@ -1242,6 +1242,7 @@ v1（已落地/已打通，tool surface 目前 21 个）：
 - `modify_asset_image`（二次确认）
 - `regenerate_panel_image`（二次确认）
 - `panel_variant`（二次确认）
+- `mutate_storyboard`（二次确认，insert/update/reorder）
 - `voice_generate`（二次确认，支持批量）
 - `voice_design`（二次确认）
 - `lip_sync`（二次确认）
@@ -1295,12 +1296,12 @@ Tool 数量控制的具体做法：
 | `generate_location_image`      | Act/Generate  | `generate_location_image`                                              | `src/app/api/projects/[projectId]/generate-image/route.ts`（legacy，同源 submitAssetGenerateTask）                                                                                                                                            | `act`              | `risk=medium billable requiresConfirmation`                  | 已实现 |
 | `regenerate_panel_image`       | Act/Generate  | `regenerate_panel_image`                                               | `src/app/api/projects/[projectId]/regenerate-panel-image/route.ts`（同源 submitTask: IMAGE_PANEL）                                                                                                                                            | `act`              | `risk=medium billable requiresConfirmation`                  | 已实现 |
 | `panel_variant`                | Act/Generate  | `panel_variant`                                                        | `src/app/api/projects/[projectId]/panel-variant/route.ts`（同源 submitTask: PANEL_VARIANT + DB 插入新 panel）                                                                                                                                | `act`              | `risk=high billable requiresConfirmation destructive`         | 已实现 |
+| `mutate_storyboard`            | Act/Edit      | `mutate_storyboard`（insert/update/reorder）                           | `src/app/api/projects/[projectId]/insert-panel/route.ts`、`src/app/api/projects/[projectId]/panel/route.ts`（同源）                                                                                                                         | `act`              | `risk=high requiresConfirmation destructive/bulk`             | 已实现 |
 | `voice_generate`               | Act/Generate  | `voice_generate`                                                       | `src/app/api/projects/[projectId]/voice-generate/route.ts`（同源 submitTask: VOICE_LINE）                                                                                                                                                     | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
 | `generate_video`               | Act/Generate  | `generate_video`                                                       | `src/app/api/projects/[projectId]/generate-video/route.ts`（同源 submitTask: VIDEO_PANEL）                                                                                                                                                    | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
 | `voice_design`                 | Act/Generate  | `voice_design`                                                         | `src/app/api/projects/[projectId]/voice-design/route.ts`（同源 submitTask: VOICE_DESIGN）                                                                                                                                                     | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
 | `lip_sync`                     | Act/Generate  | `lip_sync`                                                             | `src/app/api/projects/[projectId]/lip-sync/route.ts`（同源 submitTask: LIP_SYNC）                                                                                                                                                             | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
 | `modify_asset_image`           | Act/Edit      | `modify_asset_image`                                                   | `src/app/api/projects/[projectId]/modify-asset-image/route.ts`（同源 submitAssetModifyTask）                                                                                                                                                  | `act`              | `risk=high billable requiresConfirmation overwrite`          | 已实现 |
-| `mutate_storyboard`            | Act/Edit      | `insert_panel`/`update_panel`/`reorder_panels`（待接入）                 | `src/app/api/projects/[projectId]/insert-panel/route.ts`、`src/app/api/projects/[projectId]/panel/route.ts`                                                                                                                                  | `act/plan`          | `risk=high requiresConfirmation destructive/bulk`            | 待接入 |
 | `list_recent_mutation_batches` | Governance    | `list_recent_mutation_batches`                                          | （新增）                                                                                                                                                                                                                                      | `query`            | `risk=low`                                                  | 已实现 |
 | `revert_mutation_batch`        | Governance    | `revert_mutation_batch`                                                 | （新增）                                                                                                                                                                                                                                      | `plan`             | `risk=high requiresConfirmation destructive`                 | 已实现 |
 
@@ -1582,6 +1583,7 @@ system prompt 需要从当前的轻量规则，升级为包含：
 - [x] Prompt 注入增强：system prompt 增加 `progress` 与 `available actions` 摘要，便于模型做下一步建议与 Act/Plan 选择
 - [x] sideEffects 最小分流推进：补齐核心 operations 的 `sideEffects` 标注，并让 runtime 对 `billable` 自动触发 confirmed gate（减少遗漏）
 - [x] mutation batch 最小落地：新增 batch 表与 list/revert tools，并让首批 act-mode 写操作创建 batch 记录（便于“撤回刚才那次修改”）
+- [x] 实现 `mutate_storyboard`：覆盖 insert panel / update panel prompt / reorder panels，并纳入 mutation batch，可用 `revert_mutation_batch` 撤回
 - [x] 最小校验：`npm run typecheck` + `npm run test:unit:all` 均通过
 
 这条路径的核心目标是：
