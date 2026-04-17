@@ -677,14 +677,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           },
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'generate_character_image',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -703,6 +695,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'generate_character_image',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return {
@@ -788,14 +789,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           },
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'generate_location_image',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -813,6 +806,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'generate_location_image',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return {
@@ -865,14 +867,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           },
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'modify_asset_image',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const appearanceId = type === 'character' ? normalizeString(body.appearanceId) : ''
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
@@ -892,6 +886,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'modify_asset_image',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return {
@@ -990,14 +993,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.IMAGE_PANEL, billingPayload),
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'regenerate_panel_image',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -1011,6 +1006,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               targetId: panelId,
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'regenerate_panel_image',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return {
@@ -1164,14 +1168,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           throw error
         }
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'panel_variant',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -1189,6 +1185,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'panel_variant',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return { ...result, panelId: createdPanel.id, mutationBatchId: mutationBatch.id }
@@ -1389,14 +1394,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.INSERT_PANEL, billingPayload),
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'mutate_storyboard',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -1413,6 +1410,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'mutate_storyboard',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return { ...result, storyboardId, mutationBatchId: mutationBatch.id }
@@ -1613,6 +1619,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
             operationId: 'voice_generate',
             taskId: taskIds[0] || '',
             status: results[0]?.status || 'queued',
+            mutationBatchId: mutationBatch.id,
           })
           return {
             success: true,
@@ -1627,6 +1634,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           total: taskIds.length,
           taskIds,
           results: results.map((item) => ({ refId: item.refId, taskId: item.taskId })),
+          mutationBatchId: mutationBatch.id,
         })
 
         return {
@@ -1781,14 +1789,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.LIP_SYNC, payload),
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'lip_sync',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -1805,6 +1805,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'lip_sync',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return {
@@ -1924,6 +1933,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
             total: tasks.length,
             taskIds,
             results: panels.map((panel, index) => ({ refId: panel.id, taskId: taskIds[index] || '' })),
+            mutationBatchId: mutationBatch.id,
           })
 
           return {
@@ -1977,14 +1987,6 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
           billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
         })
 
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'generate_video',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-        })
-
         const mutationBatch = await createMutationBatch({
           projectId: ctx.projectId,
           userId: ctx.userId,
@@ -2001,6 +2003,15 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
               },
             },
           ],
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'generate_video',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+          mutationBatchId: mutationBatch.id,
         })
 
         return {

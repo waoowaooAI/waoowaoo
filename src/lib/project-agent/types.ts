@@ -89,6 +89,7 @@ export interface TaskSubmittedPartData {
   status: string
   runId?: string | null
   deduped?: boolean
+  mutationBatchId?: string | null
 }
 
 export interface TaskBatchSubmittedPartData {
@@ -99,6 +100,7 @@ export interface TaskBatchSubmittedPartData {
     refId: string
     taskId: string
   }>
+  mutationBatchId?: string | null
 }
 
 export interface ProjectAssistantContextSnapshot {

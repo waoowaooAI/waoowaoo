@@ -234,6 +234,11 @@ export {
 } from './useProjectCommandCenter'
 
 export {
+    useRevertMutationBatch,
+    type MutationBatchUndoResult,
+} from './useMutationBatchUndo'
+
+export {
     useProjectAssistantThread,
     useProjectAssistantThreadSync,
 } from './useProjectAssistantThread'

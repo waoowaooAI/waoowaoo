@@ -22,6 +22,7 @@ import type {
   WorkflowStatusPartData,
 } from '@/lib/project-agent/types'
 import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
+import { useRevertMutationBatch } from '@/lib/query/hooks'
 import {
   getSkillDisplayLabel,
   getWorkflowDisplayLabel,
@@ -186,6 +187,25 @@ function ConfirmationRequestDataCard({ data }: DataMessagePartProps<Confirmation
 }
 
 function TaskSubmittedDataCard({ data }: DataMessagePartProps<TaskSubmittedPartData>) {
+  const revertMutationBatch = useRevertMutationBatch()
+  const [undoResult, setUndoResult] = useState<{ ok: boolean; message?: string } | null>(null)
+
+  const handleUndo = async () => {
+    if (!data.mutationBatchId) return
+    if (!window.confirm('确认撤回这次变更？这可能会覆盖/删除刚生成的内容。')) return
+    setUndoResult(null)
+    try {
+      const result = await revertMutationBatch.mutateAsync(data.mutationBatchId)
+      if (result.ok) {
+        setUndoResult({ ok: true, message: `已撤回（reverted=${String(result.reverted)}）` })
+      } else {
+        setUndoResult({ ok: false, message: result.error || '撤回失败' })
+      }
+    } catch (error) {
+      setUndoResult({ ok: false, message: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/70 p-3 text-xs text-[var(--glass-text-secondary)]">
       <div className="text-sm font-medium text-[var(--glass-text-primary)]">Task Submitted</div>
@@ -194,11 +214,48 @@ function TaskSubmittedDataCard({ data }: DataMessagePartProps<TaskSubmittedPartD
       <div>status: {data.status}</div>
       {data.runId ? <div>runId: {data.runId}</div> : null}
       {typeof data.deduped === 'boolean' ? <div>deduped: {String(data.deduped)}</div> : null}
+      {data.mutationBatchId ? <div>undoBatchId: {data.mutationBatchId}</div> : null}
+      {data.mutationBatchId ? (
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded-xl bg-[var(--glass-tone-warn-fg)]/90 px-3 py-2 text-xs font-medium text-white disabled:opacity-60"
+            onClick={() => { void handleUndo() }}
+            disabled={revertMutationBatch.isPending}
+          >
+            {revertMutationBatch.isPending ? '撤回中...' : '撤回本次修改'}
+          </button>
+          {undoResult ? (
+            <div className={undoResult.ok ? 'text-[var(--glass-tone-success-fg)]' : 'text-[var(--glass-tone-warn-fg)]'}>
+              {undoResult.message}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
 
 function TaskBatchSubmittedDataCard({ data }: DataMessagePartProps<TaskBatchSubmittedPartData>) {
+  const revertMutationBatch = useRevertMutationBatch()
+  const [undoResult, setUndoResult] = useState<{ ok: boolean; message?: string } | null>(null)
+
+  const handleUndo = async () => {
+    if (!data.mutationBatchId) return
+    if (!window.confirm('确认撤回这次批量变更？这可能会覆盖/删除刚生成的内容。')) return
+    setUndoResult(null)
+    try {
+      const result = await revertMutationBatch.mutateAsync(data.mutationBatchId)
+      if (result.ok) {
+        setUndoResult({ ok: true, message: `已撤回（reverted=${String(result.reverted)}）` })
+      } else {
+        setUndoResult({ ok: false, message: result.error || '撤回失败' })
+      }
+    } catch (error) {
+      setUndoResult({ ok: false, message: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/70 p-3 text-xs text-[var(--glass-text-secondary)]">
       <div className="text-sm font-medium text-[var(--glass-text-primary)]">Tasks Submitted</div>
@@ -210,6 +267,24 @@ function TaskBatchSubmittedDataCard({ data }: DataMessagePartProps<TaskBatchSubm
         ))}
         {(data.taskIds || []).length > 8 ? <div>…</div> : null}
       </div>
+      {data.mutationBatchId ? <div className="mt-2">undoBatchId: {data.mutationBatchId}</div> : null}
+      {data.mutationBatchId ? (
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            type="button"
+            className="rounded-xl bg-[var(--glass-tone-warn-fg)]/90 px-3 py-2 text-xs font-medium text-white disabled:opacity-60"
+            onClick={() => { void handleUndo() }}
+            disabled={revertMutationBatch.isPending}
+          >
+            {revertMutationBatch.isPending ? '撤回中...' : '撤回本次批量修改'}
+          </button>
+          {undoResult ? (
+            <div className={undoResult.ok ? 'text-[var(--glass-tone-success-fg)]' : 'text-[var(--glass-tone-warn-fg)]'}>
+              {undoResult.message}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
