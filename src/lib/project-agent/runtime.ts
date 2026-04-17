@@ -144,12 +144,13 @@ export async function createProjectAgentChatResponse(input: {
             description: operation.description,
             inputSchema: operation.inputSchema,
             execute: async (args) => {
-              if (operation.sideEffects?.requiresConfirmation) {
+              const requiresConfirmation = operation.sideEffects?.requiresConfirmation ?? (operation.sideEffects?.billable === true)
+              if (requiresConfirmation) {
                 const confirmed = !!(args && typeof args === 'object' && (args as { confirmed?: unknown }).confirmed === true)
                 if (!confirmed) {
                   writeOperationDataPart<ConfirmationRequestPartData>(writer, 'data-confirmation-request', {
                     operationId,
-                    summary: operation.sideEffects.confirmationSummary
+                    summary: operation.sideEffects?.confirmationSummary
                       || `执行 ${operationId} 会产生写入或计费副作用。请在确认后重试，并在参数中带 confirmed=true。`,
                     argsHint: {
                       ...(args && typeof args === 'object' && !Array.isArray(args) ? args as Record<string, unknown> : {}),
