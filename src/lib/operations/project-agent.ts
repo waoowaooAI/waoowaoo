@@ -32,6 +32,7 @@ import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
 import { validatePreviewText, validateVoicePrompt } from '@/lib/providers/bailian/voice-design'
 import { createMutationBatch, listRecentMutationBatches } from '@/lib/mutation-batch/service'
 import { revertMutationBatch } from '@/lib/mutation-batch/revert'
+import { resolveInsertPanelUserInput } from '@/lib/project-workflow/insert-panel'
 import {
   buildAssistantProjectContextSnapshot,
   buildWorkflowApprovalReasons,
@@ -168,6 +169,14 @@ async function rollbackCreatedVariantPanel(params: {
       data: { panelCount },
     })
   })
+}
+
+async function deletePanelAndReindex(params: {
+  panelId: string
+  storyboardId: string
+  panelIndex: number
+}) {
+  await rollbackCreatedVariantPanel(params)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -1183,6 +1192,230 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         })
 
         return { ...result, panelId: createdPanel.id, mutationBatchId: mutationBatch.id }
+      },
+    },
+    mutate_storyboard: {
+      description: 'Apply storyboard mutations (insert panel / update prompts / reorder panels).',
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        confirmationSummary: '将对分镜进行编辑/重排/插入新格子（可能删除或覆盖内容；插入可能消耗额度）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: z.object({
+        confirmed: z.boolean().optional(),
+        action: z.enum(['insert_panel', 'update_panel_prompt', 'reorder_panels']),
+        storyboardId: z.string().min(1),
+        insertAfterPanelId: z.string().min(1).optional(),
+        panelId: z.string().min(1).optional(),
+        panelIndex: z.number().int().min(0).max(2000).optional(),
+        userInput: z.string().optional(),
+        prompt: z.string().optional(),
+        videoPrompt: z.string().nullable().optional(),
+        firstLastFramePrompt: z.string().nullable().optional(),
+        imagePrompt: z.string().nullable().optional(),
+        orderedPanelIds: z.array(z.string().min(1)).min(1).optional(),
+      }).passthrough(),
+      execute: async (ctx, input) => {
+        const locale = resolveLocaleFromContext(ctx.context.locale)
+        const storyboardId = input.storyboardId.trim()
+
+        if (input.action === 'update_panel_prompt') {
+          let panelId = normalizeString(input.panelId)
+          if (!panelId) {
+            if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
+              throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+            }
+            const panel = await prisma.projectPanel.findFirst({
+              where: {
+                storyboardId,
+                panelIndex: input.panelIndex,
+              },
+              select: { id: true },
+            })
+            panelId = panel?.id || ''
+          }
+          if (!panelId) {
+            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+          }
+
+          const before = await prisma.projectPanel.findUnique({
+            where: { id: panelId },
+            select: {
+              id: true,
+              videoPrompt: true,
+              firstLastFramePrompt: true,
+              imagePrompt: true,
+            },
+          })
+          if (!before) {
+            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+          }
+
+          const updateData: Record<string, unknown> = {}
+          if (Object.prototype.hasOwnProperty.call(input, 'videoPrompt')) updateData.videoPrompt = input.videoPrompt
+          if (Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt')) updateData.firstLastFramePrompt = input.firstLastFramePrompt
+          if (Object.prototype.hasOwnProperty.call(input, 'imagePrompt')) updateData.imagePrompt = input.imagePrompt
+          if (Object.keys(updateData).length === 0) {
+            return { success: true, panelId, noop: true }
+          }
+
+          await prisma.projectPanel.update({
+            where: { id: panelId },
+            data: updateData,
+          })
+
+          const mutationBatch = await createMutationBatch({
+            projectId: ctx.projectId,
+            userId: ctx.userId,
+            source: 'assistant-panel',
+            operationId: 'mutate_storyboard',
+            summary: `update_panel_prompt:${panelId}`,
+            entries: [
+              {
+                kind: 'panel_prompt_restore',
+                targetType: 'ProjectPanel',
+                targetId: panelId,
+                payload: {
+                  previousVideoPrompt: before.videoPrompt,
+                  previousFirstLastFramePrompt: before.firstLastFramePrompt,
+                  previousImagePrompt: before.imagePrompt,
+                },
+              },
+            ],
+          })
+
+          return { success: true, panelId, mutationBatchId: mutationBatch.id }
+        }
+
+        if (input.action === 'reorder_panels') {
+          const orderedPanelIds = Array.isArray(input.orderedPanelIds)
+            ? input.orderedPanelIds
+              .filter((panelId: unknown): panelId is string => typeof panelId === 'string')
+              .map((panelId: string) => panelId.trim())
+              .filter((panelId: string) => panelId.length > 0)
+            : []
+          if (orderedPanelIds.length === 0) {
+            throw new Error('PROJECT_AGENT_ORDER_REQUIRED')
+          }
+
+          const panels = await prisma.projectPanel.findMany({
+            where: { storyboardId },
+            select: { id: true, panelIndex: true, panelNumber: true },
+          })
+
+          const panelById = new Map(panels.map((panel) => [panel.id, panel] as const))
+          const uniqueIds = Array.from(new Set(orderedPanelIds)) as string[]
+          if (uniqueIds.length !== orderedPanelIds.length) {
+            throw new Error('PROJECT_AGENT_ORDER_DUPLICATE_IDS')
+          }
+          if (uniqueIds.length !== panels.length) {
+            throw new Error('PROJECT_AGENT_ORDER_INCOMPLETE')
+          }
+          for (const panelId of uniqueIds) {
+            if (!panelById.has(panelId)) {
+              throw new Error('PROJECT_AGENT_ORDER_INVALID_PANEL')
+            }
+          }
+
+          await prisma.$transaction(async (tx) => {
+            for (const panel of panels) {
+              await tx.projectPanel.update({
+                where: { id: panel.id },
+                data: { panelIndex: -(panel.panelIndex + 1) },
+              })
+            }
+
+            for (let nextIndex = 0; nextIndex < uniqueIds.length; nextIndex++) {
+              const panelId = uniqueIds[nextIndex] as string
+              await tx.projectPanel.update({
+                where: { id: panelId },
+                data: {
+                  panelIndex: nextIndex,
+                  panelNumber: nextIndex + 1,
+                },
+              })
+            }
+          })
+
+          const mutationBatch = await createMutationBatch({
+            projectId: ctx.projectId,
+            userId: ctx.userId,
+            source: 'assistant-panel',
+            operationId: 'mutate_storyboard',
+            summary: `reorder_panels:${storyboardId}`,
+            entries: [
+              {
+                kind: 'panel_reorder_restore',
+                targetType: 'ProjectStoryboard',
+                targetId: storyboardId,
+                payload: {
+                  storyboardId,
+                  panels,
+                },
+              },
+            ],
+          })
+
+          return { success: true, storyboardId, mutationBatchId: mutationBatch.id }
+        }
+
+        // insert_panel
+        if (!input.insertAfterPanelId) {
+          throw new Error('PROJECT_AGENT_INSERT_AFTER_REQUIRED')
+        }
+        const userInput = resolveInsertPanelUserInput(input as unknown as Record<string, unknown>, locale)
+        const projectModelConfig = await getProjectModelConfig(ctx.projectId, ctx.userId)
+        const billingPayload: Record<string, unknown> = {
+          ...(isRecord(input) ? input : {}),
+          userInput,
+          ...(projectModelConfig.analysisModel ? { analysisModel: projectModelConfig.analysisModel } : {}),
+          meta: {
+            locale,
+          },
+        }
+        delete billingPayload.confirmed
+
+        const result = await submitTask({
+          userId: ctx.userId,
+          locale: resolveRequiredTaskLocale(ctx.request, billingPayload),
+          requestId: getRequestId(ctx.request),
+          projectId: ctx.projectId,
+          type: TASK_TYPE.INSERT_PANEL,
+          targetType: 'ProjectStoryboard',
+          targetId: storyboardId,
+          payload: billingPayload,
+          dedupeKey: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
+          billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.INSERT_PANEL, billingPayload),
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'mutate_storyboard',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+        })
+
+        const mutationBatch = await createMutationBatch({
+          projectId: ctx.projectId,
+          userId: ctx.userId,
+          source: 'assistant-panel',
+          operationId: 'mutate_storyboard',
+          summary: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
+          entries: [
+            {
+              kind: 'insert_panel_undo',
+              targetType: 'ProjectStoryboard',
+              targetId: storyboardId,
+              payload: {
+                taskId: result.taskId,
+              },
+            },
+          ],
+        })
+
+        return { ...result, storyboardId, mutationBatchId: mutationBatch.id }
       },
     },
     voice_generate: {
