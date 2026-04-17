@@ -90,7 +90,7 @@ function buildProjectAgentSystemPrompt(params: {
     'workflow package 内部 skills 顺序不可更改、不可跳过、不可合并。',
     '当用户要求执行这两条主流程时：先调用 create_workflow_plan，再等待审批；只有用户明确同意后才调用 approve_plan。',
     '当 tool 需要 confirmed=true（会产生写入或计费 side effect）时，必须先向用户说明风险并等待用户明确回复“确认/同意”后再调用。',
-    '你可以调用 get_project_phase、get_project_snapshot、get_project_context、list_workflow_packages、create_workflow_plan、approve_plan、reject_plan、list_recent_commands、fetch_workflow_preview、get_task_status、generate_character_image。',
+    '你可以调用 get_project_phase、get_project_snapshot、get_project_context、list_workflow_packages、create_workflow_plan、approve_plan、reject_plan、list_recent_commands、fetch_workflow_preview、get_task_status、generate_character_image、generate_location_image。',
     '回答简洁，用中文。',
     `projectId=${params.projectId}`,
     `episodeId=${episodeId}`,

@@ -371,5 +371,94 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         }
       },
     },
+    generate_location_image: {
+      description: 'Generate location images for a project location.',
+      sideEffects: {
+        mode: 'act',
+        risk: 'medium',
+        billable: true,
+        requiresConfirmation: true,
+        confirmationSummary: '将为场景生成图片（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: z.object({
+        confirmed: z.boolean().optional(),
+        locationId: z.string().min(1).optional(),
+        locationName: z.string().min(1).optional(),
+        count: z.number().int().positive().max(4).optional(),
+        imageIndex: z.number().int().min(0).max(50).optional(),
+        artStyle: z.string().optional(),
+      }).refine((value) => Boolean(value.locationId || value.locationName), {
+        message: 'locationId or locationName is required',
+        path: ['locationId'],
+      }),
+      execute: async (ctx, input) => {
+        const locale = resolveLocaleFromContext(ctx.context.locale)
+
+        let locationId = normalizeString(input.locationId)
+        const locationName = normalizeString(input.locationName)
+        if (!locationId) {
+          const exact = await prisma.projectLocation.findFirst({
+            where: {
+              projectId: ctx.projectId,
+              name: locationName,
+            },
+            select: { id: true },
+          })
+          if (exact) {
+            locationId = exact.id
+          } else {
+            const fuzzy = await prisma.projectLocation.findFirst({
+              where: {
+                projectId: ctx.projectId,
+                name: {
+                  contains: locationName,
+                },
+              },
+              select: { id: true },
+            })
+            if (fuzzy) {
+              locationId = fuzzy.id
+            }
+          }
+        }
+        if (!locationId) {
+          throw new Error('PROJECT_AGENT_LOCATION_NOT_FOUND')
+        }
+
+        const body: Record<string, unknown> = {
+          meta: {
+            locale,
+          },
+          ...(typeof input.count === 'number' ? { count: input.count } : {}),
+          ...(typeof input.imageIndex === 'number' ? { imageIndex: input.imageIndex } : {}),
+          ...(normalizeString(input.artStyle) ? { artStyle: normalizeString(input.artStyle) } : {}),
+        }
+
+        const result = await submitAssetGenerateTask({
+          request: ctx.request,
+          kind: 'location',
+          assetId: locationId,
+          body,
+          access: {
+            scope: 'project',
+            userId: ctx.userId,
+            projectId: ctx.projectId,
+          },
+        })
+
+        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+          operationId: 'generate_location_image',
+          taskId: result.taskId,
+          status: result.status,
+          runId: result.runId || null,
+          deduped: result.deduped,
+        })
+
+        return {
+          ...result,
+          locationId,
+        }
+      },
+    },
   }
 }
