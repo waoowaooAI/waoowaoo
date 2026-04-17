@@ -1225,7 +1225,7 @@ tool 侧应优先新增 `get_project_snapshot`（或等价命名）并在 prompt
 
 第一批只做最需要的，不追求一次铺满全部领域：
 
-v1（已落地/已打通，tool surface 目前 15 个）：
+v1（已落地/已打通，tool surface 目前 19 个）：
 
 - `get_project_phase`
 - `get_project_snapshot`
@@ -1239,8 +1239,12 @@ v1（已落地/已打通，tool surface 目前 15 个）：
 - `reject_plan`
 - `generate_character_image`（二次确认）
 - `generate_location_image`（二次确认）
+- `modify_asset_image`（二次确认）
 - `regenerate_panel_image`（二次确认）
+- `panel_variant`（二次确认）
 - `voice_generate`（二次确认，支持批量）
+- `voice_design`（二次确认）
+- `lip_sync`（二次确认）
 - `generate_video`（二次确认，支持批量）
 
 说明：以上工具已经足够让 assistant 从“会解释流程”变成“能提交异步任务推进项目”。但 P9 仍不够全面：编辑类（modify/patch）、治理类（mutation batch + undo）、以及更细粒度的 storyboard 操作（insert/panel variant 等）尚未纳入 v1 tool surface。
@@ -1288,12 +1292,13 @@ Tool 数量控制的具体做法：
 | `generate_character_image`     | Act/Generate  | `generate_character_image`                                             | `src/app/api/projects/[projectId]/generate-character-image/route.ts`（同源 submitAssetGenerateTask）                                                                                                                                         | `act`              | `risk=medium billable requiresConfirmation`                  | 已实现 |
 | `generate_location_image`      | Act/Generate  | `generate_location_image`                                              | `src/app/api/projects/[projectId]/generate-image/route.ts`（legacy，同源 submitAssetGenerateTask）                                                                                                                                            | `act`              | `risk=medium billable requiresConfirmation`                  | 已实现 |
 | `regenerate_panel_image`       | Act/Generate  | `regenerate_panel_image`                                               | `src/app/api/projects/[projectId]/regenerate-panel-image/route.ts`（同源 submitTask: IMAGE_PANEL）                                                                                                                                            | `act`              | `risk=medium billable requiresConfirmation`                  | 已实现 |
+| `panel_variant`                | Act/Generate  | `panel_variant`                                                        | `src/app/api/projects/[projectId]/panel-variant/route.ts`（同源 submitTask: PANEL_VARIANT + DB 插入新 panel）                                                                                                                                | `act`              | `risk=high billable requiresConfirmation destructive`         | 已实现 |
 | `voice_generate`               | Act/Generate  | `voice_generate`                                                       | `src/app/api/projects/[projectId]/voice-generate/route.ts`（同源 submitTask: VOICE_LINE）                                                                                                                                                     | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
 | `generate_video`               | Act/Generate  | `generate_video`                                                       | `src/app/api/projects/[projectId]/generate-video/route.ts`（同源 submitTask: VIDEO_PANEL）                                                                                                                                                    | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
-| `voice_design`                 | Act/Generate  | `voice_design`（待接入）                                               | `src/app/api/projects/[projectId]/voice-design/route.ts`                                                                                                                                                                                      | `act`              | `risk=high billable requiresConfirmation`                    | 待接入 |
-| `lip_sync`                     | Act/Generate  | `lip_sync`（待接入）                                                   | `src/app/api/projects/[projectId]/lip-sync/route.ts`                                                                                                                                                                                          | `act`              | `risk=high billable requiresConfirmation`                    | 待接入 |
-| `modify_asset_image`           | Act/Edit      | `modify_asset_image`（待接入）                                         | `src/app/api/projects/[projectId]/modify-storyboard-image/route.ts`                                                                                                                                                                           | `act`              | `risk=high billable requiresConfirmation overwrite`          | 待接入 |
-| `mutate_storyboard`            | Act/Edit      | `insert_panel`/`panel_variant`/`update_panel`（待接入）                 | `src/app/api/projects/[projectId]/insert-panel/route.ts`、`src/app/api/projects/[projectId]/panel-variant/route.ts`、`src/app/api/projects/[projectId]/panel/route.ts`                                                                      | `act/plan`          | `risk=high requiresConfirmation destructive/bulk`            | 待接入 |
+| `voice_design`                 | Act/Generate  | `voice_design`                                                         | `src/app/api/projects/[projectId]/voice-design/route.ts`（同源 submitTask: VOICE_DESIGN）                                                                                                                                                     | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
+| `lip_sync`                     | Act/Generate  | `lip_sync`                                                             | `src/app/api/projects/[projectId]/lip-sync/route.ts`（同源 submitTask: LIP_SYNC）                                                                                                                                                             | `act`              | `risk=high billable requiresConfirmation`                    | 已实现 |
+| `modify_asset_image`           | Act/Edit      | `modify_asset_image`                                                   | `src/app/api/projects/[projectId]/modify-asset-image/route.ts`（同源 submitAssetModifyTask）                                                                                                                                                  | `act`              | `risk=high billable requiresConfirmation overwrite`          | 已实现 |
+| `mutate_storyboard`            | Act/Edit      | `insert_panel`/`update_panel`/`reorder_panels`（待接入）                 | `src/app/api/projects/[projectId]/insert-panel/route.ts`、`src/app/api/projects/[projectId]/panel/route.ts`                                                                                                                                  | `act/plan`          | `risk=high requiresConfirmation destructive/bulk`            | 待接入 |
 | `list_recent_mutation_batches` | Governance    | `list_recent_mutation_batches`（待实现）                                | （新增）                                                                                                                                                                                                                                      | `query`            | `risk=none`                                                 | 待实现 |
 | `revert_mutation_batch`        | Governance    | `revert_mutation_batch`（待实现）                                       | （新增）                                                                                                                                                                                                                                      | `plan`             | `risk=high requiresConfirmation destructive`                 | 待实现 |
 
@@ -1522,7 +1527,7 @@ system prompt 需要从当前的轻量规则，升级为包含：
 | P6   | 固定 workflow package 体系                | 已完成   | 中高     | `story-to-script` 与 `script-to-storyboard` 已 package 化                                                                                                                   |
 | P7   | 项目完整上下文查询                        | 已完成   | 中高     | 已将 `project-context` 吸收原 `policy-system` 逻辑，现有 full context 继续可用                                                                                              |
 | P8   | 项目阶段推导 `resolveProjectPhase`        | 部分完成 | 中       | 已实现最小 phase 解析与 `get_project_phase`，后续还需补失败项/stale artifacts/更细粒度阶段                                                                                  |
-| P9   | Act Mode 直接操作 tools                   | 部分完成 | 低       | 已接入 `generate_character_image` / `generate_location_image` / `regenerate_panel_image` / `voice_generate` / `generate_video`（提交异步 task，需确认）；编辑类与撤回治理类操作仍未接入 |
+| P9   | Act Mode 直接操作 tools                   | 部分完成 | 低       | 已接入 `generate_character_image` / `generate_location_image` / `modify_asset_image` / `regenerate_panel_image` / `panel_variant` / `voice_design` / `voice_generate` / `lip_sync` / `generate_video`（提交异步 task，需确认）；撤回治理类操作仍未接入 |
 | P10  | Task 查询桥接能力                         | 已完成   | 中       | 已接入最小 `get_task_status` operation，复用现有 `queryTaskTargetStates()`                                                                                                  |
 | P11  | Prompt 升级与双模式选择规则               | 部分完成 | 中       | 已注入 `phase + progress + available actions` 摘要，并落地 `operation.sideEffects` + confirmed 二次确认卡片；Act/Plan 分流与更系统的规范仍需补完                            |
 | P12  | Lite / Full Context 拆分                  | 未开始   | 低       | 当前已去掉无意义 wrapper，但仍未拆成明确 lite/full 两套上下文（建议升级为 projection lite/full）                                                                            |
@@ -1564,8 +1569,12 @@ system prompt 需要从当前的轻量规则，升级为包含：
 - [x] 补齐 operation sideEffects 框架：新增 `operation.sideEffects` 元信息，并在 runtime 落地 confirmed 二次确认机制（输出 confirmation request 卡片）
 - [x] 实现 Act Mode 资产生图闭环：`generate_character_image` / `generate_location_image` 接入现有 `submitAssetGenerateTask()`，并输出 task submitted 卡片（taskId/status/runId/deduped）
 - [x] 实现 `regenerate_panel_image`：复用现有 `IMAGE_PANEL` 任务链路提交面板重生图任务（同样走 confirmed gate + task submitted 卡片）
+- [x] 实现 `panel_variant`：插入新 panel 并提交变体生图任务（同样走 confirmed gate + task submitted 卡片）
 - [x] 实现 `voice_generate`：复用现有 `VOICE_LINE` 任务链路提交配音任务；支持批量提交并新增 batch submitted 卡片
+- [x] 实现 `voice_design`：复用现有 `VOICE_DESIGN` 任务链路提交音色设计任务（同样走 confirmed gate）
+- [x] 实现 `lip_sync`：复用现有 `LIP_SYNC` 任务链路提交口型同步任务（同样走 confirmed gate）
 - [x] 实现 `generate_video`：复用现有 `VIDEO_PANEL` 任务链路提交视频任务；支持单格或批量提交并复用 batch submitted 卡片
+- [x] 实现 `modify_asset_image`：复用现有 `submitAssetModifyTask()` 提交角色/场景图片编辑任务（同样走 confirmed gate）
 - [x] 前端新增 task 提交卡片：assistant 面板支持渲染 confirmation / task submitted 数据卡
 - [x] 补齐 `get_project_snapshot`：新增 `ProjectProjectionLite` 作为轻量状态读取入口，并让 `resolveProjectPhase` 使用 projection 而非 full context
 - [x] Prompt 注入增强：system prompt 增加 `progress` 与 `available actions` 摘要，便于模型做下一步建议与 Act/Plan 选择
