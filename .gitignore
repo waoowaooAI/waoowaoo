@@ -84,7 +84,11 @@ agent/
 # internal docs (not for public)
 docs/*
 !docs/agent_handoff_report.md
-
+!docs/testing.md
+!docs/agent_gap_report.md
+!docs/agent_design.md
+!docs/agent_design_analysis.md
+!docs/ai-assistant-domain-architecture-goals.md
 # GitHub CI workflows (internal)
 # .github/ — 只保留 workflows，忽略其他
 .github/*
