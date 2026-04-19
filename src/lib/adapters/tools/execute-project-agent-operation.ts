@@ -93,12 +93,14 @@ export async function executeProjectAgentOperationFromTool(params: {
       && (parsed.data as { confirmed?: unknown }).confirmed === true
     )
     if (!confirmed) {
-      const budget = operation.sideEffects?.budgetKey || operation.sideEffects?.estimatedCostUnits
-        ? {
-            key: operation.sideEffects?.budgetKey,
-            estimatedCostUnits: operation.sideEffects?.estimatedCostUnits,
+      const budgetKey = operation.sideEffects?.budgetKey
+      const estimatedCostUnits = operation.sideEffects?.estimatedCostUnits
+      const budget = !budgetKey && estimatedCostUnits === undefined
+        ? null
+        : {
+            ...(budgetKey ? { key: budgetKey } : {}),
+            ...(estimatedCostUnits !== undefined ? { estimatedCostUnits } : {}),
           }
-        : null
       writeOperationDataPart<ConfirmationRequestPartData>(params.writer, 'data-confirmation-request', {
         operationId: params.operationId,
         summary: operation.sideEffects?.confirmationSummary

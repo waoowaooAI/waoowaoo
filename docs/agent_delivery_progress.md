@@ -56,6 +56,7 @@
   - 测试覆盖点：`tests/unit/project-agent/tool-adapter.test.ts` 覆盖 input/output schema、confirmed gate、结构化错误
   - 命令与结果摘要：待执行
     - 代码修正：toMessage 使用 trim 兜底（code review 跟进）
+    - 代码修正：budget 仅包含已定义字段（code review 跟进）
 
 - [x] Tests：agent runtime / adapter / route contract / registry
   - 状态：done
