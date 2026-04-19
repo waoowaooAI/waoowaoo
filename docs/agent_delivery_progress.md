@@ -55,6 +55,7 @@
   - 涉及文件：`src/lib/adapters/tools/execute-project-agent-operation.ts` `src/lib/operations/types.ts`
   - 测试覆盖点：`tests/unit/project-agent/tool-adapter.test.ts` 覆盖 input/output schema、confirmed gate、结构化错误
   - 命令与结果摘要：待执行
+    - 代码修正：toMessage 使用 trim 兜底（code review 跟进）
 
 - [x] Tests：agent runtime / adapter / route contract / registry
   - 状态：done

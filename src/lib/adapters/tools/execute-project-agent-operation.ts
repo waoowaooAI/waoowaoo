@@ -21,7 +21,10 @@ function shouldRequireAssistantConfirmation(sideEffects: OperationSideEffects | 
 }
 
 function toMessage(error: unknown): string {
-  if (error instanceof Error) return error.message || 'PROJECT_AGENT_OPERATION_FAILED'
+  if (error instanceof Error) {
+    const message = error.message.trim()
+    return message || 'PROJECT_AGENT_OPERATION_FAILED'
+  }
   if (typeof error === 'string' && error.trim()) return error.trim()
   try {
     return JSON.stringify(error)
