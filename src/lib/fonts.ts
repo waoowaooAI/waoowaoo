@@ -1,7 +1,6 @@
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
 import fs from 'fs'
 import path from 'path'
-import { ImageResponse } from '@vercel/og'
 import type { ReactElement } from 'react'
 
 // 字体文件可能的路径（按优先级尝试）
@@ -77,6 +76,10 @@ export async function createLabelSVG(
     }
 
     try {
+        // Lazy import to avoid initializing WASM in environments where global `fetch`
+        // is stubbed (e.g. tests), which can cause unhandled rejections.
+        const { ImageResponse } = await import('@vercel/og')
+
         // 使用 @vercel/og 的 ImageResponse 生成图片
         const response = new ImageResponse(
             {

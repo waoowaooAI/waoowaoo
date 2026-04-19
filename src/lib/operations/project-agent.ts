@@ -8,7 +8,7 @@ import { createEditOperations } from './edit-ops'
 import { createGuiOperations } from './gui-ops'
 import { createExtraOperations } from './extra-ops'
 import { createHash, randomUUID } from 'crypto'
-import { getRequestId } from '@/lib/api-errors'
+import { ApiError, getRequestId } from '@/lib/api-errors'
 import { submitTask } from '@/lib/task/submitter'
 import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { TASK_TYPE } from '@/lib/task/types'
@@ -130,6 +130,18 @@ function hasSpeakerVoiceForProvider(
     character,
     speakerVoice,
   })
+}
+
+function hasUploadedReferenceAudioForSpeaker(params: {
+  speaker: string
+  characters: CharacterRow[]
+  speakerVoices: SpeakerVoiceMap
+}): boolean {
+  const character = matchCharacterBySpeaker(params.speaker, params.characters)
+  if (normalizeString(character?.customVoiceUrl)) return true
+  const entry = params.speakerVoices[params.speaker]
+  if (entry?.provider === 'fal' && normalizeString(entry.audioUrl)) return true
+  return false
 }
 
 function createPanelVariantId(): string {
@@ -1891,6 +1903,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
             throw new Error('PROJECT_AGENT_VOICE_LINE_NOT_FOUND')
           }
           if (!hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey)) {
+            // Bailian/Qwen TTS requires a voiceId binding; uploaded reference audio alone is not sufficient.
+            if (selectedProviderKey === 'bailian' && hasUploadedReferenceAudioForSpeaker({ speaker: line.speaker, characters, speakerVoices })) {
+              throw new ApiError('INVALID_PARAMS', {
+                message: '无音色ID，QwenTTS 必须使用 AI 设计音色',
+              })
+            }
             throw new Error('PROJECT_AGENT_VOICE_BINDING_REQUIRED')
           }
           voiceLines = [line]
