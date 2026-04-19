@@ -94,7 +94,7 @@
 
 主要问题有：
 
-- 编译健康度仍未恢复
+- （截至 2026-04-16）编译健康度仍未恢复（后续在 2026-04-17 已恢复，见后文完成清单）
   - 分支当前依然存在大量 TypeScript 错误
   - 包括 `.next/types` 对旧路由的残留引用
   - 也包括 Prisma schema 重构后 worker / tests / route handler 的真实断裂
@@ -1337,11 +1337,11 @@ system prompt 需要从当前的轻量规则，升级为包含：
 
 同时：
 
-- `maxSteps` 从 6 提升到 12-15
+- `maxSteps` 从 6 提升到更高上限（当前代码为 `stepCountIs(120)`），目标升级为**自适应停止 + 硬上限 999**
 
 实现对齐（截至 2026-04-17）：
 
-- `src/lib/project-agent/runtime.ts` 已将 `maxSteps` 提升到 `12`（`stepCountIs(12)`）
+- `src/lib/project-agent/runtime.ts` 当前为 `stepCountIs(120)`；后续计划：自适应停止 + cap=999
 - prompt 注入已包含 `failedItems` 与 `staleArtifacts` 的摘要字段，便于模型做异常解释与推荐动作
 
 #### 4. Context 分层
@@ -1573,7 +1573,7 @@ system prompt 需要从当前的轻量规则，升级为包含：
 - `Plan Mode：已完成 MVP`
 - `Act Mode：已接入首批写操作（生图/重生图/配音/视频），编辑类与撤回治理仍缺`
 - `系统状态建模：已起步，但仍是最小版本`
-- `工程健康度：已恢复到全局 typecheck 通过`
+- `（截至 2026-04-17）工程健康度：已恢复到全局 typecheck 通过`
 - `代码层级：已做第一轮收缩，但仍有明显可删减空间`
 
 ### 下一阶段最优先事项
