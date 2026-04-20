@@ -1,18 +1,9 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
-import { TASK_TYPE } from '@/lib/task/types'
-import { maybeSubmitLLMTask } from '@/lib/llm-observe/route-task'
-import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
+import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
 
-function parseReferenceImages(body: Record<string, unknown>): string[] {
-  const list = Array.isArray(body.referenceImageUrls)
-    ? body.referenceImageUrls.map((item) => (typeof item === 'string' ? item.trim() : '')).filter(Boolean)
-    : []
-  if (list.length > 0) return list.slice(0, 5)
-  const single = typeof body.referenceImageUrl === 'string' ? body.referenceImageUrl.trim() : ''
-  return single ? [single] : []
-}
+export const dynamic = 'force-dynamic'
 
 /**
  * 资产中心 - 参考图转角色（任务化）
@@ -22,32 +13,26 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
 
-  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
-  const referenceImages = parseReferenceImages(body)
-  if (referenceImages.length === 0) {
-    throw new ApiError('INVALID_PARAMS')
-  }
-  const count = normalizeImageGenerationCount('reference-to-character', body.count)
-  body.count = count
-
-  const isBackgroundJob = body.isBackgroundJob === true || body.isBackgroundJob === 1 || body.isBackgroundJob === '1'
-  const characterId = typeof body.characterId === 'string' ? body.characterId : ''
-  const appearanceId = typeof body.appearanceId === 'string' ? body.appearanceId : ''
-  if (isBackgroundJob && (!characterId || !appearanceId)) {
-    throw new ApiError('INVALID_PARAMS')
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'BODY_PARSE_FAILED',
+      field: 'body',
+      message: 'request body must be valid JSON',
+    })
   }
 
-  const asyncTaskResponse = await maybeSubmitLLMTask({
+  const result = await executeProjectAgentOperationFromApi({
     request,
-    userId: session.user.id,
+    operationId: 'asset_hub_reference_to_character',
     projectId: 'global-asset-hub',
-    type: TASK_TYPE.ASSET_HUB_REFERENCE_TO_CHARACTER,
-    targetType: appearanceId ? 'GlobalCharacterAppearance' : 'GlobalCharacter',
-    targetId: appearanceId || characterId || session.user.id,
-    routePath: '/api/asset-hub/reference-to-character',
-    body,
-    dedupeKey: `asset_hub_reference_to_character:${appearanceId || characterId || session.user.id}:${count}`})
-  if (asyncTaskResponse) return asyncTaskResponse
+    userId: session.user.id,
+    input: body,
+    source: 'asset-hub',
+  })
 
-  throw new ApiError('INVALID_PARAMS')
+  return NextResponse.json(result)
 })
+

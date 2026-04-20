@@ -49,6 +49,7 @@ vi.mock('@/lib/config-service', () => configServiceMock)
 vi.mock('@/lib/task/has-output', () => hasOutputMock)
 vi.mock('@/lib/billing', () => ({
   buildDefaultTaskBillingInfo: vi.fn(() => ({ mode: 'default' })),
+  isBillableTaskType: vi.fn(() => true),
 }))
 vi.mock('@/lib/providers/bailian/voice-design', () => ({
   validateVoicePrompt: vi.fn(() => ({ valid: true })),

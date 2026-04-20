@@ -1,15 +1,8 @@
-import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
 import { apiHandler, ApiError } from '@/lib/api-errors'
-import { TASK_TYPE } from '@/lib/task/types'
-import { maybeSubmitLLMTask } from '@/lib/llm-observe/route-task'
+import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
 
-/**
- * 资产中心 - AI 修改角色形象描述（任务化）
- * POST /api/asset-hub/ai-modify-character
- * body: { characterId, appearanceIndex, currentDescription, modifyInstruction }
- */
 export const dynamic = 'force-dynamic'
 
 export const POST = apiHandler(async (request: NextRequest) => {
@@ -17,31 +10,26 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (isErrorResponse(authResult)) return authResult
   const { session } = authResult
 
-  const payload = await request.json()
-  const { characterId, appearanceIndex, currentDescription, modifyInstruction } = payload ?? {}
-
-  if (!characterId || appearanceIndex === undefined || !currentDescription || !modifyInstruction) {
-    throw new ApiError('INVALID_PARAMS')
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'BODY_PARSE_FAILED',
+      field: 'body',
+      message: 'request body must be valid JSON',
+    })
   }
 
-  const character = await prisma.globalCharacter.findUnique({
-    where: { id: characterId },
-    select: { id: true, userId: true }})
-  if (!character || character.userId !== session.user.id) {
-    throw new ApiError('NOT_FOUND')
-  }
-
-  const asyncTaskResponse = await maybeSubmitLLMTask({
+  const result = await executeProjectAgentOperationFromApi({
     request,
-    userId: session.user.id,
+    operationId: 'asset_hub_ai_modify_character',
     projectId: 'global-asset-hub',
-    type: TASK_TYPE.ASSET_HUB_AI_MODIFY_CHARACTER,
-    targetType: 'GlobalCharacter',
-    targetId: characterId,
-    routePath: '/api/asset-hub/ai-modify-character',
-    body: { characterId, appearanceIndex, currentDescription, modifyInstruction },
-    dedupeKey: `asset_hub_ai_modify_character:${characterId}:${appearanceIndex}`})
-  if (asyncTaskResponse) return asyncTaskResponse
+    userId: session.user.id,
+    input: body,
+    source: 'asset-hub',
+  })
 
-  throw new ApiError('INVALID_PARAMS')
+  return NextResponse.json(result)
 })
+

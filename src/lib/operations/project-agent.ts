@@ -18,6 +18,9 @@ import { createDownloadOperations } from './download-ops'
 import { createRunOperations } from './run-ops'
 import { createTaskOperations } from './task-ops'
 import { createSseOperations } from './sse-ops'
+import { createHomeLlmOperations } from './home-llm-ops'
+import { createAssetHubLlmOperations } from './asset-hub-llm-ops'
+import { createAssetHubVoiceOperations } from './asset-hub-voice-ops'
 import { createHash, randomUUID } from 'crypto'
 import { ApiError, getRequestId } from '@/lib/api-errors'
 import { submitTask } from '@/lib/task/submitter'
@@ -352,6 +355,9 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     ...createRunOperations(),
     ...createTaskOperations(),
     ...createSseOperations(),
+    ...createHomeLlmOperations(),
+    ...createAssetHubLlmOperations(),
+    ...createAssetHubVoiceOperations(),
     ...createReadOperations(),
     ...createProjectCrudOperations(),
     ...createVideoOperations(),
