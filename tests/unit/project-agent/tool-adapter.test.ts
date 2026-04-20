@@ -144,6 +144,102 @@ describe('executeProjectAgentOperationFromTool', () => {
     expect(result.error.message).toBe('boom')
   })
 
+  it('[execution throws undefined] -> returns fallback message', async () => {
+    registryState.registry = {
+      fail_undefined: {
+        id: 'fail_undefined',
+        description: 'fail undefined',
+        scope: 'project',
+        sideEffects: { mode: 'act', risk: 'low' },
+        inputSchema: z.object({}),
+        outputSchema: z.object({ ok: z.boolean() }),
+        execute: vi.fn(async () => {
+          throw undefined
+        }),
+      },
+    }
+
+    const result = await executeProjectAgentOperationFromTool({
+      request: buildRequest(),
+      operationId: 'fail_undefined',
+      projectId: 'project-1',
+      userId: 'user-1',
+      context: {},
+      source: 'assistant-panel',
+      writer: buildWriter(),
+      input: {},
+    })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe('OPERATION_EXECUTION_FAILED')
+    expect(result.error.message).toBe('PROJECT_AGENT_OPERATION_FAILED')
+  })
+
+  it('[execution throws symbol] -> returns fallback message', async () => {
+    registryState.registry = {
+      fail_symbol: {
+        id: 'fail_symbol',
+        description: 'fail symbol',
+        scope: 'project',
+        sideEffects: { mode: 'act', risk: 'low' },
+        inputSchema: z.object({}),
+        outputSchema: z.object({ ok: z.boolean() }),
+        execute: vi.fn(async () => {
+          throw Symbol('boom')
+        }),
+      },
+    }
+
+    const result = await executeProjectAgentOperationFromTool({
+      request: buildRequest(),
+      operationId: 'fail_symbol',
+      projectId: 'project-1',
+      userId: 'user-1',
+      context: {},
+      source: 'assistant-panel',
+      writer: buildWriter(),
+      input: {},
+    })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe('OPERATION_EXECUTION_FAILED')
+    expect(result.error.message).toBe('PROJECT_AGENT_OPERATION_FAILED')
+  })
+
+  it('[execution throws function] -> returns fallback message', async () => {
+    registryState.registry = {
+      fail_function: {
+        id: 'fail_function',
+        description: 'fail function',
+        scope: 'project',
+        sideEffects: { mode: 'act', risk: 'low' },
+        inputSchema: z.object({}),
+        outputSchema: z.object({ ok: z.boolean() }),
+        execute: vi.fn(async () => {
+          throw (() => 'boom')
+        }),
+      },
+    }
+
+    const result = await executeProjectAgentOperationFromTool({
+      request: buildRequest(),
+      operationId: 'fail_function',
+      projectId: 'project-1',
+      userId: 'user-1',
+      context: {},
+      source: 'assistant-panel',
+      writer: buildWriter(),
+      input: {},
+    })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe('OPERATION_EXECUTION_FAILED')
+    expect(result.error.message).toBe('PROJECT_AGENT_OPERATION_FAILED')
+  })
+
   it('[output schema mismatch] -> returns structured error', async () => {
     registryState.registry = {
       output_op: {

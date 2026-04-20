@@ -3,12 +3,14 @@ import { ApiError } from '@/lib/api-errors'
 import { createProjectAgentOperationRegistry } from '@/lib/operations/registry'
 
 function toMessage(error: unknown): string {
-  if (error instanceof Error) return error.message || ''
-  if (typeof error === 'string') return error
+  if (error instanceof Error) return error.message?.trim() || 'OPERATION_FAILED'
+  if (typeof error === 'string') return error.trim() || 'OPERATION_FAILED'
   try {
-    return JSON.stringify(error)
+    const serialized = JSON.stringify(error)
+    if (typeof serialized === 'string' && serialized.trim()) return serialized.trim()
+    return 'OPERATION_FAILED'
   } catch {
-    return ''
+    return 'OPERATION_FAILED'
   }
 }
 
@@ -80,6 +82,9 @@ export async function executeProjectAgentOperationFromApi(params: {
     if (inferred) {
       throw new ApiError(inferred, { message })
     }
-    throw error
+    throw new ApiError('EXTERNAL_ERROR', {
+      code: 'OPERATION_EXECUTION_FAILED',
+      message,
+    })
   }
 }

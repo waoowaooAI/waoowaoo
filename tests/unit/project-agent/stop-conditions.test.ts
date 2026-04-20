@@ -9,7 +9,7 @@ function buildSteps(count: number): StepResult<ToolSet>[] {
 
 describe('project agent stop conditions', () => {
   it('[below cap] -> stopWhen false and no stop part', () => {
-    const controller = createProjectAgentStopController()
+    const controller = createProjectAgentStopController({} as ToolSet)
     const steps = buildSteps(PROJECT_AGENT_MAX_STEPS - 1)
 
     expect(controller.stopWhen({ steps })).toBe(false)
@@ -17,7 +17,7 @@ describe('project agent stop conditions', () => {
   })
 
   it('[cap reached] -> stopWhen true and stop part returned', () => {
-    const controller = createProjectAgentStopController()
+    const controller = createProjectAgentStopController({} as ToolSet)
     const steps = buildSteps(PROJECT_AGENT_MAX_STEPS)
 
     expect(controller.stopWhen({ steps })).toBe(true)

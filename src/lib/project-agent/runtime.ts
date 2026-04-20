@@ -92,6 +92,9 @@ function buildProjectAgentSystemPrompt(params: {
     'workflow package 内部 skills 顺序不可更改、不可跳过、不可合并。',
     '当用户要求执行这两条主流程时：先调用 create_workflow_plan，再等待审批；只有用户明确同意后才调用 approve_plan。',
     '在 assistant 对话入口：低风险小操作可直接 act；中/高风险、计费、或 destructive/overwrite/bulk/longRunning 操作必须先征得用户明确确认后再执行（tool 参数中带 confirmed=true）。',
+    '重要：所有 tool 返回统一包裹结构：成功为 { ok: true, data: ... }；失败为 { ok: false, error: { code, message, operationId, details?, issues? }, confirmationRequired? }。',
+    '当 tool 返回 ok=false：你必须读取 error.code 与 error.message 来决定下一步（例如补参数、先查询再重试、或向用户提问）。',
+    '当 tool 返回 confirmationRequired=true：你应向用户解释副作用原因并请求确认，然后在下一次调用同一 tool 时传入 confirmed=true（可参考 confirmation 卡片中的 argsHint）。',
     '当你看到 staleArtifacts 或 failedItems：优先解释原因与推荐动作（例如重跑 workflow、或执行更小粒度的 act 修复）。',
     '你可以使用所有已注册的 tools 来完成任务。tool 定义中已包含使用说明，无需额外列举。',
     '回答简洁，用中文。',
@@ -140,7 +143,6 @@ export async function createProjectAgentChatResponse(input: {
     originalMessages: normalizedMessages,
     execute: async ({ writer }) => {
       const operations = createProjectAgentOperationRegistry()
-      const stopController = createProjectAgentStopController()
       const tools = Object.fromEntries(
         Object.entries(operations).map(([operationId, operation]) => [
           operationId,
@@ -162,6 +164,7 @@ export async function createProjectAgentChatResponse(input: {
           }),
         ]),
       )
+      const stopController = createProjectAgentStopController(tools)
 
       const result = streamText({
         model: resolved.languageModel,

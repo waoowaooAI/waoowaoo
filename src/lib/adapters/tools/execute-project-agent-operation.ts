@@ -27,7 +27,9 @@ function toMessage(error: unknown): string {
   }
   if (typeof error === 'string' && error.trim()) return error.trim()
   try {
-    return JSON.stringify(error)
+    const serialized = JSON.stringify(error)
+    if (typeof serialized === 'string' && serialized.trim()) return serialized.trim()
+    return 'PROJECT_AGENT_OPERATION_FAILED'
   } catch {
     return 'PROJECT_AGENT_OPERATION_FAILED'
   }
