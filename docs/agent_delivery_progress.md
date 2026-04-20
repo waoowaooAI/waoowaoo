@@ -3,7 +3,7 @@
 开始时间：2026-04-19T06:08:42.480Z  
 目标摘要：端到端补齐 Project Agent（Workspace Assistant）P0 关键能力与未完成任务，完善测试与文档，并拆分多次提交。  
 范围假设：
-- 仓库内未发现 `AGENTS.md`，将按实际代码与现有 docs 继续推进并在文档中注明缺失。
+- 已存在 `AGENTS.md`（全仓规范），所有改动均遵循：route 只做鉴权/参数校验/调用下沉逻辑；显式失败；禁止隐式兜底；新增/变更必须补齐测试。
 - 仅聚焦 project-agent 相关 runtime/adapters/operations/routes/tests/docs 与必要的前端渲染补齐。
 - 不新增外部依赖、不重写历史、不做大规模目录迁移。
 验收标准（DoD）：
@@ -74,17 +74,13 @@
   - 测试覆盖点：N/A
   - 命令与结果摘要：N/A
 
-- [ ] 验证：typecheck + agent 相关测试/回归
-  - 状态：doing
+- [x] 验证：typecheck + agent 相关测试/回归
+  - 状态：done
   - 涉及文件：N/A
   - 测试覆盖点：`npm run typecheck` + 相关 test suites
   - 命令与结果摘要：
-    - `npm install` -> 失败（npm: Exit handler never called）
-    - `npm install --no-audit --no-fund` -> 失败（npm: Exit handler never called）
-    - `npm run typecheck` -> 失败（缺少 `@types/node`/`undici`）
-    - `npm run lint:all` -> 失败（eslint 未安装）
-    - `npm run build` -> 失败（prisma 未安装）
-    - `npm run test:regression:cases` -> 失败（`cross-env` 未安装）
+    - `npm run typecheck` -> 通过
+    - `npm run test:behavior:api` -> 通过
 
 - [x] P1：Projection / Context 分层补齐（panel 级细节）
   - 状态：done
@@ -121,3 +117,10 @@
   - 涉及文件：`src/lib/operations/extra-ops.ts` `src/app/api/projects/[projectId]/analyze/route.ts` `src/app/api/projects/[projectId]/analyze-global/route.ts` `src/app/api/projects/[projectId]/analyze-shot-variants/route.ts` `src/app/api/projects/[projectId]/voice-analyze/route.ts` `src/app/api/projects/[projectId]/screenplay-conversion/route.ts` `src/app/api/projects/[projectId]/story-to-script-stream/route.ts` `src/app/api/projects/[projectId]/script-to-storyboard-stream/route.ts` `src/app/api/projects/[projectId]/ai-modify-appearance/route.ts` `src/app/api/projects/[projectId]/ai-modify-prop/route.ts` `src/app/api/projects/[projectId]/ai-modify-shot-prompt/route.ts`
   - 测试覆盖点：复用 `tests/integration/api/contract/llm-observe-routes.test.ts`（contract）验证 taskType/targetType
   - 命令与结果摘要：待执行
+
+- [x] P1/P2：Operation 覆盖与收口（projects CRUD + video/download routes）
+  - 状态：done
+  - 涉及文件：`src/lib/operations/system-project-ops.ts` `src/lib/operations/project-crud-ops.ts` `src/lib/operations/video-ops.ts` `src/lib/operations/download-ops.ts` `src/lib/operations/project-agent.ts`
+  - route 下沉：`src/app/api/projects/route.ts` `src/app/api/projects/[projectId]/route.ts` `src/app/api/projects/[projectId]/video-urls/route.ts` `src/app/api/projects/[projectId]/video-proxy/route.ts` `src/app/api/projects/[projectId]/download-images/route.ts` `src/app/api/projects/[projectId]/download-videos/route.ts` `src/app/api/projects/[projectId]/download-voices/route.ts`
+  - 安全性修正：episodeId 查询强制带 projectId 约束；video-proxy 仅允许解析为 storageKey 后再签名下载（避免 SSRF）。
+  - 测试覆盖点：`tests/integration/api/contract/projects.route.test.ts` `tests/integration/api/contract/project-basic.route.test.ts` `tests/integration/api/contract/project-video-routes.test.ts` `tests/integration/api/contract/project-download-routes.test.ts`
