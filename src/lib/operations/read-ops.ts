@@ -6,6 +6,7 @@ import { listSkillCatalogEntries, listWorkflowPackages, readSkillCatalogDocument
 import { loadScriptPreview, loadStoryboardPreview } from '@/lib/project-agent/preview'
 import { resolveProjectPhase } from '@/lib/project-agent/project-phase'
 import { assembleProjectProjectionLite } from '@/lib/project-projection/lite'
+import { assembleProjectProjectionFull } from '@/lib/project-projection/full'
 import { listSavedSkills } from '@/lib/saved-skills/service'
 import { buildAssistantProjectContextSnapshot } from '@/lib/project-agent/presentation'
 import type {
@@ -25,6 +26,24 @@ const taskTargetSchema = z.object({
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function parseProjectionScope(scopeRef: string | undefined): { clipId?: string | null; storyboardId?: string | null; panelId?: string | null } | null {
+  const normalized = normalizeString(scopeRef)
+  if (!normalized) return null
+  if (normalized.startsWith('clip:')) {
+    const clipId = normalized.slice('clip:'.length).trim()
+    return clipId ? { clipId } : null
+  }
+  if (normalized.startsWith('storyboard:')) {
+    const storyboardId = normalized.slice('storyboard:'.length).trim()
+    return storyboardId ? { storyboardId } : null
+  }
+  if (normalized.startsWith('panel:')) {
+    const panelId = normalized.slice('panel:'.length).trim()
+    return panelId ? { panelId } : null
+  }
+  return null
 }
 
 export function createReadOperations(): ProjectAgentOperationRegistry {
@@ -52,17 +71,30 @@ export function createReadOperations(): ProjectAgentOperationRegistry {
     },
     get_project_snapshot: {
       id: 'get_project_snapshot',
-      description: 'Load a lightweight project snapshot projection suitable for planning and prompt context.',
+      description: 'Load a project snapshot projection suitable for planning. Use detail=full to inspect panel-level state.',
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'project',
-      inputSchema: z.object({}),
-      outputSchema: z.unknown(),
-      execute: async (ctx) => assembleProjectProjectionLite({
-        projectId: ctx.projectId,
-        userId: ctx.userId,
-        episodeId: ctx.context.episodeId || null,
-        currentStage: ctx.context.currentStage || null,
+      inputSchema: z.object({
+        detail: z.enum(['lite', 'full']).optional(),
+        panelLimit: z.number().int().positive().max(1000).optional(),
+        scopeRef: z.string().optional(),
       }),
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => (input.detail === 'full'
+        ? assembleProjectProjectionFull({
+            projectId: ctx.projectId,
+            userId: ctx.userId,
+            episodeId: ctx.context.episodeId || null,
+            currentStage: ctx.context.currentStage || null,
+            panelLimit: input.panelLimit,
+            scope: parseProjectionScope(input.scopeRef) ?? null,
+          })
+        : assembleProjectProjectionLite({
+            projectId: ctx.projectId,
+            userId: ctx.userId,
+            episodeId: ctx.context.episodeId || null,
+            currentStage: ctx.context.currentStage || null,
+          })),
     },
     get_project_context: {
       id: 'get_project_context',
@@ -228,6 +260,28 @@ export function createReadOperations(): ProjectAgentOperationRegistry {
           episodeId: ctx.context.episodeId || null,
           limit,
         })
+      },
+    },
+    get_project_command: {
+      id: 'get_project_command',
+      description: 'Get a single command by id (optionally sync status from its linked run).',
+      sideEffects: { mode: 'query', risk: 'low' },
+      scope: 'command',
+      inputSchema: z.object({
+        commandId: z.string().min(1),
+        sync: z.boolean().optional(),
+      }),
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => {
+        if (input.sync !== false) {
+          await syncProjectCommandStatus({ commandId: input.commandId })
+        }
+        const commands = await listProjectCommands({
+          projectId: ctx.projectId,
+          limit: 50,
+        })
+        const command = commands.find((item) => item.commandId === input.commandId) || null
+        return { command }
       },
     },
   }

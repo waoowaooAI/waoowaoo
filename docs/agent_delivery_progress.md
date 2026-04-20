@@ -57,6 +57,9 @@
   - 命令与结果摘要：待执行
     - 代码修正：toMessage 使用 trim 兜底（code review 跟进）
     - 代码修正：budget 仅包含已定义字段（code review 跟进）
+    - 代码修正：toMessage 对 `JSON.stringify` 的 undefined 输出兜底，保证 error.message 可诊断（P0 延续）
+    - prompt 对齐：system prompt 明确 tool result wrapper（P0-P1）
+    - 回归测试：补齐 throws undefined/symbol/function 的 fallback 断言（P0 延续）
 
 - [x] Tests：agent runtime / adapter / route contract / registry
   - 状态：done
@@ -82,3 +85,39 @@
     - `npm run lint:all` -> 失败（eslint 未安装）
     - `npm run build` -> 失败（prisma 未安装）
     - `npm run test:regression:cases` -> 失败（`cross-env` 未安装）
+
+- [x] P1：Projection / Context 分层补齐（panel 级细节）
+  - 状态：done
+  - 涉及文件：`src/lib/project-projection/full.ts` `src/lib/project-projection/types.ts` `src/lib/project-context/types.ts` `src/lib/project-context/assembler.ts` `src/lib/operations/read-ops.ts`
+  - 测试覆盖点：`tests/unit/project-projection/full.test.ts` `tests/unit/project-context/assembler.test.ts`
+  - 命令与结果摘要：待执行
+
+- [x] P1：Projection scope 裁剪（tool 可按 scopeRef 拉取）
+  - 状态：done
+  - 涉及文件：`src/lib/project-projection/full.ts` `src/lib/operations/read-ops.ts`
+  - 测试覆盖点：`tests/unit/project-projection/full.test.ts`（新增 scope panelId 场景）
+  - 命令与结果摘要：待执行
+
+- [x] P1/P2：Operation 覆盖与收口（plan approve/reject、mutation batch revert route）
+  - 状态：done
+  - 涉及文件：`src/app/api/projects/[projectId]/plans/[planId]/approve/route.ts` `src/app/api/projects/[projectId]/plans/[planId]/reject/route.ts` `src/app/api/mutation-batches/[batchId]/revert/route.ts` `src/lib/command-center/workflow-id.ts`
+  - 测试覆盖点：`tests/integration/api/contract/plan-approval-routes.test.ts` `tests/integration/api/contract/mutation-batch-revert.route.test.ts`
+  - 命令与结果摘要：待执行
+
+- [x] P1/P2：Operation 覆盖与收口（regenerate-group/single/text、modify-storyboard-image）
+  - 状态：done
+  - 涉及文件：`src/lib/operations/media-ops.ts` `src/lib/operations/project-agent.ts` `src/app/api/projects/[projectId]/regenerate-group/route.ts` `src/app/api/projects/[projectId]/regenerate-single-image/route.ts` `src/app/api/projects/[projectId]/regenerate-storyboard-text/route.ts` `src/app/api/projects/[projectId]/modify-storyboard-image/route.ts`
+  - 测试覆盖点：`tests/unit/operations/media-ops.test.ts`（unit） + 复用 `tests/integration/api/contract/direct-submit-media-routes.test.ts`（contract）
+  - 命令与结果摘要：待执行
+
+- [x] P1/P2：Operation 覆盖与收口（project config、command detail route）
+  - 状态：done
+  - 涉及文件：`src/lib/operations/config-ops.ts` `src/lib/operations/project-agent.ts` `src/app/api/projects/[projectId]/config/route.ts` `src/lib/operations/read-ops.ts` `src/app/api/projects/[projectId]/commands/[commandId]/route.ts`
+  - 测试覆盖点：复用 `tests/integration/api/specific/project-art-style-validation.test.ts` + 新增 `tests/integration/api/contract/project-command.route.test.ts`
+  - 命令与结果摘要：待执行
+
+- [x] P1/P2：Operation 覆盖与收口（LLM routes：analyze/voice/screenplay/stream/ai-modify）
+  - 状态：done
+  - 涉及文件：`src/lib/operations/extra-ops.ts` `src/app/api/projects/[projectId]/analyze/route.ts` `src/app/api/projects/[projectId]/analyze-global/route.ts` `src/app/api/projects/[projectId]/analyze-shot-variants/route.ts` `src/app/api/projects/[projectId]/voice-analyze/route.ts` `src/app/api/projects/[projectId]/screenplay-conversion/route.ts` `src/app/api/projects/[projectId]/story-to-script-stream/route.ts` `src/app/api/projects/[projectId]/script-to-storyboard-stream/route.ts` `src/app/api/projects/[projectId]/ai-modify-appearance/route.ts` `src/app/api/projects/[projectId]/ai-modify-prop/route.ts` `src/app/api/projects/[projectId]/ai-modify-shot-prompt/route.ts`
+  - 测试覆盖点：复用 `tests/integration/api/contract/llm-observe-routes.test.ts`（contract）验证 taskType/targetType
+  - 命令与结果摘要：待执行

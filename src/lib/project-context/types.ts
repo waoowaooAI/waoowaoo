@@ -58,6 +58,14 @@ export interface ProjectContextPanelSnapshot {
   storyboardId: string
   panelIndex: number
   description: string | null
+  imagePrompt: string | null
+  imageUrl: string | null
+  imageMediaId: string | null
+  candidateImages: string | null
+  videoPrompt: string | null
+  videoUrl: string | null
+  videoMediaId: string | null
+  updatedAt: string
 }
 
 export interface ProjectContextWorkflowSnapshot {
