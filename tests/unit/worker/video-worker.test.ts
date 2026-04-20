@@ -91,6 +91,7 @@ vi.mock('@/lib/model-capabilities/lookup', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
 }))
 vi.mock('@/lib/model-config-contract', () => ({
+  composeModelKey: vi.fn((provider: string, modelId: string) => `${provider}::${modelId}`),
   parseModelKeyStrict: vi.fn(() => ({ provider: 'fal' })),
 }))
 vi.mock('@/lib/api-config', () => ({

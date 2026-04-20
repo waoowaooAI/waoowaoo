@@ -40,6 +40,7 @@ const logMock = vi.hoisted(() => ({
 }))
 
 const modelConfigContractMock = vi.hoisted(() => ({
+  composeModelKey: vi.fn((provider: string, modelId: string) => `${provider}::${modelId}`),
   parseModelKeyStrict: vi.fn(() => ({ provider: 'mock', modelId: 'mock-model' })),
 }))
 
