@@ -1,72 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
-import { ApiError, apiHandler } from '@/lib/api-errors'
+import { apiHandler, ApiError } from '@/lib/api-errors'
+import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
 
-// 删除音色
 export const DELETE = apiHandler(async (
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ) => {
-    // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
-    if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
+  const authResult = await requireUserAuth()
+  if (isErrorResponse(authResult)) return authResult
+  const { session } = authResult
 
-    const { id } = await params
+  const { id } = await context.params
 
-    const voice = await prisma.globalVoice.findUnique({
-        where: { id }
-    })
+  const result = await executeProjectAgentOperationFromApi({
+    request,
+    operationId: 'asset_hub_delete_voice',
+    projectId: 'global-asset-hub',
+    userId: session.user.id,
+    input: { id },
+    source: 'asset-hub',
+  })
 
-    if (!voice) {
-        throw new ApiError('NOT_FOUND')
-    }
-
-    if (voice.userId !== session.user.id) {
-        throw new ApiError('FORBIDDEN')
-    }
-
-    await prisma.globalVoice.delete({
-        where: { id }
-    })
-
-    return NextResponse.json({ success: true })
+  return NextResponse.json(result)
 })
 
-// 更新音色
 export const PATCH = apiHandler(async (
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ) => {
-    // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
-    if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
+  const authResult = await requireUserAuth()
+  if (isErrorResponse(authResult)) return authResult
+  const { session } = authResult
 
-    const { id } = await params
-    const body = await request.json()
+  const { id } = await context.params
 
-    const voice = await prisma.globalVoice.findUnique({
-        where: { id }
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'BODY_PARSE_FAILED',
+      field: 'body',
+      message: 'request body must be valid JSON',
     })
+  }
 
-    if (!voice) {
-        throw new ApiError('NOT_FOUND')
-    }
+  const result = await executeProjectAgentOperationFromApi({
+    request,
+    operationId: 'asset_hub_update_voice',
+    projectId: 'global-asset-hub',
+    userId: session.user.id,
+    input: {
+      ...(body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : {}),
+      id,
+    },
+    source: 'asset-hub',
+  })
 
-    if (voice.userId !== session.user.id) {
-        throw new ApiError('FORBIDDEN')
-    }
-
-    const updatedVoice = await prisma.globalVoice.update({
-        where: { id },
-        data: {
-            name: body.name?.trim() || voice.name,
-            description: body.description !== undefined ? body.description?.trim() || null : voice.description,
-            folderId: body.folderId !== undefined ? body.folderId : voice.folderId
-        }
-    })
-
-    return NextResponse.json({ success: true, voice: updatedVoice })
+  return NextResponse.json(result)
 })
+

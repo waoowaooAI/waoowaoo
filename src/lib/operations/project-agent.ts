@@ -21,6 +21,9 @@ import { createSseOperations } from './sse-ops'
 import { createHomeLlmOperations } from './home-llm-ops'
 import { createAssetHubLlmOperations } from './asset-hub-llm-ops'
 import { createAssetHubVoiceOperations } from './asset-hub-voice-ops'
+import { createAssetHubFolderOperations } from './asset-hub-folder-ops'
+import { createAssetHubVoiceLibraryOperations } from './asset-hub-voice-library-ops'
+import { createAssetHubPickerOperations } from './asset-hub-picker-ops'
 import { createHash, randomUUID } from 'crypto'
 import { ApiError, getRequestId } from '@/lib/api-errors'
 import { submitTask } from '@/lib/task/submitter'
@@ -358,6 +361,9 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     ...createHomeLlmOperations(),
     ...createAssetHubLlmOperations(),
     ...createAssetHubVoiceOperations(),
+    ...createAssetHubFolderOperations(),
+    ...createAssetHubVoiceLibraryOperations(),
+    ...createAssetHubPickerOperations(),
     ...createReadOperations(),
     ...createProjectCrudOperations(),
     ...createVideoOperations(),

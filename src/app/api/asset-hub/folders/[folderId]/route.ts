@@ -1,80 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
-import { ApiError, apiHandler } from '@/lib/api-errors'
+import { apiHandler, ApiError } from '@/lib/api-errors'
+import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
 
-// 更新文件夹
 export const PATCH = apiHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ folderId: string }> }
+  request: NextRequest,
+  context: { params: Promise<{ folderId: string }> }
 ) => {
-    const { folderId } = await context.params
+  const { folderId } = await context.params
 
-    // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
-    if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
+  const authResult = await requireUserAuth()
+  if (isErrorResponse(authResult)) return authResult
+  const { session } = authResult
 
-    const body = await request.json()
-    const { name } = body
-
-    if (!name?.trim()) {
-        throw new ApiError('INVALID_PARAMS')
-    }
-
-    // 验证所有权
-    const folder = await prisma.globalAssetFolder.findUnique({
-        where: { id: folderId }
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'BODY_PARSE_FAILED',
+      field: 'body',
+      message: 'request body must be valid JSON',
     })
+  }
 
-    if (!folder || folder.userId !== session.user.id) {
-        throw new ApiError('FORBIDDEN')
-    }
+  const result = await executeProjectAgentOperationFromApi({
+    request,
+    operationId: 'asset_hub_update_folder',
+    projectId: 'global-asset-hub',
+    userId: session.user.id,
+    input: {
+      ...(body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : {}),
+      folderId,
+    },
+    source: 'asset-hub',
+  })
 
-    const updatedFolder = await prisma.globalAssetFolder.update({
-        where: { id: folderId },
-        data: { name: name.trim() }
-    })
-
-    return NextResponse.json({ success: true, folder: updatedFolder })
+  return NextResponse.json(result)
 })
 
-// 删除文件夹
 export const DELETE = apiHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ folderId: string }> }
+  request: NextRequest,
+  context: { params: Promise<{ folderId: string }> }
 ) => {
-    const { folderId } = await context.params
+  const { folderId } = await context.params
 
-    // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
-    if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
+  const authResult = await requireUserAuth()
+  if (isErrorResponse(authResult)) return authResult
+  const { session } = authResult
 
-    // 验证所有权
-    const folder = await prisma.globalAssetFolder.findUnique({
-        where: { id: folderId }
-    })
+  const result = await executeProjectAgentOperationFromApi({
+    request,
+    operationId: 'asset_hub_delete_folder',
+    projectId: 'global-asset-hub',
+    userId: session.user.id,
+    input: { folderId },
+    source: 'asset-hub',
+  })
 
-    if (!folder || folder.userId !== session.user.id) {
-        throw new ApiError('FORBIDDEN')
-    }
-
-    // 删除前，将文件夹内的资产移动到根目录（folderId = null）
-    await prisma.globalCharacter.updateMany({
-        where: { folderId },
-        data: { folderId: null }
-    })
-
-    await prisma.globalLocation.updateMany({
-        where: { folderId },
-        data: { folderId: null }
-    })
-
-    // 删除文件夹
-    await prisma.globalAssetFolder.delete({
-        where: { id: folderId }
-    })
-
-    return NextResponse.json({ success: true })
+  return NextResponse.json(result)
 })
+

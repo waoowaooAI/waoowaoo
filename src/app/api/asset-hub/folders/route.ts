@@ -1,43 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { requireUserAuth, isErrorResponse } from '@/lib/api-auth'
-import { ApiError, apiHandler } from '@/lib/api-errors'
+import { apiHandler, ApiError } from '@/lib/api-errors'
+import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
 
-// 获取用户所有文件夹
-export const GET = apiHandler(async () => {
-    // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
-    if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
+export const GET = apiHandler(async (request: NextRequest) => {
+  const authResult = await requireUserAuth()
+  if (isErrorResponse(authResult)) return authResult
+  const { session } = authResult
 
-    const folders = await prisma.globalAssetFolder.findMany({
-        where: { userId: session.user.id },
-        orderBy: { name: 'asc' }
-    })
+  const result = await executeProjectAgentOperationFromApi({
+    request,
+    operationId: 'asset_hub_list_folders',
+    projectId: 'global-asset-hub',
+    userId: session.user.id,
+    input: {},
+    source: 'asset-hub',
+  })
 
-    return NextResponse.json({ folders })
+  return NextResponse.json(result)
 })
 
-// 创建文件夹
 export const POST = apiHandler(async (request: NextRequest) => {
-    // 🔐 统一权限验证
-    const authResult = await requireUserAuth()
-    if (isErrorResponse(authResult)) return authResult
-    const { session } = authResult
+  const authResult = await requireUserAuth()
+  if (isErrorResponse(authResult)) return authResult
+  const { session } = authResult
 
-    const body = await request.json()
-    const { name } = body
-
-    if (!name?.trim()) {
-        throw new ApiError('INVALID_PARAMS')
-    }
-
-    const folder = await prisma.globalAssetFolder.create({
-        data: {
-            userId: session.user.id,
-            name: name.trim()
-        }
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'BODY_PARSE_FAILED',
+      field: 'body',
+      message: 'request body must be valid JSON',
     })
+  }
 
-    return NextResponse.json({ success: true, folder })
+  const result = await executeProjectAgentOperationFromApi({
+    request,
+    operationId: 'asset_hub_create_folder',
+    projectId: 'global-asset-hub',
+    userId: session.user.id,
+    input: body,
+    source: 'asset-hub',
+  })
+
+  return NextResponse.json(result)
 })
+
