@@ -1,185 +1,188 @@
-# Agent Delivery Progress
+# Agent 功能完成现状
 
-开始时间：2026-04-19T06:08:42.480Z  
-目标摘要：端到端补齐 Project Agent（Workspace Assistant）P0 关键能力与未完成任务，完善测试与文档，并拆分多次提交。  
-范围假设：
-- 已存在 `AGENTS.md`（全仓规范），所有改动均遵循：route 只做鉴权/参数校验/调用下沉逻辑；显式失败；禁止隐式兜底；新增/变更必须补齐测试。
-- 仅聚焦 project-agent 相关 runtime/adapters/operations/routes/tests/docs 与必要的前端渲染补齐。
-- 不新增外部依赖、不重写历史、不做大规模目录迁移。
-验收标准（DoD）：
-- `npm run typecheck` 通过。
-- agent 相关改动均有对应测试覆盖（runtime/adapters/route contract）。
-- 自适应停止 + cap=999 实现且达到上限有显式提示。
-- tool 错误以结构化结果返回，confirmed gate 强制且具备预算元信息预留。
-- docs/agent_* 与代码事实一致。
-- 进度记录含命令与结果摘要。
+> 这份文档只描述当前事实，不重复设计构想。
+> 最新评估基于代码扫描和当前实现，不再引用旧时间线中的历史结论。
 
-## 未完成功能清单（来自 docs/agent_task.md）
+## 1. 总体判断
 
-| id | 描述 | 涉及模块 | 风险 | 需要的测试层级 | 状态 |
-| --- | --- | --- | --- | --- | --- |
-| P8 | 项目阶段推导 `resolveProjectPhase` 细化 | `src/lib/project-agent/project-phase.ts` | 中 | unit | 部分完成 |
-| P9 | Act Mode 直接操作 tools 覆盖收口 | `src/lib/operations/*` | 高 | unit/integration(api) | 部分完成 |
-| P11 | Prompt 升级与 Act/Plan 分流规则补齐 | `src/lib/project-agent/runtime.ts` | 中 | unit | 部分完成 |
-| P12 | Lite / Full Context 拆分 | `src/lib/project-context/*` `src/lib/project-projection/*` | 中 | unit | 未开始 |
-| P13 | Act Mode 富渲染组件补齐 | `src/features/project-workspace/components/workspace-assistant/*` | 中 | unit(component) | 部分完成 |
-| P14 | Workspace 与 Assistant 状态统一 | `src/lib/query/hooks/*` `src/features/project-workspace/*` | 中 | integration(api)/unit | 部分完成 |
-| P15 | 抽象收口与精简 | `src/lib/command-center/*` `src/lib/project-context/*` | 中 | unit | 进行中 |
-| P16 | operation registry 收敛 | `src/lib/operations/registry.ts` | 低 | unit | 进行中 |
-| P17 | agent 代码量削减与目录收敛 | `src/lib/project-agent/*` | 中 | unit | 进行中 |
-| P18 | Project Projection（snapshot/projection）补全 | `src/lib/project-projection/*` | 中 | unit | 部分完成 |
-| P19 | mutation batch 与撤回（undo）收口 | `src/lib/mutation-batch/*` `src/lib/operations/governance-ops.ts` | 中 | unit/integration(api) | 部分完成 |
-| P20 | sideEffects 驱动的审批分流完善 | `src/lib/operations/types.ts` `src/lib/adapters/*` | 中 | unit | 部分完成 |
-| P21 | Saved Skills（沉淀/重做）完善 | `src/lib/saved-skills/*` | 低 | unit | 部分完成 |
+当前 Project Agent 已经不是“聊天面板 + 少量工具”的原型，而是一套可运行的项目助手主链路。
 
-## 里程碑进度
+它已经具备以下完整闭环：
 
-- [x] 基线检查与计划落地
-  - 状态：done
-  - 涉及文件：`docs/agent_delivery_progress.md`
-  - 测试覆盖点：N/A
-  - 命令与结果摘要：
-    - `npm run lint:all` -> 失败（eslint 未安装）
-    - `npm run typecheck` -> 失败（缺少依赖与类型：`process`/`undici`）
-    - `npm run test:all` -> 失败（`cross-env` 未安装）
-    - `npm run build` -> 失败（`prisma` 未安装）
+- 项目级 assistant 入口。
+- runtime 执行链。
+- project phase / projection / context 读取。
+- operation registry 统一暴露工具和 API。
+- confirmed gate 与结构化错误返回。
+- async task 提交与状态回看。
+- 对应的 unit / integration 测试。
 
-- [x] Runtime：自适应停止 + cap=999
-  - 状态：done
-  - 涉及文件：`src/lib/project-agent/runtime.ts` `src/lib/project-agent/types.ts` `src/lib/project-agent/stop-conditions.ts` `src/features/project-workspace/components/workspace-assistant/WorkspaceAssistantRenderers.tsx`
-  - 测试覆盖点：`tests/unit/project-agent/stop-conditions.test.ts` 覆盖 stop cap
-  - 命令与结果摘要：待执行
+综合判断：
 
-- [x] Tool adapter：结构化错误 + confirmed gate 预算预留
-  - 状态：done
-  - 涉及文件：`src/lib/adapters/tools/execute-project-agent-operation.ts` `src/lib/operations/types.ts`
-  - 测试覆盖点：`tests/unit/project-agent/tool-adapter.test.ts` 覆盖 input/output schema、confirmed gate、结构化错误
-  - 命令与结果摘要：待执行
-    - 代码修正：toMessage 使用 trim 兜底（code review 跟进）
-    - 代码修正：budget 仅包含已定义字段（code review 跟进）
-    - 代码修正：toMessage 对 `JSON.stringify` 的 undefined 输出兜底，保证 error.message 可诊断（P0 延续）
-    - prompt 对齐：system prompt 明确 tool result wrapper（P0-P1）
-    - 回归测试：补齐 throws undefined/symbol/function 的 fallback 断言（P0 延续）
+- 核心 P0 能力已经完成。
+- 大部分 P1 能力已经完成。
+- 现阶段主要剩余工作是工程收敛、细节补齐和体验优化，而不是重做架构。
 
-- [x] Tests：agent runtime / adapter / route contract / registry
-  - 状态：done
-  - 涉及文件：`tests/unit/project-agent/*` `tests/unit/operations/*` `tests/integration/api/contract/*`
-  - 测试覆盖点：cap stop、adapter error/confirmation、route contract
-  - 命令与结果摘要：
-    - `BILLING_TEST_BOOTSTRAP=0 npx vitest run tests/unit/project-agent tests/unit/operations/registry.test.ts tests/unit/components/workspace-assistant-message-parts.test.tsx` -> 失败（`vitest/config` 缺失）
+## 2. 当前实现主链路
 
-- [x] Docs：对齐 agent_* 文档与代码事实
-  - 状态：done
-  - 涉及文件：`docs/agent_design.md` `docs/agent_design_analysis.md` `docs/agent_handoff_report.md` `docs/agent_task.md`
-  - 测试覆盖点：N/A
-  - 命令与结果摘要：N/A
+```text
+UI / API route
+  -> createProjectAgentChatResponse
+  -> resolveProjectPhase
+  -> selectProjectAgentTools
+  -> streamText
+  -> executeProjectAgentOperationFromTool
+  -> operation.execute / submit task / write ui data parts
+```
 
-- [x] 验证：typecheck + agent 相关测试/回归
-  - 状态：done
-  - 涉及文件：N/A
-  - 测试覆盖点：`npm run typecheck` + 相关 test suites
-  - 命令与结果摘要：
-    - `npm run typecheck` -> 通过
-    - `npm run test:behavior:api` -> 通过
+现在的关键事实是：
 
-- [x] P1：Projection / Context 分层补齐（panel 级细节）
-  - 状态：done
-  - 涉及文件：`src/lib/project-projection/full.ts` `src/lib/project-projection/types.ts` `src/lib/project-context/types.ts` `src/lib/project-context/assembler.ts` `src/lib/operations/read-ops.ts`
-  - 测试覆盖点：`tests/unit/project-projection/full.test.ts` `tests/unit/project-context/assembler.test.ts`
-  - 命令与结果摘要：待执行
+- runtime 已使用 AI SDK streamText。
+- tool 集合不是静态全量暴露，而是按 route / phase / intent / risk 动态裁剪。
+- stop 条件是硬上限 999，并在触顶时显式输出 stop part。
+- tool 错误统一返回结构化 result，不再让失败直接吞没上下文。
+- API 侧也复用了 operation registry，不再是 route 自己各写一套逻辑。
 
-- [x] P1：Projection scope 裁剪（tool 可按 scopeRef 拉取）
-  - 状态：done
-  - 涉及文件：`src/lib/project-projection/full.ts` `src/lib/operations/read-ops.ts`
-  - 测试覆盖点：`tests/unit/project-projection/full.test.ts`（新增 scope panelId 场景）
-  - 命令与结果摘要：待执行
+## 3. 已落地能力
 
-- [x] P1/P2：Operation 覆盖与收口（plan approve/reject、mutation batch revert route）
-  - 状态：done
-  - 涉及文件：`src/app/api/projects/[projectId]/plans/[planId]/approve/route.ts` `src/app/api/projects/[projectId]/plans/[planId]/reject/route.ts` `src/app/api/mutation-batches/[batchId]/revert/route.ts` `src/lib/command-center/workflow-id.ts`
-  - 测试覆盖点：`tests/integration/api/contract/plan-approval-routes.test.ts` `tests/integration/api/contract/mutation-batch-revert.route.test.ts`
-  - 命令与结果摘要：待执行
+### 3.1 Runtime
 
-- [x] P1/P2：Operation 覆盖与收口（regenerate-group/single/text、modify-storyboard-image）
-  - 状态：done
-  - 涉及文件：`src/lib/operations/media-ops.ts` `src/lib/operations/project-agent.ts` `src/app/api/projects/[projectId]/regenerate-group/route.ts` `src/app/api/projects/[projectId]/regenerate-single-image/route.ts` `src/app/api/projects/[projectId]/regenerate-storyboard-text/route.ts` `src/app/api/projects/[projectId]/modify-storyboard-image/route.ts`
-  - 测试覆盖点：`tests/unit/operations/media-ops.test.ts`（unit） + 复用 `tests/integration/api/contract/direct-submit-media-routes.test.ts`（contract）
-  - 命令与结果摘要：待执行
+`src/lib/project-agent/runtime.ts` 现在承担的是完整执行入口，而不是薄壳。
 
-- [x] P1/P2：Operation 覆盖与收口（project config、command detail route）
-  - 状态：done
-  - 涉及文件：`src/lib/operations/config-ops.ts` `src/lib/operations/project-agent.ts` `src/app/api/projects/[projectId]/config/route.ts` `src/lib/operations/read-ops.ts` `src/app/api/projects/[projectId]/commands/[commandId]/route.ts`
-  - 测试覆盖点：复用 `tests/integration/api/specific/project-art-style-validation.test.ts` + 新增 `tests/integration/api/contract/project-command.route.test.ts`
-  - 命令与结果摘要：待执行
+已实现的关键点：
 
-- [x] P1/P2：Operation 覆盖与收口（LLM routes：analyze/voice/screenplay/stream/ai-modify）
-  - 状态：done
-  - 涉及文件：`src/lib/operations/extra-ops.ts` `src/app/api/projects/[projectId]/analyze/route.ts` `src/app/api/projects/[projectId]/analyze-global/route.ts` `src/app/api/projects/[projectId]/analyze-shot-variants/route.ts` `src/app/api/projects/[projectId]/voice-analyze/route.ts` `src/app/api/projects/[projectId]/screenplay-conversion/route.ts` `src/app/api/projects/[projectId]/story-to-script-stream/route.ts` `src/app/api/projects/[projectId]/script-to-storyboard-stream/route.ts` `src/app/api/projects/[projectId]/ai-modify-appearance/route.ts` `src/app/api/projects/[projectId]/ai-modify-prop/route.ts` `src/app/api/projects/[projectId]/ai-modify-shot-prompt/route.ts`
-  - 测试覆盖点：复用 `tests/integration/api/contract/llm-observe-routes.test.ts`（contract）验证 taskType/targetType
-  - 命令与结果摘要：待执行
+- 消息校验和模型消息转换。
+- 按用户模型配置选择语言模型。
+- phase + context + route policy 组合成 system prompt。
+- 动态装配 tools。
+- 流式输出到 UIMessage stream。
+- stop controller 触顶显式输出 data-agent-stop。
 
-- [x] P1/P2：Operation 覆盖与收口（projects CRUD + video/download routes）
-  - 状态：done
-  - 涉及文件：`src/lib/operations/system-project-ops.ts` `src/lib/operations/project-crud-ops.ts` `src/lib/operations/video-ops.ts` `src/lib/operations/download-ops.ts` `src/lib/operations/project-agent.ts`
-  - route 下沉：`src/app/api/projects/route.ts` `src/app/api/projects/[projectId]/route.ts` `src/app/api/projects/[projectId]/video-urls/route.ts` `src/app/api/projects/[projectId]/video-proxy/route.ts` `src/app/api/projects/[projectId]/download-images/route.ts` `src/app/api/projects/[projectId]/download-videos/route.ts` `src/app/api/projects/[projectId]/download-voices/route.ts`
-  - 安全性修正：episodeId 查询强制带 projectId 约束；video-proxy 仅允许解析为 storageKey 后再签名下载（避免 SSRF）。
-  - 测试覆盖点：`tests/integration/api/contract/projects.route.test.ts` `tests/integration/api/contract/project-basic.route.test.ts` `tests/integration/api/contract/project-video-routes.test.ts` `tests/integration/api/contract/project-download-routes.test.ts`
+### 3.2 Project phase
 
-- [x] P1/P2：Operation 覆盖与收口（runs/tasks/sse/asset-hub）
-  - 状态：done
-  - 涉及文件：
-    - operations：`src/lib/operations/run-ops.ts` `src/lib/operations/task-ops.ts` `src/lib/operations/sse-ops.ts`
-    - asset-hub：`src/lib/operations/asset-hub-llm-ops.ts` `src/lib/operations/asset-hub-voice-ops.ts` `src/lib/operations/asset-hub-folder-ops.ts` `src/lib/operations/asset-hub-voice-library-ops.ts` `src/lib/operations/asset-hub-picker-ops.ts`
-  - route 下沉：
-    - runs/tasks：`src/app/api/runs/**` `src/app/api/tasks/**`
-    - sse：`src/app/api/sse/route.ts`（bootstrap 下沉到 op；流式订阅留在 route）
-    - asset-hub：`src/app/api/asset-hub/**`（folders/voices/picker + llm task submit）
-  - 安全性修正：
-    - SSE replay 引入按 userId 过滤，避免跨用户事件回放混淆。
-  - 测试覆盖点：
-    - `tests/integration/api/contract/run-cancel.route.test.ts`
-    - `tests/integration/api/contract/run-step-retry.route.test.ts`
-    - `tests/integration/api/contract/runs-list.route.test.ts`
-    - 复用 `tests/integration/api/contract/direct-submit-*-routes.test.ts`
-  - 命令与结果摘要：
-    - `npm run typecheck` -> 通过
-    - `npm run test:behavior:api` -> 通过
+`src/lib/project-agent/project-phase.ts` 已经不只是简单枚举，而是一个带进度和判断依据的状态快照。
 
-- [x] P1/P2：Operation 覆盖与收口（project 编辑入口：storyboards/panel/voice-lines/editor/episodes/speaker-voice）
-  - 状态：done
-  - 涉及文件：
-    - operations：`src/lib/operations/gui-ops.ts`（新增 query/read operations：`list_storyboards`/`list_voice_lines`/`list_voice_line_speakers`/`get_video_editor_project`/`list_episodes`/`get_episode_detail`/`get_speaker_voices`）
-    - operations：`src/lib/operations/plan-ops.ts`（approve/reject 补齐 projectId 校验 + workflowId 推导）
-    - operations：`src/lib/operations/project-agent.ts`（mutate_storyboard 支持 delete/update 通过 panelId 自动反查 storyboardId）
-  - route 下沉：
-    - `src/app/api/projects/[projectId]/storyboards/route.ts`
-    - `src/app/api/projects/[projectId]/panel/route.ts`
-    - `src/app/api/projects/[projectId]/panel/select-candidate/route.ts`
-    - `src/app/api/projects/[projectId]/voice-lines/route.ts`
-    - `src/app/api/projects/[projectId]/editor/route.ts`
-    - `src/app/api/projects/[projectId]/episodes/route.ts`
-    - `src/app/api/projects/[projectId]/episodes/[episodeId]/route.ts`
-    - `src/app/api/projects/[projectId]/episodes/split-by-markers/route.ts`
-    - `src/app/api/projects/[projectId]/speaker-voice/route.ts`
-    - `src/app/api/projects/[projectId]/plans/[planId]/approve/route.ts`
-    - `src/app/api/projects/[projectId]/plans/[planId]/reject/route.ts`
-  - 安全性修正：
-    - episode detail GET 从 `findUnique` 改为 op 内 `findFirst({ id, projectId })` 强制 projectId 约束，避免跨项目 episodeId 泄露。
-  - 测试覆盖点：
-    - `tests/integration/api/contract/plan-approval-routes.test.ts`（更新为 route 仅 thin-call，不再 mock prisma）
-    - 复用既有 `tests/integration/api/contract/project-crud-routes.test.ts` 等契约
+它现在能提供：
 
-- [x] P1/P2：Operation 覆盖与收口（user/auth：preferences/models/billing/api-config/register）
-  - 状态：done
-  - 涉及文件：
-    - operations：`src/lib/operations/user-preference-ops.ts` `src/lib/operations/user-models-ops.ts` `src/lib/operations/user-billing-ops.ts` `src/lib/operations/user-api-config-ops.ts` `src/lib/operations/auth-ops.ts`
-    - 抽离：`src/lib/user-api/api-config.ts`（route 迁移为 thin wrapper，逻辑可被 operation 复用）
-  - route 下沉：
-    - `src/app/api/user-preference/route.ts`
-    - `src/app/api/user/models/route.ts`
-    - `src/app/api/user/costs/route.ts`
-    - `src/app/api/user/transactions/route.ts`
-    - `src/app/api/user/api-config/route.ts`
-    - `src/app/api/auth/register/route.ts`（保留 rate-limit 与审计日志；注册落地迁移到 operation）
-  - 说明：
-    - auth register 属于“无 session”入口，此处约定传 `projectId='system'` 且 `userId='anonymous'`（operation 内不依赖 ctx.userId）。
+- phase。
+- progress 计数。
+- active runs。
+- failed items。
+- stale artifacts。
+- available actions（plan / act）。
+
+这比早期只看单一阶段值更接近真实项目助手需要的状态表达。
+
+### 3.3 Projection / context
+
+当前已经形成两层结构：
+
+- lite projection：适合多数状态判断和 prompt 注入。
+- full projection / context：适合需要 panel、clip、storyboard、voice line 细节的读取场景。
+
+当前 full projection 和 context 已经能提供较完整的分镜细节，包括：
+
+- panel 级别的 description、imagePrompt、imageUrl、candidateImages、videoPrompt、videoUrl。
+- storyboard / clip 的关联信息。
+- 运行中的 workflow 和最新 artifacts。
+
+这意味着“参考某个分镜继续生成”这类动作已经有了真实的数据基础。
+
+### 3.4 Operation / adapter
+
+现在的 operation 层已经是系统的主事实源：
+
+- 读、写、计划、治理、任务、项目、用户配置、资产中心等能力都收敛到 operation registry。
+- tool adapter 统一处理输入校验、confirmed gate、执行错误和输出校验。
+- API adapter 统一把 GUI / route 调用落到 operation 上。
+
+这套结构的质量比“route 各写各的”明显更好，因为：
+
+- 重复逻辑减少了。
+- 危险动作的判定集中化了。
+- 代码事实比文档叙述更一致了。
+
+### 3.5 状态和任务
+
+当前已经支持：
+
+- workflow plan / approval / status。
+- 任务提交后的 taskId / runId / batchId 回传。
+- mutation batch / undo 相关能力。
+- 运行中的任务和失败任务查询。
+
+这说明 assistant 已经能够把“做什么”与“如何完成”分开表达。
+
+## 4. 实现质量评估
+
+### 4.1 优点
+
+1. 事实源比较清楚。
+
+   operation registry、projection、context、runtime 各自分工明确，避免了单文件吞掉所有责任。
+
+2. 错误处理比早期健康。
+
+   tool 层现在返回结构化错误，不再依赖流中断让模型“猜”发生了什么。
+
+3. 动态工具选择是有效的。
+
+   不是把所有能力都塞给模型，而是按场景裁剪，这对降低误调用和噪音是有帮助的。
+
+4. 测试覆盖已经跟上关键链路。
+
+   runtime、tool adapter、registry、route contract、projection 相关测试都已经是可维护的最小闭环。
+
+### 4.2 仍需留意的质量问题
+
+1. prompt 里仍包含一定量的运行时快照字符串。
+
+   这比旧版本好很多，但还不是完全“状态通过工具读取、prompt 只保留规则”的极简形态。
+
+2. 工具裁剪策略仍然偏保守。
+
+   目前通过 route / phase / risk / scope 做选择，整体正确，但对极少数边缘场景的覆盖还需要持续校准。
+
+3. 代码仍有继续收敛空间。
+
+   project-agent、project-projection、project-context、operations 之间的边界已经明确，但一些辅助层还可以继续削薄。
+
+4. 文档必须继续保持和代码同步。
+
+   这套 agent 变化速度快，如果文档不按事实更新，很容易重新出现历史状态和当前状态混写的问题。
+
+## 5. 当前完成度
+
+### 5.1 已完成
+
+- 项目级 assistant 入口。
+- runtime / stop 机制。
+- dynamic tool selection。
+- confirmed gate。
+- structured tool result。
+- projection / context 两层。
+- operation registry 收口。
+- API adapter 收口。
+- 主要 route 的 operation 化。
+- 关键测试补齐。
+
+### 5.2 部分完成
+
+- prompt 结构继续优化。
+- 工具选择策略继续精调。
+- UI 对不同操作结果的富渲染继续增强。
+- 代码目录继续收敛。
+- 事件桥接继续减少。
+
+### 5.3 仍在进行中
+
+- 进一步减少系统对长 prompt 的依赖。
+- 进一步提升 projection 的使用一致性。
+- 进一步统一 assistant 与 workspace 的状态来源。
+- 对剩余边缘 route / operation 进行持续收口。
+
+## 6. 结论
+
+如果只看主链路，Project Agent 已经完成了“能用”的阶段，并且在执行、确认、错误和投影四个方面都比早期版本稳很多。
+
+如果看工程质量，它目前是“可交付的项目助手骨架”，不是“最终收敛态”。后续最该做的不是加新概念，而是继续削减噪音、补齐边缘场景、统一状态来源。

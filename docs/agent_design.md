@@ -1,199 +1,240 @@
-# Project Agent（Workspace Assistant）当前设计文档
+# Agent 功能设计构想
 
-> 本文档描述 **project-agent（项目级 workspace assistant）** 的当前实现与确定的升级方向。  
-> 适用范围：`src/lib/project-agent/**`、`src/lib/operations/**`、`src/lib/adapters/**` 以及对应的 project assistant API routes。
+> 这份文档只描述目标态和设计边界，不记录过期时间线。
+> 适用范围：`src/lib/project-agent/**`、`src/lib/project-projection/**`、`src/lib/project-context/**`、`src/lib/operations/**`、`src/lib/adapters/**` 以及项目级 assistant routes。
 
----
+## 1. 设计目标
 
-[TOC]
+Project Agent 的定位不是通用聊天助手，而是项目级执行助手。它需要在项目上下文里完成三类事情：
 
----
+1. 解释现状：告诉用户项目当前在哪个阶段、哪些产物已完成、哪些任务仍在运行、哪些结果已经过时。
+2. 协助决策：把复杂流程拆成可理解的计划、审批与执行步骤。
+3. 安全执行：在低风险场景直接 act，在高风险或计费场景要求确认，并保留可审计、可撤回的记录。
 
-## 0. 文档目的（为什么要有这份）
+核心原则很简单：
 
-这份文档的目标不是“设想一套新平台”，而是：
+- operation registry 是 truth source，tool 只是暴露层。
+- 显式失败，不做隐式兜底。
+- 小写入可以直连数据库，复杂批量写入交给 workflow / domain 层。
+- 所有可变状态尽量通过 projection/context 读取，不把系统搞成一个越来越大的 prompt。
 
-1. 把当前代码的 **事实基线** 固化成可交付的设计说明（便于把任务一次性交付给 coding agent）。
-2. 把已确认的关键决策写清楚，避免 docs 之间互相打架。
-3. 明确“哪些改动必须写哪些测试”，并能直接对齐 `docs/testing.md` 的要求。
+## 2. 角色边界
 
----
+仓库里至少有两类 assistant，不能混用设计：
 
-## 1. 两套 assistant 的边界（不要混）
+- Project Agent：项目级 assistant，负责项目推进、资产/分镜/配音/视频相关的解释、计划和执行。
+- Assistant Platform：用户级 assistant，负责通用配置、教程和非项目绑定能力。
 
-仓库内存在两套 assistant，职责不同：
+Project Agent 不应该重造一套 skill registry。它的事实来源已经是 operation registry、projection 和 context，而不是通用 skill 系统。
 
-### 1.1 Project Agent（本文重点）
+## 3. 目标架构
 
-- API：`src/app/api/projects/[projectId]/assistant/chat/route.ts`
-- Runtime：`src/lib/project-agent/runtime.ts`
-- 工具面：`src/lib/operations/**`（operation registry 自动暴露为 tools）
-- 目标：在项目上下文里完成 **解释/规划/审批/查询 + 可控 act-mode 写操作**（并形成可撤回记录）。
-
-### 1.2 Assistant Platform（user-level）
-
-- API：`src/app/api/user/assistant/chat/route.ts`
-- Runtime：`src/lib/assistant-platform/runtime.ts`
-- Skills：`api-config-template` / `tutorial`
-- 目标：提供与项目无关或弱项目绑定的通用助手能力（例如配置教程）。
-
-原则：**不要把 assistant-platform 的“skill registry”思路搬到 project-agent 上重做一套**；project-agent 已经以 operation registry 为 truth source。
-
----
-
-## 2. 高层架构（当前实现）
-
-```
-用户 → WorkspaceAssistantPanel（前端）
-  │
-  ▼
-POST /api/projects/[projectId]/assistant/chat
-  │  (apiHandler + requireProjectAuth)
-  ▼
-createProjectAgentChatResponse()
-  │
-  ├─ resolveProjectPhase() → phase/progress/failedItems/staleArtifacts/actions
-  ├─ resolveProjectAgentLanguageModel() → AI SDK model
-  ├─ createProjectAgentOperationRegistry() → operation map
-  ├─ operations → tools（自动组装）
-    └─ streamText(model, system, messages, tools, stopWhen=adaptiveStop(cap=999))
-        │
-        └─ tool call → executeProjectAgentOperationFromTool()
-              ├─ inputSchema 校验
-              ├─ confirmed gate（由 operation.sideEffects 决定）
-              ├─ operation.execute()
-              │    ├─ 直连 prisma（交互式编辑/轻写入，允许）
-              │    └─ submitTask（异步图/音/视频生成）
-              └─ writer.write(data parts) → 前端渲染卡片
+```text
+UI / 路由 / 外部调用
+  -> project assistant route
+  -> runtime
+  -> project phase + projection/context
+  -> route policy + tool policy
+  -> operation registry
+  -> tool adapter / api adapter
+  -> operation.execute
+  -> DB / task / workflow / mutation batch
 ```
 
-关键点：
+设计上需要保留的几个关键层：
 
-- operation registry 是 **单一 truth**：tool 名称 == operationId。
-- confirmed gate 在 tool adapter 统一处理，避免每个 operation 手写分散确认逻辑。
-- 异步任务使用 Fire-and-Report：提交任务后返回 `taskId/status/runId/deduped`，再通过 `get_task_status` 查询。
+- runtime：负责模型选择、消息转换、工具装配、stop 规则和流式输出。
+- projection/context：负责从数据库和运行时状态中提取项目事实。
+- route policy：负责把当前会话路由到 query / plan / act 的不同处理路径。
+- tool policy：负责按阶段、意图、风险和作用域裁剪可见工具。
+- operation adapters：统一执行和统一校验，避免 route 和 tool 两边重复实现。
 
----
+## 4. 行为模式
 
-## 3. 关键代码索引（必须以代码为准）
+### 4.1 Query 模式
 
-- Project assistant route：`src/app/api/projects/[projectId]/assistant/chat/route.ts`
-- Agent runtime：`src/lib/project-agent/runtime.ts`
-- Phase 推导：`src/lib/project-agent/project-phase.ts`
-- Operation registry：`src/lib/operations/registry.ts` → `src/lib/operations/*.ts`
-- Tool adapter（confirmed gate / schema 校验）：`src/lib/adapters/tools/execute-project-agent-operation.ts`
-- API adapter（GUI 入口复用 operation）：`src/lib/adapters/api/execute-project-agent-operation.ts`
-- UI data parts 类型：`src/lib/project-agent/types.ts`
+用于读取项目状态、查看运行结果、解释当前进度和失败原因。
 
----
+要求：
 
-## 4. 执行模型（已确认方向）
+- 只读优先。
+- 输出要面向用户，而不是把内部结构原样抛给用户。
+- 当发现 stale artifacts 或 failed items 时，要先解释，再建议下一步动作。
 
-### 4.1 事实基线（当前代码）
+### 4.2 Plan 模式
 
-当前 runtime 使用 AI SDK `streamText` 的 step 预算上限（固定数字）。
+用于固定 workflow 的编排，例如 story-to-script、script-to-storyboard。
 
-### 4.2 确定目标：自适应停止 + cap=999
+要求：
 
-已确认的目标约束：
+- 先 create_workflow_plan，再审批，再执行。
+- workflow 内部 skill 顺序不能被 agent 改写、跳过或合并。
+- 计划结果必须可回放、可审计。
 
-- 需要 **自适应停止**：让 agent 自己判断任务完成，不再依赖固定阈值来决定是否停止。
-- 仍保留一个 **硬上限 999**：作为 stop cap，避免 runaway loop，且达到上限需显式报告原因。
+### 4.3 Act 模式
 
-落地建议（实现细节可由 coding agent 选择最小改动方案）：
+用于资产生成、分镜修复、配音生成、视频生成、轻量编辑等直接操作。
 
-- 通过 `stopWhen` 自定义谓词（或等价机制）实现自适应停止；
-- 必须保证：达到 cap 时显式停止并向用户报告“因步数上限停止”，禁止静默截断。
+要求：
 
----
+- 低风险、低成本、局部修改可以直接 act。
+- 中高风险、计费、覆盖、批量、长耗时操作必须先确认。
+- 能返回结构化错误，就不要把错误变成静默失败。
 
-## 5. 错误模型（显式失败，但返回给 agent 自愈）
+## 5. 结构化上下文
 
-已确认的决策（与 `docs/ai-assistant-domain-architecture-goals.md` 的“显式失败”不矛盾）：
+当前设计里，项目状态不应该只靠 prompt 中的一段文本快照，而应该拆成两层：
 
-- 系统必须 **显式失败**：不允许吞错、不允许隐式回退、不允许用默认值掩盖缺失状态。
-- 但在 tool-use loop 内，失败应尽量作为 **结构化 tool result** 返回给 LLM，让 LLM 能观察错误并选择下一步策略（重试/补参数/先查询再执行/向用户提问）。
+- Lite projection：用于 agent 在大多数场景下判断项目大局、阶段、运行状态和最新产物。
+- Full projection / context：用于需要 panel、clip、storyboard、voice line 细节的精确操作。
 
-推荐的统一返回形态（示例，不是强制字段名）：
+建议的上下文分工：
 
-```ts
-{ ok: true, data: ... }
-{ ok: false, error: { code: 'PANEL_NOT_FOUND', message: '...', details: {...} } }
-```
+- phase：判断当前处于 draft / script / storyboard / voice / generation 的哪一类阶段。
+- progress：展示 clip、screenplay、storyboard、panel、voice line 的完成度。
+- active runs：展示当前仍在运行的 workflow 或任务。
+- failed items：展示最近失败的任务或步骤，供 agent 诊断。
+- stale artifacts：展示哪些已生成内容已经落后于最新输入。
 
-仅在不可恢复的基础设施级错误（例如 DB 连接失败、系统配置缺失且无法继续）时抛出异常终止流；并要求错误信息可诊断。
+## 6. Skills 设计
 
----
+Skills 不是业务真相源，而是“可复用的行动/编排模板层”。当前建议把 skill 明确分成三个类别：
 
-## 6. confirmed gate（必须保留）与“预算授权”预留
+### 6.1 Developer-maintained skills：project-workflow
 
-### 6.1 现行规则：需要 confirmed
+这类 skill 由开发者维护，属于项目主流程的固定能力包。
 
-在 assistant 对话入口中，所有可能带来写入/覆盖/删除/批量/长耗时/计费等副作用的 operation，必须通过 confirmed gate。
+特征：
 
-依据：`operation.sideEffects`（mode/risk/billable/destructive/overwrite/bulk/longRunning/requiresConfirmation）。
+- 代码仓库中可版本化、可测试、可回放。
+- 对应稳定的 workflow package，例如 story-to-script、script-to-storyboard。
+- 适合承载明确的业务步骤、审批边界和固定顺序，不依赖用户临时创建。
+- 不能被 agent 自由改写内部步骤，只能按定义编排或调用。
 
-### 6.2 未来方向：为 agent 分配额度后可自主决定
+### 6.2 Agent-saved skills：执行过程中沉淀的工作流
 
-已确认要为未来预留基础：
+这类 skill 由 agent 在 plan 模式或 act 推进过程中产生，之后可沉淀为可复用模板。
 
-- 当系统为 agent 分配了明确额度/预算（例如项目级额度、线程级额度、用户一次性授权额度）时，可以允许 agent 在预算范围内自主决定是否执行，而不是每次都要求人工 confirmed。
+特征：
 
-预留建议（可择一实现）：
+- 来源于一次真实执行，而不是先验设计。
+- 适合把“用户刚跑过的一套有效工作流”保存为可再次调用的模板。
+- 存储在 `skills/saved/` 这类子目录中，和 project-workflow 平级，但语义不同。
+- 允许带有项目上下文约束，例如适用于某类剧集、某类分镜风格或某个资产组合。
 
-- 在 runtime context 中注入 `assistantBudget`（包含额度、已用、有效期、scope）；
-- 或在 `operation.sideEffects` 中补充可选元信息（例如 `estimatedCostUnits` / `budgetKey`）。
+### 6.3 User-installed skills：外部导入 / 分享安装
 
-无论哪种方式，必须满足：
+这类 skill 由用户手动安装，来源可能是别人分享的模板、导出的技能包或外部仓库。
 
-- 可审计（记录授权来源、预算变化、每次消耗的依据）
-- 可撤回（mutation batch/undo）
-- 显式失败（预算不足时必须明确报错/请求确认）
+特征：
 
----
+- 用户显式安装、显式启用。
+- 需要清晰的来源标记、版本标记和兼容性说明。
+- 默认应处于隔离或受限状态，避免和 project-workflow 混淆。
+- 安装后只作为可选能力，不应自动覆盖开发者维护的核心 workflow。
 
-## 7. 写入路径策略（允许 operation 直连 prisma）
+### 6.4 Skills 和 operations 的关系
 
-已确认的“有意简化”策略：
+- skills 负责“如何组织一串动作”。
+- operations 负责“一个动作具体怎么执行”。
+- workflow skill 可以编排 operation，但不应该重新定义 operation 的业务语义。
+- 可沉淀的 skill 应优先保存为模板，而不是复制底层执行逻辑。
 
-- 交互式编辑/轻写入：允许 `operation.execute` 直连 prisma（简单、快速、可维护）。
-- workflow 批量写入：仍建议通过 domain/service/repository 层，承担更强的验证、幂等、跨实体约束与可恢复性。
+### 6.5 Skills 的 UI / 生命周期目标
+
+skills 体系最终应支持：
+
+- 显式的 skills / workflow 调用入口。
+- 保存、安装、启用、禁用、导入、导出。
+- 分类浏览和来源标识。
+- 对 project-workflow、saved skill、installed skill 做明确区分。
+
+## 7. 工具设计
+
+工具的目标不是“尽可能多”，而是“尽可能少但足够组合”。
+
+需要遵守的规则：
+
+- tool 名称和 operationId 一一对应。
+- tool 描述要明确用途、风险和适用场景。
+- 动态裁剪可见工具，避免一次把所有能力都暴露给模型。
+- 工具选取要同时考虑阶段、意图、作用域和风险预算。
+
+### 7.1 confirmed gate
+
+confirmed gate 仍然必须存在，因为项目里存在写入、覆盖、批量和计费类动作。
+
+设计目标不是取消确认，而是让确认更精确：
+
+- 低风险 query 不需要确认。
+- 中风险 act 可以保留确认，但应尽量减少无意义的重复确认。
+- 高风险、覆盖、批量、长耗时操作必须确认。
+
+### 7.2 budget 预留
+
+未来如果系统给 agent 分配预算，应支持基于预算的自主决策，但前提是：
+
+- 可审计。
+- 可撤回。
+- 预算不足时必须显式失败或要求确认。
+
+## 8. 错误模型
+
+系统必须显式失败，但在 tool loop 里尽量把失败变成结构化结果返回给模型。
+
+推荐原则：
+
+- 参数错误、资源不存在、状态冲突等，返回结构化错误，允许模型自愈。
+- 基础设施故障、配置缺失、不可恢复异常，才中断流并显式报错。
+- 禁止吞错、默认值兜底和悄悄跳过。
+
+## 9. 写入策略
+
+当前建议保留两条写入路径：
+
+- 交互式轻写入：operation.execute 可以直接落库，保持简单和可维护。
+- workflow / 批量写入：保留 domain / repository 的显式层，负责事务、幂等和跨实体约束。
 
 硬约束：
 
-- 不允许绕开 mutation batch/undo 体系去做不可撤回的隐式写入。
-- 对于“创建记录后再提交任务”的流程：必须先完成前置校验；若任务提交可能失败，必须有显式补偿/回滚，禁止僵尸数据。
+- 不允许绕开 mutation batch / undo 体系做不可撤回写入。
+- 创建记录后再提交任务时，必须先做前置校验，失败时要有补偿或回滚。
 
----
+## 10. 异步任务
 
-## 8. 异步任务（Fire-and-Report）
+图、音、视频等耗时任务采用 Fire-and-Report：
 
-对于图片/配音/视频等生成任务：
+- 先提交任务。
+- 返回 task id / run id / batch id 等结构化信息。
+- 前端展示任务卡片。
+- 后续由用户或 agent 再查状态，不默认阻塞等待长任务完成。
 
-- operation 负责提交任务（`submitTask` / `submitAssetGenerateTask` 等）并返回结构化结果；
-- 前端渲染 `data-task-submitted` / `data-task-batch-submitted` 卡片；
-- 后续通过 `get_task_status` 观察状态（必要时可提供“短轮询”仅用于 quick task，但默认不等待长任务完成）。
+## 11. 测试要求
 
----
+只要改动以下任意部分，就必须补测试：
 
-## 9. 测试要求（必须按 docs/testing.md）
+- runtime 的 stop 条件。
+- tool adapter 的确认、输入输出校验和结构化错误。
+- projection/context 的字段变更。
+- route 与 operation 的对齐。
+- 新增或修改的工作流、任务类型、批量撤回和恢复逻辑。
 
-只要改动了下列任意一项，必须同步补测试：
+优先测试的对象是：
 
-- worker/handler 行为、bug 修复、新 route、新 task type、新 provider 协议、dedupe/enqueue/rollback/orphan、P0 主链路语义。
+- `src/lib/project-agent/runtime.ts`
+- `src/lib/adapters/tools/execute-project-agent-operation.ts`
+- `src/lib/adapters/api/execute-project-agent-operation.ts`
+- `src/lib/project-projection/**`
+- `src/lib/project-context/**`
 
-尤其建议补齐/新增的关键测试面：
+## 12. 设计结论
 
-- `src/lib/adapters/tools/execute-project-agent-operation.ts`：confirmed gate 判定、input schema 报错、output schema 报错、结构化错误返回（不 throw）的行为测试。
-- `src/lib/project-agent/runtime.ts`：自适应停止策略（cap=999）与“达到上限要显式报告”的行为测试。
+这套 agent 的终态不是“更长的 prompt”，而是：
 
-分层与命名必须遵守 `docs/testing.md`。
+- 更稳定的状态投影。
+- 更严格的 operation 边界。
+- 更少但更好的工具暴露。
+- 更清晰的确认与预算语义。
+- 更可靠的错误自愈闭环。
 
----
-
-## 10. 近期优先级（对齐已确认决策）
-
-1. tool adapter：错误结构化返回（显式失败 + 允许自愈）
-2. runtime：自适应停止 + cap=999
-3. confirmed gate：保持强制 confirmed，同时为未来预算授权预留接口/元信息
-4. projection 补全与 operation 覆盖面提升（按收益推进）
+换句话说，agent 的智能来自于状态、工具和反馈循环，而不是把所有知识硬塞进 system prompt。
