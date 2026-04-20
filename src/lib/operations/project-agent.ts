@@ -33,6 +33,7 @@ import { createUserModelsOperations } from './user-models-ops'
 import { createUserBillingOperations } from './user-billing-ops'
 import { createUserApiConfigOperations } from './user-api-config-ops'
 import { createAuthOperations } from './auth-ops'
+import { decorateProjectAgentOperationRegistryWithToolMeta } from './tool-meta'
 import { createHash, randomUUID } from 'crypto'
 import { ApiError, getRequestId } from '@/lib/api-errors'
 import { submitTask } from '@/lib/task/submitter'
@@ -69,6 +70,13 @@ import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 
 
 const DEFAULT_LIPSYNC_MODEL_KEY = composeModelKey('fal', 'fal-ai/kling-video/lipsync/audio-to-video')
+
+function withToolPack(
+  registry: ProjectAgentOperationRegistry,
+  defaults: Parameters<typeof decorateProjectAgentOperationRegistryWithToolMeta>[1],
+): ProjectAgentOperationRegistry {
+  return decorateProjectAgentOperationRegistryWithToolMeta(registry, defaults)
+}
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -363,38 +371,134 @@ function buildVideoPanelBillingInfoOrThrow(payload: unknown) {
 
 export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegistry {
   return {
-    ...createSystemProjectOperations(),
-    ...createRunOperations(),
-    ...createTaskOperations(),
-    ...createSseOperations(),
-    ...createHomeLlmOperations(),
-    ...createAuthOperations(),
-    ...createUserPreferenceOperations(),
-    ...createUserModelsOperations(),
-    ...createUserBillingOperations(),
-    ...createUserApiConfigOperations(),
-    ...createAssetHubLlmOperations(),
-    ...createAssetHubVoiceOperations(),
-    ...createAssetHubFolderOperations(),
-    ...createAssetHubVoiceLibraryOperations(),
-    ...createAssetHubVoiceUploadOperations(),
-    ...createAssetHubCharacterLibraryOperations(),
-    ...createAssetHubCharacterAppearanceOperations(),
-    ...createAssetHubLocationLibraryOperations(),
-    ...createAssetHubPickerOperations(),
-    ...createReadOperations(),
-    ...createProjectCrudOperations(),
-    ...createVideoOperations(),
-    ...createDownloadOperations(),
-    ...createPlanOperations(),
-    ...createGovernanceOperations(),
-    ...createEditOperations(),
-    ...createConfigOperations(),
-    ...createProjectDataOperations(),
-    ...createGuiOperations(),
-    ...createExtraOperations(),
-    ...createLlmTaskOperations(),
-    ...createMediaOperations(),
+    ...withToolPack(createSystemProjectOperations(), {
+      tool: { defaultVisibility: 'core', groups: ['project'], tags: ['project', 'system'] },
+      selection: { baseWeight: 60, costHint: 'low' },
+    }),
+    ...withToolPack(createRunOperations(), {
+      tool: { defaultVisibility: 'core', groups: ['run'], tags: ['run'] },
+      selection: { baseWeight: 55, costHint: 'low' },
+    }),
+    ...withToolPack(createTaskOperations(), {
+      tool: { defaultVisibility: 'core', groups: ['task'], tags: ['task'] },
+      selection: { baseWeight: 55, costHint: 'low' },
+    }),
+    ...withToolPack(createSseOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['debug', 'sse'], tags: ['debug'] },
+      selection: { baseWeight: -100, costHint: 'low' },
+    }),
+    ...withToolPack(createHomeLlmOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['llm'], tags: ['llm'] },
+      selection: { baseWeight: 10, costHint: 'medium' },
+    }),
+    ...withToolPack(createAuthOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['auth'], tags: ['auth'] },
+      selection: { baseWeight: -100, costHint: 'low' },
+    }),
+    ...withToolPack(createUserPreferenceOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['config', 'preference'], tags: ['config'] },
+      selection: { baseWeight: 25, costHint: 'low' },
+    }),
+    ...withToolPack(createUserModelsOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['config', 'models'], tags: ['config'] },
+      selection: { baseWeight: 25, costHint: 'low' },
+    }),
+    ...withToolPack(createUserBillingOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['billing'], tags: ['billing'] },
+      selection: { baseWeight: 20, costHint: 'low' },
+    }),
+    ...withToolPack(createUserApiConfigOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['config', 'api'], tags: ['config'] },
+      selection: { baseWeight: 20, costHint: 'low' },
+    }),
+    ...withToolPack(createAssetHubLlmOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'ai'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'high' },
+    }),
+    ...withToolPack(createAssetHubVoiceOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'voice'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'medium' },
+    }),
+    ...withToolPack(createAssetHubFolderOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'folder'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'low' },
+    }),
+    ...withToolPack(createAssetHubVoiceLibraryOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'voice'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'low' },
+    }),
+    ...withToolPack(createAssetHubVoiceUploadOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'voice'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'medium' },
+    }),
+    ...withToolPack(createAssetHubCharacterLibraryOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'character'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'low' },
+    }),
+    ...withToolPack(createAssetHubCharacterAppearanceOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'character'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'low' },
+    }),
+    ...withToolPack(createAssetHubLocationLibraryOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'location'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'low' },
+    }),
+    ...withToolPack(createAssetHubPickerOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['asset-hub', 'picker'], tags: ['asset-hub'] },
+      selection: { baseWeight: -50, costHint: 'low' },
+    }),
+    ...withToolPack(createReadOperations(), {
+      tool: { defaultVisibility: 'core', groups: ['read'], tags: ['read'] },
+      selection: { baseWeight: 70, costHint: 'low' },
+    }),
+    ...withToolPack(createProjectCrudOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['project', 'crud'], tags: ['project'] },
+      selection: { baseWeight: 10, costHint: 'low' },
+    }),
+    ...withToolPack(createVideoOperations(), {
+      tool: { defaultVisibility: 'scenario', groups: ['video'], tags: ['video', 'media'] },
+      selection: { baseWeight: 30, costHint: 'high' },
+    }),
+    ...withToolPack(createDownloadOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['download'], tags: ['download'] },
+      selection: { baseWeight: 15, costHint: 'medium' },
+    }),
+    ...withToolPack(createPlanOperations(), {
+      tool: { defaultVisibility: 'scenario', groups: ['workflow', 'plan'], tags: ['workflow'] },
+      selection: { baseWeight: 45, costHint: 'low' },
+    }),
+    ...withToolPack(createGovernanceOperations(), {
+      tool: { defaultVisibility: 'guarded', selectable: false, groups: ['governance'], tags: ['governance'] },
+      selection: { baseWeight: -20, costHint: 'high' },
+    }),
+    ...withToolPack(createEditOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['edit'], tags: ['edit', 'asset', 'storyboard'] },
+      selection: { baseWeight: 20, costHint: 'low' },
+    }),
+    ...withToolPack(createConfigOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['config'], tags: ['config'] },
+      selection: { baseWeight: 20, costHint: 'low' },
+    }),
+    ...withToolPack(createProjectDataOperations(), {
+      tool: { defaultVisibility: 'core', groups: ['project', 'data'], tags: ['project', 'asset', 'storyboard'] },
+      selection: { baseWeight: 55, costHint: 'low' },
+    }),
+    ...withToolPack(createGuiOperations(), {
+      tool: { defaultVisibility: 'hidden', selectable: false, groups: ['gui'], tags: ['gui'] },
+      selection: { baseWeight: -100, costHint: 'low' },
+    }),
+    ...withToolPack(createExtraOperations(), {
+      tool: { defaultVisibility: 'extended', groups: ['extra'], tags: ['extra'] },
+      selection: { baseWeight: 0, costHint: 'low' },
+    }),
+    ...withToolPack(createLlmTaskOperations(), {
+      tool: { defaultVisibility: 'scenario', groups: ['llm', 'task'], tags: ['llm', 'storyboard'] },
+      selection: { baseWeight: 25, costHint: 'high' },
+    }),
+    ...withToolPack(createMediaOperations(), {
+      tool: { defaultVisibility: 'scenario', groups: ['media'], tags: ['media', 'panel', 'storyboard'] },
+      selection: { baseWeight: 30, costHint: 'high' },
+    }),
     generate_character_image: {
       id: 'generate_character_image',
       description: 'Generate character appearance images for a project character.',

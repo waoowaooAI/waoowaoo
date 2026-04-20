@@ -21,6 +21,10 @@ import type { ProjectAgentContext } from './types'
 import { resolveProjectPhase } from './project-phase'
 import { createProjectAgentStopController } from './stop-conditions'
 import type { ProjectAgentStopPartData } from './types'
+import { routeProjectAgentRequest } from './router'
+import { selectProjectAgentTools } from './tool-policy'
+import { normalizeProjectAgentToolSelection } from './tool-selection'
+import { resolveEffectiveProjectAssistantToolSelection } from './tool-selection-store'
 
 function normalizeProjectAgentContext(raw: unknown): ProjectAgentContext {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
@@ -28,10 +32,12 @@ function normalizeProjectAgentContext(raw: unknown): ProjectAgentContext {
   const locale = typeof record.locale === 'string' ? record.locale.trim() : ''
   const episodeId = typeof record.episodeId === 'string' ? record.episodeId.trim() : ''
   const currentStage = typeof record.currentStage === 'string' ? record.currentStage.trim() : ''
+  const toolSelection = normalizeProjectAgentToolSelection(record.toolSelection)
   return {
     ...(locale ? { locale } : {}),
     ...(episodeId ? { episodeId } : {}),
     ...(currentStage ? { currentStage } : {}),
+    ...(toolSelection ? { toolSelection } : {}),
   }
 }
 
@@ -82,6 +88,7 @@ function buildProjectAgentSystemPrompt(params: {
   projectId: string
   context: ProjectAgentContext
   phaseSummary: string
+  toolSummary: string
 }) {
   const episodeId = params.context.episodeId || 'unknown'
   const stage = params.context.currentStage || 'unknown'
@@ -96,12 +103,13 @@ function buildProjectAgentSystemPrompt(params: {
     '当 tool 返回 ok=false：你必须读取 error.code 与 error.message 来决定下一步（例如补参数、先查询再重试、或向用户提问）。',
     '当 tool 返回 confirmationRequired=true：你应向用户解释副作用原因并请求确认，然后在下一次调用同一 tool 时传入 confirmed=true（可参考 confirmation 卡片中的 argsHint）。',
     '当你看到 staleArtifacts 或 failedItems：优先解释原因与推荐动作（例如重跑 workflow、或执行更小粒度的 act 修复）。',
-    '你可以使用所有已注册的 tools 来完成任务。tool 定义中已包含使用说明，无需额外列举。',
+    '你只能使用当前会话注入的 tools 来完成任务（会根据用户意图与阶段动态裁剪）。tool 定义中已包含使用说明，无需额外列举。',
     '回答简洁，用中文。',
     `projectId=${params.projectId}`,
     `episodeId=${episodeId}`,
     `currentStage=${stage}`,
     `projectPhase=${params.phaseSummary}`,
+    `toolSelection=${params.toolSummary}`,
   ].join('\n')
 }
 
@@ -127,7 +135,18 @@ export async function createProjectAgentChatResponse(input: {
     throw new Error('PROJECT_AGENT_MODEL_NOT_CONFIGURED')
   }
 
-  const context = normalizeProjectAgentContext(input.context)
+  const contextBase = normalizeProjectAgentContext(input.context)
+  const context: ProjectAgentContext = contextBase.toolSelection
+    ? contextBase
+    : {
+        ...contextBase,
+        toolSelection: await resolveEffectiveProjectAssistantToolSelection({
+          userId: input.userId,
+          assistantId: 'workspace-command',
+          projectId: input.projectId,
+          episodeId: contextBase.episodeId ?? null,
+        }),
+      }
   const phase = await resolveProjectPhase({
     projectId: input.projectId,
     userId: input.userId,
@@ -143,26 +162,42 @@ export async function createProjectAgentChatResponse(input: {
     originalMessages: normalizedMessages,
     execute: async ({ writer }) => {
       const operations = createProjectAgentOperationRegistry()
+      const route = routeProjectAgentRequest({
+        messages: normalizedMessages,
+        phase,
+        context,
+      })
+      const selection = selectProjectAgentTools({
+        operations,
+        context,
+        phase,
+        route,
+        toolSelection: context.toolSelection,
+        maxTools: 45,
+      })
       const tools = Object.fromEntries(
-        Object.entries(operations).map(([operationId, operation]) => [
-          operationId,
-          tool({
-            description: operation.description,
-            inputSchema: operation.inputSchema,
-            execute: async (args) => {
-              return executeProjectAgentOperationFromTool({
-                request: input.request,
-                operationId,
-                projectId: input.projectId,
-                userId: input.userId,
-                context,
-                source: 'assistant-panel',
-                writer,
-                input: args,
-              })
-            },
-          }),
-        ]),
+        selection.operationIds.map((operationId) => {
+          const operation = operations[operationId]
+          return [
+            operationId,
+            tool({
+              description: operation.description,
+              inputSchema: operation.inputSchema,
+              execute: async (args) => {
+                return executeProjectAgentOperationFromTool({
+                  request: input.request,
+                  operationId,
+                  projectId: input.projectId,
+                  userId: input.userId,
+                  context,
+                  source: 'assistant-panel',
+                  writer,
+                  input: args,
+                })
+              },
+            }),
+          ]
+        }),
       )
       const stopController = createProjectAgentStopController(tools)
 
@@ -180,6 +215,13 @@ export async function createProjectAgentChatResponse(input: {
             `actions.plan=${phase.availableActions.planMode.join(',') || '-'}`,
             `actions.act=${phase.availableActions.actMode.join(',') || '-'}`,
           ].join(' | '),
+          toolSummary: [
+            `node=${selection.route.nodeId}`,
+            `intent=${selection.route.intent}`,
+            `domains=${selection.route.domains.join(',')}`,
+            `tools=${String(selection.operationIds.length)}/${String(selection.totalCandidates)}`,
+            `confidence=${String(selection.route.confidence)}`,
+          ].join(','),
         }),
         messages: await toModelMessages(normalizedMessages),
         tools,

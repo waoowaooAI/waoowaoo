@@ -4,6 +4,7 @@ import type { WorkflowCanonicalEvent } from '@/lib/agent/events/workflow-events'
 import type { ProjectContextSnapshot } from '@/lib/project-context/types'
 import type { ProjectPhase, ProjectPhaseSnapshot } from './project-phase'
 import type { WorkflowPackageId, WorkflowSkillId } from '@/lib/skill-system/types'
+import type { ProjectAgentToolSelection } from './tool-selection'
 
 export type ProjectAssistantId = 'workspace-command'
 
@@ -11,6 +12,7 @@ export interface ProjectAgentContext {
   locale?: string
   episodeId?: string | null
   currentStage?: string | null
+  toolSelection?: ProjectAgentToolSelection | null
 }
 
 export interface WorkflowPlanPartData {

@@ -43,6 +43,12 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
     asset_hub_list_characters: {
       id: 'asset_hub_list_characters',
       description: 'List global characters for the current user (optionally filtered by folderId).',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'character'],
+        tags: ['asset-hub', 'read', 'character'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({
@@ -213,6 +219,12 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
     asset_hub_get_character: {
       id: 'asset_hub_get_character',
       description: 'Get a single global character by id.',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'character'],
+        tags: ['asset-hub', 'read', 'character'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({
@@ -337,4 +349,3 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
     },
   }
 }
-

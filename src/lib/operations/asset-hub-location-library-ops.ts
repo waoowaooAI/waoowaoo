@@ -28,6 +28,12 @@ export function createAssetHubLocationLibraryOperations(): ProjectAgentOperation
     asset_hub_list_locations: {
       id: 'asset_hub_list_locations',
       description: 'List global locations for the current user (optionally filtered by folderId).',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'location'],
+        tags: ['asset-hub', 'read', 'location'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({
@@ -128,6 +134,12 @@ export function createAssetHubLocationLibraryOperations(): ProjectAgentOperation
     asset_hub_get_location: {
       id: 'asset_hub_get_location',
       description: 'Get a global location by id.',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'location'],
+        tags: ['asset-hub', 'read', 'location'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({
@@ -227,4 +239,3 @@ export function createAssetHubLocationLibraryOperations(): ProjectAgentOperation
     },
   }
 }
-

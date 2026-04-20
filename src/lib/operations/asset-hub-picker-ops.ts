@@ -15,6 +15,12 @@ export function createAssetHubPickerOperations(): ProjectAgentOperationRegistry 
     asset_hub_picker: {
       id: 'asset_hub_picker',
       description: 'List global assets for picker (character/location/voice) with preview URLs.',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'picker'],
+        tags: ['asset-hub', 'read'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({
@@ -128,4 +134,3 @@ export function createAssetHubPickerOperations(): ProjectAgentOperationRegistry 
     },
   }
 }
-

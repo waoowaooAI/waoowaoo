@@ -27,6 +27,8 @@ function mapProjectAgentError(error: unknown): ApiError {
       || error.message === 'PROJECT_AGENT_EMPTY_MESSAGES'
       || error.message === 'PROJECT_AGENT_EPISODE_REQUIRED'
       || error.message === 'PROJECT_ASSISTANT_INVALID_THREAD_MESSAGES'
+      || error.message === 'PROJECT_AGENT_TOOL_SELECTION_INVALID'
+      || error.message === 'PROJECT_AGENT_TOOL_SELECTION_TOO_LARGE'
     ) {
       return new ApiError('INVALID_PARAMS', {
         code: error.message,

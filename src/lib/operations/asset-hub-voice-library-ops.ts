@@ -22,6 +22,12 @@ export function createAssetHubVoiceLibraryOperations(): ProjectAgentOperationReg
     asset_hub_list_voices: {
       id: 'asset_hub_list_voices',
       description: 'List global voices for the current user (optionally filtered by folderId).',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'voice'],
+        tags: ['asset-hub', 'read', 'voice'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({
@@ -185,4 +191,3 @@ export function createAssetHubVoiceLibraryOperations(): ProjectAgentOperationReg
     },
   }
 }
-

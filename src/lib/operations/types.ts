@@ -36,6 +36,41 @@ export type OperationScope =
   | 'plan'
   | 'mutation-batch'
 
+export interface OperationChannels {
+  tool: boolean
+  api: boolean
+}
+
+export type OperationToolVisibility = 'hidden' | 'core' | 'scenario' | 'extended' | 'guarded'
+
+export interface OperationToolMeta {
+  /**
+   * Whether this operation should be listed in the frontend tool configuration UI.
+   * Note: selectable does NOT mean always injected into the model; it only means eligible to be selected.
+   */
+  selectable: boolean
+  defaultVisibility: OperationToolVisibility
+  /**
+   * Group path for building tree UI, e.g. ['workflow', 'plan'].
+   */
+  groups: string[]
+  /**
+   * Tag list for routing and selection, e.g. ['storyboard', 'asset-hub'].
+   */
+  tags: string[]
+  phases: string[]
+  requiresEpisode: boolean
+  allowInPlanMode: boolean
+  allowInActMode: boolean
+}
+
+export type OperationCostHint = 'low' | 'medium' | 'high'
+
+export interface OperationSelectionMeta {
+  baseWeight: number
+  costHint: OperationCostHint
+}
+
 export interface OperationSideEffects {
   mode: OperationMode
   risk: OperationRiskLevel
@@ -82,6 +117,9 @@ export interface ProjectAgentOperationDefinition {
   inputSchema: ZodTypeAny
   outputSchema: ZodTypeAny
   sideEffects?: OperationSideEffects
+  channels?: OperationChannels
+  tool?: Partial<OperationToolMeta>
+  selection?: Partial<OperationSelectionMeta>
   scope: OperationScope
   execute: (context: ProjectAgentOperationContext, input: ZodInfer<ZodTypeAny>) => Promise<unknown>
 }

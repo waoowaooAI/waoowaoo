@@ -12,6 +12,12 @@ export function createAssetHubFolderOperations(): ProjectAgentOperationRegistry 
     asset_hub_list_folders: {
       id: 'asset_hub_list_folders',
       description: 'List global asset folders for the current user.',
+      tool: {
+        selectable: true,
+        defaultVisibility: 'extended',
+        groups: ['asset-hub', 'read', 'folder'],
+        tags: ['asset-hub', 'read'],
+      },
       sideEffects: { mode: 'query', risk: 'low' },
       scope: 'system',
       inputSchema: z.object({}),
@@ -127,4 +133,3 @@ export function createAssetHubFolderOperations(): ProjectAgentOperationRegistry 
     },
   }
 }
-
