@@ -24,14 +24,13 @@ export const POST = apiHandler(async (
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'insert_storyboard_panel',
     projectId,
     userId: authResult.session.user.id,
     context: {
       locale,
     },
     input: {
-      action: 'insert_panel',
       storyboardId,
       insertAfterPanelId,
       ...body,

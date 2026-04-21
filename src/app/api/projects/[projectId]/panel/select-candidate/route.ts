@@ -33,11 +33,10 @@ export const POST = apiHandler(async (
   if (action === 'cancel') {
     await executeProjectAgentOperationFromApi({
       request,
-      operationId: 'mutate_storyboard',
+      operationId: 'cancel_storyboard_panel_candidates',
       projectId,
       userId: authResult.session.user.id,
       input: {
-        action: 'cancel_panel_candidates',
         panelId,
       },
       source: 'project-ui',
@@ -56,11 +55,10 @@ export const POST = apiHandler(async (
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'select_storyboard_panel_candidate',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      action: 'select_panel_candidate',
       panelId,
       selectedImageUrl,
     },

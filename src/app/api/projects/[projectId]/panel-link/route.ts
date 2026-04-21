@@ -23,11 +23,10 @@ export const POST = apiHandler(async (
 
   await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'update_storyboard_panel_fields',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      action: 'update_panel_fields',
       storyboardId,
       panelIndex: Number(panelIndex),
       linkedToNextPanel: linked === true,

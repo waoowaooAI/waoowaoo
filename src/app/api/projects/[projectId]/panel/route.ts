@@ -25,11 +25,10 @@ export const POST = apiHandler(async (
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'create_storyboard_panel',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      action: 'create_panel',
       storyboardId,
       ...body,
     },
@@ -66,11 +65,10 @@ export const DELETE = apiHandler(async (
 
   await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'delete_storyboard_panel',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      action: 'delete_panel',
       panelId,
     },
     source: 'project-ui',
@@ -103,11 +101,10 @@ export const PATCH = apiHandler(async (
   if (panelId) {
     await executeProjectAgentOperationFromApi({
       request,
-      operationId: 'mutate_storyboard',
+      operationId: 'update_storyboard_panel_prompt',
       projectId,
       userId: authResult.session.user.id,
       input: {
-        action: 'update_panel_prompt',
         panelId,
         ...(videoPrompt !== undefined ? { videoPrompt } : {}),
         ...(firstLastFramePrompt !== undefined ? { firstLastFramePrompt } : {}),
@@ -125,11 +122,10 @@ export const PATCH = apiHandler(async (
 
   await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'update_storyboard_panel_prompt',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      action: 'update_panel_prompt',
       storyboardId,
       panelIndex: Number(panelIndex),
       ...(videoPrompt !== undefined ? { videoPrompt } : {}),
@@ -163,11 +159,10 @@ export const PUT = apiHandler(async (
 
   await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'mutate_storyboard',
+    operationId: 'update_storyboard_panel_fields',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      action: 'update_panel_fields',
       storyboardId,
       ...body,
     },

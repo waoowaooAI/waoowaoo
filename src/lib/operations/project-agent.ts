@@ -112,6 +112,189 @@ function resolveCandidateCount(input?: unknown): number {
   return Math.max(1, Math.min(4, Math.trunc(parsed)))
 }
 
+const storyboardMutationActionSchema = z.enum([
+  'insert_panel',
+  'update_panel_prompt',
+  'reorder_panels',
+  'create_panel',
+  'select_panel_candidate',
+  'cancel_panel_candidates',
+  'delete_panel',
+  'update_panel_fields',
+])
+
+const storyboardMutationInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  action: storyboardMutationActionSchema,
+  storyboardId: z.string().min(1).optional(),
+  insertAfterPanelId: z.string().min(1).optional(),
+  panelId: z.string().min(1).optional(),
+  panelIndex: z.number().int().min(0).max(2000).optional(),
+  panelNumber: z.unknown().optional(),
+  shotType: z.string().nullable().optional(),
+  cameraMove: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  characters: z.string().nullable().optional(),
+  props: z.string().nullable().optional(),
+  srtStart: z.unknown().optional(),
+  srtEnd: z.unknown().optional(),
+  duration: z.unknown().optional(),
+  linkedToNextPanel: z.unknown().optional(),
+  userInput: z.string().optional(),
+  prompt: z.string().optional(),
+  videoPrompt: z.string().nullable().optional(),
+  firstLastFramePrompt: z.string().nullable().optional(),
+  imagePrompt: z.string().nullable().optional(),
+  selectedImageUrl: z.string().optional(),
+  actingNotes: z.unknown().optional(),
+  photographyRules: z.unknown().optional(),
+  orderedPanelIds: z.array(z.string().min(1)).min(1).optional(),
+}).passthrough()
+
+const createStoryboardPanelInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  storyboardId: z.string().min(1),
+  shotType: z.string().nullable().optional(),
+  cameraMove: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  characters: z.string().nullable().optional(),
+  props: z.string().nullable().optional(),
+  srtStart: z.unknown().optional(),
+  srtEnd: z.unknown().optional(),
+  duration: z.unknown().optional(),
+  videoPrompt: z.string().nullable().optional(),
+  firstLastFramePrompt: z.string().nullable().optional(),
+}).passthrough()
+
+const deleteStoryboardPanelInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  storyboardId: z.string().min(1).optional(),
+  panelId: z.string().min(1).optional(),
+  panelIndex: z.number().int().min(0).max(2000).optional(),
+}).refine((value) => Boolean(value.panelId || (value.storyboardId && typeof value.panelIndex === 'number')), {
+  message: 'panelId or (storyboardId + panelIndex) is required',
+  path: ['panelId'],
+})
+
+const updateStoryboardPanelPromptInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  storyboardId: z.string().min(1).optional(),
+  panelId: z.string().min(1).optional(),
+  panelIndex: z.number().int().min(0).max(2000).optional(),
+  videoPrompt: z.string().nullable().optional(),
+  firstLastFramePrompt: z.string().nullable().optional(),
+  imagePrompt: z.string().nullable().optional(),
+}).refine((value) => Boolean(value.panelId || (value.storyboardId && typeof value.panelIndex === 'number')), {
+  message: 'panelId or (storyboardId + panelIndex) is required',
+  path: ['panelId'],
+}).refine((value) => (
+  Object.prototype.hasOwnProperty.call(value, 'videoPrompt')
+  || Object.prototype.hasOwnProperty.call(value, 'firstLastFramePrompt')
+  || Object.prototype.hasOwnProperty.call(value, 'imagePrompt')
+), {
+  message: 'at least one prompt field is required',
+  path: ['videoPrompt'],
+})
+
+const updateStoryboardPanelFieldsInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  storyboardId: z.string().min(1),
+  panelId: z.string().min(1).optional(),
+  panelIndex: z.number().int().min(0).max(2000).optional(),
+  panelNumber: z.unknown().optional(),
+  shotType: z.string().nullable().optional(),
+  cameraMove: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  characters: z.string().nullable().optional(),
+  props: z.string().nullable().optional(),
+  srtStart: z.unknown().optional(),
+  srtEnd: z.unknown().optional(),
+  duration: z.unknown().optional(),
+  linkedToNextPanel: z.unknown().optional(),
+  actingNotes: z.unknown().optional(),
+  photographyRules: z.unknown().optional(),
+  videoPrompt: z.string().nullable().optional(),
+  firstLastFramePrompt: z.string().nullable().optional(),
+}).passthrough().refine((value) => Boolean(value.panelId || typeof value.panelIndex === 'number'), {
+  message: 'panelId or panelIndex is required',
+  path: ['panelId'],
+})
+
+const reorderStoryboardPanelsInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  storyboardId: z.string().min(1),
+  orderedPanelIds: z.array(z.string().min(1)).min(1),
+})
+
+const selectStoryboardPanelCandidateInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  panelId: z.string().min(1),
+  selectedImageUrl: z.string().min(1),
+})
+
+const cancelStoryboardPanelCandidatesInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  panelId: z.string().min(1),
+})
+
+const insertStoryboardPanelInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  storyboardId: z.string().min(1),
+  insertAfterPanelId: z.string().min(1),
+  userInput: z.string().optional(),
+  prompt: z.string().optional(),
+}).passthrough()
+
+type StoryboardMutationInput = z.infer<typeof storyboardMutationInputSchema>
+
+const modifyCharacterImageInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  characterId: z.string().min(1),
+}).passthrough()
+
+const modifyLocationImageInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  locationId: z.string().min(1),
+}).passthrough()
+
+const generateVoiceLineAudioInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  episodeId: z.string().min(1).optional(),
+  lineId: z.string().min(1),
+  audioModel: z.string().optional(),
+})
+
+const generateEpisodeVoiceAudioInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  episodeId: z.string().min(1).optional(),
+  audioModel: z.string().optional(),
+})
+
+const generatePanelVideoInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  panelId: z.string().min(1).optional(),
+  storyboardId: z.string().min(1).optional(),
+  panelIndex: z.number().int().min(0).max(2000).optional(),
+  videoModel: z.string().min(1),
+  firstLastFrame: z.unknown().optional(),
+  generationOptions: z.record(z.unknown()).optional(),
+}).passthrough().refine((value) => Boolean(value.panelId || (value.storyboardId && typeof value.panelIndex === 'number')), {
+  message: 'panelId or (storyboardId + panelIndex) is required',
+  path: ['panelId'],
+})
+
+const generateEpisodeVideosInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  episodeId: z.string().min(1).optional(),
+  limit: z.number().int().positive().max(50).optional(),
+  videoModel: z.string().min(1),
+  firstLastFrame: z.unknown().optional(),
+  generationOptions: z.record(z.unknown()).optional(),
+}).passthrough()
+
 type VoiceLineRow = {
   id: string
   speaker: string
@@ -176,6 +359,1250 @@ function hasUploadedReferenceAudioForSpeaker(params: {
   const entry = params.speakerVoices[params.speaker]
   if (entry?.provider === 'fal' && normalizeString(entry.audioUrl)) return true
   return false
+}
+
+async function executeStoryboardMutationOperation(
+  ctx: Parameters<ProjectAgentOperationRegistry[string]['execute']>[0],
+  input: StoryboardMutationInput,
+  operationId: string,
+) {
+  const locale = resolveLocaleFromContext(ctx.context.locale)
+  let storyboardId = normalizeString(input.storyboardId)
+
+  if (input.action === 'select_panel_candidate' || input.action === 'cancel_panel_candidates') {
+    const panelId = normalizeString(input.panelId)
+    if (!panelId) {
+      throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+    }
+
+    const panel = await prisma.projectPanel.findFirst({
+      where: {
+        id: panelId,
+        storyboard: {
+          episode: {
+            projectId: ctx.projectId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        imageUrl: true,
+        imageHistory: true,
+        candidateImages: true,
+      },
+    })
+    if (!panel) {
+      throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+    }
+
+    if (input.action === 'cancel_panel_candidates') {
+      const previousCandidateImages = panel.candidateImages
+      await prisma.projectPanel.update({
+        where: { id: panelId },
+        data: { candidateImages: null },
+      })
+
+      const mutationBatch = await createMutationBatch({
+        projectId: ctx.projectId,
+        userId: ctx.userId,
+        source: ctx.source,
+        operationId,
+        summary: `cancel_panel_candidates:${panelId}`,
+        entries: [
+          {
+            kind: 'panel_candidates_restore',
+            targetType: 'ProjectPanel',
+            targetId: panelId,
+            payload: {
+              previousCandidateImages,
+            },
+          },
+        ],
+      })
+
+      return { success: true, panelId, mutationBatchId: mutationBatch.id }
+    }
+
+    const selectedImageUrl = normalizeString(input.selectedImageUrl)
+    if (!selectedImageUrl) {
+      throw new Error('PROJECT_AGENT_SELECTED_IMAGE_REQUIRED')
+    }
+
+    const candidateImages = parseUnknownArray(panel.candidateImages)
+    const selectedCosKey = await resolveStorageKeyFromMediaValue(selectedImageUrl)
+    const candidateKeys = (await Promise.all(
+      candidateImages.map((candidate: unknown) => resolveStorageKeyFromMediaValue(candidate)),
+    )).filter((key): key is string => !!key)
+
+    if (!selectedCosKey || !candidateKeys.includes(selectedCosKey)) {
+      throw new Error('PROJECT_AGENT_PANEL_CANDIDATE_INVALID')
+    }
+
+    const currentHistory = parsePanelHistory(panel.imageHistory)
+    if (panel.imageUrl) {
+      currentHistory.push({
+        url: panel.imageUrl,
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    let finalImageKey = selectedCosKey
+    const isReusableKey = !finalImageKey.startsWith('http://')
+      && !finalImageKey.startsWith('https://')
+      && !finalImageKey.startsWith('/')
+
+    if (!isReusableKey) {
+      const sourceUrl = toFetchableUrl(selectedImageUrl)
+      const cosKey = generateUniqueKey(`panel-${panelId}-selected`, 'png')
+      finalImageKey = await downloadAndUploadImage(sourceUrl, cosKey)
+    }
+
+    const signedUrl = getSignedUrl(finalImageKey, 7 * 24 * 3600)
+    const previousCandidateImages = panel.candidateImages
+    const previousImageUrl = panel.imageUrl
+    const previousImageHistory = panel.imageHistory
+
+    await prisma.projectPanel.update({
+      where: { id: panelId },
+      data: {
+        imageUrl: finalImageKey,
+        imageHistory: JSON.stringify(currentHistory),
+        candidateImages: null,
+      },
+    })
+
+    const mutationBatch = await createMutationBatch({
+      projectId: ctx.projectId,
+      userId: ctx.userId,
+      source: ctx.source,
+      operationId,
+      summary: `select_panel_candidate:${panelId}`,
+      entries: [
+        {
+          kind: 'panel_candidate_select_restore',
+          targetType: 'ProjectPanel',
+          targetId: panelId,
+          payload: {
+            previousImageUrl,
+            previousImageHistory,
+            previousCandidateImages,
+          },
+        },
+      ],
+    })
+
+    return {
+      success: true,
+      panelId,
+      imageUrl: signedUrl,
+      cosKey: finalImageKey,
+      mutationBatchId: mutationBatch.id,
+    }
+  }
+
+  if (!storyboardId && (input.action === 'delete_panel' || input.action === 'update_panel_prompt')) {
+    const panelId = normalizeString(input.panelId)
+    if (panelId) {
+      const panel = await prisma.projectPanel.findFirst({
+        where: {
+          id: panelId,
+          storyboard: {
+            episode: {
+              projectId: ctx.projectId,
+            },
+          },
+        },
+        select: { storyboardId: true },
+      })
+      if (!panel) {
+        throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+      }
+      storyboardId = panel.storyboardId
+    }
+  }
+
+  if (!storyboardId) {
+    throw new Error('PROJECT_AGENT_STORYBOARD_REQUIRED')
+  }
+
+  const storyboard = await prisma.projectStoryboard.findFirst({
+    where: {
+      id: storyboardId,
+      episode: {
+        projectId: ctx.projectId,
+      },
+    },
+    select: { id: true },
+  })
+  if (!storyboard) {
+    throw new Error('PROJECT_AGENT_STORYBOARD_NOT_FOUND')
+  }
+
+  if (input.action === 'create_panel') {
+    const createdPanel = await prisma.$transaction(async (tx) => {
+      const maxPanel = await tx.projectPanel.findFirst({
+        where: { storyboardId },
+        orderBy: { panelIndex: 'desc' },
+        select: { panelIndex: true },
+      })
+      const nextPanelIndex = (maxPanel?.panelIndex ?? -1) + 1
+
+      const hasSrtStart = Object.prototype.hasOwnProperty.call(input, 'srtStart')
+      const hasSrtEnd = Object.prototype.hasOwnProperty.call(input, 'srtEnd')
+      const hasDuration = Object.prototype.hasOwnProperty.call(input, 'duration')
+
+      const panel = await tx.projectPanel.create({
+        data: {
+          storyboardId,
+          panelIndex: nextPanelIndex,
+          panelNumber: nextPanelIndex + 1,
+          shotType: input.shotType ?? null,
+          cameraMove: input.cameraMove ?? null,
+          description: input.description ?? null,
+          location: input.location ?? null,
+          characters: input.characters ?? null,
+          props: input.props ?? null,
+          ...(hasSrtStart ? { srtStart: parseNullableNumberField(input.srtStart) } : {}),
+          ...(hasSrtEnd ? { srtEnd: parseNullableNumberField(input.srtEnd) } : {}),
+          ...(hasDuration ? { duration: parseNullableNumberField(input.duration) } : {}),
+          ...(Object.prototype.hasOwnProperty.call(input, 'videoPrompt') ? { videoPrompt: input.videoPrompt } : {}),
+          ...(Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt') ? { firstLastFramePrompt: input.firstLastFramePrompt } : {}),
+        },
+      })
+
+      const panelCount = await tx.projectPanel.count({
+        where: { storyboardId },
+      })
+
+      await tx.projectStoryboard.update({
+        where: { id: storyboardId },
+        data: { panelCount },
+      })
+
+      return panel
+    })
+
+    const mutationBatch = await createMutationBatch({
+      projectId: ctx.projectId,
+      userId: ctx.userId,
+      source: ctx.source,
+      operationId,
+      summary: `create_panel:${createdPanel.id}`,
+      entries: [
+        {
+          kind: 'panel_create_delete',
+          targetType: 'ProjectPanel',
+          targetId: createdPanel.id,
+          payload: {
+            storyboardId,
+            panelIndex: createdPanel.panelIndex,
+          },
+        },
+      ],
+    })
+
+    return {
+      success: true,
+      panel: createdPanel,
+      panelId: createdPanel.id,
+      storyboardId,
+      mutationBatchId: mutationBatch.id,
+    }
+  }
+
+  if (input.action === 'delete_panel') {
+    let panelId = normalizeString(input.panelId)
+    if (!panelId) {
+      if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
+        throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+      }
+      const panel = await prisma.projectPanel.findFirst({
+        where: {
+          storyboardId,
+          panelIndex: input.panelIndex,
+        },
+        select: { id: true },
+      })
+      panelId = panel?.id || ''
+    }
+    if (!panelId) {
+      throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+    }
+
+    const panel = await prisma.projectPanel.findFirst({
+      where: { id: panelId, storyboardId },
+      select: {
+        id: true,
+        storyboardId: true,
+        panelIndex: true,
+        panelNumber: true,
+        shotType: true,
+        cameraMove: true,
+        description: true,
+        location: true,
+        characters: true,
+        props: true,
+        srtSegment: true,
+        srtStart: true,
+        srtEnd: true,
+        duration: true,
+        imagePrompt: true,
+        imageUrl: true,
+        imageMediaId: true,
+        imageHistory: true,
+        videoPrompt: true,
+        firstLastFramePrompt: true,
+        videoUrl: true,
+        videoGenerationMode: true,
+        videoMediaId: true,
+        sceneType: true,
+        candidateImages: true,
+        linkedToNextPanel: true,
+        lipSyncTaskId: true,
+        lipSyncVideoUrl: true,
+        lipSyncVideoMediaId: true,
+        sketchImageUrl: true,
+        sketchImageMediaId: true,
+        photographyRules: true,
+        actingNotes: true,
+        previousImageUrl: true,
+        previousImageMediaId: true,
+      },
+    })
+    if (!panel) {
+      throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.projectPanel.delete({
+        where: { id: panelId },
+      })
+
+      const maxPanel = await tx.projectPanel.findFirst({
+        where: { storyboardId },
+        orderBy: { panelIndex: 'desc' },
+        select: { panelIndex: true },
+      })
+      const maxPanelIndex = maxPanel?.panelIndex ?? -1
+      const offset = maxPanelIndex + 1000
+
+      await tx.projectPanel.updateMany({
+        where: {
+          storyboardId,
+          panelIndex: { gt: panel.panelIndex },
+        },
+        data: {
+          panelIndex: { increment: offset },
+          panelNumber: { increment: offset },
+        },
+      })
+
+      await tx.projectPanel.updateMany({
+        where: {
+          storyboardId,
+          panelIndex: { gt: panel.panelIndex + offset },
+        },
+        data: {
+          panelIndex: { decrement: offset + 1 },
+          panelNumber: { decrement: offset + 1 },
+        },
+      })
+
+      const panelCount = await tx.projectPanel.count({
+        where: { storyboardId },
+      })
+      await tx.projectStoryboard.update({
+        where: { id: storyboardId },
+        data: { panelCount },
+      })
+    })
+
+    const mutationBatch = await createMutationBatch({
+      projectId: ctx.projectId,
+      userId: ctx.userId,
+      source: ctx.source,
+      operationId,
+      summary: `delete_panel:${panelId}`,
+      entries: [
+        {
+          kind: 'panel_delete_restore',
+          targetType: 'ProjectStoryboard',
+          targetId: storyboardId,
+          payload: {
+            panel,
+          },
+        },
+      ],
+    })
+
+    return { success: true, panelId, storyboardId, mutationBatchId: mutationBatch.id }
+  }
+
+  if (input.action === 'update_panel_fields') {
+    let panelId = normalizeString(input.panelId)
+    const panelIndex = typeof input.panelIndex === 'number' && Number.isFinite(input.panelIndex)
+      ? input.panelIndex
+      : null
+
+    const updateData: Record<string, unknown> = {}
+    if (Object.prototype.hasOwnProperty.call(input, 'panelNumber')) {
+      const parsed = parseNullableNumberField(input.panelNumber)
+      updateData.panelNumber = parsed === null ? null : Math.trunc(parsed)
+    }
+    if (Object.prototype.hasOwnProperty.call(input, 'shotType')) updateData.shotType = input.shotType
+    if (Object.prototype.hasOwnProperty.call(input, 'cameraMove')) updateData.cameraMove = input.cameraMove
+    if (Object.prototype.hasOwnProperty.call(input, 'description')) updateData.description = input.description
+    if (Object.prototype.hasOwnProperty.call(input, 'location')) updateData.location = input.location
+    if (Object.prototype.hasOwnProperty.call(input, 'characters')) updateData.characters = input.characters
+    if (Object.prototype.hasOwnProperty.call(input, 'props')) updateData.props = input.props
+    if (Object.prototype.hasOwnProperty.call(input, 'srtStart')) updateData.srtStart = parseNullableNumberField(input.srtStart)
+    if (Object.prototype.hasOwnProperty.call(input, 'srtEnd')) updateData.srtEnd = parseNullableNumberField(input.srtEnd)
+    if (Object.prototype.hasOwnProperty.call(input, 'duration')) updateData.duration = parseNullableNumberField(input.duration)
+    if (Object.prototype.hasOwnProperty.call(input, 'videoPrompt')) updateData.videoPrompt = input.videoPrompt
+    if (Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt')) updateData.firstLastFramePrompt = input.firstLastFramePrompt
+    if (Object.prototype.hasOwnProperty.call(input, 'linkedToNextPanel')) {
+      updateData.linkedToNextPanel = input.linkedToNextPanel === true
+    }
+    if (Object.prototype.hasOwnProperty.call(input, 'actingNotes')) updateData.actingNotes = toStructuredJsonField(input.actingNotes, 'actingNotes')
+    if (Object.prototype.hasOwnProperty.call(input, 'photographyRules')) updateData.photographyRules = toStructuredJsonField(input.photographyRules, 'photographyRules')
+
+    if (Object.keys(updateData).length === 0) {
+      return { success: true, panelId: panelId || null, noop: true }
+    }
+
+    const existing = panelId
+      ? await prisma.projectPanel.findFirst({
+          where: { id: panelId, storyboardId },
+          select: {
+            id: true,
+            panelIndex: true,
+            panelNumber: true,
+            shotType: true,
+            cameraMove: true,
+            description: true,
+            location: true,
+            characters: true,
+            props: true,
+            srtStart: true,
+            srtEnd: true,
+            duration: true,
+            videoPrompt: true,
+            firstLastFramePrompt: true,
+            linkedToNextPanel: true,
+            actingNotes: true,
+            photographyRules: true,
+          },
+        })
+      : panelIndex === null
+        ? null
+        : await prisma.projectPanel.findUnique({
+            where: {
+              storyboardId_panelIndex: {
+                storyboardId,
+                panelIndex,
+              },
+            },
+            select: {
+              id: true,
+              panelIndex: true,
+              panelNumber: true,
+              shotType: true,
+              cameraMove: true,
+              description: true,
+              location: true,
+              characters: true,
+              props: true,
+              srtStart: true,
+              srtEnd: true,
+              duration: true,
+              videoPrompt: true,
+              firstLastFramePrompt: true,
+              linkedToNextPanel: true,
+              actingNotes: true,
+              photographyRules: true,
+            },
+          })
+
+    if (existing) {
+      panelId = existing.id
+      await prisma.projectPanel.update({
+        where: { id: existing.id },
+        data: updateData,
+      })
+
+      const mutationBatch = await createMutationBatch({
+        projectId: ctx.projectId,
+        userId: ctx.userId,
+        source: ctx.source,
+        operationId,
+        summary: `update_panel_fields:${existing.id}`,
+        entries: [
+          {
+            kind: 'panel_fields_restore',
+            targetType: 'ProjectPanel',
+            targetId: existing.id,
+            payload: {
+              previous: existing,
+            },
+          },
+        ],
+      })
+
+      return { success: true, panelId: existing.id, storyboardId, mutationBatchId: mutationBatch.id }
+    }
+
+    if (panelIndex === null) {
+      throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+    }
+
+    const createdPanel = await prisma.projectPanel.create({
+      data: {
+        storyboardId,
+        panelIndex,
+        panelNumber: panelIndex + 1,
+        imageUrl: null,
+        ...updateData,
+      },
+      select: { id: true, panelIndex: true },
+    })
+
+    const panelCount = await prisma.projectPanel.count({
+      where: { storyboardId },
+    })
+    await prisma.projectStoryboard.update({
+      where: { id: storyboardId },
+      data: { panelCount },
+    })
+
+    const mutationBatch = await createMutationBatch({
+      projectId: ctx.projectId,
+      userId: ctx.userId,
+      source: ctx.source,
+      operationId,
+      summary: `create_panel:${createdPanel.id}`,
+      entries: [
+        {
+          kind: 'panel_create_delete',
+          targetType: 'ProjectPanel',
+          targetId: createdPanel.id,
+          payload: {
+            storyboardId,
+            panelIndex: createdPanel.panelIndex,
+          },
+        },
+      ],
+    })
+
+    return { success: true, panelId: createdPanel.id, storyboardId, created: true, mutationBatchId: mutationBatch.id }
+  }
+
+  if (input.action === 'update_panel_prompt') {
+    let panelId = normalizeString(input.panelId)
+    if (!panelId) {
+      if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
+        throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+      }
+      const panel = await prisma.projectPanel.findFirst({
+        where: {
+          storyboardId,
+          panelIndex: input.panelIndex,
+        },
+        select: { id: true },
+      })
+      panelId = panel?.id || ''
+    }
+
+    const updateData: Record<string, unknown> = {}
+    if (Object.prototype.hasOwnProperty.call(input, 'videoPrompt')) updateData.videoPrompt = input.videoPrompt
+    if (Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt')) updateData.firstLastFramePrompt = input.firstLastFramePrompt
+    if (Object.prototype.hasOwnProperty.call(input, 'imagePrompt')) updateData.imagePrompt = input.imagePrompt
+    if (Object.keys(updateData).length === 0) {
+      return { success: true, panelId, noop: true }
+    }
+
+    if (!panelId) {
+      if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
+        throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+      }
+
+      const createdPanel = await prisma.projectPanel.create({
+        data: {
+          storyboardId,
+          panelIndex: input.panelIndex,
+          panelNumber: input.panelIndex + 1,
+          imageUrl: null,
+          ...updateData,
+        },
+        select: { id: true, panelIndex: true },
+      })
+
+      const panelCount = await prisma.projectPanel.count({
+        where: { storyboardId },
+      })
+      await prisma.projectStoryboard.update({
+        where: { id: storyboardId },
+        data: { panelCount },
+      })
+
+      const mutationBatch = await createMutationBatch({
+        projectId: ctx.projectId,
+        userId: ctx.userId,
+        source: ctx.source,
+        operationId,
+        summary: `create_panel:${createdPanel.id}`,
+        entries: [
+          {
+            kind: 'panel_create_delete',
+            targetType: 'ProjectPanel',
+            targetId: createdPanel.id,
+            payload: {
+              storyboardId,
+              panelIndex: createdPanel.panelIndex,
+            },
+          },
+        ],
+      })
+
+      return { success: true, panelId: createdPanel.id, created: true, mutationBatchId: mutationBatch.id }
+    }
+
+    const before = await prisma.projectPanel.findFirst({
+      where: { id: panelId, storyboardId },
+      select: {
+        id: true,
+        videoPrompt: true,
+        firstLastFramePrompt: true,
+        imagePrompt: true,
+      },
+    })
+    if (!before) {
+      throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+    }
+
+    await prisma.projectPanel.update({
+      where: { id: panelId },
+      data: updateData,
+    })
+
+    const mutationBatch = await createMutationBatch({
+      projectId: ctx.projectId,
+      userId: ctx.userId,
+      source: ctx.source,
+      operationId,
+      summary: `update_panel_prompt:${panelId}`,
+      entries: [
+        {
+          kind: 'panel_prompt_restore',
+          targetType: 'ProjectPanel',
+          targetId: panelId,
+          payload: {
+            previousVideoPrompt: before.videoPrompt,
+            previousFirstLastFramePrompt: before.firstLastFramePrompt,
+            previousImagePrompt: before.imagePrompt,
+          },
+        },
+      ],
+    })
+
+    return { success: true, panelId, mutationBatchId: mutationBatch.id }
+  }
+
+  if (input.action === 'reorder_panels') {
+    const orderedPanelIds = Array.isArray(input.orderedPanelIds)
+      ? input.orderedPanelIds
+        .filter((panelId: unknown): panelId is string => typeof panelId === 'string')
+        .map((panelId: string) => panelId.trim())
+        .filter((panelId: string) => panelId.length > 0)
+      : []
+    if (orderedPanelIds.length === 0) {
+      throw new Error('PROJECT_AGENT_ORDER_REQUIRED')
+    }
+
+    const panels = await prisma.projectPanel.findMany({
+      where: { storyboardId },
+      select: { id: true, panelIndex: true, panelNumber: true },
+    })
+
+    const panelById = new Map(panels.map((panel) => [panel.id, panel] as const))
+    const uniqueIds = Array.from(new Set(orderedPanelIds)) as string[]
+    if (uniqueIds.length !== orderedPanelIds.length) {
+      throw new Error('PROJECT_AGENT_ORDER_DUPLICATE_IDS')
+    }
+    if (uniqueIds.length !== panels.length) {
+      throw new Error('PROJECT_AGENT_ORDER_INCOMPLETE')
+    }
+    for (const panelId of uniqueIds) {
+      if (!panelById.has(panelId)) {
+        throw new Error('PROJECT_AGENT_ORDER_INVALID_PANEL')
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const panel of panels) {
+        await tx.projectPanel.update({
+          where: { id: panel.id },
+          data: { panelIndex: -(panel.panelIndex + 1) },
+        })
+      }
+
+      for (let nextIndex = 0; nextIndex < uniqueIds.length; nextIndex++) {
+        const panelId = uniqueIds[nextIndex] as string
+        await tx.projectPanel.update({
+          where: { id: panelId },
+          data: {
+            panelIndex: nextIndex,
+            panelNumber: nextIndex + 1,
+          },
+        })
+      }
+    })
+
+    const mutationBatch = await createMutationBatch({
+      projectId: ctx.projectId,
+      userId: ctx.userId,
+      source: ctx.source,
+      operationId,
+      summary: `reorder_panels:${storyboardId}`,
+      entries: [
+        {
+          kind: 'panel_reorder_restore',
+          targetType: 'ProjectStoryboard',
+          targetId: storyboardId,
+          payload: {
+            storyboardId,
+            panels,
+          },
+        },
+      ],
+    })
+
+    return { success: true, storyboardId, mutationBatchId: mutationBatch.id }
+  }
+
+  if (!input.insertAfterPanelId) {
+    throw new Error('PROJECT_AGENT_INSERT_AFTER_REQUIRED')
+  }
+  const userInput = resolveInsertPanelUserInput(input as unknown as Record<string, unknown>, locale)
+  const projectModelConfig = await getProjectModelConfig(ctx.projectId, ctx.userId)
+  const billingPayload: Record<string, unknown> = {
+    ...(isRecord(input) ? input : {}),
+    userInput,
+    ...(projectModelConfig.analysisModel ? { analysisModel: projectModelConfig.analysisModel } : {}),
+    meta: {
+      locale,
+    },
+  }
+  delete billingPayload.confirmed
+
+  const result = await submitTask({
+    userId: ctx.userId,
+    locale: resolveRequiredTaskLocale(ctx.request, billingPayload),
+    requestId: getRequestId(ctx.request),
+    projectId: ctx.projectId,
+    type: TASK_TYPE.INSERT_PANEL,
+    targetType: 'ProjectStoryboard',
+    targetId: storyboardId,
+    payload: billingPayload,
+    dedupeKey: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
+    billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.INSERT_PANEL, billingPayload),
+  })
+
+  const mutationBatch = await createMutationBatch({
+    projectId: ctx.projectId,
+    userId: ctx.userId,
+    source: ctx.source,
+    operationId,
+    summary: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
+    entries: [
+      {
+        kind: 'insert_panel_undo',
+        targetType: 'ProjectStoryboard',
+        targetId: storyboardId,
+        payload: {
+          taskId: result.taskId,
+        },
+      },
+    ],
+  })
+
+  writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
+    operationId,
+    taskId: result.taskId,
+    status: result.status,
+    runId: result.runId || null,
+    deduped: result.deduped,
+    mutationBatchId: mutationBatch.id,
+  })
+
+  return { ...result, storyboardId, mutationBatchId: mutationBatch.id }
+}
+
+async function executeAssetImageModificationOperation(params: {
+  ctx: Parameters<ProjectAgentOperationRegistry[string]['execute']>[0]
+  input: Record<string, unknown>
+  operationId: string
+  kind: 'character' | 'location'
+}) {
+  const assetId = params.kind === 'character'
+    ? normalizeString(params.input.characterId)
+    : normalizeString(params.input.locationId)
+
+  if (!assetId) {
+    throw new Error('PROJECT_AGENT_ASSET_ID_REQUIRED')
+  }
+
+  const body: Record<string, unknown> = {
+    ...params.input,
+    ...(params.kind === 'character' ? { characterId: assetId } : { locationId: assetId }),
+  }
+  delete body.confirmed
+
+  const result = await submitAssetModifyTask({
+    request: params.ctx.request,
+    kind: params.kind,
+    assetId,
+    body,
+    access: {
+      scope: 'project',
+      userId: params.ctx.userId,
+      projectId: params.ctx.projectId,
+    },
+  })
+
+  const appearanceId = params.kind === 'character' ? normalizeString(body.appearanceId) : ''
+  const mutationBatch = await createMutationBatch({
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+    source: params.ctx.source,
+    operationId: params.operationId,
+    summary: `${params.operationId}:${assetId}`,
+    entries: [
+      {
+        kind: 'asset_render_revert',
+        targetType: params.kind === 'character' ? 'ProjectCharacter' : 'ProjectLocation',
+        targetId: assetId,
+        payload: {
+          kind: params.kind,
+          assetId,
+          ...(appearanceId ? { appearanceId } : {}),
+        },
+      },
+    ],
+  })
+
+  writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
+    operationId: params.operationId,
+    taskId: result.taskId,
+    status: result.status,
+    runId: result.runId || null,
+    deduped: result.deduped,
+    mutationBatchId: mutationBatch.id,
+  })
+
+  return {
+    ...result,
+    assetId,
+    mutationBatchId: mutationBatch.id,
+  }
+}
+
+async function executeVoiceGenerateOperation(params: {
+  ctx: Parameters<ProjectAgentOperationRegistry[string]['execute']>[0]
+  input: {
+    episodeId?: string
+    lineId?: string
+    audioModel?: string
+  }
+  operationId: string
+  all: boolean
+}) {
+  const locale = resolveLocaleFromContext(params.ctx.context.locale)
+  const episodeId = normalizeString(params.input.episodeId) || normalizeString(params.ctx.context.episodeId)
+  const lineId = normalizeString(params.input.lineId)
+  const requestedAudioModel = normalizeString(params.input.audioModel)
+
+  if (!episodeId) {
+    throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
+  }
+  if (!params.all && !lineId) {
+    throw new Error('PROJECT_AGENT_VOICE_LINE_REQUIRED')
+  }
+  if (requestedAudioModel && !parseModelKeyStrict(requestedAudioModel)) {
+    throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
+  }
+
+  const [pref, projectData, episode] = await Promise.all([
+    prisma.userPreference.findUnique({
+      where: { userId: params.ctx.userId },
+      select: { audioModel: true },
+    }),
+    prisma.project.findUnique({
+      where: { id: params.ctx.projectId },
+      select: {
+        id: true,
+        audioModel: true,
+        characters: {
+          select: {
+            name: true,
+            customVoiceUrl: true,
+            voiceId: true,
+          },
+        },
+      },
+    }),
+    prisma.projectEpisode.findFirst({
+      where: {
+        id: episodeId,
+        projectId: params.ctx.projectId,
+      },
+      select: {
+        id: true,
+        speakerVoices: true,
+      },
+    }),
+  ])
+
+  if (!projectData || !episode) {
+    throw new Error('PROJECT_AGENT_NOT_FOUND')
+  }
+
+  const preferredAudioModel = normalizeString(pref?.audioModel)
+  if (preferredAudioModel && !parseModelKeyStrict(preferredAudioModel)) {
+    throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
+  }
+  const projectAudioModel = normalizeString(projectData.audioModel)
+  if (projectAudioModel && !parseModelKeyStrict(projectAudioModel)) {
+    throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
+  }
+
+  const resolvedAudioModel = requestedAudioModel || projectAudioModel || preferredAudioModel
+  const selectedResolvedAudioModel = await resolveModelSelectionOrSingle(
+    params.ctx.userId,
+    resolvedAudioModel || null,
+    'audio',
+  )
+  const selectedProviderKey = getProviderKey(selectedResolvedAudioModel.provider).toLowerCase()
+
+  const speakerVoices = parseSpeakerVoiceMap(episode.speakerVoices)
+  const characters = (projectData.characters || []) as CharacterRow[]
+
+  let voiceLines: VoiceLineRow[] = []
+  if (params.all) {
+    const allLines = await prisma.projectVoiceLine.findMany({
+      where: {
+        episodeId,
+        audioUrl: null,
+      },
+      orderBy: { lineIndex: 'asc' },
+      select: {
+        id: true,
+        speaker: true,
+        content: true,
+        audioUrl: true,
+      },
+    })
+    voiceLines = allLines.filter((line) =>
+      hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey),
+    )
+  } else {
+    const line = await prisma.projectVoiceLine.findFirst({
+      where: {
+        id: lineId,
+        episodeId,
+      },
+      select: {
+        id: true,
+        speaker: true,
+        content: true,
+        audioUrl: true,
+      },
+    })
+    if (!line) {
+      throw new Error('PROJECT_AGENT_VOICE_LINE_NOT_FOUND')
+    }
+    if (!hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey)) {
+      if (selectedProviderKey === 'bailian' && hasUploadedReferenceAudioForSpeaker({ speaker: line.speaker, characters, speakerVoices })) {
+        throw new ApiError('INVALID_PARAMS', {
+          message: '无音色ID，QwenTTS 必须使用 AI 设计音色',
+        })
+      }
+      throw new Error('PROJECT_AGENT_VOICE_BINDING_REQUIRED')
+    }
+    voiceLines = [line]
+  }
+
+  if (voiceLines.length === 0) {
+    return {
+      success: true,
+      async: true,
+      results: [],
+      taskIds: [],
+      total: 0,
+      error: '没有需要生成的台词（可能是已生成或缺少音色绑定）',
+    }
+  }
+
+  const localeForTask = resolveRequiredTaskLocale(params.ctx.request, { meta: { locale } })
+  const results = await Promise.all(
+    voiceLines.map(async (line) => {
+      const payload = {
+        episodeId,
+        lineId: line.id,
+        maxSeconds: estimateVoiceLineMaxSeconds(line.content),
+        audioModel: selectedResolvedAudioModel.modelKey,
+        meta: {
+          locale,
+        },
+      }
+      const result = await submitTask({
+        userId: params.ctx.userId,
+        locale: localeForTask,
+        requestId: getRequestId(params.ctx.request),
+        projectId: params.ctx.projectId,
+        episodeId,
+        type: TASK_TYPE.VOICE_LINE,
+        targetType: 'ProjectVoiceLine',
+        targetId: line.id,
+        payload: withTaskUiPayload(payload, {
+          hasOutputAtStart: await hasVoiceLineAudioOutput(line.id),
+        }),
+        dedupeKey: `voice_line:${line.id}`,
+        billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.VOICE_LINE, payload),
+      })
+      return {
+        refId: line.id,
+        taskId: result.taskId,
+        status: result.status,
+      }
+    }),
+  )
+
+  const taskIds = results.map((item) => item.taskId)
+  const mutationBatch = await createMutationBatch({
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+    source: params.ctx.source,
+    operationId: params.operationId,
+    summary: `${params.operationId}:${episodeId}:${params.all ? 'all' : (lineId || 'single')}`,
+    entries: voiceLines.map((line) => ({
+      kind: 'voice_line_restore',
+      targetType: 'ProjectVoiceLine',
+      targetId: line.id,
+      payload: {
+        previousAudioUrl: (line as { audioUrl?: string | null }).audioUrl ?? null,
+      },
+    })),
+  })
+  if (!params.all) {
+    writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
+      operationId: params.operationId,
+      taskId: taskIds[0] || '',
+      status: results[0]?.status || 'queued',
+      mutationBatchId: mutationBatch.id,
+    })
+    return {
+      success: true,
+      async: true,
+      taskId: taskIds[0],
+      mutationBatchId: mutationBatch.id,
+    }
+  }
+
+  writeOperationDataPart<TaskBatchSubmittedPartData>(params.ctx.writer, 'data-task-batch-submitted', {
+    operationId: params.operationId,
+    total: taskIds.length,
+    taskIds,
+    results: results.map((item) => ({ refId: item.refId, taskId: item.taskId })),
+    mutationBatchId: mutationBatch.id,
+  })
+
+  return {
+    success: true,
+    async: true,
+    results: results.map((item) => ({ lineId: item.refId, taskId: item.taskId })),
+    taskIds,
+    total: taskIds.length,
+    mutationBatchId: mutationBatch.id,
+  }
+}
+
+async function executeGenerateVideoOperation(params: {
+  ctx: Parameters<ProjectAgentOperationRegistry[string]['execute']>[0]
+  input: Record<string, unknown>
+  operationId: string
+  batch: boolean
+}) {
+  const locale = resolveLocaleFromContext(params.ctx.context.locale)
+  const existingMeta = isRecord(params.input.meta) ? params.input.meta : {}
+  const payload: Record<string, unknown> = {
+    ...params.input,
+    meta: {
+      ...existingMeta,
+      locale,
+    },
+  }
+  delete payload.confirmed
+
+  requireVideoModelKeyFromPayload(payload)
+  validateFirstLastFrameModel(payload.firstLastFrame)
+  await validateVideoCapabilityCombination({
+    payload,
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+  })
+
+  const localeForTask = resolveRequiredTaskLocale(params.ctx.request, payload)
+  if (params.batch) {
+    const episodeId = normalizeString(payload.episodeId) || normalizeString(params.ctx.context.episodeId)
+    if (!episodeId) {
+      throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
+    }
+    const limit = typeof payload.limit === 'number' && Number.isFinite(payload.limit) ? payload.limit : 20
+
+    const panels = await prisma.projectPanel.findMany({
+      where: {
+        storyboard: { episodeId },
+        imageUrl: { not: null },
+        OR: [
+          { videoUrl: null },
+          { videoUrl: '' },
+        ],
+      },
+      select: { id: true, videoUrl: true },
+      take: limit,
+    })
+
+    if (panels.length === 0) {
+      return { tasks: [], total: 0 }
+    }
+
+    const tasks = await Promise.all(
+      panels.map(async (panel) =>
+        submitTask({
+          userId: params.ctx.userId,
+          locale: localeForTask,
+          requestId: getRequestId(params.ctx.request),
+          projectId: params.ctx.projectId,
+          episodeId,
+          type: TASK_TYPE.VIDEO_PANEL,
+          targetType: 'ProjectPanel',
+          targetId: panel.id,
+          payload: withTaskUiPayload(payload, {
+            hasOutputAtStart: await hasPanelVideoOutput(panel.id),
+          }),
+          dedupeKey: `video_panel:${panel.id}`,
+          billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
+        }),
+      ),
+    )
+
+    const taskIds = tasks.map((task) => task.taskId)
+    const mutationBatch = await createMutationBatch({
+      projectId: params.ctx.projectId,
+      userId: params.ctx.userId,
+      source: params.ctx.source,
+      operationId: params.operationId,
+      summary: `${params.operationId}:${episodeId}:batch`,
+      entries: panels.map((panel) => ({
+        kind: 'panel_video_restore',
+        targetType: 'ProjectPanel',
+        targetId: panel.id,
+        payload: {
+          previousVideoUrl: panel.videoUrl ?? null,
+        },
+      })),
+    })
+    writeOperationDataPart<TaskBatchSubmittedPartData>(params.ctx.writer, 'data-task-batch-submitted', {
+      operationId: params.operationId,
+      total: tasks.length,
+      taskIds,
+      results: panels.map((panel, index) => ({ refId: panel.id, taskId: taskIds[index] || '' })),
+      mutationBatchId: mutationBatch.id,
+    })
+
+    return {
+      tasks,
+      total: tasks.length,
+      mutationBatchId: mutationBatch.id,
+    }
+  }
+
+  let panelId = normalizeString(payload.panelId)
+  let previousVideoUrl: string | null = null
+  if (!panelId) {
+    const storyboardId = normalizeString(payload.storyboardId)
+    const panelIndex = typeof payload.panelIndex === 'number' ? payload.panelIndex : NaN
+    if (!storyboardId || !Number.isFinite(panelIndex)) {
+      throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+    }
+    const panel = await prisma.projectPanel.findFirst({
+      where: { storyboardId, panelIndex: Number(panelIndex) },
+      select: { id: true, videoUrl: true },
+    })
+    panelId = panel?.id || ''
+    previousVideoUrl = panel?.videoUrl ?? null
+  }
+  if (!panelId) {
+    throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+  }
+  if (normalizeString(payload.panelId)) {
+    const panel = await prisma.projectPanel.findUnique({
+      where: { id: panelId },
+      select: { videoUrl: true },
+    })
+    if (!panel) {
+      throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+    }
+    previousVideoUrl = panel.videoUrl ?? null
+  }
+
+  const result = await submitTask({
+    userId: params.ctx.userId,
+    locale: localeForTask,
+    requestId: getRequestId(params.ctx.request),
+    projectId: params.ctx.projectId,
+    type: TASK_TYPE.VIDEO_PANEL,
+    targetType: 'ProjectPanel',
+    targetId: panelId,
+    payload: withTaskUiPayload(payload, {
+      hasOutputAtStart: await hasPanelVideoOutput(panelId),
+    }),
+    dedupeKey: `video_panel:${panelId}`,
+    billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
+  })
+
+  const mutationBatch = await createMutationBatch({
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+    source: params.ctx.source,
+    operationId: params.operationId,
+    summary: `${params.operationId}:${panelId}`,
+    entries: [
+      {
+        kind: 'panel_video_restore',
+        targetType: 'ProjectPanel',
+        targetId: panelId,
+        payload: {
+          previousVideoUrl,
+        },
+      },
+    ],
+  })
+
+  writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
+    operationId: params.operationId,
+    taskId: result.taskId,
+    status: result.status,
+    runId: result.runId || null,
+    deduped: result.deduped,
+    mutationBatchId: mutationBatch.id,
+  })
+
+  return {
+    ...result,
+    panelId,
+    mutationBatchId: mutationBatch.id,
+  }
 }
 
 function createPanelVariantId(): string {
@@ -502,6 +1929,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     generate_character_image: {
       id: 'generate_character_image',
       description: 'Generate character appearance images for a project character.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['asset', 'character', 'generate'],
+        tags: ['asset', 'character', 'edit', 'media'],
+      },
+      selection: { baseWeight: 28, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'medium',
@@ -632,6 +2065,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     generate_location_image: {
       id: 'generate_location_image',
       description: 'Generate location images for a project location.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['asset', 'location', 'generate'],
+        tags: ['asset', 'location', 'edit', 'media'],
+      },
+      selection: { baseWeight: 28, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'medium',
@@ -746,6 +2185,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     modify_asset_image: {
       id: 'modify_asset_image',
       description: 'Modify an asset image (character/location) using edit model (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['asset', 'modify'],
+        tags: ['asset', 'edit', 'media'],
+      },
+      selection: { baseWeight: 34, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -832,6 +2277,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     regenerate_panel_image: {
       id: 'regenerate_panel_image',
       description: 'Regenerate storyboard panel images (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['storyboard', 'panel', 'media'],
+        tags: ['media', 'panel', 'storyboard'],
+      },
+      selection: { baseWeight: 42, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'medium',
@@ -956,6 +2407,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     panel_variant: {
       id: 'panel_variant',
       description: 'Insert a variant panel after an existing panel and enqueue image generation (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['storyboard', 'panel', 'variant'],
+        tags: ['media', 'panel', 'storyboard', 'edit'],
+      },
+      selection: { baseWeight: 40, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -1134,7 +2591,8 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     },
     mutate_storyboard: {
       id: 'mutate_storyboard',
-      description: 'Apply storyboard mutations (insert panel / update prompts / reorder panels).',
+      description: 'Apply storyboard mutations, including delete panel, insert panel, update prompts, reorder panels, select candidates, and update panel fields.',
+      channels: { tool: false, api: true },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -1145,820 +2603,213 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         confirmationSummary: '将对分镜进行编辑/重排/插入新格子（可能删除或覆盖内容；插入可能消耗额度）。确认继续后请重新调用并传入 confirmed=true。',
       },
       scope: 'storyboard',
-      inputSchema: z.object({
-        confirmed: z.boolean().optional(),
-        action: z.enum([
-          'insert_panel',
-          'update_panel_prompt',
-          'reorder_panels',
-          'create_panel',
-          'select_panel_candidate',
-          'cancel_panel_candidates',
-          'delete_panel',
-          'update_panel_fields',
-        ]),
-        storyboardId: z.string().min(1).optional(),
-        insertAfterPanelId: z.string().min(1).optional(),
-        panelId: z.string().min(1).optional(),
-        panelIndex: z.number().int().min(0).max(2000).optional(),
-        panelNumber: z.unknown().optional(),
-        shotType: z.string().nullable().optional(),
-        cameraMove: z.string().nullable().optional(),
-        description: z.string().nullable().optional(),
-        location: z.string().nullable().optional(),
-        characters: z.string().nullable().optional(),
-        props: z.string().nullable().optional(),
-        srtStart: z.unknown().optional(),
-        srtEnd: z.unknown().optional(),
-        duration: z.unknown().optional(),
-        linkedToNextPanel: z.unknown().optional(),
-        userInput: z.string().optional(),
-        prompt: z.string().optional(),
-        videoPrompt: z.string().nullable().optional(),
-        firstLastFramePrompt: z.string().nullable().optional(),
-        imagePrompt: z.string().nullable().optional(),
-        selectedImageUrl: z.string().optional(),
-        actingNotes: z.unknown().optional(),
-        photographyRules: z.unknown().optional(),
-        orderedPanelIds: z.array(z.string().min(1)).min(1).optional(),
-      }).passthrough(),
+      inputSchema: storyboardMutationInputSchema,
       outputSchema: z.unknown(),
-      execute: async (ctx, input) => {
-        const locale = resolveLocaleFromContext(ctx.context.locale)
-        let storyboardId = normalizeString(input.storyboardId)
-
-        if (input.action === 'select_panel_candidate' || input.action === 'cancel_panel_candidates') {
-          const panelId = normalizeString(input.panelId)
-          if (!panelId) {
-            throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
-          }
-
-          const panel = await prisma.projectPanel.findFirst({
-            where: {
-              id: panelId,
-              storyboard: {
-                episode: {
-                  projectId: ctx.projectId,
-                },
-              },
-            },
-            select: {
-              id: true,
-              imageUrl: true,
-              imageHistory: true,
-              candidateImages: true,
-            },
-          })
-          if (!panel) {
-            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-          }
-
-          if (input.action === 'cancel_panel_candidates') {
-            const previousCandidateImages = panel.candidateImages
-            await prisma.projectPanel.update({
-              where: { id: panelId },
-              data: { candidateImages: null },
-            })
-
-            const mutationBatch = await createMutationBatch({
-              projectId: ctx.projectId,
-              userId: ctx.userId,
-              source: ctx.source,
-              operationId: 'mutate_storyboard',
-              summary: `cancel_panel_candidates:${panelId}`,
-              entries: [
-                {
-                  kind: 'panel_candidates_restore',
-                  targetType: 'ProjectPanel',
-                  targetId: panelId,
-                  payload: {
-                    previousCandidateImages,
-                  },
-                },
-              ],
-            })
-
-            return { success: true, panelId, mutationBatchId: mutationBatch.id }
-          }
-
-          const selectedImageUrl = normalizeString(input.selectedImageUrl)
-          if (!selectedImageUrl) {
-            throw new Error('PROJECT_AGENT_SELECTED_IMAGE_REQUIRED')
-          }
-
-          const candidateImages = parseUnknownArray(panel.candidateImages)
-          const selectedCosKey = await resolveStorageKeyFromMediaValue(selectedImageUrl)
-          const candidateKeys = (await Promise.all(
-            candidateImages.map((candidate: unknown) => resolveStorageKeyFromMediaValue(candidate)),
-          )).filter((key): key is string => !!key)
-
-          if (!selectedCosKey || !candidateKeys.includes(selectedCosKey)) {
-            throw new Error('PROJECT_AGENT_PANEL_CANDIDATE_INVALID')
-          }
-
-          const currentHistory = parsePanelHistory(panel.imageHistory)
-          if (panel.imageUrl) {
-            currentHistory.push({
-              url: panel.imageUrl,
-              timestamp: new Date().toISOString(),
-            })
-          }
-
-          let finalImageKey = selectedCosKey
-          const isReusableKey = !finalImageKey.startsWith('http://')
-            && !finalImageKey.startsWith('https://')
-            && !finalImageKey.startsWith('/')
-
-          if (!isReusableKey) {
-            const sourceUrl = toFetchableUrl(selectedImageUrl)
-            const cosKey = generateUniqueKey(`panel-${panelId}-selected`, 'png')
-            finalImageKey = await downloadAndUploadImage(sourceUrl, cosKey)
-          }
-
-          const signedUrl = getSignedUrl(finalImageKey, 7 * 24 * 3600)
-          const previousCandidateImages = panel.candidateImages
-          const previousImageUrl = panel.imageUrl
-          const previousImageHistory = panel.imageHistory
-
-          await prisma.projectPanel.update({
-            where: { id: panelId },
-            data: {
-              imageUrl: finalImageKey,
-              imageHistory: JSON.stringify(currentHistory),
-              candidateImages: null,
-            },
-          })
-
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'mutate_storyboard',
-            summary: `select_panel_candidate:${panelId}`,
-            entries: [
-              {
-                kind: 'panel_candidate_select_restore',
-                targetType: 'ProjectPanel',
-                targetId: panelId,
-                payload: {
-                  previousImageUrl,
-                  previousImageHistory,
-                  previousCandidateImages,
-                },
-              },
-            ],
-          })
-
-          return {
-            success: true,
-            panelId,
-            imageUrl: signedUrl,
-            cosKey: finalImageKey,
-            mutationBatchId: mutationBatch.id,
-          }
-        }
-
-        if (!storyboardId && (input.action === 'delete_panel' || input.action === 'update_panel_prompt')) {
-          const panelId = normalizeString(input.panelId)
-          if (panelId) {
-            const panel = await prisma.projectPanel.findFirst({
-              where: {
-                id: panelId,
-                storyboard: {
-                  episode: {
-                    projectId: ctx.projectId,
-                  },
-                },
-              },
-              select: { storyboardId: true },
-            })
-            if (!panel) {
-              throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-            }
-            storyboardId = panel.storyboardId
-          }
-        }
-
-        if (!storyboardId) {
-          throw new Error('PROJECT_AGENT_STORYBOARD_REQUIRED')
-        }
-
-        const storyboard = await prisma.projectStoryboard.findFirst({
-          where: {
-            id: storyboardId,
-            episode: {
-              projectId: ctx.projectId,
-            },
-          },
-          select: { id: true },
-        })
-        if (!storyboard) {
-          throw new Error('PROJECT_AGENT_STORYBOARD_NOT_FOUND')
-        }
-
-        if (input.action === 'create_panel') {
-          const createdPanel = await prisma.$transaction(async (tx) => {
-            const maxPanel = await tx.projectPanel.findFirst({
-              where: { storyboardId },
-              orderBy: { panelIndex: 'desc' },
-              select: { panelIndex: true },
-            })
-            const nextPanelIndex = (maxPanel?.panelIndex ?? -1) + 1
-
-            const hasSrtStart = Object.prototype.hasOwnProperty.call(input, 'srtStart')
-            const hasSrtEnd = Object.prototype.hasOwnProperty.call(input, 'srtEnd')
-            const hasDuration = Object.prototype.hasOwnProperty.call(input, 'duration')
-
-            const panel = await tx.projectPanel.create({
-              data: {
-                storyboardId,
-                panelIndex: nextPanelIndex,
-                panelNumber: nextPanelIndex + 1,
-                shotType: input.shotType ?? null,
-                cameraMove: input.cameraMove ?? null,
-                description: input.description ?? null,
-                location: input.location ?? null,
-                characters: input.characters ?? null,
-                props: input.props ?? null,
-                ...(hasSrtStart ? { srtStart: parseNullableNumberField(input.srtStart) } : {}),
-                ...(hasSrtEnd ? { srtEnd: parseNullableNumberField(input.srtEnd) } : {}),
-                ...(hasDuration ? { duration: parseNullableNumberField(input.duration) } : {}),
-                ...(Object.prototype.hasOwnProperty.call(input, 'videoPrompt') ? { videoPrompt: input.videoPrompt } : {}),
-                ...(Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt') ? { firstLastFramePrompt: input.firstLastFramePrompt } : {}),
-              },
-            })
-
-            const panelCount = await tx.projectPanel.count({
-              where: { storyboardId },
-            })
-
-            await tx.projectStoryboard.update({
-              where: { id: storyboardId },
-              data: { panelCount },
-            })
-
-            return panel
-          })
-
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'mutate_storyboard',
-            summary: `create_panel:${createdPanel.id}`,
-            entries: [
-              {
-                kind: 'panel_create_delete',
-                targetType: 'ProjectPanel',
-                targetId: createdPanel.id,
-                payload: {
-                  storyboardId,
-                  panelIndex: createdPanel.panelIndex,
-                },
-              },
-            ],
-          })
-
-          return {
-            success: true,
-            panel: createdPanel,
-            panelId: createdPanel.id,
-            storyboardId,
-            mutationBatchId: mutationBatch.id,
-          }
-        }
-
-        if (input.action === 'delete_panel') {
-          let panelId = normalizeString(input.panelId)
-          if (!panelId) {
-            if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
-              throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
-            }
-            const panel = await prisma.projectPanel.findFirst({
-              where: {
-                storyboardId,
-                panelIndex: input.panelIndex,
-              },
-              select: { id: true },
-            })
-            panelId = panel?.id || ''
-          }
-          if (!panelId) {
-            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-          }
-
-          const panel = await prisma.projectPanel.findFirst({
-            where: { id: panelId, storyboardId },
-            select: {
-              id: true,
-              storyboardId: true,
-              panelIndex: true,
-              panelNumber: true,
-              shotType: true,
-              cameraMove: true,
-              description: true,
-              location: true,
-              characters: true,
-              props: true,
-              srtSegment: true,
-              srtStart: true,
-              srtEnd: true,
-              duration: true,
-              imagePrompt: true,
-              imageUrl: true,
-              imageMediaId: true,
-              imageHistory: true,
-              videoPrompt: true,
-              firstLastFramePrompt: true,
-              videoUrl: true,
-              videoGenerationMode: true,
-              videoMediaId: true,
-              sceneType: true,
-              candidateImages: true,
-              linkedToNextPanel: true,
-              lipSyncTaskId: true,
-              lipSyncVideoUrl: true,
-              lipSyncVideoMediaId: true,
-              sketchImageUrl: true,
-              sketchImageMediaId: true,
-              photographyRules: true,
-              actingNotes: true,
-              previousImageUrl: true,
-              previousImageMediaId: true,
-            },
-          })
-          if (!panel) {
-            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-          }
-
-          await prisma.$transaction(async (tx) => {
-            await tx.projectPanel.delete({
-              where: { id: panelId },
-            })
-
-            const maxPanel = await tx.projectPanel.findFirst({
-              where: { storyboardId },
-              orderBy: { panelIndex: 'desc' },
-              select: { panelIndex: true },
-            })
-            const maxPanelIndex = maxPanel?.panelIndex ?? -1
-            const offset = maxPanelIndex + 1000
-
-            await tx.projectPanel.updateMany({
-              where: {
-                storyboardId,
-                panelIndex: { gt: panel.panelIndex },
-              },
-              data: {
-                panelIndex: { increment: offset },
-                panelNumber: { increment: offset },
-              },
-            })
-
-            await tx.projectPanel.updateMany({
-              where: {
-                storyboardId,
-                panelIndex: { gt: panel.panelIndex + offset },
-              },
-              data: {
-                panelIndex: { decrement: offset + 1 },
-                panelNumber: { decrement: offset + 1 },
-              },
-            })
-
-            const panelCount = await tx.projectPanel.count({
-              where: { storyboardId },
-            })
-            await tx.projectStoryboard.update({
-              where: { id: storyboardId },
-              data: { panelCount },
-            })
-          })
-
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'mutate_storyboard',
-            summary: `delete_panel:${panelId}`,
-            entries: [
-              {
-                kind: 'panel_delete_restore',
-                targetType: 'ProjectStoryboard',
-                targetId: storyboardId,
-                payload: {
-                  panel,
-                },
-              },
-            ],
-          })
-
-          return { success: true, panelId, storyboardId, mutationBatchId: mutationBatch.id }
-        }
-
-        if (input.action === 'update_panel_fields') {
-          let panelId = normalizeString(input.panelId)
-          const panelIndex = typeof input.panelIndex === 'number' && Number.isFinite(input.panelIndex)
-            ? input.panelIndex
-            : null
-
-          const updateData: Record<string, unknown> = {}
-          if (Object.prototype.hasOwnProperty.call(input, 'panelNumber')) {
-            const parsed = parseNullableNumberField(input.panelNumber)
-            updateData.panelNumber = parsed === null ? null : Math.trunc(parsed)
-          }
-          if (Object.prototype.hasOwnProperty.call(input, 'shotType')) updateData.shotType = input.shotType
-          if (Object.prototype.hasOwnProperty.call(input, 'cameraMove')) updateData.cameraMove = input.cameraMove
-          if (Object.prototype.hasOwnProperty.call(input, 'description')) updateData.description = input.description
-          if (Object.prototype.hasOwnProperty.call(input, 'location')) updateData.location = input.location
-          if (Object.prototype.hasOwnProperty.call(input, 'characters')) updateData.characters = input.characters
-          if (Object.prototype.hasOwnProperty.call(input, 'props')) updateData.props = input.props
-          if (Object.prototype.hasOwnProperty.call(input, 'srtStart')) updateData.srtStart = parseNullableNumberField(input.srtStart)
-          if (Object.prototype.hasOwnProperty.call(input, 'srtEnd')) updateData.srtEnd = parseNullableNumberField(input.srtEnd)
-          if (Object.prototype.hasOwnProperty.call(input, 'duration')) updateData.duration = parseNullableNumberField(input.duration)
-          if (Object.prototype.hasOwnProperty.call(input, 'videoPrompt')) updateData.videoPrompt = input.videoPrompt
-          if (Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt')) updateData.firstLastFramePrompt = input.firstLastFramePrompt
-          if (Object.prototype.hasOwnProperty.call(input, 'linkedToNextPanel')) {
-            updateData.linkedToNextPanel = input.linkedToNextPanel === true
-          }
-          if (Object.prototype.hasOwnProperty.call(input, 'actingNotes')) updateData.actingNotes = toStructuredJsonField(input.actingNotes, 'actingNotes')
-          if (Object.prototype.hasOwnProperty.call(input, 'photographyRules')) updateData.photographyRules = toStructuredJsonField(input.photographyRules, 'photographyRules')
-
-          if (Object.keys(updateData).length === 0) {
-            return { success: true, panelId: panelId || null, noop: true }
-          }
-
-              const existing = panelId
-            ? await prisma.projectPanel.findFirst({
-                where: { id: panelId, storyboardId },
-                select: {
-                  id: true,
-                  panelIndex: true,
-                  panelNumber: true,
-                  shotType: true,
-                  cameraMove: true,
-                  description: true,
-                  location: true,
-                  characters: true,
-                  props: true,
-                  srtStart: true,
-                  srtEnd: true,
-                  duration: true,
-                  videoPrompt: true,
-                  firstLastFramePrompt: true,
-                  linkedToNextPanel: true,
-                  actingNotes: true,
-                  photographyRules: true,
-                },
-              })
-            : panelIndex === null
-              ? null
-              : await prisma.projectPanel.findUnique({
-                  where: {
-                    storyboardId_panelIndex: {
-                      storyboardId,
-                      panelIndex,
-                    },
-                  },
-                  select: {
-                    id: true,
-                    panelIndex: true,
-                    panelNumber: true,
-                    shotType: true,
-                    cameraMove: true,
-                    description: true,
-                    location: true,
-                    characters: true,
-                    props: true,
-                    srtStart: true,
-                    srtEnd: true,
-                    duration: true,
-                    videoPrompt: true,
-                    firstLastFramePrompt: true,
-                    linkedToNextPanel: true,
-                    actingNotes: true,
-                    photographyRules: true,
-                  },
-                })
-
-          if (existing) {
-            panelId = existing.id
-            await prisma.projectPanel.update({
-              where: { id: existing.id },
-              data: updateData,
-            })
-
-            const mutationBatch = await createMutationBatch({
-              projectId: ctx.projectId,
-              userId: ctx.userId,
-              source: ctx.source,
-              operationId: 'mutate_storyboard',
-              summary: `update_panel_fields:${existing.id}`,
-              entries: [
-                {
-                  kind: 'panel_fields_restore',
-                  targetType: 'ProjectPanel',
-                  targetId: existing.id,
-                  payload: {
-                    previous: existing,
-                  },
-                },
-              ],
-            })
-
-            return { success: true, panelId: existing.id, storyboardId, mutationBatchId: mutationBatch.id }
-          }
-
-          if (panelIndex === null) {
-            throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
-          }
-
-          const createdPanel = await prisma.projectPanel.create({
-            data: {
-              storyboardId,
-              panelIndex,
-              panelNumber: panelIndex + 1,
-              imageUrl: null,
-              ...updateData,
-            },
-            select: { id: true, panelIndex: true },
-          })
-
-          const panelCount = await prisma.projectPanel.count({
-            where: { storyboardId },
-          })
-          await prisma.projectStoryboard.update({
-            where: { id: storyboardId },
-            data: { panelCount },
-          })
-
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'mutate_storyboard',
-            summary: `create_panel:${createdPanel.id}`,
-            entries: [
-              {
-                kind: 'panel_create_delete',
-                targetType: 'ProjectPanel',
-                targetId: createdPanel.id,
-                payload: {
-                  storyboardId,
-                  panelIndex: createdPanel.panelIndex,
-                },
-              },
-            ],
-          })
-
-          return { success: true, panelId: createdPanel.id, storyboardId, created: true, mutationBatchId: mutationBatch.id }
-        }
-
-        if (input.action === 'update_panel_prompt') {
-          let panelId = normalizeString(input.panelId)
-          if (!panelId) {
-            if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
-              throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
-            }
-            const panel = await prisma.projectPanel.findFirst({
-              where: {
-                storyboardId,
-                panelIndex: input.panelIndex,
-              },
-              select: { id: true },
-            })
-            panelId = panel?.id || ''
-          }
-
-          const updateData: Record<string, unknown> = {}
-          if (Object.prototype.hasOwnProperty.call(input, 'videoPrompt')) updateData.videoPrompt = input.videoPrompt
-          if (Object.prototype.hasOwnProperty.call(input, 'firstLastFramePrompt')) updateData.firstLastFramePrompt = input.firstLastFramePrompt
-          if (Object.prototype.hasOwnProperty.call(input, 'imagePrompt')) updateData.imagePrompt = input.imagePrompt
-          if (Object.keys(updateData).length === 0) {
-            return { success: true, panelId, noop: true }
-          }
-
-          if (!panelId) {
-            if (typeof input.panelIndex !== 'number' || !Number.isFinite(input.panelIndex)) {
-              throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
-            }
-
-            const createdPanel = await prisma.projectPanel.create({
-              data: {
-                storyboardId,
-                panelIndex: input.panelIndex,
-                panelNumber: input.panelIndex + 1,
-                imageUrl: null,
-                ...updateData,
-              },
-              select: { id: true, panelIndex: true },
-            })
-
-            const panelCount = await prisma.projectPanel.count({
-              where: { storyboardId },
-            })
-            await prisma.projectStoryboard.update({
-              where: { id: storyboardId },
-              data: { panelCount },
-            })
-
-            const mutationBatch = await createMutationBatch({
-              projectId: ctx.projectId,
-              userId: ctx.userId,
-              source: ctx.source,
-              operationId: 'mutate_storyboard',
-              summary: `create_panel:${createdPanel.id}`,
-              entries: [
-                {
-                  kind: 'panel_create_delete',
-                  targetType: 'ProjectPanel',
-                  targetId: createdPanel.id,
-                  payload: {
-                    storyboardId,
-                    panelIndex: createdPanel.panelIndex,
-                  },
-                },
-              ],
-            })
-
-            return { success: true, panelId: createdPanel.id, created: true, mutationBatchId: mutationBatch.id }
-          }
-
-          const before = await prisma.projectPanel.findFirst({
-            where: { id: panelId, storyboardId },
-            select: {
-              id: true,
-              videoPrompt: true,
-              firstLastFramePrompt: true,
-              imagePrompt: true,
-            },
-          })
-          if (!before) {
-            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-          }
-
-          await prisma.projectPanel.update({
-            where: { id: panelId },
-            data: updateData,
-          })
-
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'mutate_storyboard',
-            summary: `update_panel_prompt:${panelId}`,
-            entries: [
-              {
-                kind: 'panel_prompt_restore',
-                targetType: 'ProjectPanel',
-                targetId: panelId,
-                payload: {
-                  previousVideoPrompt: before.videoPrompt,
-                  previousFirstLastFramePrompt: before.firstLastFramePrompt,
-                  previousImagePrompt: before.imagePrompt,
-                },
-              },
-            ],
-          })
-
-          return { success: true, panelId, mutationBatchId: mutationBatch.id }
-        }
-
-        if (input.action === 'reorder_panels') {
-          const orderedPanelIds = Array.isArray(input.orderedPanelIds)
-            ? input.orderedPanelIds
-              .filter((panelId: unknown): panelId is string => typeof panelId === 'string')
-              .map((panelId: string) => panelId.trim())
-              .filter((panelId: string) => panelId.length > 0)
-            : []
-          if (orderedPanelIds.length === 0) {
-            throw new Error('PROJECT_AGENT_ORDER_REQUIRED')
-          }
-
-          const panels = await prisma.projectPanel.findMany({
-            where: { storyboardId },
-            select: { id: true, panelIndex: true, panelNumber: true },
-          })
-
-          const panelById = new Map(panels.map((panel) => [panel.id, panel] as const))
-          const uniqueIds = Array.from(new Set(orderedPanelIds)) as string[]
-          if (uniqueIds.length !== orderedPanelIds.length) {
-            throw new Error('PROJECT_AGENT_ORDER_DUPLICATE_IDS')
-          }
-          if (uniqueIds.length !== panels.length) {
-            throw new Error('PROJECT_AGENT_ORDER_INCOMPLETE')
-          }
-          for (const panelId of uniqueIds) {
-            if (!panelById.has(panelId)) {
-              throw new Error('PROJECT_AGENT_ORDER_INVALID_PANEL')
-            }
-          }
-
-          await prisma.$transaction(async (tx) => {
-            for (const panel of panels) {
-              await tx.projectPanel.update({
-                where: { id: panel.id },
-                data: { panelIndex: -(panel.panelIndex + 1) },
-              })
-            }
-
-            for (let nextIndex = 0; nextIndex < uniqueIds.length; nextIndex++) {
-              const panelId = uniqueIds[nextIndex] as string
-              await tx.projectPanel.update({
-                where: { id: panelId },
-                data: {
-                  panelIndex: nextIndex,
-                  panelNumber: nextIndex + 1,
-                },
-              })
-            }
-          })
-
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'mutate_storyboard',
-            summary: `reorder_panels:${storyboardId}`,
-            entries: [
-              {
-                kind: 'panel_reorder_restore',
-                targetType: 'ProjectStoryboard',
-                targetId: storyboardId,
-                payload: {
-                  storyboardId,
-                  panels,
-                },
-              },
-            ],
-          })
-
-          return { success: true, storyboardId, mutationBatchId: mutationBatch.id }
-        }
-
-        // insert_panel
-        if (!input.insertAfterPanelId) {
-          throw new Error('PROJECT_AGENT_INSERT_AFTER_REQUIRED')
-        }
-        const userInput = resolveInsertPanelUserInput(input as unknown as Record<string, unknown>, locale)
-        const projectModelConfig = await getProjectModelConfig(ctx.projectId, ctx.userId)
-        const billingPayload: Record<string, unknown> = {
-          ...(isRecord(input) ? input : {}),
-          userInput,
-          ...(projectModelConfig.analysisModel ? { analysisModel: projectModelConfig.analysisModel } : {}),
-          meta: {
-            locale,
-          },
-        }
-        delete billingPayload.confirmed
-
-        const result = await submitTask({
-          userId: ctx.userId,
-          locale: resolveRequiredTaskLocale(ctx.request, billingPayload),
-          requestId: getRequestId(ctx.request),
-          projectId: ctx.projectId,
-          type: TASK_TYPE.INSERT_PANEL,
-          targetType: 'ProjectStoryboard',
-          targetId: storyboardId,
-          payload: billingPayload,
-          dedupeKey: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
-          billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.INSERT_PANEL, billingPayload),
-        })
-
-        const mutationBatch = await createMutationBatch({
-          projectId: ctx.projectId,
-          userId: ctx.userId,
-          source: ctx.source,
-          operationId: 'mutate_storyboard',
-          summary: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
-          entries: [
-            {
-              kind: 'insert_panel_undo',
-              targetType: 'ProjectStoryboard',
-              targetId: storyboardId,
-              payload: {
-                taskId: result.taskId,
-              },
-            },
-          ],
-        })
-
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'mutate_storyboard',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-          mutationBatchId: mutationBatch.id,
-        })
-
-        return { ...result, storyboardId, mutationBatchId: mutationBatch.id }
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, input, 'mutate_storyboard'),
+    },
+    create_storyboard_panel: {
+      id: 'create_storyboard_panel',
+      description: 'Create a new storyboard panel at the end of a storyboard.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'create'],
+        tags: ['storyboard', 'panel', 'edit', 'create'],
       },
+      selection: { baseWeight: 52, costHint: 'medium' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        overwrite: true,
+        destructive: true,
+        confirmationSummary: '将创建一个新的分镜格。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'storyboard',
+      inputSchema: createStoryboardPanelInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'create_panel',
+      }, 'create_storyboard_panel'),
+    },
+    delete_storyboard_panel: {
+      id: 'delete_storyboard_panel',
+      description: 'Delete a storyboard panel by panelId or by storyboardId plus panelIndex.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'delete'],
+        tags: ['storyboard', 'panel', 'edit', 'delete'],
+      },
+      selection: { baseWeight: 56, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        destructive: true,
+        confirmationSummary: '将删除一个分镜格并重排后续编号。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'storyboard',
+      inputSchema: deleteStoryboardPanelInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'delete_panel',
+      }, 'delete_storyboard_panel'),
+    },
+    update_storyboard_panel_prompt: {
+      id: 'update_storyboard_panel_prompt',
+      description: 'Update prompt fields for a storyboard panel.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'prompt'],
+        tags: ['storyboard', 'panel', 'edit', 'prompt'],
+      },
+      selection: { baseWeight: 54, costHint: 'medium' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        overwrite: true,
+        confirmationSummary: '将修改分镜格提示词。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'storyboard',
+      inputSchema: updateStoryboardPanelPromptInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'update_panel_prompt',
+      }, 'update_storyboard_panel_prompt'),
+    },
+    update_storyboard_panel_fields: {
+      id: 'update_storyboard_panel_fields',
+      description: 'Update structured storyboard panel fields such as shot, description, timing, or linkage.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'fields'],
+        tags: ['storyboard', 'panel', 'edit', 'fields'],
+      },
+      selection: { baseWeight: 50, costHint: 'medium' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        overwrite: true,
+        confirmationSummary: '将修改分镜格字段信息。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'storyboard',
+      inputSchema: updateStoryboardPanelFieldsInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'update_panel_fields',
+      }, 'update_storyboard_panel_fields'),
+    },
+    reorder_storyboard_panels: {
+      id: 'reorder_storyboard_panels',
+      description: 'Reorder all panels in a storyboard using an explicit orderedPanelIds list.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'reorder'],
+        tags: ['storyboard', 'panel', 'edit', 'reorder'],
+      },
+      selection: { baseWeight: 48, costHint: 'medium' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        destructive: true,
+        confirmationSummary: '将重排整个分镜组内的格子顺序。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'storyboard',
+      inputSchema: reorderStoryboardPanelsInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'reorder_panels',
+      }, 'reorder_storyboard_panels'),
+    },
+    select_storyboard_panel_candidate: {
+      id: 'select_storyboard_panel_candidate',
+      description: 'Select one storyboard panel candidate image as the final panel image.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'candidate'],
+        tags: ['storyboard', 'panel', 'edit', 'candidate'],
+      },
+      selection: { baseWeight: 44, costHint: 'medium' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        overwrite: true,
+        confirmationSummary: '将确认候选图并覆盖当前分镜图。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'panel',
+      inputSchema: selectStoryboardPanelCandidateInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'select_panel_candidate',
+      }, 'select_storyboard_panel_candidate'),
+    },
+    cancel_storyboard_panel_candidates: {
+      id: 'cancel_storyboard_panel_candidates',
+      description: 'Cancel and clear candidate images for a storyboard panel.',
+      tool: {
+        defaultVisibility: 'extended',
+        groups: ['storyboard', 'panel', 'candidate'],
+        tags: ['storyboard', 'panel', 'edit', 'candidate'],
+      },
+      selection: { baseWeight: 38, costHint: 'low' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        destructive: true,
+        confirmationSummary: '将清空该分镜格的候选图。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'panel',
+      inputSchema: cancelStoryboardPanelCandidatesInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'cancel_panel_candidates',
+      }, 'cancel_storyboard_panel_candidates'),
+    },
+    insert_storyboard_panel: {
+      id: 'insert_storyboard_panel',
+      description: 'Insert a new storyboard panel after an existing panel and enqueue generation.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['storyboard', 'panel', 'insert'],
+        tags: ['storyboard', 'panel', 'edit', 'insert'],
+      },
+      selection: { baseWeight: 46, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        requiresConfirmation: true,
+        overwrite: true,
+        longRunning: true,
+        confirmationSummary: '将插入新的分镜格并提交生成任务。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'storyboard',
+      inputSchema: insertStoryboardPanelInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
+        ...input,
+        action: 'insert_panel',
+      }, 'insert_storyboard_panel'),
     },
     voice_generate: {
       id: 'voice_generate',
       description: 'Generate voice line audio for one or more voice lines (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['voice', 'generate'],
+        tags: ['asset', 'voice', 'edit'],
+      },
+      selection: { baseWeight: 34, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -2193,6 +3044,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     voice_design: {
       id: 'voice_design',
       description: 'Design a new voice using a text prompt and preview text (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['voice', 'design'],
+        tags: ['asset', 'voice', 'edit'],
+      },
+      selection: { baseWeight: 26, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -2268,6 +3125,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     lip_sync: {
       id: 'lip_sync',
       description: 'Generate lip-sync video for a storyboard panel using a voice line (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['storyboard', 'panel', 'lip-sync'],
+        tags: ['media', 'panel', 'storyboard', 'voice'],
+      },
+      selection: { baseWeight: 38, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -2378,6 +3241,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     generate_video: {
       id: 'generate_video',
       description: 'Generate panel videos for a storyboard panel or an episode batch (async task submission).',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['video', 'panel'],
+        tags: ['video', 'media', 'panel', 'storyboard'],
+      },
+      selection: { baseWeight: 42, costHint: 'high' },
       sideEffects: {
         mode: 'act',
         risk: 'high',
