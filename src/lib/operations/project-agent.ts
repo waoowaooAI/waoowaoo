@@ -2185,12 +2185,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     modify_asset_image: {
       id: 'modify_asset_image',
       description: 'Modify an asset image (character/location) using edit model (async task submission).',
-      tool: {
-        defaultVisibility: 'scenario',
-        groups: ['asset', 'modify'],
-        tags: ['asset', 'edit', 'media'],
-      },
-      selection: { baseWeight: 34, costHint: 'high' },
+      channels: { tool: false, api: true },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -2209,70 +2204,70 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         locationId: z.string().min(1).optional(),
       }).passthrough(),
       outputSchema: z.unknown(),
-      execute: async (ctx, input) => {
-        const type = input.type
-        const assetId = type === 'character'
-          ? normalizeString((input as Record<string, unknown>).characterId)
-          : normalizeString((input as Record<string, unknown>).locationId)
-
-        if (!assetId) {
-          throw new Error('PROJECT_AGENT_ASSET_ID_REQUIRED')
-        }
-
-        const body: Record<string, unknown> = {
-          ...(isRecord(input) ? input : {}),
-          ...(type === 'character' ? { characterId: assetId } : { locationId: assetId }),
-        }
-        delete body.confirmed
-
-        const result = await submitAssetModifyTask({
-          request: ctx.request,
-          kind: type,
-          assetId,
-          body,
-          access: {
-            scope: 'project',
-            userId: ctx.userId,
-            projectId: ctx.projectId,
-          },
-        })
-
-        const appearanceId = type === 'character' ? normalizeString(body.appearanceId) : ''
-        const mutationBatch = await createMutationBatch({
-          projectId: ctx.projectId,
-          userId: ctx.userId,
-          source: ctx.source,
-          operationId: 'modify_asset_image',
-          summary: `modify_asset_image:${type}:${assetId}`,
-          entries: [
-            {
-              kind: 'asset_render_revert',
-              targetType: type === 'character' ? 'ProjectCharacter' : 'ProjectLocation',
-              targetId: assetId,
-              payload: {
-                kind: type,
-                assetId,
-                ...(appearanceId ? { appearanceId } : {}),
-              },
-            },
-          ],
-        })
-
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'modify_asset_image',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-          mutationBatchId: mutationBatch.id,
-        })
-
-        return {
-          ...result,
-          assetId,
-          mutationBatchId: mutationBatch.id,
-        }
+      execute: async (ctx, input) => executeAssetImageModificationOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'modify_asset_image',
+        kind: input.type,
+      }),
+    },
+    modify_character_image: {
+      id: 'modify_character_image',
+      description: 'Modify a project character image using the edit model.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['asset', 'character', 'modify'],
+        tags: ['asset', 'character', 'edit', 'media'],
       },
+      selection: { baseWeight: 36, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        overwrite: true,
+        destructive: true,
+        longRunning: true,
+        confirmationSummary: '将修改角色图片（可能覆盖现有结果且可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'asset',
+      inputSchema: modifyCharacterImageInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeAssetImageModificationOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'modify_character_image',
+        kind: 'character',
+      }),
+    },
+    modify_location_image: {
+      id: 'modify_location_image',
+      description: 'Modify a project location image using the edit model.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['asset', 'location', 'modify'],
+        tags: ['asset', 'location', 'edit', 'media'],
+      },
+      selection: { baseWeight: 36, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        overwrite: true,
+        destructive: true,
+        longRunning: true,
+        confirmationSummary: '将修改场景图片（可能覆盖现有结果且可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'asset',
+      inputSchema: modifyLocationImageInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeAssetImageModificationOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'modify_location_image',
+        kind: 'location',
+      }),
     },
     regenerate_panel_image: {
       id: 'regenerate_panel_image',
@@ -2804,12 +2799,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     voice_generate: {
       id: 'voice_generate',
       description: 'Generate voice line audio for one or more voice lines (async task submission).',
-      tool: {
-        defaultVisibility: 'scenario',
-        groups: ['voice', 'generate'],
-        tags: ['asset', 'voice', 'edit'],
-      },
-      selection: { baseWeight: 34, costHint: 'high' },
+      channels: { tool: false, api: true },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -2828,218 +2818,67 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         audioModel: z.string().optional(),
       }),
       outputSchema: z.unknown(),
-      execute: async (ctx, input) => {
-        const locale = resolveLocaleFromContext(ctx.context.locale)
-        const episodeId = normalizeString(input.episodeId) || normalizeString(ctx.context.episodeId)
-        const lineId = normalizeString(input.lineId)
-        const all = input.all === true
-        const requestedAudioModel = normalizeString(input.audioModel)
-
-        if (!episodeId) {
-          throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
-        }
-        if (!all && !lineId) {
-          throw new Error('PROJECT_AGENT_VOICE_LINE_REQUIRED')
-        }
-        if (requestedAudioModel && !parseModelKeyStrict(requestedAudioModel)) {
-          throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
-        }
-
-        const [pref, projectData, episode] = await Promise.all([
-          prisma.userPreference.findUnique({
-            where: { userId: ctx.userId },
-            select: { audioModel: true },
-          }),
-          prisma.project.findUnique({
-            where: { id: ctx.projectId },
-            select: {
-              id: true,
-              audioModel: true,
-              characters: {
-                select: {
-                  name: true,
-                  customVoiceUrl: true,
-                  voiceId: true,
-                },
-              },
-            },
-          }),
-          prisma.projectEpisode.findFirst({
-            where: {
-              id: episodeId,
-              projectId: ctx.projectId,
-            },
-            select: {
-              id: true,
-              speakerVoices: true,
-            },
-          }),
-        ])
-
-        if (!projectData || !episode) {
-          throw new Error('PROJECT_AGENT_NOT_FOUND')
-        }
-
-        const preferredAudioModel = normalizeString(pref?.audioModel)
-        if (preferredAudioModel && !parseModelKeyStrict(preferredAudioModel)) {
-          throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
-        }
-        const projectAudioModel = normalizeString(projectData.audioModel)
-        if (projectAudioModel && !parseModelKeyStrict(projectAudioModel)) {
-          throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
-        }
-
-        const resolvedAudioModel = requestedAudioModel || projectAudioModel || preferredAudioModel
-        const selectedResolvedAudioModel = await resolveModelSelectionOrSingle(
-          ctx.userId,
-          resolvedAudioModel || null,
-          'audio',
-        )
-        const selectedProviderKey = getProviderKey(selectedResolvedAudioModel.provider).toLowerCase()
-
-        const speakerVoices = parseSpeakerVoiceMap(episode.speakerVoices)
-        const characters = (projectData.characters || []) as CharacterRow[]
-
-        let voiceLines: VoiceLineRow[] = []
-        if (all) {
-          const allLines = await prisma.projectVoiceLine.findMany({
-            where: {
-              episodeId,
-              audioUrl: null,
-            },
-            orderBy: { lineIndex: 'asc' },
-            select: {
-              id: true,
-              speaker: true,
-              content: true,
-              audioUrl: true,
-            },
-          })
-          voiceLines = allLines.filter((line) =>
-            hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey),
-          )
-        } else {
-          const line = await prisma.projectVoiceLine.findFirst({
-            where: {
-              id: lineId,
-              episodeId,
-            },
-            select: {
-              id: true,
-              speaker: true,
-              content: true,
-              audioUrl: true,
-            },
-          })
-          if (!line) {
-            throw new Error('PROJECT_AGENT_VOICE_LINE_NOT_FOUND')
-          }
-          if (!hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey)) {
-            // Bailian/Qwen TTS requires a voiceId binding; uploaded reference audio alone is not sufficient.
-            if (selectedProviderKey === 'bailian' && hasUploadedReferenceAudioForSpeaker({ speaker: line.speaker, characters, speakerVoices })) {
-              throw new ApiError('INVALID_PARAMS', {
-                message: '无音色ID，QwenTTS 必须使用 AI 设计音色',
-              })
-            }
-            throw new Error('PROJECT_AGENT_VOICE_BINDING_REQUIRED')
-          }
-          voiceLines = [line]
-        }
-
-        if (voiceLines.length === 0) {
-          return {
-            success: true,
-            async: true,
-            results: [],
-            taskIds: [],
-            total: 0,
-            error: '没有需要生成的台词（可能是已生成或缺少音色绑定）',
-          }
-        }
-
-        const localeForTask = resolveRequiredTaskLocale(ctx.request, { meta: { locale } })
-        const results = await Promise.all(
-          voiceLines.map(async (line) => {
-            const payload = {
-              episodeId,
-              lineId: line.id,
-              maxSeconds: estimateVoiceLineMaxSeconds(line.content),
-              audioModel: selectedResolvedAudioModel.modelKey,
-              meta: {
-                locale,
-              },
-            }
-            const result = await submitTask({
-              userId: ctx.userId,
-              locale: localeForTask,
-              requestId: getRequestId(ctx.request),
-              projectId: ctx.projectId,
-              episodeId,
-              type: TASK_TYPE.VOICE_LINE,
-              targetType: 'ProjectVoiceLine',
-              targetId: line.id,
-              payload: withTaskUiPayload(payload, {
-                hasOutputAtStart: await hasVoiceLineAudioOutput(line.id),
-              }),
-              dedupeKey: `voice_line:${line.id}`,
-              billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.VOICE_LINE, payload),
-            })
-            return {
-              refId: line.id,
-              taskId: result.taskId,
-              status: result.status,
-            }
-          }),
-        )
-
-        const taskIds = results.map((item) => item.taskId)
-        const mutationBatch = await createMutationBatch({
-          projectId: ctx.projectId,
-          userId: ctx.userId,
-          source: ctx.source,
-          operationId: 'voice_generate',
-          summary: `voice_generate:${episodeId}:${all ? 'all' : (lineId || 'single')}`,
-          entries: voiceLines.map((line) => ({
-            kind: 'voice_line_restore',
-            targetType: 'ProjectVoiceLine',
-            targetId: line.id,
-            payload: {
-              previousAudioUrl: (line as { audioUrl?: string | null }).audioUrl ?? null,
-            },
-          })),
-        })
-        if (!all) {
-          writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-            operationId: 'voice_generate',
-            taskId: taskIds[0] || '',
-            status: results[0]?.status || 'queued',
-            mutationBatchId: mutationBatch.id,
-          })
-          return {
-            success: true,
-            async: true,
-            taskId: taskIds[0],
-            mutationBatchId: mutationBatch.id,
-          }
-        }
-
-        writeOperationDataPart<TaskBatchSubmittedPartData>(ctx.writer, 'data-task-batch-submitted', {
-          operationId: 'voice_generate',
-          total: taskIds.length,
-          taskIds,
-          results: results.map((item) => ({ refId: item.refId, taskId: item.taskId })),
-          mutationBatchId: mutationBatch.id,
-        })
-
-        return {
-          success: true,
-          async: true,
-          results: results.map((item) => ({ lineId: item.refId, taskId: item.taskId })),
-          taskIds,
-          total: taskIds.length,
-          mutationBatchId: mutationBatch.id,
-        }
+      execute: async (ctx, input) => executeVoiceGenerateOperation({
+        ctx,
+        input,
+        operationId: 'voice_generate',
+        all: input.all === true,
+      }),
+    },
+    generate_voice_line_audio: {
+      id: 'generate_voice_line_audio',
+      description: 'Generate audio for a single voice line.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['voice', 'line', 'generate'],
+        tags: ['asset', 'voice', 'edit'],
       },
+      selection: { baseWeight: 36, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        longRunning: true,
+        confirmationSummary: '将为单条台词生成配音（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'episode',
+      inputSchema: generateVoiceLineAudioInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeVoiceGenerateOperation({
+        ctx,
+        input,
+        operationId: 'generate_voice_line_audio',
+        all: false,
+      }),
+    },
+    generate_episode_voice_audio: {
+      id: 'generate_episode_voice_audio',
+      description: 'Generate audio for all pending voice lines in an episode.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['voice', 'episode', 'generate'],
+        tags: ['asset', 'voice', 'edit'],
+      },
+      selection: { baseWeight: 34, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        bulk: true,
+        longRunning: true,
+        confirmationSummary: '将为整集待生成台词批量生成配音（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'episode',
+      inputSchema: generateEpisodeVoiceAudioInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeVoiceGenerateOperation({
+        ctx,
+        input,
+        operationId: 'generate_episode_voice_audio',
+        all: true,
+      }),
     },
     voice_design: {
       id: 'voice_design',
@@ -3241,12 +3080,7 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     generate_video: {
       id: 'generate_video',
       description: 'Generate panel videos for a storyboard panel or an episode batch (async task submission).',
-      tool: {
-        defaultVisibility: 'scenario',
-        groups: ['video', 'panel'],
-        tags: ['video', 'media', 'panel', 'storyboard'],
-      },
-      selection: { baseWeight: 42, costHint: 'high' },
+      channels: { tool: false, api: true },
       sideEffects: {
         mode: 'act',
         risk: 'high',
@@ -3271,181 +3105,69 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
         generationOptions: z.record(z.unknown()).optional(),
       }).passthrough(),
       outputSchema: z.unknown(),
-      execute: async (ctx, input) => {
-        const locale = resolveLocaleFromContext(ctx.context.locale)
-        const inputRecord = isRecord(input) ? input : ({} as Record<string, unknown>)
-        const existingMeta = isRecord(inputRecord.meta) ? inputRecord.meta : {}
-        const payload: Record<string, unknown> = {
-          ...inputRecord,
-          meta: {
-            ...existingMeta,
-            locale,
-          },
-        }
-        delete payload.confirmed
-
-        requireVideoModelKeyFromPayload(payload)
-        validateFirstLastFrameModel(payload.firstLastFrame)
-        await validateVideoCapabilityCombination({
-          payload,
-          projectId: ctx.projectId,
-          userId: ctx.userId,
-        })
-
-        const localeForTask = resolveRequiredTaskLocale(ctx.request, payload)
-        const isBatch = payload.all === true
-        if (isBatch) {
-          const episodeId = normalizeString(payload.episodeId) || normalizeString(ctx.context.episodeId)
-          if (!episodeId) {
-            throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
-          }
-          const limit = typeof payload.limit === 'number' && Number.isFinite(payload.limit) ? payload.limit : 20
-
-          const panels = await prisma.projectPanel.findMany({
-            where: {
-              storyboard: { episodeId },
-              imageUrl: { not: null },
-              OR: [
-                { videoUrl: null },
-                { videoUrl: '' },
-              ],
-            },
-            select: { id: true, videoUrl: true },
-            take: limit,
-          })
-
-          if (panels.length === 0) {
-            return { tasks: [], total: 0 }
-          }
-
-          const tasks = await Promise.all(
-            panels.map(async (panel) =>
-              submitTask({
-                userId: ctx.userId,
-                locale: localeForTask,
-                requestId: getRequestId(ctx.request),
-                projectId: ctx.projectId,
-                episodeId,
-                type: TASK_TYPE.VIDEO_PANEL,
-                targetType: 'ProjectPanel',
-                targetId: panel.id,
-                payload: withTaskUiPayload(payload, {
-                  hasOutputAtStart: await hasPanelVideoOutput(panel.id),
-                }),
-                dedupeKey: `video_panel:${panel.id}`,
-                billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
-              }),
-            ),
-          )
-
-          const taskIds = tasks.map((task) => task.taskId)
-          const mutationBatch = await createMutationBatch({
-            projectId: ctx.projectId,
-            userId: ctx.userId,
-            source: ctx.source,
-            operationId: 'generate_video',
-            summary: `generate_video:${episodeId}:batch`,
-            entries: panels.map((panel) => ({
-              kind: 'panel_video_restore',
-              targetType: 'ProjectPanel',
-              targetId: panel.id,
-              payload: {
-                previousVideoUrl: panel.videoUrl ?? null,
-              },
-            })),
-          })
-          writeOperationDataPart<TaskBatchSubmittedPartData>(ctx.writer, 'data-task-batch-submitted', {
-            operationId: 'generate_video',
-            total: tasks.length,
-            taskIds,
-            results: panels.map((panel, index) => ({ refId: panel.id, taskId: taskIds[index] || '' })),
-            mutationBatchId: mutationBatch.id,
-          })
-
-          return {
-            tasks,
-            total: tasks.length,
-            mutationBatchId: mutationBatch.id,
-          }
-        }
-
-        let panelId = normalizeString(payload.panelId)
-        let previousVideoUrl: string | null = null
-        if (!panelId) {
-          const storyboardId = normalizeString(payload.storyboardId)
-          const panelIndex = typeof payload.panelIndex === 'number' ? payload.panelIndex : NaN
-          if (!storyboardId || !Number.isFinite(panelIndex)) {
-            throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
-          }
-          const panel = await prisma.projectPanel.findFirst({
-            where: { storyboardId, panelIndex: Number(panelIndex) },
-            select: { id: true, videoUrl: true },
-          })
-          panelId = panel?.id || ''
-          previousVideoUrl = panel?.videoUrl ?? null
-        }
-        if (!panelId) {
-          throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-        }
-        if (normalizeString(payload.panelId)) {
-          const panel = await prisma.projectPanel.findUnique({
-            where: { id: panelId },
-            select: { videoUrl: true },
-          })
-          if (!panel) {
-            throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
-          }
-          previousVideoUrl = panel.videoUrl ?? null
-        }
-
-        const result = await submitTask({
-          userId: ctx.userId,
-          locale: localeForTask,
-          requestId: getRequestId(ctx.request),
-          projectId: ctx.projectId,
-          type: TASK_TYPE.VIDEO_PANEL,
-          targetType: 'ProjectPanel',
-          targetId: panelId,
-          payload: withTaskUiPayload(payload, {
-            hasOutputAtStart: await hasPanelVideoOutput(panelId),
-          }),
-          dedupeKey: `video_panel:${panelId}`,
-          billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
-        })
-
-        const mutationBatch = await createMutationBatch({
-          projectId: ctx.projectId,
-          userId: ctx.userId,
-          source: ctx.source,
-          operationId: 'generate_video',
-          summary: `generate_video:${panelId}`,
-          entries: [
-            {
-              kind: 'panel_video_restore',
-              targetType: 'ProjectPanel',
-              targetId: panelId,
-              payload: {
-                previousVideoUrl,
-              },
-            },
-          ],
-        })
-
-        writeOperationDataPart<TaskSubmittedPartData>(ctx.writer, 'data-task-submitted', {
-          operationId: 'generate_video',
-          taskId: result.taskId,
-          status: result.status,
-          runId: result.runId || null,
-          deduped: result.deduped,
-          mutationBatchId: mutationBatch.id,
-        })
-
-        return {
-          ...result,
-          panelId,
-          mutationBatchId: mutationBatch.id,
-        }
+      execute: async (ctx, input) => executeGenerateVideoOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'generate_video',
+        batch: input.all === true,
+      }),
+    },
+    generate_panel_video: {
+      id: 'generate_panel_video',
+      description: 'Generate video for a single storyboard panel.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['video', 'panel', 'generate'],
+        tags: ['video', 'media', 'panel', 'storyboard'],
       },
+      selection: { baseWeight: 44, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        overwrite: true,
+        longRunning: true,
+        confirmationSummary: '将为单个分镜格生成视频（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'panel',
+      inputSchema: generatePanelVideoInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeGenerateVideoOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'generate_panel_video',
+        batch: false,
+      }),
+    },
+    generate_episode_videos: {
+      id: 'generate_episode_videos',
+      description: 'Batch generate videos for pending panels in an episode.',
+      tool: {
+        defaultVisibility: 'scenario',
+        groups: ['video', 'episode', 'generate'],
+        tags: ['video', 'media', 'panel', 'storyboard'],
+      },
+      selection: { baseWeight: 40, costHint: 'high' },
+      sideEffects: {
+        mode: 'act',
+        risk: 'high',
+        billable: true,
+        requiresConfirmation: true,
+        overwrite: true,
+        bulk: true,
+        longRunning: true,
+        confirmationSummary: '将为整集待生成分镜批量生成视频（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      scope: 'episode',
+      inputSchema: generateEpisodeVideosInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeGenerateVideoOperation({
+        ctx,
+        input: { ...input, all: true } as Record<string, unknown>,
+        operationId: 'generate_episode_videos',
+        batch: true,
+      }),
     },
   }
 }

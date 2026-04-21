@@ -17,7 +17,6 @@ describe('project agent operation registry', () => {
     for (const operationId of [
       'generate_character_image',
       'generate_location_image',
-      'modify_asset_image',
       'regenerate_panel_image',
       'panel_variant',
       'create_storyboard_panel',
@@ -28,10 +27,14 @@ describe('project agent operation registry', () => {
       'select_storyboard_panel_candidate',
       'cancel_storyboard_panel_candidates',
       'insert_storyboard_panel',
-      'voice_generate',
+      'modify_character_image',
+      'modify_location_image',
+      'generate_voice_line_audio',
+      'generate_episode_voice_audio',
+      'generate_panel_video',
+      'generate_episode_videos',
       'voice_design',
       'lip_sync',
-      'generate_video',
     ]) {
       const operation = registry[operationId]
       expect(operation).toBeDefined()
@@ -46,8 +49,14 @@ describe('project agent operation registry', () => {
     const registry = createProjectAgentOperationRegistry()
 
     expect(registry.mutate_storyboard?.channels).toEqual({ tool: false, api: true })
+    expect(registry.modify_asset_image?.channels).toEqual({ tool: false, api: true })
+    expect(registry.voice_generate?.channels).toEqual({ tool: false, api: true })
+    expect(registry.generate_video?.channels).toEqual({ tool: false, api: true })
     expect(registry.delete_storyboard_panel?.channels?.tool ?? true).toBe(true)
     expect(registry.update_storyboard_panel_prompt?.channels?.tool ?? true).toBe(true)
     expect(registry.insert_storyboard_panel?.channels?.tool ?? true).toBe(true)
+    expect(registry.modify_character_image?.channels?.tool ?? true).toBe(true)
+    expect(registry.generate_voice_line_audio?.channels?.tool ?? true).toBe(true)
+    expect(registry.generate_panel_video?.channels?.tool ?? true).toBe(true)
   })
 })
