@@ -24,7 +24,7 @@ export const POST = apiHandler(async (
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'modify_asset_image',
+    operationId: type === 'character' ? 'modify_character_image' : 'modify_location_image',
     projectId,
     userId: authResult.session.user.id,
     input: body,

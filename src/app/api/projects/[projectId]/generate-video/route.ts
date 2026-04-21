@@ -37,7 +37,7 @@ export const POST = apiHandler(async (
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'generate_video',
+    operationId: body.all === true ? 'generate_episode_videos' : 'generate_panel_video',
     projectId,
     userId: authResult.session.user.id,
     context: {
