@@ -12,6 +12,7 @@ import {
   loadProjectAssistantThread,
   saveProjectAssistantThread,
 } from '@/lib/project-agent/persistence'
+import { writeWorkspaceAssistantThreadLog } from '@/lib/project-agent/thread-log'
 
 type RequestBody = {
   messages?: unknown
@@ -154,6 +155,7 @@ export const PUT = apiHandler(async (
       assistantId: 'workspace-command',
       messages,
     })
+    await writeWorkspaceAssistantThreadLog(thread)
     return NextResponse.json({ thread })
   } catch (error) {
     throw mapProjectAgentError(error)

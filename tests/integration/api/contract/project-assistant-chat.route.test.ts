@@ -37,6 +37,12 @@ const persistenceMock = vi.hoisted(() => ({
   clearProjectAssistantThread: vi.fn(async (): Promise<void> => undefined),
 }))
 
+const threadLogMock = vi.hoisted(() => ({
+  writeWorkspaceAssistantThreadLog: vi.fn(async () => '/tmp/workspace-assistant.log'),
+  serializeWorkspaceAssistantThreadLog: vi.fn(() => '# Workspace Assistant Thread Log'),
+  buildWorkspaceAssistantThreadLogFileName: vi.fn(() => 'workspace-assistant__project-1__episode_episode-1__thread-1.log'),
+}))
+
 const modelConfigMock = vi.hoisted(() => ({
   getUserModelConfig: vi.fn(async () => ({
     analysisModel: 'llm::mock',
@@ -74,6 +80,7 @@ vi.mock('@/lib/api-auth', () => {
 
 vi.mock('@/lib/project-agent', () => projectAgentMock)
 vi.mock('@/lib/project-agent/persistence', () => persistenceMock)
+vi.mock('@/lib/project-agent/thread-log', () => threadLogMock)
 vi.mock('@/lib/config-service', () => modelConfigMock)
 vi.mock('@/lib/project-agent/model', () => modelResolverMock)
 vi.mock('@/lib/project-agent/message-compression', () => messageCompressionMock)
@@ -84,6 +91,7 @@ import {
   POST as chatPost,
   PUT as chatPut,
 } from '@/app/api/projects/[projectId]/assistant/chat/route'
+import { GET as chatLogGet } from '@/app/api/projects/[projectId]/assistant/chat/log/route'
 
 describe('project assistant chat route', () => {
   beforeEach(() => {
@@ -323,6 +331,7 @@ describe('project assistant chat route', () => {
         },
       ],
     })
+    expect(threadLogMock.writeWorkspaceAssistantThreadLog).toHaveBeenCalledTimes(1)
   })
 
   it('PUT /api/projects/[projectId]/assistant/chat -> persists compressed thread when long conversation threshold is hit', async () => {
@@ -382,5 +391,39 @@ describe('project assistant chat route', () => {
       episodeId: 'episode-1',
       assistantId: 'workspace-command',
     })
+  })
+
+  it('GET /api/projects/[projectId]/assistant/chat/log -> downloads current workspace thread log', async () => {
+    persistenceMock.loadProjectAssistantThread.mockResolvedValueOnce({
+      id: 'thread-1',
+      assistantId: 'workspace-command',
+      projectId: 'project-1',
+      episodeId: 'episode-1',
+      scopeRef: 'episode:episode-1',
+      messages: [
+        {
+          id: 'assistant-1',
+          role: 'assistant',
+          parts: [{ type: 'text', text: 'persisted' }],
+        },
+      ],
+      createdAt: '2026-04-13T00:00:00.000Z',
+      updatedAt: '2026-04-13T00:00:00.000Z',
+    })
+
+    const response = await chatLogGet(
+      buildMockRequest({
+        path: '/api/projects/project-1/assistant/chat/log',
+        method: 'GET',
+        query: {
+          episodeId: 'episode-1',
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(response.status).toBe(200)
+    expect(threadLogMock.serializeWorkspaceAssistantThreadLog).toHaveBeenCalledTimes(1)
+    expect(response.headers.get('content-disposition')).toContain('workspace-assistant__project-1__episode_episode-1__thread-1.log')
   })
 })
