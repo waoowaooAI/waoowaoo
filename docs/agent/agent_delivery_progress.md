@@ -22,6 +22,8 @@
 - ✅ system prompt 去状态化（改为 tool 按需读取）
 - ✅ `auto/plan/fast` 显式切换（切换会重建 chat session，真实影响后续请求）
 - ✅ execution-mode 解析（显式 mode 与 router intent 统一收敛）
+- ✅ 待处理动作区（审批/确认前置到 UI 层）
+- ✅ 工具选择运行时日志
 
 综合判断：
 
@@ -64,6 +66,7 @@ UI / API route
 - interactionMode 已升级为 `auto/plan/fast`
 - `interactionMode + routedIntent` 会在 runtime 层统一解析成 `effectiveIntent`
 - 基于路由结果动态装配 tools
+- 待审批/待确认动作会聚合到 Assistant 面板的显式待处理动作区
 - 流式输出到 UIMessage stream
 - stop controller 触顶显式输出 `data-agent-stop`
 
@@ -120,6 +123,7 @@ UI / API route
 - `plan` 模式下会阻止 `act` 工具，但保留 `plan` 工具进入确认流
 - `auto` 模式跟随 router intent，`fast` 模式保留 act，`plan` 模式会把 `act intent` 降级为 planning handling
 - `interactionMode` 已进入 chat session id，切换模式会重建会话实例并影响下一条请求
+- runtime 会记录工具选择日志，包括 interactionMode、routedIntent、effectiveIntent、toolCategories、selected operations
 - 最大工具数限制（默认 45）
 - 工具为 0 时显式报错
 
@@ -182,8 +186,8 @@ UI / API route
 
 ### 5.2 部分完成（P1）
 
-- ⬜ 工具选择策略的生产场景验证 → 需要日志和真实会话回归样本
-- ⬜ `auto/plan/fast` 已有显式切换和 execution-mode 解析，但审批前置和 richer workflow UI 仍不足
+- ⬜ 工具选择策略的生产场景验证 → 日志已落地，仍需真实会话回归样本与日志消费
+- ⬜ `auto/plan/fast` 已有显式切换、execution-mode 解析、模式说明和待处理动作区，但 richer workflow UI 仍不足
 - ⬜ 富渲染卡片（对比/diff/预览）仍偏弱
 - ⬜ markdown 基础渲染已完成，但视觉一致性和复杂内容排版仍可继续增强
 

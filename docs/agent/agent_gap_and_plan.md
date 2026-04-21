@@ -14,7 +14,7 @@
 - **状态注入收敛**（P1）：已完成。system prompt 不再拼接 `phaseSummary/toolSummary`，改为在规则中要求模型先调用 `get_project_phase` / `get_project_snapshot` 读取状态。
 - **结构化错误与 confirmed gate**（P0）：已完成。`tool adapter` 统一封装确认门控和错误返回。
 - **operation registry 统一**（P0）：已完成。tool 和 API 两条入口共用同一个 registry。
-- **interactionMode 三态化**（P1）：已部分完成。当前已从二态升级为 `auto/plan/fast` 三态，并通过 execution-mode 统一解析显式 mode 与 router intent。`plan` 模式下 `act intent` 会降级为 planning handling，`fast` 模式保留直接 act，`auto` 跟随 router。相关交互文案、审批前置和 richer workflow UI 仍待补齐。
+- **interactionMode 三态化**（P1）：已大部分完成。当前已从二态升级为 `auto/plan/fast` 三态，并通过 execution-mode 统一解析显式 mode 与 router intent。`plan` 模式下 `act intent` 会降级为 planning handling，`fast` 模式保留直接 act，`auto` 跟随 router。前端已补模式说明、待处理动作区、审批/确认前置入口；剩余缺口主要是 richer workflow UI 与对比卡片。
 
 当前差距主要集中在 **P1/P2 级别的体验优化和工程收敛**，不再涉及架构重做。
 
@@ -42,7 +42,7 @@
 | 能力 | 成熟范式要求 | 当前状态 | 差距级别 |
 | --- | --- | --- | --- |
 | 状态注入方式 | prompt 只保留规则，状态通过 tool 读取 | ✅ 已完成，system prompt 仅保留行为规则与 tool 调用约束 | - |
-| 多轮规划与审批 UI | 显式 mode 与隐式 intent 边界清晰，规划/审批/执行语义可见 | 已有 `auto/plan/fast` 显式切换和 execution-mode 解析；但审批前置和 richer UI 仍不足 | P1 |
+| 多轮规划与审批 UI | 显式 mode 与隐式 intent 边界清晰，规划/审批/执行语义可见 | 已有 `auto/plan/fast` 显式切换、execution-mode 解析、模式说明、待处理动作区；但 richer UI 和对比视图仍不足 | P1 |
 | 预算语义 | 确认可升级为预算授权 | confirmed gate 只有布尔确认，无预算字段 | P2 |
 | Skills 三类分层 | project-workflow / saved / installed 清晰区分 | `skill-system/` 和 `saved-skills/` 已存在，但 UI 无统一的 skills 浏览/安装/启用入口 | P2 |
 | 富渲染卡片 | 对比渲染、diff 视图、任务状态卡片 | 基础任务状态和确认卡片已有，对比/diff 等高级卡片不足 | P2 |
@@ -53,8 +53,8 @@
 
 | 优先级 | 差距项 | 目标状态 | 建议动作 | 验收方式 |
 | --- | --- | --- | --- | --- |
-| P1 | 工具选择持续精调 | 不漏掉低频必要工具，不暴露无关工具 | 收集真实对话中的工具选择日志，验证评分策略覆盖度；增加 tool selection 回归测试 | tool selection 单测 + 日志分析 |
-| P1 | interactionMode 交互完善 | `auto/plan/fast` 语义、审批边界、执行结果在 UI 中清晰可见 | 在三态切换基础上继续补审批前置、模式说明和 richer workflow UI | component 测试 |
+| P1 | 工具选择持续精调 | 不漏掉低频必要工具，不暴露无关工具 | 工具选择日志已落地；继续补真实对话覆盖度验证与日志消费视图 | tool selection 单测 + 日志分析 |
+| P1 | interactionMode 交互完善 | `auto/plan/fast` 语义、审批边界、执行结果在 UI 中清晰可见 | 模式说明、待处理动作区已落地；继续补 richer workflow UI | component 测试 |
 | P1 | 富渲染能力补齐 | 复杂 act-mode 有前后对比、diff、结果回看卡片 | 增加 preview/compare/diff 型卡片组件 | component / integration 测试 |
 | P2 | budget 语义预留 | 确认语义可升级为预算语义 | 在 sideEffects / context 中保留预算字段 | 协议测试 |
 | P2 | Skills 调用入口 | skills 可显式浏览/安装/调用 | 统一 `skill-system`/`saved-skills` 的 UI 入口 | component / integration 测试 |
@@ -66,13 +66,13 @@
 
 ### 4.1 短期重点（下一迭代）
 
-1. **工具选择策略的真实场景验证**：`tool-policy.ts` 的评分体系已经完整，并已有 scenario/runtime 单测，但仍缺少生产日志闭环。建议补工具选择日志和真实对话回归样本，确保边缘场景（如多 domain 混合请求）不漏工具。
+1. **工具选择策略的真实场景验证**：`tool-policy.ts` 的评分体系已经完整，并已有 scenario/runtime 单测和运行时日志；仍缺少日志消费与真实对话回放验证，需确保边缘场景（如多 domain 混合请求）不漏工具。
 
 2. **interactionMode 交互补齐**：
    - 当前已有 `auto/plan/fast` 显式切换
    - 已加入 execution-mode 解析，显式 mode 与 router intent 不再直接冲突
-   - 还应补模式说明、审批前置和 workflow 边界提示
-   - 需要避免用户在 `plan` 模式下误以为会直接执行
+   - 已补模式说明、待审批/待确认动作区和 workflow 计划选择入口
+   - 剩余工作是 richer workflow UI、对比视图和更清晰的执行后反馈
 
 3. **对话体验完善**：
    - markdown 基础渲染已落地，但视觉一致性和复杂内容排版仍可继续优化
