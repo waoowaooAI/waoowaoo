@@ -243,10 +243,6 @@ export {
     useProjectAssistantThreadSync,
 } from './useProjectAssistantThread'
 
-export {
-    useProjectAssistantToolSelection,
-    useProjectAssistantToolSelectionSync,
-} from './useProjectAssistantToolSelection'
 
 export {
     useUserModels,

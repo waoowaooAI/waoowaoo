@@ -45,23 +45,4 @@ describe('buildProjectAgentToolCatalog', () => {
     expect(catalog.tools.map((t) => t.operationId)).toEqual(['b_visible', 'c_visible'])
     expect(catalog.tools[0]?.groups).toEqual(['group'])
   })
-
-  it('localizes selectable descriptions for supported locale copy', () => {
-    const operations: ProjectAgentOperationRegistry = {
-      asset_hub_list_folders: {
-        id: 'asset_hub_list_folders',
-        description: 'List global asset folders for the current user.',
-        scope: 'project',
-        sideEffects: { mode: 'query', risk: 'low' },
-        channels: { tool: true, api: true },
-        tool: { selectable: true, defaultVisibility: 'core', groups: ['asset-hub'], tags: ['read'] },
-        inputSchema: z.object({}),
-        outputSchema: z.unknown(),
-        execute: async () => ({}),
-      },
-    }
-
-    const catalog = buildProjectAgentToolCatalog(operations, 'zh')
-    expect(catalog.tools[0]?.description).toBe('列出当前用户的全局资产文件夹。')
-  })
 })

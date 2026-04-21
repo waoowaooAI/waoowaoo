@@ -18,8 +18,6 @@ import { createProjectAgentStopController } from './stop-conditions'
 import type { ProjectAgentStopPartData } from './types'
 import { routeProjectAgentRequest } from './router'
 import { selectProjectAgentTools } from './tool-policy'
-import { normalizeProjectAgentToolSelection } from './tool-selection'
-import { resolveEffectiveProjectAssistantToolSelection } from './tool-selection-store'
 import { buildProjectAgentSystemPrompt } from './copy'
 import { normalizeProjectAgentLocale } from './locale'
 import { compressMessages } from './message-compression'
@@ -31,12 +29,10 @@ function normalizeProjectAgentContext(raw: unknown): ProjectAgentContext {
   const locale = typeof record.locale === 'string' ? record.locale.trim() : ''
   const episodeId = typeof record.episodeId === 'string' ? record.episodeId.trim() : ''
   const currentStage = typeof record.currentStage === 'string' ? record.currentStage.trim() : ''
-  const toolSelection = normalizeProjectAgentToolSelection(record.toolSelection)
   return {
     ...(locale ? { locale } : {}),
     ...(episodeId ? { episodeId } : {}),
     ...(currentStage ? { currentStage } : {}),
-    ...(toolSelection ? { toolSelection } : {}),
   }
 }
 
@@ -75,17 +71,9 @@ export async function createProjectAgentChatResponse(input: {
   }
 
   const contextBase = normalizeProjectAgentContext(input.context)
-  const context: ProjectAgentContext = contextBase.toolSelection
-    ? contextBase
-    : {
-        ...contextBase,
-        toolSelection: await resolveEffectiveProjectAssistantToolSelection({
-          userId: input.userId,
-          assistantId: 'workspace-command',
-          projectId: input.projectId,
-          episodeId: contextBase.episodeId ?? null,
-        }),
-      }
+  const context: ProjectAgentContext = {
+    ...contextBase,
+  }
   const phase = await resolveProjectPhase({
     projectId: input.projectId,
     userId: input.userId,
@@ -107,17 +95,27 @@ export async function createProjectAgentChatResponse(input: {
     originalMessages: runtimeMessages,
     execute: async ({ writer }) => {
       const operations = createProjectAgentOperationRegistry()
-      const route = routeProjectAgentRequest({
+      const route = await routeProjectAgentRequest({
         messages: runtimeMessages,
         phase,
         context,
+        model: resolved.languageModel,
       })
+      if (route.needsClarification && route.clarifyingQuestion) {
+        writer.write({ type: 'start' })
+        writer.write({ type: 'start-step' })
+        writer.write({ type: 'text-start', id: 'clarification' })
+        writer.write({ type: 'text-delta', id: 'clarification', delta: route.clarifyingQuestion })
+        writer.write({ type: 'text-end', id: 'clarification' })
+        writer.write({ type: 'finish-step' })
+        writer.write({ type: 'finish', finishReason: 'stop' })
+        return
+      }
       const selection = selectProjectAgentTools({
         operations,
         context,
         phase,
         route,
-        toolSelection: context.toolSelection,
         maxTools: 45,
       })
       const tools = Object.fromEntries(
@@ -163,11 +161,12 @@ export async function createProjectAgentChatResponse(input: {
             `actions.act=${phase.availableActions.actMode.join(',') || '-'}`,
           ].join(' | '),
           toolSummary: [
-            `node=${selection.route.nodeId}`,
             `intent=${selection.route.intent}`,
             `domains=${selection.route.domains.join(',')}`,
+            `categories=${selection.route.toolCategories.join(',')}`,
             `tools=${String(selection.operationIds.length)}/${String(selection.totalCandidates)}`,
             `confidence=${String(selection.route.confidence)}`,
+            `reasoning=${selection.route.reasoning.join(';') || '-'}`,
           ].join(','),
         }),
         messages: await toModelMessages(runtimeMessages),

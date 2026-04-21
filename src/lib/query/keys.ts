@@ -103,8 +103,6 @@ export const queryKeys = {
             ['project', projectId, 'commands', episodeId ?? ''] as const,
         assistantThread: (projectId: string, episodeId?: string | null) =>
             ['project', projectId, 'assistant-thread', episodeId ?? ''] as const,
-        assistantToolSelection: (projectId: string, scope: string, episodeId?: string | null) =>
-            ['project', projectId, 'assistant-tool-selection', scope, episodeId ?? ''] as const,
     },
 
     // ============ 顶层便捷函数 ============

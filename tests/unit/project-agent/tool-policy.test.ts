@@ -28,11 +28,13 @@ function buildPhaseSnapshot(): ProjectPhaseSnapshot {
 
 function buildRoute(partial: Partial<ProjectAgentRouteDecision>): ProjectAgentRouteDecision {
   return {
-    nodeId: 'unknown',
     intent: 'query',
     domains: ['unknown'],
     confidence: 0.5,
-    reasonCodes: ['test'],
+    toolCategories: ['project-overview'],
+    needsClarification: false,
+    clarifyingQuestion: null,
+    reasoning: ['test'],
     latestUserText: 'test',
     ...partial,
   }
@@ -89,8 +91,7 @@ describe('selectProjectAgentTools', () => {
       operations,
       context: { episodeId: null },
       phase: buildPhaseSnapshot(),
-      route: buildRoute({ nodeId: 'storyboard_read', intent: 'query', domains: ['storyboard', 'panel'] }),
-      toolSelection: null,
+      route: buildRoute({ intent: 'query', domains: ['storyboard'], toolCategories: ['storyboard-read'] }),
       maxTools: 10,
     })
 
@@ -131,11 +132,49 @@ describe('selectProjectAgentTools', () => {
       operations,
       context: {},
       phase: buildPhaseSnapshot(),
-      route: buildRoute({ nodeId: 'asset_hub_read', intent: 'query', domains: ['asset-hub'] }),
-      toolSelection: null,
+      route: buildRoute({ intent: 'query', domains: ['asset-hub'], toolCategories: ['asset-hub'] }),
       maxTools: 5,
     })
 
     expect(selection.operationIds[0]).toBe('asset_hub_picker')
+  })
+
+  it('[panel media] keeps likely-needed media tools instead of aggressive exclusion', () => {
+    const operations: ProjectAgentOperationRegistry = {
+      regenerate_panel_image: {
+        id: 'regenerate_panel_image',
+        description: 'regenerate panel image',
+        scope: 'panel',
+        sideEffects: { mode: 'act', risk: 'medium', billable: true },
+        channels: { tool: true, api: true },
+        tool: { defaultVisibility: 'scenario', tags: ['media', 'panel', 'storyboard'], groups: ['media'], selectable: true },
+        selection: { baseWeight: 60, costHint: 'high' },
+        inputSchema: z.object({}),
+        outputSchema: z.unknown(),
+        execute: async () => ({}),
+      },
+      get_project_phase: {
+        id: 'get_project_phase',
+        description: 'phase',
+        scope: 'project',
+        sideEffects: { mode: 'query', risk: 'low' },
+        channels: { tool: true, api: true },
+        tool: { defaultVisibility: 'core', tags: ['read', 'project'], groups: ['read'], selectable: true },
+        selection: { baseWeight: 10, costHint: 'low' },
+        inputSchema: z.object({}),
+        outputSchema: z.unknown(),
+        execute: async () => ({}),
+      },
+    }
+
+    const selection = selectProjectAgentTools({
+      operations,
+      context: { episodeId: 'ep-1' },
+      phase: buildPhaseSnapshot(),
+      route: buildRoute({ intent: 'act', domains: ['storyboard'], toolCategories: ['panel-media'] }),
+      maxTools: 5,
+    })
+
+    expect(selection.operationIds).toContain('regenerate_panel_image')
   })
 })

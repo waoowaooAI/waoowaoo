@@ -66,12 +66,13 @@ export function buildProjectAgentSystemPrompt(params: {
       'When confirmationRequired=true: explain the side effects, ask for confirmation, and call the same tool again with confirmed=true after the user approves.',
       'When you see staleArtifacts or failedItems: explain the reason first and recommend the next action.',
       'You may only use the tools injected into the current turn. Tool availability is dynamically trimmed by intent and stage.',
+      'The router has already selected tool categories. Do not assume missing tools exist.',
       'Answer concisely in English.',
       `projectId=${params.projectId}`,
       `episodeId=${params.episodeId}`,
       `currentStage=${params.stage}`,
       `projectPhase=${params.phaseSummary}`,
-      `toolSelection=${params.toolSummary}`,
+      `toolRouting=${params.toolSummary}`,
     ].join('\n')
   }
 
@@ -87,12 +88,13 @@ export function buildProjectAgentSystemPrompt(params: {
     '当 tool 返回 confirmationRequired=true：你应向用户解释副作用原因并请求确认，然后在下一次调用同一 tool 时传入 confirmed=true（可参考 confirmation 卡片中的 argsHint）。',
     '当你看到 staleArtifacts 或 failedItems：优先解释原因与推荐动作（例如重跑 workflow、或执行更小粒度的 act 修复）。',
     '你只能使用当前会话注入的 tools 来完成任务（会根据用户意图与阶段动态裁剪）。tool 定义中已包含使用说明，无需额外列举。',
+    'router 已经先行选择了工具类别，不要假设未注入的工具存在。',
     '回答简洁，用中文。',
     `projectId=${params.projectId}`,
     `episodeId=${params.episodeId}`,
     `currentStage=${params.stage}`,
     `projectPhase=${params.phaseSummary}`,
-    `toolSelection=${params.toolSummary}`,
+    `toolRouting=${params.toolSummary}`,
   ].join('\n')
 }
 

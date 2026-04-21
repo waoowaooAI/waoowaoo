@@ -120,8 +120,8 @@ describe('project assistant chat route', () => {
       projectId: 'project-1',
       userId: 'user-1',
       context: {
-          episodeId: 'episode-1',
-          currentStage: 'config',
+        episodeId: 'episode-1',
+        currentStage: 'config',
       },
     }))
   })
