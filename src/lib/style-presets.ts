@@ -7,6 +7,12 @@ export interface StylePresetOption {
 
 const ALL_STYLE_PRESETS: readonly StylePresetOption[] = [
   {
+    value: '',
+    label: '无',
+    description: '不启用',
+    enabled: true,
+  },
+  {
     value: 'horror-suspense',
     label: '恐怖悬疑',
     description: '压迫氛围',

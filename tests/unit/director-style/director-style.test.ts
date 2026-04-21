@@ -21,6 +21,8 @@ describe('director style', () => {
 
     expect(doc).not.toBeNull()
     expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.CHARACTER_ANALYZE, doc)).toContain('危险感')
+    expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.CHARACTER_ANALYZE, doc)).toContain('"priorities"')
     expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.PANEL_IMAGE_GENERATE, doc)).toContain('冷色')
+    expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.PANEL_IMAGE_GENERATE, doc)).toContain('"allowWhenHelpful"')
   })
 })

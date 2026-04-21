@@ -22,6 +22,5 @@ export function resolveDirectorStyleRequirements(
   if (!directorStyleDoc) return ''
   const field = PROMPT_TO_STYLE_FIELD[promptId]
   if (!field) return ''
-  return directorStyleDoc[field]
+  return JSON.stringify(directorStyleDoc[field], null, 2)
 }
-

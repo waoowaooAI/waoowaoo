@@ -2,9 +2,39 @@ import * as React from 'react'
 import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { SegmentedControl } from '@/components/ui/SegmentedControl'
+import {
+  buildSegmentedControlOptionValuesSignature,
+  resolveSegmentedControlIndicator,
+  SegmentedControl,
+  type SegmentedControlIndicator,
+} from '@/components/ui/SegmentedControl'
 
 describe('SegmentedControl', () => {
+  it('does not create a new indicator state when the active segment metrics are unchanged', () => {
+    const previousIndicator: SegmentedControlIndicator = { left: 24, width: 88 }
+
+    const nextIndicator = resolveSegmentedControlIndicator(previousIndicator, {
+      left: 24,
+      width: 88,
+    })
+
+    expect(nextIndicator).toBe(previousIndicator)
+  })
+
+  it('builds the same option signature when labels are recreated with the same values', () => {
+    const firstSignature = buildSegmentedControlOptionValuesSignature([
+      { value: 'llm', label: createElement('span', null, '文本') },
+      { value: 'image', label: createElement('span', null, '图片') },
+    ])
+    const secondSignature = buildSegmentedControlOptionValuesSignature([
+      { value: 'llm', label: createElement('strong', null, '文本') },
+      { value: 'image', label: createElement('strong', null, '图片') },
+    ])
+
+    expect(firstSignature).toBe('llm|image')
+    expect(secondSignature).toBe(firstSignature)
+  })
+
   it('compact 布局 -> 输出左对齐的非拉伸结构', () => {
     Reflect.set(globalThis, 'React', React)
 

@@ -85,6 +85,7 @@ describe('RatioStyleSelectors', () => {
           value: 'horror-suspense',
           onChange: () => undefined,
           options: [
+            { value: '', label: '无', description: '不启用' },
             { value: 'horror-suspense', label: '恐怖悬疑', description: '压迫氛围' },
             { value: 'dark-noir', label: '暗黑黑色', description: '冷峻低照' },
           ],
@@ -102,6 +103,8 @@ describe('RatioStyleSelectors', () => {
     expect(html).toContain('真人风格')
     expect(html).toContain('16:9')
     expect(html).toContain('恐怖悬疑')
+    expect(html).toContain('无')
     expect(html).toContain('压迫氛围')
+    expect(html).not.toContain('导演风格')
   })
 })

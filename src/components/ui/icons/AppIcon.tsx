@@ -1,3 +1,4 @@
+import React from 'react'
 import { iconRegistry, type AppIconName } from './registry'
 import type { LucideProps } from 'lucide-react'
 

@@ -201,7 +201,6 @@ export default function ProjectInputStage({
           stylePresetValue={directorStylePresetId}
           onStylePresetChange={(value) => onDirectorStylePresetChange?.(value)}
           stylePresetOptions={STYLE_PRESETS}
-          stylePresetLabel="导演风格"
           textareaClassName="px-0 pt-0 pb-3 align-top"
           primaryAction={(
             <button

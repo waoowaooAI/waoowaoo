@@ -9,5 +9,4 @@ export {
   resolveDirectorStyleFieldsFromPreset,
 } from './storage'
 export { resolveDirectorStyleRequirements } from './resolve-style-requirements'
-export type { DirectorStyleDoc, DirectorStyleDocField } from './types'
-
+export type { DirectorStyleDoc, DirectorStyleDocField, DirectorStyleGuidanceBlock } from './types'

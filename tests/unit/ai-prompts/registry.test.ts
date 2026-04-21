@@ -41,5 +41,6 @@ describe('ai prompt registry', () => {
 
     expect(prompt).toContain('【导演风格要求】')
     expect(prompt).toContain('危险感')
+    expect(prompt).toContain('"judgement"')
   })
 })

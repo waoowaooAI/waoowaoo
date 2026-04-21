@@ -9,8 +9,8 @@ import {
 } from '@assistant-ui/react'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
-import { Bot, Wrench } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { AppIcon } from '@/components/ui/icons'
 import type {
   ApprovalRequestPartData,
   ConfirmationRequestPartData,
@@ -488,7 +488,7 @@ export function WorkspaceAssistantToolCallCard(props: ToolCallMessagePartProps) 
       >
         <div className="min-w-0 max-w-[calc(100%-6rem)] flex-1">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--glass-text-tertiary)]">
-            <Wrench className="h-3.5 w-3.5" />
+            <AppIcon name="settingsHex" className="h-3.5 w-3.5" />
             <span>{t('toolCall.title')}</span>
           </div>
           <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold text-[var(--glass-text-primary)]">
@@ -605,7 +605,7 @@ export function WorkspaceAssistantThreadMessage(props: {
       <MessagePrimitive.If assistant>
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--glass-text-tertiary)]">
-            <Bot className="h-3.5 w-3.5 text-[var(--glass-accent-from)]" />
+            <AppIcon name="brain" className="h-3.5 w-3.5 text-[var(--glass-accent-from)]" />
             <span>{t('thread.modelOutput')}</span>
           </div>
           <MessagePrimitive.Root className="space-y-3 rounded-[22px] border border-[rgba(59,130,246,0.12)] bg-[rgba(255,255,255,0.8)] px-3 py-3 text-sm text-[var(--glass-text-primary)] shadow-[0_12px_28px_rgba(15,23,42,0.06)]">

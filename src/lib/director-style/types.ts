@@ -12,15 +12,22 @@ export const DIRECTOR_STYLE_DOC_FIELDS = [
 
 export type DirectorStyleDocField = (typeof DIRECTOR_STYLE_DOC_FIELDS)[number]
 
-export interface DirectorStyleDoc {
-  character: string
-  location: string
-  prop: string
-  storyboardPlan: string
-  cinematography: string
-  acting: string
-  storyboardDetail: string
-  image: string
-  video: string
+export interface DirectorStyleGuidanceBlock {
+  intent: string
+  priorities: string[]
+  avoid: string[]
+  allowWhenHelpful: string[]
+  judgement: string
 }
 
+export interface DirectorStyleDoc {
+  character: DirectorStyleGuidanceBlock
+  location: DirectorStyleGuidanceBlock
+  prop: DirectorStyleGuidanceBlock
+  storyboardPlan: DirectorStyleGuidanceBlock
+  cinematography: DirectorStyleGuidanceBlock
+  acting: DirectorStyleGuidanceBlock
+  storyboardDetail: DirectorStyleGuidanceBlock
+  image: DirectorStyleGuidanceBlock
+  video: DirectorStyleGuidanceBlock
+}

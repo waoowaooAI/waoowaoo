@@ -1,6 +1,5 @@
 'use client'
 
-import { Activity } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
@@ -8,6 +7,7 @@ import {
   ComposerPrimitive,
   ThreadPrimitive,
 } from '@assistant-ui/react'
+import { AppIcon } from '@/components/ui/icons'
 import {
   useApproveProjectPlan,
   useProjectContext,
@@ -253,7 +253,7 @@ export default function WorkspaceAssistantPanel({
                         : 'border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.9)] text-[var(--glass-text-secondary)]'
                     }`}
                     >
-                      <Activity className={`h-3.5 w-3.5 ${assistantRuntime.pending ? 'animate-pulse' : ''}`} />
+                      <AppIcon name="cpu" className={`h-3.5 w-3.5 ${assistantRuntime.pending ? 'animate-pulse' : ''}`} />
                       <span>{statusText}</span>
                     </div>
                   </div>

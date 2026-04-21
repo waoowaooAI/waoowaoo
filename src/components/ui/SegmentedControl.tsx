@@ -1,12 +1,17 @@
 'use client'
 
-import { useRef, useState, useEffect, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 // ─── Types ────────────────────────────────────────────
 
 export interface SegmentedControlOption<T extends string = string> {
     value: T
     label: ReactNode
+}
+
+export interface SegmentedControlIndicator {
+    left: number
+    width: number
 }
 
 type SegmentedControlLayout = 'fill' | 'compact'
@@ -19,6 +24,26 @@ interface SegmentedControlProps<T extends string = string> {
     layout?: SegmentedControlLayout
     /** Extra className on the outer container */
     className?: string
+}
+
+export function resolveSegmentedControlIndicator(
+    currentIndicator: SegmentedControlIndicator,
+    nextIndicator: SegmentedControlIndicator,
+): SegmentedControlIndicator {
+    if (
+        currentIndicator.left === nextIndicator.left
+        && currentIndicator.width === nextIndicator.width
+    ) {
+        return currentIndicator
+    }
+
+    return nextIndicator
+}
+
+export function buildSegmentedControlOptionValuesSignature<T extends string = string>(
+    options: SegmentedControlOption<T>[],
+): string {
+    return options.map((option) => option.value).join('|')
 }
 
 // ─── Component ────────────────────────────────────────
@@ -39,18 +64,30 @@ export function SegmentedControl<T extends string = string>({
     className = '',
 }: SegmentedControlProps<T>) {
     const gridRef = useRef<HTMLDivElement>(null)
-    const [indicator, setIndicator] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
+    const [indicator, setIndicator] = useState<SegmentedControlIndicator>({ left: 0, width: 0 })
+    const indicatorRef = useRef<SegmentedControlIndicator>(indicator)
     const isCompact = layout === 'compact'
+    const optionValuesSignature = buildSegmentedControlOptionValuesSignature(options)
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!gridRef.current) return
         const activeIndex = options.findIndex((opt) => opt.value === value)
         const buttons = gridRef.current.querySelectorAll<HTMLButtonElement>('button')
         const activeButton = buttons[activeIndex]
         if (activeButton) {
-            setIndicator({ left: activeButton.offsetLeft, width: activeButton.offsetWidth })
+            const nextIndicator: SegmentedControlIndicator = {
+                left: activeButton.offsetLeft,
+                width: activeButton.offsetWidth,
+            }
+            const resolvedIndicator = resolveSegmentedControlIndicator(indicatorRef.current, nextIndicator)
+            if (resolvedIndicator === indicatorRef.current) {
+                return
+            }
+
+            indicatorRef.current = resolvedIndicator
+            setIndicator(resolvedIndicator)
         }
-    }, [value, options])
+    }, [layout, optionValuesSignature, options, value])
 
     return (
         <div

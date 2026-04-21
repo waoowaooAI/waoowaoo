@@ -5,6 +5,7 @@ import {
   shouldShowOpenAICompatVideoHint,
 } from '@/app/[locale]/profile/components/api-config/provider-card/ProviderAdvancedFields'
 import {
+  buildProviderCardGroupedModels,
   buildCustomPricingFromModelForm,
   buildProviderConnectionPayload,
 } from '@/app/[locale]/profile/components/api-config/provider-card/hooks/useProviderCardState'
@@ -40,6 +41,50 @@ describe('provider card pricing form behavior', () => {
     expect(shouldShowOpenAICompatVideoHint('openai-compatible:oa-1', 'image')).toBe(false)
     expect(shouldShowOpenAICompatVideoHint('gemini-compatible:gm-1', 'video')).toBe(false)
     expect(shouldShowOpenAICompatVideoHint('ark', 'video')).toBe(false)
+  })
+
+  it('groups provider models by normalized type for stable tab state', () => {
+    const groupedModels = buildProviderCardGroupedModels([
+      {
+        modelId: 'gpt-4.1',
+        modelKey: 'openai-compatible:oa-1::gpt-4.1',
+        name: 'GPT 4.1',
+        type: 'llm',
+        provider: 'openai-compatible:oa-1',
+        price: 0,
+        enabled: true,
+      },
+      {
+        modelId: 'gpt-image-1',
+        modelKey: 'openai-compatible:oa-1::gpt-image-1',
+        name: 'GPT Image',
+        type: 'image',
+        provider: 'openai-compatible:oa-1',
+        price: 0,
+        enabled: true,
+      },
+      {
+        modelId: 'sync-v1',
+        modelKey: 'ark::sync-v1',
+        name: 'Lip Sync',
+        type: 'lipsync',
+        provider: 'ark',
+        price: 0,
+        enabled: true,
+      },
+    ])
+
+    expect(groupedModels).toEqual({
+      llm: [
+        expect.objectContaining({ modelId: 'gpt-4.1' }),
+      ],
+      image: [
+        expect.objectContaining({ modelId: 'gpt-image-1' }),
+      ],
+      audio: [
+        expect.objectContaining({ modelId: 'sync-v1', type: 'lipsync' }),
+      ],
+    })
   })
 
   it('keeps payload without customPricing when pricing toggle is off', () => {
