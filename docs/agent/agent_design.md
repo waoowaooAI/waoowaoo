@@ -61,7 +61,24 @@ UI / 路由 / 外部调用
 - 输出要面向用户，而不是把内部结构原样抛给用户。
 - 当发现 stale artifacts 或 failed items 时，要先解释，再建议下一步动作。
 
-### 4.2 Plan 模式
+### 4.2 交互模式
+
+Project Agent 的模式语义应拆成两层：
+
+- **显式 interactionMode**：用户施加的交互约束
+- **隐式 routed intent**：router 对当前请求语义的判断
+
+推荐三态 interactionMode：
+
+- `auto`：默认模式。跟随 router 判定，可在安全规则允许时直接 act。
+- `plan`：显式执行冻结。允许 query / plan 和确认准备，但不直接执行 act。
+- `fast`：显式快速执行。尽量直接 act，但不绕过 confirmation gate。
+
+这意味着：
+
+- `interactionMode` 决定用户施加的执行边界
+- `intent` 决定当前请求语义
+- 两者需要通过一层统一解析得到最终执行模式，不能互相替代
 
 用于固定 workflow 的编排，例如 story-to-script、script-to-storyboard。
 
@@ -70,6 +87,11 @@ UI / 路由 / 外部调用
 - 先 create_workflow_plan，再审批，再执行。
 - workflow 内部 skill 顺序不能被 agent 改写、跳过或合并。
 - 计划结果必须可回放、可审计。
+
+额外约束：
+
+- 当 `interactionMode=plan` 且 router 判定 `intent=act` 时，应降级为 planning/confirmation-preparation handling，而不是直接执行 act。
+- 真正的 approve / revert / execute 属于 commit 动作，不应因为处于 `plan` 语义就自动获得执行权。
 
 ### 4.3 Act 模式
 
@@ -80,6 +102,20 @@ UI / 路由 / 外部调用
 - 低风险、低成本、局部修改可以直接 act。
 - 中高风险、计费、覆盖、批量、长耗时操作必须先确认。
 - 能返回结构化错误，就不要把错误变成静默失败。
+
+### 4.4 模式组合规则
+
+推荐矩阵：
+
+- `auto + query` -> query
+- `auto + plan` -> plan
+- `auto + act` -> act
+- `plan + query` -> query
+- `plan + plan` -> plan
+- `plan + act` -> plan
+- `fast + query` -> query
+- `fast + plan` -> plan
+- `fast + act` -> act
 
 ## 5. 结构化上下文
 
