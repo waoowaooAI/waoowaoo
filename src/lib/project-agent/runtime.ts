@@ -12,6 +12,8 @@ import { createProjectAgentOperationRegistry } from '@/lib/operations/registry'
 import { getUserModelConfig } from '@/lib/config-service'
 import { executeProjectAgentOperationFromTool } from '@/lib/adapters/tools/execute-project-agent-operation'
 import { writeOperationDataPart } from '@/lib/operations/types'
+import { getRequestId } from '@/lib/api-errors'
+import { createScopedLogger } from '@/lib/logging/core'
 import type { ProjectAgentContext } from './types'
 import { resolveProjectPhase } from './project-phase'
 import { createProjectAgentStopController } from './stop-conditions'
@@ -24,6 +26,15 @@ import { compressMessages } from './message-compression'
 import { resolveProjectAgentLanguageModel } from './model'
 import type { ProjectAgentInteractionMode } from './types'
 import { resolveProjectAgentExecutionMode } from './execution-mode'
+
+const projectAgentLogger = createScopedLogger({
+  module: 'project-agent.runtime',
+})
+
+function buildMessagePreview(text: string): string {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  return normalized.length > 200 ? `${normalized.slice(0, 200)}...` : normalized
+}
 
 function normalizeInteractionMode(value: unknown): ProjectAgentInteractionMode | undefined {
   if (value !== 'auto' && value !== 'plan' && value !== 'fast') return undefined
@@ -114,6 +125,29 @@ export async function createProjectAgentChatResponse(input: {
         interactionMode: context.interactionMode,
         routedIntent: route.intent,
       })
+      const requestId = getRequestId(input.request)
+      projectAgentLogger.info({
+        action: route.needsClarification ? 'assistant.route.clarification' : 'assistant.tool.selection',
+        message: route.needsClarification ? 'Project agent route requires clarification' : 'Project agent tool selection decided',
+        requestId,
+        projectId: input.projectId,
+        userId: input.userId,
+        details: {
+          interactionMode: executionMode.interactionMode,
+          routedIntent: route.intent,
+          effectiveIntent: executionMode.effectiveIntent,
+          confidence: route.confidence,
+          domains: route.domains,
+          toolCategories: route.toolCategories,
+          latestUserTextPreview: buildMessagePreview(route.latestUserText),
+          ...(route.needsClarification
+            ? {
+                clarifyingQuestion: route.clarifyingQuestion,
+                reasoning: route.reasoning,
+              }
+            : {}),
+        },
+      })
       if (route.needsClarification && route.clarifyingQuestion) {
         writer.write({ type: 'start' })
         writer.write({ type: 'start-step' })
@@ -138,6 +172,22 @@ export async function createProjectAgentChatResponse(input: {
           ],
         },
         maxTools: 45,
+      })
+      projectAgentLogger.info({
+        action: 'assistant.tool.selection.result',
+        message: 'Project agent tool selection result',
+        requestId,
+        projectId: input.projectId,
+        userId: input.userId,
+        details: {
+          interactionMode: executionMode.interactionMode,
+          routedIntent: route.intent,
+          effectiveIntent: executionMode.effectiveIntent,
+          toolCategories: selection.route.toolCategories,
+          totalCandidates: selection.totalCandidates,
+          operationIds: selection.operationIds,
+          confidence: selection.route.confidence,
+        },
       })
       const tools = Object.fromEntries(
         selection.operationIds.map((operationId) => {

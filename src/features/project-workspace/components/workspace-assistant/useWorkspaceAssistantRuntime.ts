@@ -39,6 +39,7 @@ interface UseWorkspaceAssistantRuntimeResult {
   syncError: string | null
   storageError: string | null
   storageLoading: boolean
+  sendMessage: (text: string) => Promise<void>
   replaceMessages: (messages: UIMessage[]) => void
   appendMessages: (messages: UIMessage[]) => void
 }
@@ -92,6 +93,10 @@ export function useWorkspaceAssistantRuntime({
 
   const replaceMessages = useCallback((messages: UIMessage[]) => {
     chat.setMessages(messages)
+  }, [chat])
+
+  const sendMessage = useCallback(async (text: string) => {
+    await chat.sendMessage({ text })
   }, [chat])
 
   const appendMessages = useCallback((messages: UIMessage[]) => {
@@ -185,6 +190,7 @@ export function useWorkspaceAssistantRuntime({
     syncError,
     storageError: assistantThread.error?.message || null,
     storageLoading: assistantThread.isLoading,
+    sendMessage,
     replaceMessages,
     appendMessages,
   }

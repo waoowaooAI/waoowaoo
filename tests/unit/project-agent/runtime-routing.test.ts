@@ -24,6 +24,10 @@ const registryState = vi.hoisted(() => ({
   registry: {} as ProjectAgentOperationRegistry,
 }))
 
+const loggerState = vi.hoisted(() => ({
+  info: vi.fn(),
+}))
+
 vi.mock('ai', async () => {
   const actual = await vi.importActual<typeof import('ai')>('ai')
   return {
@@ -106,6 +110,21 @@ vi.mock('@/lib/operations/registry', () => ({
   createProjectAgentOperationRegistry: () => registryState.registry,
 }))
 
+vi.mock('@/lib/logging/core', () => ({
+  createScopedLogger: vi.fn(() => ({
+    info: (...args: unknown[]) => loggerState.info(...args),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    event: vi.fn(),
+    child: vi.fn(),
+  })),
+}))
+
+vi.mock('@/lib/api-errors', () => ({
+  getRequestId: vi.fn(() => 'req-1'),
+}))
+
 import { createProjectAgentChatResponse } from '@/lib/project-agent/runtime'
 
 function buildRequest(): NextRequest {
@@ -123,6 +142,7 @@ describe('project agent runtime tool routing', () => {
     streamState.capturedToolNames = []
     streamState.capturedSystem = ''
     streamState.writerEvents = []
+    loggerState.info.mockReset()
     registryState.registry = {
       get_character_detail: {
         id: 'get_character_detail',
@@ -190,6 +210,15 @@ describe('project agent runtime tool routing', () => {
     expect(streamState.capturedToolNames).toContain('get_character_detail')
     expect(streamState.capturedToolNames).not.toContain('regenerate_panel_image')
     expect(streamState.capturedSystem).toContain('get_project_phase')
+    expect(loggerState.info).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'assistant.tool.selection.result',
+      requestId: 'req-1',
+      projectId: 'project-1',
+      details: expect.objectContaining({
+        operationIds: expect.arrayContaining(['get_character_detail']),
+        toolCategories: ['asset-character'],
+      }),
+    }))
   })
 
   it('injects panel media tools when router returns panel-media category', async () => {

@@ -15,11 +15,19 @@ import {
 import type { RunStreamView } from '@/lib/query/hooks/run-stream/types'
 import {
   ApprovalCard,
+  ConfirmationActionCard,
+  WorkflowPlanDataCard,
   useWorkspaceAssistantMessagePartComponents,
   WorkspaceAssistantThreadMessage,
 } from './workspace-assistant/WorkspaceAssistantRenderers'
-import { collectPendingApprovalActions, removeApprovalRequestFromMessages } from './workspace-assistant/approval-state'
-import { createAssistantMessage } from './workspace-assistant/workflow-timeline'
+import {
+  collectPendingApprovalActions,
+  collectPendingConfirmationActions,
+  collectWorkflowPlanSnapshots,
+  removeApprovalRequestFromMessages,
+  removeConfirmationRequestFromMessages,
+} from './workspace-assistant/approval-state'
+import { createAssistantMessage, createLocalMessage } from './workspace-assistant/workflow-timeline'
 import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspaceAssistantRuntime'
 import { getWorkflowDisplayLabel } from '@/lib/skill-system/project-workflow-machine'
 
@@ -60,7 +68,38 @@ export default function WorkspaceAssistantPanel({
     () => collectPendingApprovalActions(assistantRuntime.messages),
     [assistantRuntime.messages],
   )
+  const pendingConfirmationActions = useMemo(
+    () => collectPendingConfirmationActions(assistantRuntime.messages),
+    [assistantRuntime.messages],
+  )
+  const workflowPlans = useMemo(
+    () => collectWorkflowPlanSnapshots(assistantRuntime.messages),
+    [assistantRuntime.messages],
+  )
   const activePendingApproval = pendingApprovalActions[pendingApprovalActions.length - 1] || null
+  const [selectedPendingActionKey, setSelectedPendingActionKey] = useState<string | null>(null)
+  const pendingActionItems = [
+    ...pendingApprovalActions.map((item) => ({
+      key: `approval:${item.planId}`,
+      label: workflowLabels[item.data.workflowId],
+      kind: 'approval' as const,
+      summary: item.data.summary,
+    })),
+    ...pendingConfirmationActions.map((item) => ({
+      key: `confirm:${item.operationId}`,
+      label: item.data.operationId,
+      kind: 'confirmation' as const,
+      summary: item.data.summary,
+    })),
+  ]
+  const effectiveSelectedPendingActionKey = selectedPendingActionKey || pendingActionItems[pendingActionItems.length - 1]?.key || null
+  const selectedPendingApproval = effectiveSelectedPendingActionKey?.startsWith('approval:')
+    ? pendingApprovalActions.find((item) => `approval:${item.planId}` === effectiveSelectedPendingActionKey) || null
+    : null
+  const activePendingConfirmation = effectiveSelectedPendingActionKey?.startsWith('confirm:')
+    ? pendingConfirmationActions.find((item) => `confirm:${item.operationId}` === effectiveSelectedPendingActionKey) || null
+    : null
+  const selectedPlan = workflowPlans.find((item) => item.planId === (selectedPendingApproval?.planId || '')) || null
   const partComponents = useWorkspaceAssistantMessagePartComponents({
     storyToScriptStream,
     scriptToStoryboardStream,
@@ -97,6 +136,34 @@ export default function WorkspaceAssistantPanel({
         },
       ]),
     ])
+  }
+  const [confirmationSubmittingKey, setConfirmationSubmittingKey] = useState<string | null>(null)
+  const handleConfirmOperation = async (operationId: string, argsHint?: Record<string, unknown> | null) => {
+    setConfirmationSubmittingKey(`confirm:${operationId}:continue`)
+    try {
+      const nextMessages = removeConfirmationRequestFromMessages(assistantRuntime.messages, operationId)
+      assistantRuntime.replaceMessages(nextMessages)
+      await assistantRuntime.sendMessage(
+        `我确认继续执行该操作。请继续调用 operation=${operationId}，并严格使用下面的参数（已包含 confirmed=true）：\n\n\`\`\`json\n${JSON.stringify(argsHint ?? { confirmed: true }, null, 2)}\n\`\`\``,
+      )
+    } finally {
+      setConfirmationSubmittingKey(null)
+    }
+  }
+  const handleCancelOperation = async (operationId: string) => {
+    setConfirmationSubmittingKey(`confirm:${operationId}:cancel`)
+    try {
+      const nextMessages = removeConfirmationRequestFromMessages(assistantRuntime.messages, operationId)
+      assistantRuntime.replaceMessages([
+        ...nextMessages,
+        createLocalMessage('assistant', [{
+          type: 'text',
+          text: `已取消待确认操作 ${operationId}。`,
+        }]),
+      ])
+    } finally {
+      setConfirmationSubmittingKey(null)
+    }
   }
   const contextSummary = `${projectContext?.episodeName || episodeId || t('cards.globalScope')} · ${currentStage} · ${t('panel.runs', { count: projectContext?.activeRuns.length || 0 })}`
   const statusText = assistantRuntime.syncError
@@ -142,13 +209,67 @@ export default function WorkspaceAssistantPanel({
               ) : null}
 
               <div className="space-y-3">
+                {pendingActionItems.length > 0 ? (
+                  <div className="rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)]/80 p-3">
+                    <div className="mb-3 text-sm font-medium text-[var(--glass-text-primary)]">
+                      {t('panel.pendingActionsTitle')}
+                    </div>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {pendingActionItems.map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          className={
+                            effectiveSelectedPendingActionKey === item.key
+                              ? 'rounded-full bg-[var(--glass-accent-from)] px-3 py-1.5 text-xs font-medium text-white'
+                              : 'rounded-full border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)] px-3 py-1.5 text-xs text-[var(--glass-text-secondary)]'
+                          }
+                          onClick={() => setSelectedPendingActionKey(item.key)}
+                        >
+                          {item.kind === 'approval' ? t('panel.pendingApprovalChip', { label: item.label }) : t('panel.pendingConfirmationChip', { label: item.label })}
+                        </button>
+                      ))}
+                    </div>
+                    {selectedPendingApproval ? (
+                      <div className="space-y-3">
+                        {selectedPlan ? (
+                          <WorkflowPlanDataCard
+                            data={selectedPlan.data}
+                            type="data"
+                            name="workflow-plan"
+                            status={{ type: 'complete' }}
+                          />
+                        ) : null}
+                        <ApprovalCard
+                          planId={selectedPendingApproval.planId}
+                          summary={selectedPendingApproval.data.summary}
+                          reasons={selectedPendingApproval.data.reasons}
+                          onApprove={handleApprovePlan}
+                          onReject={handleRejectPlan}
+                          approvePending={approvePlan.isPending}
+                          rejectPending={rejectPlan.isPending}
+                        />
+                      </div>
+                    ) : activePendingConfirmation ? (
+                      <ConfirmationActionCard
+                        operationId={activePendingConfirmation.operationId}
+                        summary={activePendingConfirmation.data.summary}
+                        argsHint={activePendingConfirmation.data.argsHint ?? null}
+                        onConfirm={async () => handleConfirmOperation(activePendingConfirmation.operationId, activePendingConfirmation.data.argsHint ?? null)}
+                        onCancel={async () => handleCancelOperation(activePendingConfirmation.operationId)}
+                        confirmPending={confirmationSubmittingKey === `confirm:${activePendingConfirmation.operationId}:continue`}
+                        cancelPending={confirmationSubmittingKey === `confirm:${activePendingConfirmation.operationId}:cancel`}
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
                 <ThreadPrimitive.Messages>
                   {() => (
                     <WorkspaceAssistantThreadMessage messagePartComponents={partComponents} />
                   )}
                 </ThreadPrimitive.Messages>
 
-                {activePendingApproval ? (
+                {activePendingApproval && pendingActionItems.length === 0 ? (
                   <div className="rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-muted)]/80 p-3">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>

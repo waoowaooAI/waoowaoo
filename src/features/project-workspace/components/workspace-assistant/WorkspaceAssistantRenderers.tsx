@@ -191,14 +191,49 @@ export function HiddenApprovalRequestDataCard(_: DataMessagePartProps<ApprovalRe
   return null
 }
 
-function ConfirmationRequestDataCard({ data }: DataMessagePartProps<ConfirmationRequestPartData>) {
+export function HiddenConfirmationRequestDataCard(_: DataMessagePartProps<ConfirmationRequestPartData>) {
+  return null
+}
+
+export function ConfirmationActionCard(props: {
+  operationId: string
+  summary: string
+  argsHint?: Record<string, unknown> | null
+  onConfirm: () => Promise<void>
+  onCancel: () => Promise<void>
+  confirmPending: boolean
+  cancelPending: boolean
+}) {
   const t = useTranslations('assistantAgent')
   return (
     <div className="rounded-2xl border border-[var(--glass-tone-warn-fg)]/30 bg-[var(--glass-bg-muted)]/70 p-3 text-xs text-[var(--glass-text-secondary)]">
       <div className="text-sm font-medium text-[var(--glass-text-primary)]">{t('cards.confirmationRequired')}</div>
-      <div className="mt-1">{data.summary}</div>
+      <div className="mt-1">{props.summary}</div>
       <div className="mt-2 rounded-xl bg-[var(--glass-bg-surface)]/70 px-3 py-2 font-mono text-[10px] text-[var(--glass-text-tertiary)]">
-        operation: {data.operationId}
+        operation: {props.operationId}
+      </div>
+      {props.argsHint ? (
+        <pre className="mt-2 overflow-x-auto rounded-xl bg-[var(--glass-bg-surface)]/70 px-3 py-2 text-[10px] text-[var(--glass-text-tertiary)]">
+          {JSON.stringify(props.argsHint, null, 2)}
+        </pre>
+      ) : null}
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          className="flex-1 rounded-xl bg-[var(--glass-accent-from)] px-3 py-2 text-sm font-medium text-white"
+          onClick={() => { void props.onConfirm() }}
+          disabled={props.confirmPending}
+        >
+          {props.confirmPending ? t('cards.confirmRunning') : t('cards.confirmContinue')}
+        </button>
+        <button
+          type="button"
+          className="flex-1 rounded-xl border border-[var(--glass-stroke-base)] px-3 py-2 text-sm font-medium text-[var(--glass-text-primary)]"
+          onClick={() => { void props.onCancel() }}
+          disabled={props.cancelPending}
+        >
+          {props.cancelPending ? t('cards.cancelRunning') : t('cards.cancelAction')}
+        </button>
       </div>
     </div>
   )
@@ -440,7 +475,7 @@ export function useWorkspaceAssistantMessagePartComponents({
       by_name: {
         'agent-stop': AgentStopDataCard,
         'project-phase': ProjectPhaseDataCard,
-        'confirmation-request': ConfirmationRequestDataCard,
+        'confirmation-request': HiddenConfirmationRequestDataCard,
         'task-submitted': TaskSubmittedDataCard,
         'task-batch-submitted': TaskBatchSubmittedDataCard,
         'workflow-plan': WorkflowPlanDataCard,
