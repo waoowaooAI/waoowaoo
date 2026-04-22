@@ -312,14 +312,7 @@ export async function createProjectAgentChatResponse(input: {
             error: message,
           },
         })
-        writer.write({ type: 'start' })
-        writer.write({ type: 'start-step' })
-        writer.write({ type: 'text-start', id: 'agent-error' })
-        writer.write({ type: 'text-delta', id: 'agent-error', delta: `请求失败（requestId=${requestId}）：${message}` })
-        writer.write({ type: 'text-end', id: 'agent-error' })
-        writer.write({ type: 'finish-step' })
-        writer.write({ type: 'finish', finishReason: 'error' })
-        return
+        throw new Error(`PROJECT_AGENT_STREAM_FAILED requestId=${requestId}: ${message}`)
       }
 
       writer.merge(result.toUIMessageStream({

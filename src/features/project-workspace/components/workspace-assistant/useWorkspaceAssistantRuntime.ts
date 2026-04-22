@@ -96,6 +96,7 @@ export function useWorkspaceAssistantRuntime({
   }, [chat])
 
   const sendMessage = useCallback(async (text: string) => {
+    chat.clearError()
     await chat.sendMessage({ text })
   }, [chat])
 
