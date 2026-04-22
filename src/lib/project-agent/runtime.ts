@@ -252,52 +252,75 @@ export async function createProjectAgentChatResponse(input: {
       const tools = Object.fromEntries(toolEntries) as ToolSet
       const stopController = createProjectAgentStopController(tools)
 
-      const result = streamText({
-        model: resolved.languageModel,
-        system: buildProjectAgentSystemPrompt({
-          locale,
+      let result: ReturnType<typeof streamText>
+      try {
+        result = streamText({
+          model: resolved.languageModel,
+          system: buildProjectAgentSystemPrompt({
+            locale,
+            projectId: input.projectId,
+            episodeId: context.episodeId || 'unknown',
+            stage: context.currentStage || 'unknown',
+            interactionMode: executionMode.interactionMode,
+          }),
+          messages: await toModelMessages(runtimeMessages),
+          tools,
+          stopWhen: stopController.stopWhen,
+          experimental_onToolCallStart: ({ toolCall }) => {
+            projectAgentLogger.info({
+              action: 'assistant.tool.call.start',
+              message: 'Project agent tool call started',
+              requestId,
+              projectId: input.projectId,
+              userId: input.userId,
+              details: {
+                toolName: toolCall.toolName,
+              },
+            })
+          },
+          experimental_onToolCallFinish: ({ toolCall, durationMs, success, error }) => {
+            projectAgentLogger.info({
+              action: 'assistant.tool.call.finish',
+              message: 'Project agent tool call finished',
+              requestId,
+              projectId: input.projectId,
+              userId: input.userId,
+              details: {
+                toolName: toolCall.toolName,
+                durationMs,
+                success,
+                ...(success ? {} : { error: error instanceof Error ? error.message : String(error) }),
+              },
+            })
+          },
+          onFinish: ({ steps }) => {
+            const stopPart = stopController.buildStopPart(steps.length)
+            if (!stopPart) return
+            writeOperationDataPart<ProjectAgentStopPartData>(writer, 'data-agent-stop', stopPart)
+          },
+          temperature: 0.2,
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        projectAgentLogger.error({
+          action: 'assistant.streamText.failed',
+          message: 'Project agent streamText failed',
+          requestId,
           projectId: input.projectId,
-          episodeId: context.episodeId || 'unknown',
-          stage: context.currentStage || 'unknown',
-          interactionMode: executionMode.interactionMode,
-        }),
-        messages: await toModelMessages(runtimeMessages),
-        tools,
-        stopWhen: stopController.stopWhen,
-        experimental_onToolCallStart: ({ toolCall }) => {
-          projectAgentLogger.info({
-            action: 'assistant.tool.call.start',
-            message: 'Project agent tool call started',
-            requestId,
-            projectId: input.projectId,
-            userId: input.userId,
-            details: {
-              toolName: toolCall.toolName,
-            },
-          })
-        },
-        experimental_onToolCallFinish: ({ toolCall, durationMs, success, error }) => {
-          projectAgentLogger.info({
-            action: 'assistant.tool.call.finish',
-            message: 'Project agent tool call finished',
-            requestId,
-            projectId: input.projectId,
-            userId: input.userId,
-            details: {
-              toolName: toolCall.toolName,
-              durationMs,
-              success,
-              ...(success ? {} : { error: error instanceof Error ? error.message : String(error) }),
-            },
-          })
-        },
-        onFinish: ({ steps }) => {
-          const stopPart = stopController.buildStopPart(steps.length)
-          if (!stopPart) return
-          writeOperationDataPart<ProjectAgentStopPartData>(writer, 'data-agent-stop', stopPart)
-        },
-        temperature: 0.2,
-      })
+          userId: input.userId,
+          details: {
+            error: message,
+          },
+        })
+        writer.write({ type: 'start' })
+        writer.write({ type: 'start-step' })
+        writer.write({ type: 'text-start', id: 'agent-error' })
+        writer.write({ type: 'text-delta', id: 'agent-error', delta: `请求失败（requestId=${requestId}）：${message}` })
+        writer.write({ type: 'text-end', id: 'agent-error' })
+        writer.write({ type: 'finish-step' })
+        writer.write({ type: 'finish', finishReason: 'error' })
+        return
+      }
 
       writer.merge(result.toUIMessageStream({
         originalMessages: runtimeMessages,
