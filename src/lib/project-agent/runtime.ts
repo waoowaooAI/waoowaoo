@@ -33,6 +33,15 @@ const projectAgentLogger = createScopedLogger({
   module: 'project-agent.runtime',
 })
 
+function writeDebugText(writer: UIMessageStreamWriter<UIMessage>, text: string) {
+  writer.write({ type: 'start' })
+  writer.write({ type: 'start-step' })
+  writer.write({ type: 'text-start', id: 'agent-debug' })
+  writer.write({ type: 'text-delta', id: 'agent-debug', delta: text })
+  writer.write({ type: 'text-end', id: 'agent-debug' })
+  writer.write({ type: 'finish-step' })
+}
+
 function buildMessagePreview(text: string): string {
   const normalized = text.replace(/\s+/g, ' ').trim()
   return normalized.length > 200 ? `${normalized.slice(0, 200)}...` : normalized
@@ -77,6 +86,7 @@ export async function createProjectAgentChatResponse(input: {
   context: unknown
   messages: unknown
 }): Promise<Response> {
+  const stableRequestId = getRequestId(input.request) ?? crypto.randomUUID()
   const validation = await safeValidateUIMessages({ messages: input.messages })
   if (!validation.success) {
     throw new Error('PROJECT_AGENT_INVALID_MESSAGES')
@@ -136,7 +146,7 @@ export async function createProjectAgentChatResponse(input: {
         interactionMode: context.interactionMode,
         routedIntent: route.intent,
       })
-      const requestId = getRequestId(input.request)
+      const requestId = stableRequestId
       projectAgentLogger.info({
         action: route.needsClarification ? 'assistant.route.clarification' : 'assistant.tool.selection',
         message: route.needsClarification ? 'Project agent route requires clarification' : 'Project agent tool selection decided',
@@ -181,8 +191,19 @@ export async function createProjectAgentChatResponse(input: {
         allowedIntents,
       })
       if (agentDebug) {
+        writeDebugText(writer, [
+          '[agentDebug]',
+          `requestId=${requestId}`,
+          `interactionMode=${executionMode.interactionMode}`,
+          `routedIntent=${route.intent}`,
+          `effectiveIntent=${executionMode.effectiveIntent}`,
+          `confidence=${String(route.confidence)}`,
+          `requestedGroups=${JSON.stringify(route.requestedGroups)}`,
+          `alwaysOn=${String(selection.alwaysOnOperationIds.length)}`,
+          `tools=${String(selection.operationIds.length)}`,
+        ].join('\n'))
         writeOperationDataPart<AgentDebugPartData>(writer, 'data-agent-debug', {
-          requestId: requestId ?? null,
+          requestId,
           interactionMode: executionMode.interactionMode,
           routedIntent: route.intent,
           effectiveIntent: executionMode.effectiveIntent,
@@ -247,7 +268,7 @@ export async function createProjectAgentChatResponse(input: {
           projectAgentLogger.info({
             action: 'assistant.tool.call.start',
             message: 'Project agent tool call started',
-            requestId: requestId ?? 'unknown',
+            requestId,
             projectId: input.projectId,
             userId: input.userId,
             details: {
@@ -259,7 +280,7 @@ export async function createProjectAgentChatResponse(input: {
           projectAgentLogger.info({
             action: 'assistant.tool.call.finish',
             message: 'Project agent tool call finished',
-            requestId: requestId ?? 'unknown',
+            requestId,
             projectId: input.projectId,
             userId: input.userId,
             details: {
@@ -285,5 +306,7 @@ export async function createProjectAgentChatResponse(input: {
     onError: (error) => (error instanceof Error ? error.message : String(error)),
   })
 
-  return createUIMessageStreamResponse({ stream })
+  const response = createUIMessageStreamResponse({ stream })
+  response.headers.set('x-request-id', stableRequestId)
+  return response
 }

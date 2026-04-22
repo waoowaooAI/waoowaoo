@@ -87,7 +87,7 @@ export interface ProjectAgentStopPartData {
 }
 
 export interface AgentDebugPartData {
-  requestId: string | null
+  requestId: string
   interactionMode: ProjectAgentInteractionMode
   routedIntent: 'query' | 'plan' | 'act'
   effectiveIntent: 'query' | 'plan' | 'act'
