@@ -264,7 +264,7 @@ export function StylePresetSelector({
   value,
   onChange,
   options,
-  labelText = '导演风格',
+  labelText,
 }: {
   value: string
   onChange: (value: string) => void
@@ -296,15 +296,17 @@ export function StylePresetSelector({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`${TRIGGER_CLASSNAME} cursor-pointer`}
-        title={selectedOption?.label ?? labelText}
+        title={selectedOption?.label ?? labelText ?? '无'}
       >
         <div className="flex min-w-0 items-center gap-2">
           <AppIcon name="clapperboard" className="h-4 w-4 shrink-0 text-[var(--glass-accent-from)]" />
-          <span className="truncate text-[11px] font-medium text-[var(--glass-text-tertiary)]">
-            {labelText}
-          </span>
+          {labelText ? (
+            <span className="truncate text-[11px] font-medium text-[var(--glass-text-tertiary)]">
+              {labelText}
+            </span>
+          ) : null}
           <span className={`${TRIGGER_TEXT_CLASSNAME} min-w-0 flex-1 truncate`}>
-            {selectedOption?.label ?? '未选择'}
+            {selectedOption?.label ?? '无'}
           </span>
         </div>
         <AppIcon name="chevronDown" className={`h-4 w-4 text-[var(--glass-text-tertiary)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />

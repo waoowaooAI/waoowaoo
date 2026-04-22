@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import type { ProjectAgentInteractionMode } from '@/lib/project-agent/types'
 import { AppIcon } from '@/components/ui/icons'
+import type { ProjectAgentInteractionMode } from '@/lib/project-agent/types'
 
 const VIEWPORT_EDGE_GAP = 12
 const PANEL_WIDTH = 320

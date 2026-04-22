@@ -159,12 +159,17 @@ export function writeAssistantStoredMessages(storageKey: string, messages: UIMes
   }
 }
 
+export function buildAssistantMessagesSignature(messages: UIMessage[]): string {
+  return JSON.stringify(messages)
+}
+
 export function useAssistantChat(params: UseAssistantChatParams): UseAssistantChatResult {
   const [input, setInput] = useState('')
   const [renderedMessages, setRenderedMessages] = useState<UIMessage[]>([])
   const handledSavedKeysRef = useRef(new Set<string>())
   const frameIdRef = useRef<number | null>(null)
   const latestMessagesRef = useRef<UIMessage[]>([])
+  const renderedMessagesSignatureRef = useRef<string>(buildAssistantMessagesSignature([]))
   const restoredPersistenceKeyRef = useRef<string | null>(null)
   const onSaved = params.onSaved
   const contextPayload = useMemo(() => ({
@@ -196,6 +201,18 @@ export function useAssistantChat(params: UseAssistantChatParams): UseAssistantCh
 
   const pending = chat.status === 'submitted' || chat.status === 'streaming'
 
+  const commitRenderedMessages = useCallback((messages: UIMessage[]) => {
+    const nextSignature = buildAssistantMessagesSignature(messages)
+    if (nextSignature === renderedMessagesSignatureRef.current) {
+      latestMessagesRef.current = messages
+      return
+    }
+
+    renderedMessagesSignatureRef.current = nextSignature
+    latestMessagesRef.current = messages
+    setRenderedMessages(messages)
+  }, [])
+
   useEffect(() => {
     latestMessagesRef.current = chat.messages
     if (!pending) {
@@ -203,15 +220,15 @@ export function useAssistantChat(params: UseAssistantChatParams): UseAssistantCh
         cancelAnimationFrame(frameIdRef.current)
         frameIdRef.current = null
       }
-      setRenderedMessages(chat.messages)
+      commitRenderedMessages(chat.messages)
       return
     }
     if (frameIdRef.current !== null) return
     frameIdRef.current = requestAnimationFrame(() => {
       frameIdRef.current = null
-      setRenderedMessages(latestMessagesRef.current)
+      commitRenderedMessages(latestMessagesRef.current)
     })
-  }, [chat.messages, pending])
+  }, [chat.messages, commitRenderedMessages, pending])
 
   useEffect(() => {
     if (!params.persistenceKey) return
@@ -219,10 +236,9 @@ export function useAssistantChat(params: UseAssistantChatParams): UseAssistantCh
     restoredPersistenceKeyRef.current = params.persistenceKey
     const restoredMessages = readAssistantStoredMessages(params.persistenceKey)
     chat.setMessages(restoredMessages)
-    setRenderedMessages(restoredMessages)
-    latestMessagesRef.current = restoredMessages
+    commitRenderedMessages(restoredMessages)
     handledSavedKeysRef.current.clear()
-  }, [chat, params.persistenceKey])
+  }, [chat, commitRenderedMessages, params.persistenceKey])
 
   useEffect(() => {
     if (!params.persistenceKey) return
@@ -261,8 +277,7 @@ export function useAssistantChat(params: UseAssistantChatParams): UseAssistantCh
     chat.setMessages([])
     chat.clearError()
     setInput('')
-    setRenderedMessages([])
-    latestMessagesRef.current = []
+    commitRenderedMessages([])
     if (frameIdRef.current !== null) {
       cancelAnimationFrame(frameIdRef.current)
       frameIdRef.current = null
@@ -275,13 +290,12 @@ export function useAssistantChat(params: UseAssistantChatParams): UseAssistantCh
         // ignore storage failures
       }
     }
-  }, [chat, params.persistenceKey])
+  }, [chat, commitRenderedMessages, params.persistenceKey])
 
   const replaceMessages = useCallback((messages: UIMessage[]) => {
     chat.setMessages(messages)
-    setRenderedMessages(messages)
-    latestMessagesRef.current = messages
-  }, [chat])
+    commitRenderedMessages(messages)
+  }, [chat, commitRenderedMessages])
 
   const appendMessages = useCallback((messages: UIMessage[]) => {
     if (messages.length === 0) return

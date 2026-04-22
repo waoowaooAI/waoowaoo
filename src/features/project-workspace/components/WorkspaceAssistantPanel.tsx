@@ -7,6 +7,7 @@ import {
   ComposerPrimitive,
   ThreadPrimitive,
 } from '@assistant-ui/react'
+import { AppIcon } from '@/components/ui/icons'
 import {
   useApproveProjectPlan,
   useProjectContext,
@@ -32,7 +33,6 @@ import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspace
 import { getWorkflowDisplayLabel } from '@/lib/skill-system/project-workflow-machine'
 import { WorkspaceAssistantModePicker } from './workspace-assistant/WorkspaceAssistantModePicker'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
-import { AppIcon } from '@/components/ui/icons'
 
 interface WorkspaceAssistantPanelProps {
   projectId: string
@@ -253,7 +253,7 @@ export default function WorkspaceAssistantPanel({
                         : 'border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.9)] text-[var(--glass-text-secondary)]'
                     }`}
                     >
-                      <AppIcon name="sparkles" className={`h-3.5 w-3.5 ${assistantRuntime.pending ? 'animate-pulse' : ''}`} />
+                      <AppIcon name="cpu" className={`h-3.5 w-3.5 ${assistantRuntime.pending ? 'animate-pulse' : ''}`} />
                       <span>{statusText}</span>
                     </div>
                   </div>

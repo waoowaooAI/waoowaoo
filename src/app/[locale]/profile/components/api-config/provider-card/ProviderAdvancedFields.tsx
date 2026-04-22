@@ -163,14 +163,19 @@ export function ProviderAdvancedFields({
   const defaultAddType: ProviderCardModelType = providerKey === 'openrouter' ? 'llm' : 'image'
   const useTabbedLayout = state.hasModels || shouldShowDefaultTabs(provider.id)
   const shouldShowVideoHint = shouldShowOpenAICompatVideoHint(provider.id, currentType)
+  const segmentedControlOptions = useMemo(
+    () =>
+      visibleTypes.map((type) => ({
+        value: type,
+        label: <><TypeIcon type={type} className="h-3 w-3" /><span>{typeLabel(type, t)}</span></>,
+      })),
+    [t, visibleTypes],
+  )
 
   return useTabbedLayout ? (
     <div className="space-y-2.5 p-3">
       <SegmentedControl
-        options={visibleTypes.map((type) => ({
-          value: type,
-          label: <><TypeIcon type={type} className="h-3 w-3" /><span>{typeLabel(type, t)}</span></>,
-        }))}
+        options={segmentedControlOptions}
         value={currentType ?? visibleTypes[0]}
         onChange={(val) => setActiveType(val as ProviderCardModelType)}
       />

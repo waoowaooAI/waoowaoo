@@ -270,15 +270,15 @@ describe('worker script-to-storyboard behavior', () => {
       name: 'Project One',
       analysisModel: 'llm::analysis-model',
       directorStyleDoc: JSON.stringify({
-        character: '角色风格',
-        location: '场景风格',
-        prop: '道具风格',
-        storyboardPlan: '分镜风格',
-        cinematography: '摄影风格',
-        acting: '表演风格',
-        storyboardDetail: '细化风格',
-        image: '图片风格',
-        video: '视频风格',
+        character: { intent: '角色风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        location: { intent: '场景风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        prop: { intent: '道具风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        storyboardPlan: { intent: '分镜风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        cinematography: { intent: '摄影风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        acting: { intent: '表演风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        storyboardDetail: { intent: '细化风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        image: { intent: '图片风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+        video: { intent: '视频风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
       }),
       characters: [{ id: 'char-1', name: 'Narrator' }],
       locations: [{ id: 'loc-1', name: 'Office' }],
@@ -374,7 +374,9 @@ describe('worker script-to-storyboard behavior', () => {
     expect(runScriptToStoryboardSkillWorkflowMock).toHaveBeenCalledWith(expect.objectContaining({
       projectData: expect.objectContaining({
         directorStyleDoc: expect.objectContaining({
-          storyboardPlan: '分镜风格',
+          storyboardPlan: expect.objectContaining({
+            intent: '分镜风格',
+          }),
         }),
       }),
     }))

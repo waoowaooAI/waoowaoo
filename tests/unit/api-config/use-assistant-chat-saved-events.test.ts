@@ -1,6 +1,7 @@
 import type { UIMessage } from 'ai'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildAssistantMessagesSignature,
   collectSavedEvents,
   readAssistantStoredMessages,
   writeAssistantStoredMessages,
@@ -145,5 +146,27 @@ describe('assistant chat saved events parser', () => {
     storage.set('assistant:broken', '{broken-json')
 
     expect(readAssistantStoredMessages('assistant:broken')).toEqual([])
+  })
+
+  it('builds the same signature for message arrays with identical content', () => {
+    const firstMessages = [{
+      id: 'm4',
+      role: 'assistant',
+      parts: [
+        { type: 'text', text: 'hello' },
+      ],
+    }] as unknown as UIMessage[]
+    const secondMessages = [{
+      id: 'm4',
+      role: 'assistant',
+      parts: [
+        { type: 'text', text: 'hello' },
+      ],
+    }] as unknown as UIMessage[]
+
+    expect(firstMessages).not.toBe(secondMessages)
+    expect(buildAssistantMessagesSignature(firstMessages)).toBe(
+      buildAssistantMessagesSignature(secondMessages),
+    )
   })
 })

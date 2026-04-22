@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   encodeModelKey,
   PRESET_MODELS,
@@ -287,6 +287,21 @@ function toProviderCardModelType(type: CustomModel['type']): ProviderCardModelTy
   return null
 }
 
+export function buildProviderCardGroupedModels(
+  models: CustomModel[],
+): ProviderCardGroupedModels {
+  const groupedModels: ProviderCardGroupedModels = {}
+  for (const model of models) {
+    const groupedType = toProviderCardModelType(model.type)
+    if (!groupedType) continue
+    if (!groupedModels[groupedType]) {
+      groupedModels[groupedType] = []
+    }
+    groupedModels[groupedType]!.push(model)
+  }
+  return groupedModels
+}
+
 export interface UseProviderCardStateResult {
   providerKey: string
   isPresetProvider: boolean
@@ -390,15 +405,10 @@ export function useProviderCardState({
     Boolean(onUpdateBaseUrl)
   const tutorial = getProviderTutorial(provider.id)
 
-  const groupedModels: ProviderCardGroupedModels = {}
-  for (const model of models) {
-    const groupedType = toProviderCardModelType(model.type)
-    if (!groupedType) continue
-    if (!groupedModels[groupedType]) {
-      groupedModels[groupedType] = []
-    }
-    groupedModels[groupedType]!.push(model)
-  }
+  const groupedModels = useMemo(
+    () => buildProviderCardGroupedModels(models),
+    [models],
+  )
 
   const hasModels = Object.keys(groupedModels).length > 0
   const isPresetModel = (modelKey: string) =>
@@ -728,20 +738,22 @@ export function useProviderCardState({
     })
   }, [allModels, models, onAddModel, onUpdateModel])
 
+  const handleAssistantSaved = useCallback((event: AssistantSavedEvent) => {
+    setAssistantSavedEvent(event)
+    if (event.draftModel) {
+      upsertModelFromAssistantDraft(event.draftModel)
+      return
+    }
+    onUpdateModel?.(event.savedModelKey, {
+      compatMediaTemplateSource: 'ai',
+    })
+  }, [onUpdateModel, upsertModelFromAssistantDraft])
+
   const assistantChat = useAssistantChat({
     assistantId: 'api-config-template',
     context: { providerId: provider.id },
     enabled: assistantEnabled,
-    onSaved: (event) => {
-      setAssistantSavedEvent(event)
-      if (event.draftModel) {
-        upsertModelFromAssistantDraft(event.draftModel)
-        return
-      }
-      onUpdateModel?.(event.savedModelKey, {
-        compatMediaTemplateSource: 'ai',
-      })
-    },
+    onSaved: handleAssistantSaved,
   })
 
   const openAssistant = useCallback(() => {
