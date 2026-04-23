@@ -32,14 +32,16 @@ describe('project agent operation registry', () => {
 
     expect(registry.mutate_storyboard).toBeUndefined()
     expect(registry.modify_asset_image?.channels).toEqual({ tool: false, api: true })
-    expect(registry.voice_generate?.channels).toEqual({ tool: false, api: true })
-    expect(registry.generate_video?.channels).toEqual({ tool: false, api: true })
+    expect(registry.voice_generate).toBeUndefined()
+    expect(registry.generate_video).toBeUndefined()
     expect(registry.delete_storyboard_panel?.channels?.tool ?? true).toBe(true)
     expect(registry.update_storyboard_panel_prompt?.channels?.tool ?? true).toBe(true)
     expect(registry.insert_storyboard_panel?.channels?.tool ?? true).toBe(true)
     expect(registry.modify_character_image?.channels?.tool ?? true).toBe(true)
     expect(registry.generate_voice_line_audio?.channels?.tool ?? true).toBe(true)
     expect(registry.generate_panel_video?.channels?.tool ?? true).toBe(true)
+    expect(registry.generate_episode_voice_audio?.channels?.api ?? false).toBe(true)
+    expect(registry.generate_episode_videos?.channels?.api ?? false).toBe(true)
 
     expect(registry.delete_storyboard_panel?.groupPath).toEqual(['storyboard', 'edit'])
     expect(registry.update_storyboard_panel_prompt?.groupPath).toEqual(['storyboard', 'edit'])

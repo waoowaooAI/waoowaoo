@@ -13,6 +13,10 @@ import type { TaskSubmittedPartData } from '@/lib/project-agent/types'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { writeOperationDataPart } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
+import {
+  refineTaskSubmitOperationOutputSchema,
+  taskSubmitOperationOutputSchemaBase,
+} from '@/lib/operations/output-schemas'
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -30,6 +34,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 const DEFAULT_LIPSYNC_MODEL_KEY = composeModelKey('fal', 'fal-ai/kling-video/lipsync/audio-to-video')
 
 export function createLipSyncOperations(): ProjectAgentOperationRegistryDraft {
+  const withMutationBatchBase = taskSubmitOperationOutputSchemaBase.extend({
+    mutationBatchId: z.string().min(1),
+  }).passthrough()
+
+  const taskSubmitOutputWithMutationBatch = <TShape extends z.ZodRawShape>(shape: TShape) => refineTaskSubmitOperationOutputSchema(
+    withMutationBatchBase.extend(shape).passthrough(),
+  )
+
   return {
     lip_sync: defineOperation({
       id: 'lip_sync',
@@ -55,7 +67,10 @@ export function createLipSyncOperations(): ProjectAgentOperationRegistryDraft {
         voiceLineId: z.string().min(1),
         lipSyncModel: z.string().optional(),
       }).passthrough(),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        panelId: z.string().min(1),
+        lipSyncModel: z.string().min(1),
+      }),
       execute: async (ctx, input) => {
         const locale = resolveLocaleFromContext(ctx.context.locale)
 

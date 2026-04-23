@@ -13,6 +13,7 @@ import { hasCharacterAppearanceOutput, hasLocationImageOutput, hasPanelImageOutp
 import { sanitizeImageInputsForTaskPayload } from '@/lib/media/outbound-image'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
+import { taskSubmitOperationOutputSchema } from '@/lib/operations/output-schemas'
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -57,7 +58,7 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
         message: 'appearanceId is required when type=character',
         path: ['appearanceId'],
       }),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOperationOutputSchema,
       execute: async (ctx, input) => {
         const count = input.type === 'character'
           ? normalizeImageGenerationCount('character', (input as Record<string, unknown>).count)
@@ -158,7 +159,7 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
         appearanceId: z.string().min(1).optional(),
         imageIndex: z.union([z.number().int().min(0).max(200), z.string().min(1)]),
       }).passthrough(),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOperationOutputSchema,
       execute: async (ctx, input) => {
         const imageIndex = (input as Record<string, unknown>).imageIndex
         const parsedImageIndex = toNumberOrNull(imageIndex)
@@ -241,7 +242,7 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
         confirmed: z.boolean().optional(),
         storyboardId: z.string().min(1),
       }).passthrough(),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOperationOutputSchema,
       execute: async (ctx, input) => {
         const projectModelConfig = await getProjectModelConfig(ctx.projectId, ctx.userId)
         const analysisModel = projectModelConfig.analysisModel
@@ -291,7 +292,7 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
         selectedAssets: z.array(z.unknown()).optional(),
         meta: z.unknown().optional(),
       }).passthrough(),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOperationOutputSchema,
       execute: async (ctx, input) => {
         const panel = await prisma.projectPanel.findFirst({
           where: {

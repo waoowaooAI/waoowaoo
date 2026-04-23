@@ -55,12 +55,17 @@ function resolveAvailableActions(phase: ProjectPhase, hasEpisode: boolean): Proj
       }
     case PROJECT_PHASE.STORYBOARD_READY:
       return {
-        actMode: ['generate_character_image', 'generate_location_image', 'regenerate_panel_image', 'voice_generate'],
+        actMode: [
+          'generate_character_image',
+          'generate_location_image',
+          'regenerate_panel_image',
+          'generate_episode_voice_audio',
+        ],
         planMode: [],
       }
     case PROJECT_PHASE.VOICE_READY:
       return {
-        actMode: ['generate_video'],
+        actMode: ['generate_episode_videos'],
         planMode: [],
       }
     default:

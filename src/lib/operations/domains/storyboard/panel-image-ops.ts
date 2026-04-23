@@ -19,6 +19,10 @@ import type { TaskSubmittedPartData } from '@/lib/project-agent/types'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { writeOperationDataPart } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
+import {
+  refineTaskSubmitOperationOutputSchema,
+  taskSubmitOperationOutputSchemaBase,
+} from '@/lib/operations/output-schemas'
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -99,6 +103,14 @@ async function rollbackCreatedVariantPanel(params: {
 }
 
 export function createStoryboardPanelImageOperations(): ProjectAgentOperationRegistryDraft {
+  const withMutationBatchBase = taskSubmitOperationOutputSchemaBase.extend({
+    mutationBatchId: z.string().min(1),
+  }).passthrough()
+
+  const taskSubmitOutputWithMutationBatch = <TShape extends z.ZodRawShape>(shape: TShape) => refineTaskSubmitOperationOutputSchema(
+    withMutationBatchBase.extend(shape).passthrough(),
+  )
+
   return {
     regenerate_panel_image: defineOperation({
       id: 'regenerate_panel_image',
@@ -127,7 +139,9 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
         message: 'panelId or (storyboardId + panelIndex) is required',
         path: ['panelId'],
       }),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        panelId: z.string().min(1),
+      }),
       execute: async (ctx, input) => {
         const locale = resolveLocaleFromContext(ctx.context.locale)
 
@@ -254,7 +268,9 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
         sourcePanelId: z.string().min(1),
         variant: z.record(z.unknown()),
       }).passthrough(),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        panelId: z.string().min(1),
+      }),
       execute: async (ctx, input) => {
         const locale = resolveLocaleFromContext(ctx.context.locale)
         const storyboardId = input.storyboardId.trim()

@@ -6,6 +6,10 @@ import type { TaskSubmittedPartData } from '@/lib/project-agent/types'
 import type { ProjectAgentOperationContext, ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { writeOperationDataPart } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
+import {
+  refineTaskSubmitOperationOutputSchema,
+  taskSubmitOperationOutputSchemaBase,
+} from '@/lib/operations/output-schemas'
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -96,6 +100,14 @@ async function executeAssetImageModificationOperation(params: {
 }
 
 export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft {
+  const withMutationBatchBase = taskSubmitOperationOutputSchemaBase.extend({
+    mutationBatchId: z.string().min(1),
+  }).passthrough()
+
+  const taskSubmitOutputWithMutationBatch = <TShape extends z.ZodRawShape>(shape: TShape) => refineTaskSubmitOperationOutputSchema(
+    withMutationBatchBase.extend(shape).passthrough(),
+  )
+
   return {
     generate_character_image: defineOperation({
       id: 'generate_character_image',
@@ -128,7 +140,10 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
         message: 'characterId or characterName is required',
         path: ['characterId'],
       }),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        characterId: z.string().min(1),
+        appearanceId: z.string().nullable(),
+      }),
       execute: async (ctx, input) => {
         const locale = resolveLocaleFromContext(ctx.context.locale)
 
@@ -263,7 +278,9 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
         message: 'locationId or locationName is required',
         path: ['locationId'],
       }),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        locationId: z.string().min(1),
+      }),
       execute: async (ctx, input) => {
         const locale = resolveLocaleFromContext(ctx.context.locale)
 
@@ -380,7 +397,9 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
         characterId: z.string().min(1).optional(),
         locationId: z.string().min(1).optional(),
       }).passthrough(),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        assetId: z.string().min(1),
+      }),
       execute: async (ctx, input) => executeAssetImageModificationOperation({
         ctx,
         input: input as Record<string, unknown>,
@@ -408,7 +427,9 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
         summary: '将修改角色图片（可能覆盖现有结果且可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: modifyCharacterImageInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        assetId: z.string().min(1),
+      }),
       execute: async (ctx, input) => executeAssetImageModificationOperation({
         ctx,
         input: input as Record<string, unknown>,
@@ -436,7 +457,9 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
         summary: '将修改场景图片（可能覆盖现有结果且可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: modifyLocationImageInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOutputWithMutationBatch({
+        assetId: z.string().min(1),
+      }),
       execute: async (ctx, input) => executeAssetImageModificationOperation({
         ctx,
         input: input as Record<string, unknown>,

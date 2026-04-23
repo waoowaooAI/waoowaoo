@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
+import { storyboardMutationOperationOutputSchema } from '@/lib/operations/output-schemas'
 import {
   cancelStoryboardPanelCandidatesInputSchema,
   createStoryboardPanelInputSchema,
@@ -31,7 +32,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
       intent: 'act',
       effects: EFFECTS_WRITE,
       inputSchema: createStoryboardPanelInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'create_panel',
@@ -50,7 +51,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将删除一个分镜格并重排后续编号。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: deleteStoryboardPanelInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'delete_panel',
@@ -69,7 +70,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将修改分镜格提示词。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: updateStoryboardPanelPromptInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'update_panel_prompt',
@@ -88,7 +89,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将修改分镜格字段信息。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: updateStoryboardPanelFieldsInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'update_panel_fields',
@@ -107,7 +108,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将重排整个分镜组内的格子顺序。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: reorderStoryboardPanelsInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'reorder_panels',
@@ -126,7 +127,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将确认候选图并覆盖当前分镜图。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: selectStoryboardPanelCandidateInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'select_panel_candidate',
@@ -145,7 +146,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将清空该分镜格的候选图。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: cancelStoryboardPanelCandidatesInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'cancel_panel_candidates',
@@ -166,7 +167,7 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
         summary: '将插入新的分镜格并提交生成任务。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: insertStoryboardPanelInputSchema,
-      outputSchema: z.unknown(),
+      outputSchema: storyboardMutationOperationOutputSchema,
       execute: async (ctx, input) => executeStoryboardMutationOperation(ctx, {
         ...input,
         action: 'insert_panel',
@@ -174,4 +175,3 @@ export function createStoryboardPanelEditOperations(): ProjectAgentOperationRegi
     }),
   }
 }
-

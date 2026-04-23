@@ -20,6 +20,13 @@ import type { ProjectAgentOperationContext, ProjectAgentOperationRegistryDraft }
 import { writeOperationDataPart } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 import {
+  refineTaskBatchSubmitOperationOutputSchema,
+  refineTaskSubmitOperationOutputSchema,
+  taskBatchSubmitOperationOutputSchemaBase,
+  taskSubmitOperationOutputSchema,
+  taskSubmitOperationOutputSchemaBase,
+} from '@/lib/operations/output-schemas'
+import {
   hasVoiceBindingForProvider,
   parseSpeakerVoiceMap,
   type CharacterVoiceFields,
@@ -79,26 +86,19 @@ function hasUploadedReferenceAudioForSpeaker(params: {
   return false
 }
 
-async function executeVoiceGenerateOperation(params: {
+async function buildVoiceGenerationContext(params: {
   ctx: ProjectAgentOperationContext
   input: {
     episodeId?: string
-    lineId?: string
     audioModel?: string
   }
-  operationId: string
-  all: boolean
 }) {
   const locale = resolveLocaleFromContext(params.ctx.context.locale)
   const episodeId = normalizeString(params.input.episodeId) || normalizeString(params.ctx.context.episodeId)
-  const lineId = normalizeString(params.input.lineId)
   const requestedAudioModel = normalizeString(params.input.audioModel)
 
   if (!episodeId) {
     throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
-  }
-  if (!params.all && !lineId) {
-    throw new Error('PROJECT_AGENT_VOICE_LINE_REQUIRED')
   }
   if (requestedAudioModel && !parseModelKeyStrict(requestedAudioModel)) {
     throw new Error('PROJECT_AGENT_MODEL_KEY_INVALID')
@@ -156,65 +156,161 @@ async function executeVoiceGenerateOperation(params: {
   )
   const selectedProviderKey = getProviderKey(selectedResolvedAudioModel.provider).toLowerCase()
 
-  const speakerVoices = parseSpeakerVoiceMap(episode.speakerVoices)
-  const characters = (projectData.characters || []) as CharacterRow[]
-
-  let voiceLines: VoiceLineRow[] = []
-  if (params.all) {
-    const allLines = await prisma.projectVoiceLine.findMany({
-      where: {
-        episodeId,
-        audioUrl: null,
-      },
-      orderBy: { lineIndex: 'asc' },
-      select: {
-        id: true,
-        speaker: true,
-        content: true,
-        audioUrl: true,
-      },
-    })
-    voiceLines = allLines.filter((line) =>
-      hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey),
-    )
-  } else {
-    const line = await prisma.projectVoiceLine.findFirst({
-      where: {
-        id: lineId,
-        episodeId,
-      },
-      select: {
-        id: true,
-        speaker: true,
-        content: true,
-        audioUrl: true,
-      },
-    })
-    if (!line) {
-      throw new Error('PROJECT_AGENT_VOICE_LINE_NOT_FOUND')
-    }
-    if (!hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey)) {
-      if (
-        selectedProviderKey === 'bailian'
-        && hasUploadedReferenceAudioForSpeaker({ speaker: line.speaker, characters, speakerVoices })
-      ) {
-        throw new ApiError('INVALID_PARAMS', {
-          message: '无音色ID，QwenTTS 必须使用 AI 设计音色',
-        })
-      }
-      throw new Error('PROJECT_AGENT_VOICE_BINDING_REQUIRED')
-    }
-    voiceLines = [line]
+  return {
+    locale,
+    episodeId,
+    selectedResolvedAudioModel,
+    selectedProviderKey,
+    speakerVoices: parseSpeakerVoiceMap(episode.speakerVoices),
+    characters: (projectData.characters || []) as CharacterRow[],
   }
+}
+
+async function executeGenerateVoiceLineAudioOperation(params: {
+  ctx: ProjectAgentOperationContext
+  input: {
+    episodeId?: string
+    lineId: string
+    audioModel?: string
+  }
+  operationId: string
+}) {
+  const { locale, episodeId, selectedResolvedAudioModel, selectedProviderKey, speakerVoices, characters } = await buildVoiceGenerationContext({
+    ctx: params.ctx,
+    input: params.input,
+  })
+
+  const lineId = normalizeString(params.input.lineId)
+  if (!lineId) {
+    throw new Error('PROJECT_AGENT_VOICE_LINE_REQUIRED')
+  }
+
+  const line = await prisma.projectVoiceLine.findFirst({
+    where: {
+      id: lineId,
+      episodeId,
+    },
+    select: {
+      id: true,
+      speaker: true,
+      content: true,
+      audioUrl: true,
+    },
+  })
+  if (!line) {
+    throw new Error('PROJECT_AGENT_VOICE_LINE_NOT_FOUND')
+  }
+  if (!hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey)) {
+    if (
+      selectedProviderKey === 'bailian'
+      && hasUploadedReferenceAudioForSpeaker({ speaker: line.speaker, characters, speakerVoices })
+    ) {
+      throw new ApiError('INVALID_PARAMS', {
+        message: '无音色ID，QwenTTS 必须使用 AI 设计音色',
+      })
+    }
+    throw new Error('PROJECT_AGENT_VOICE_BINDING_REQUIRED')
+  }
+
+  const localeForTask = resolveRequiredTaskLocale(params.ctx.request, { meta: { locale } })
+  const payload = {
+    episodeId,
+    lineId: line.id,
+    maxSeconds: estimateVoiceLineMaxSeconds(line.content),
+    audioModel: selectedResolvedAudioModel.modelKey,
+    meta: {
+      locale,
+    },
+  }
+  const result = await submitTask({
+    userId: params.ctx.userId,
+    locale: localeForTask,
+    requestId: getRequestId(params.ctx.request),
+    projectId: params.ctx.projectId,
+    episodeId,
+    type: TASK_TYPE.VOICE_LINE,
+    targetType: 'ProjectVoiceLine',
+    targetId: line.id,
+    payload: withTaskUiPayload(payload, {
+      hasOutputAtStart: await hasVoiceLineAudioOutput(line.id),
+    }),
+    dedupeKey: `voice_line:${line.id}`,
+    billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.VOICE_LINE, payload),
+  })
+
+  const mutationBatch = await createMutationBatch({
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+    source: params.ctx.source,
+    operationId: params.operationId,
+    summary: `${params.operationId}:${episodeId}:${line.id}`,
+    entries: [
+      {
+        kind: 'voice_line_restore',
+        targetType: 'ProjectVoiceLine',
+        targetId: line.id,
+        payload: {
+          previousAudioUrl: line.audioUrl ?? null,
+        },
+      },
+    ],
+  })
+
+  writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
+    operationId: params.operationId,
+    taskId: result.taskId,
+    status: result.status,
+    runId: result.runId || null,
+    deduped: result.deduped,
+    mutationBatchId: mutationBatch.id,
+  })
+
+  return {
+    ...result,
+    lineId: line.id,
+    mutationBatchId: mutationBatch.id,
+  }
+}
+
+async function executeGenerateEpisodeVoiceAudioOperation(params: {
+  ctx: ProjectAgentOperationContext
+  input: {
+    episodeId?: string
+    audioModel?: string
+  }
+  operationId: string
+}) {
+  const { locale, episodeId, selectedResolvedAudioModel, selectedProviderKey, speakerVoices, characters } = await buildVoiceGenerationContext({
+    ctx: params.ctx,
+    input: params.input,
+  })
+
+  const allLines = await prisma.projectVoiceLine.findMany({
+    where: {
+      episodeId,
+      audioUrl: null,
+    },
+    orderBy: { lineIndex: 'asc' },
+    select: {
+      id: true,
+      speaker: true,
+      content: true,
+      audioUrl: true,
+    },
+  })
+  const voiceLines = allLines.filter((line) =>
+    hasSpeakerVoiceForProvider(line.speaker, characters, speakerVoices, selectedProviderKey),
+  )
 
   if (voiceLines.length === 0) {
     return {
       success: true,
       async: true,
-      results: [],
       taskIds: [],
       total: 0,
-      error: '没有需要生成的台词（可能是已生成或缺少音色绑定）',
+      results: [],
+      noop: true,
+      reason: '没有需要生成的台词（可能是已生成或缺少音色绑定）',
     }
   }
 
@@ -248,7 +344,6 @@ async function executeVoiceGenerateOperation(params: {
       return {
         refId: line.id,
         taskId: result.taskId,
-        status: result.status,
       }
     }),
   )
@@ -259,31 +354,16 @@ async function executeVoiceGenerateOperation(params: {
     userId: params.ctx.userId,
     source: params.ctx.source,
     operationId: params.operationId,
-    summary: `${params.operationId}:${episodeId}:${params.all ? 'all' : (lineId || 'single')}`,
+    summary: `${params.operationId}:${episodeId}:batch`,
     entries: voiceLines.map((line) => ({
       kind: 'voice_line_restore',
       targetType: 'ProjectVoiceLine',
       targetId: line.id,
       payload: {
-        previousAudioUrl: (line as { audioUrl?: string | null }).audioUrl ?? null,
+        previousAudioUrl: line.audioUrl ?? null,
       },
     })),
   })
-
-  if (!params.all) {
-    writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
-      operationId: params.operationId,
-      taskId: taskIds[0] || '',
-      status: results[0]?.status || 'queued',
-      mutationBatchId: mutationBatch.id,
-    })
-    return {
-      success: true,
-      async: true,
-      taskId: taskIds[0],
-      mutationBatchId: mutationBatch.id,
-    }
-  }
 
   writeOperationDataPart<TaskBatchSubmittedPartData>(params.ctx.writer, 'data-task-batch-submitted', {
     operationId: params.operationId,
@@ -317,38 +397,23 @@ const generateEpisodeVoiceAudioInputSchema = z.object({
 })
 
 export function createVoiceOperations(): ProjectAgentOperationRegistryDraft {
-  return {
-    voice_generate: defineOperation({
-      id: 'voice_generate',
-      summary: 'Generate voice line audio for one or more voice lines (async task submission).',
-      intent: 'act',
-      channels: { tool: false, api: true },
-      prerequisites: { episodeId: 'required' },
-      effects: {
-        writes: true,
-        billable: true,
-        destructive: false,
-        overwrite: false,
-        bulk: true,
-        externalSideEffects: true,
-        longRunning: true,
-      },
-      inputSchema: z.object({
-        confirmed: z.boolean().optional(),
-        episodeId: z.string().min(1).optional(),
-        lineId: z.string().min(1).optional(),
-        all: z.boolean().optional(),
-        audioModel: z.string().optional(),
-      }),
-      outputSchema: z.unknown(),
-      execute: async (ctx, input) => executeVoiceGenerateOperation({
-        ctx,
-        input,
-        operationId: 'voice_generate',
-        all: input.all === true,
-      }),
-    }),
+  const submitWithMutationBatchOutputSchema = refineTaskSubmitOperationOutputSchema(
+    taskSubmitOperationOutputSchemaBase.extend({
+      mutationBatchId: z.string().min(1),
+      lineId: z.string().min(1),
+    }).passthrough(),
+  )
 
+  const batchWithLineResultsOutputSchema = refineTaskBatchSubmitOperationOutputSchema(
+    taskBatchSubmitOperationOutputSchemaBase.extend({
+      results: z.array(z.object({
+        lineId: z.string().min(1),
+        taskId: z.string().min(1),
+      })),
+    }).passthrough(),
+  )
+
+  return {
     generate_voice_line_audio: defineOperation({
       id: 'generate_voice_line_audio',
       summary: 'Generate audio for a single voice line.',
@@ -368,12 +433,11 @@ export function createVoiceOperations(): ProjectAgentOperationRegistryDraft {
         summary: '将为单条台词生成配音（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: generateVoiceLineAudioInputSchema,
-      outputSchema: z.unknown(),
-      execute: async (ctx, input) => executeVoiceGenerateOperation({
+      outputSchema: submitWithMutationBatchOutputSchema,
+      execute: async (ctx, input) => executeGenerateVoiceLineAudioOperation({
         ctx,
         input,
         operationId: 'generate_voice_line_audio',
-        all: false,
       }),
     }),
 
@@ -396,12 +460,11 @@ export function createVoiceOperations(): ProjectAgentOperationRegistryDraft {
         summary: '将为整集待生成台词批量生成配音（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
       },
       inputSchema: generateEpisodeVoiceAudioInputSchema,
-      outputSchema: z.unknown(),
-      execute: async (ctx, input) => executeVoiceGenerateOperation({
+      outputSchema: batchWithLineResultsOutputSchema,
+      execute: async (ctx, input) => executeGenerateEpisodeVoiceAudioOperation({
         ctx,
         input,
         operationId: 'generate_episode_voice_audio',
-        all: true,
       }),
     }),
 
@@ -429,7 +492,7 @@ export function createVoiceOperations(): ProjectAgentOperationRegistryDraft {
         preferredName: z.string().optional(),
         language: z.enum(['zh', 'en']).optional(),
       }),
-      outputSchema: z.unknown(),
+      outputSchema: taskSubmitOperationOutputSchema,
       execute: async (ctx, input) => {
         const locale = resolveLocaleFromContext(ctx.context.locale)
         const voicePrompt = input.voicePrompt.trim()
