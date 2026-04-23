@@ -56,7 +56,7 @@ vi.mock('@/lib/media/outbound-image', () => ({
   })),
 }))
 
-import { createMediaOperations } from '@/lib/operations/media-ops'
+import { createMediaOperations } from '@/lib/operations/domains/media/media-ops'
 
 function buildCtx() {
   return {
