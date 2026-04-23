@@ -50,7 +50,7 @@ describe('withOperationPack', () => {
     }
 
     expect(() => withOperationPack(draft, defaults)).toThrow(
-      'PROJECT_AGENT_OPERATION_GROUP_PATH_FOLDER_MISMATCH:bad:storyboard:asset',
+      /PROJECT_AGENT_OPERATION_GROUP_PATH_FOLDER_MISMATCH:operationId=bad:/,
     )
   })
 
@@ -70,9 +70,9 @@ describe('withOperationPack', () => {
     expect(registry.ok.groupPath).toEqual(['project', 'read'])
   })
 
-  it('allows groupPath overrides within the same folder group', () => {
+  it('allows groupPath overrides only under the pack groupPath prefix', () => {
     const draft: ProjectAgentOperationRegistryDraft = {
-      ok: createNoopOperation({ id: 'ok', groupPath: ['asset', 'character'] }),
+      ok: createNoopOperation({ id: 'ok', groupPath: ['asset', 'edit', 'character'] }),
     }
 
     const defaults: OperationPackDefaults = {
@@ -83,6 +83,24 @@ describe('withOperationPack', () => {
     }
 
     const registry = withOperationPack(draft, defaults)
-    expect(registry.ok.groupPath).toEqual(['asset', 'character'])
+    expect(registry.ok.groupPath).toEqual(['asset', 'edit', 'character'])
+  })
+
+  it('throws with an actionable message when groupPath drifts across sibling groups', () => {
+    const draft: ProjectAgentOperationRegistryDraft = {
+      bad: createNoopOperation({ id: 'bad', groupPath: ['asset-hub', 'voice-library'] }),
+    }
+
+    const defaults: OperationPackDefaults = {
+      groupPath: ['asset-hub', 'voice'],
+      channels: { tool: true, api: false },
+      prerequisites: { episodeId: 'optional' },
+      confirmation: { required: false },
+    }
+
+    expect(
+      () => withOperationPack(draft, defaults),
+      'If this fails, it likely means a refactor accidentally moved an operation into the wrong groupPath, causing tools to be injected under the wrong prompt section.',
+    ).toThrow(/reason=operation groupPath must start with pack groupPath/)
   })
 })

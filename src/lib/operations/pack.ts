@@ -67,12 +67,33 @@ function assertOperationFolderGroupConsistency(params: {
   groupPath: OperationGroupPath
   defaultsGroupPath: OperationGroupPath
 }): void {
-  const defaultsFolderGroup = params.defaultsGroupPath[0]
-  const operationFolderGroup = params.groupPath[0]
-  if (operationFolderGroup !== defaultsFolderGroup) {
+  const operationPath = params.groupPath
+  const defaultsPath = params.defaultsGroupPath
+
+  if (operationPath.length < defaultsPath.length) {
     throw new Error(
-      `PROJECT_AGENT_OPERATION_GROUP_PATH_FOLDER_MISMATCH:${params.operationId}:${operationFolderGroup}:${defaultsFolderGroup}`,
+      [
+        'PROJECT_AGENT_OPERATION_GROUP_PATH_FOLDER_MISMATCH',
+        `operationId=${params.operationId}`,
+        `operationGroupPath=${operationPath.join('/')}`,
+        `packGroupPath=${defaultsPath.join('/')}`,
+        'reason=operation groupPath must start with pack groupPath to avoid cross-pack semantic drift',
+      ].join(':'),
     )
+  }
+
+  for (let i = 0; i < defaultsPath.length; i += 1) {
+    if (operationPath[i] !== defaultsPath[i]) {
+      throw new Error(
+        [
+          'PROJECT_AGENT_OPERATION_GROUP_PATH_FOLDER_MISMATCH',
+          `operationId=${params.operationId}`,
+          `operationGroupPath=${operationPath.join('/')}`,
+          `packGroupPath=${defaultsPath.join('/')}`,
+          'reason=operation groupPath must start with pack groupPath to avoid cross-pack semantic drift',
+        ].join(':'),
+      )
+    }
   }
 }
 

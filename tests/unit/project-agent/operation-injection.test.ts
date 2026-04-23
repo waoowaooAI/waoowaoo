@@ -67,6 +67,31 @@ describe('selectProjectAgentOperationsByGroups', () => {
     expect(result.operationIds).toEqual(expect.arrayContaining(['ui_confirm', 'get_project_phase']))
   })
 
+  it('fails loudly if an always-on operation carries side effects', () => {
+    const registry: ProjectAgentOperationRegistry = {
+      ui_confirm: makeTestOperation({
+        id: 'ui_confirm',
+        intent: 'query',
+        groupPath: ['ui'],
+        effects: EFFECTS_WRITE,
+        confirmation: { required: true, summary: 'writes' },
+        inputSchema: z.object({}),
+        outputSchema: z.object({ ok: z.boolean() }),
+        execute: async () => ({ ok: true }),
+      }),
+    }
+
+    expect(
+      () => selectProjectAgentOperationsByGroups({
+        registry,
+        requestedGroups: [],
+        maxTools: 50,
+        allowedIntents: ['query'],
+      }),
+      'If this fails, it means a write/billable/destructive tool was accidentally placed under an always-on group (ui or project/read), which would be injected into every prompt and increase accidental execution risk.',
+    ).toThrow(/PROJECT_AGENT_ALWAYS_ON_OPERATION_SIDE_EFFECTS_NOT_ALLOWED/)
+  })
+
   it('fails explicitly on invalid requestedGroups segments', () => {
     const registry = buildRegistry()
     expect(() => selectProjectAgentOperationsByGroups({

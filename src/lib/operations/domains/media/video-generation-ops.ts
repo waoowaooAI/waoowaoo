@@ -1,0 +1,449 @@
+import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
+import { getRequestId } from '@/lib/api-errors'
+import { submitTask } from '@/lib/task/submitter'
+import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
+import { TASK_TYPE } from '@/lib/task/types'
+import { buildDefaultTaskBillingInfo } from '@/lib/billing'
+import { BillingOperationError } from '@/lib/billing/errors'
+import { withTaskUiPayload } from '@/lib/task/ui-payload'
+import { createMutationBatch } from '@/lib/mutation-batch/service'
+import { hasPanelVideoOutput } from '@/lib/task/has-output'
+import { parseModelKeyStrict, type CapabilityValue } from '@/lib/model-config-contract'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
+import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
+import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
+import type {
+  TaskBatchSubmittedPartData,
+  TaskSubmittedPartData,
+} from '@/lib/project-agent/types'
+import type { ProjectAgentOperationContext, ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
+import { writeOperationDataPart } from '@/lib/operations/types'
+import { defineOperation } from '@/lib/operations/define-operation'
+
+function normalizeString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function resolveLocaleFromContext(locale?: unknown): string {
+  const normalized = normalizeString(locale)
+  return normalized || 'zh'
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function toVideoRuntimeSelections(value: unknown): Record<string, CapabilityValue> {
+  if (!isRecord(value)) return {}
+  const selections: Record<string, CapabilityValue> = {}
+  for (const [field, raw] of Object.entries(value)) {
+    if (field === 'aspectRatio') continue
+    if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
+      selections[field] = raw
+    }
+  }
+  return selections
+}
+
+function resolveVideoGenerationMode(payload: unknown): 'normal' | 'firstlastframe' {
+  if (!isRecord(payload)) return 'normal'
+  return isRecord(payload.firstLastFrame) ? 'firstlastframe' : 'normal'
+}
+
+function isSeedance2Model(modelKey: string): boolean {
+  const parsed = parseModelKeyStrict(modelKey)
+  if (!parsed) return false
+  return parsed.provider === 'ark'
+    && (
+      parsed.modelId === 'doubao-seedance-2-0-260128'
+      || parsed.modelId === 'doubao-seedance-2-0-fast-260128'
+    )
+}
+
+function resolveVideoModelKeyFromPayload(payload: Record<string, unknown>): string | null {
+  const firstLast = isRecord(payload.firstLastFrame) ? payload.firstLastFrame : null
+  if (firstLast && typeof firstLast.flModel === 'string' && parseModelKeyStrict(firstLast.flModel)) {
+    return firstLast.flModel
+  }
+  if (typeof payload.videoModel === 'string' && parseModelKeyStrict(payload.videoModel)) {
+    return payload.videoModel
+  }
+  return null
+}
+
+function requireVideoModelKeyFromPayload(payload: unknown): string {
+  if (!isRecord(payload) || typeof payload.videoModel !== 'string' || !parseModelKeyStrict(payload.videoModel)) {
+    throw new Error('PROJECT_AGENT_VIDEO_MODEL_REQUIRED')
+  }
+  return payload.videoModel
+}
+
+function validateFirstLastFrameModel(input: unknown) {
+  if (input === undefined || input === null) return
+  if (!isRecord(input)) {
+    throw new Error('PROJECT_AGENT_FIRSTLASTFRAME_PAYLOAD_INVALID')
+  }
+
+  const flModel = input.flModel
+  if (typeof flModel !== 'string' || !parseModelKeyStrict(flModel)) {
+    throw new Error('PROJECT_AGENT_FIRSTLASTFRAME_MODEL_INVALID')
+  }
+
+  const capabilities = resolveBuiltinCapabilitiesByModelKey('video', flModel)
+  if (capabilities?.video?.firstlastframe !== true) {
+    throw new Error('PROJECT_AGENT_FIRSTLASTFRAME_MODEL_UNSUPPORTED')
+  }
+}
+
+async function validateVideoCapabilityCombination(input: {
+  payload: unknown
+  projectId: string
+  userId: string
+}) {
+  const payload = input.payload
+  if (!isRecord(payload)) return
+  const modelKey = resolveVideoModelKeyFromPayload(payload)
+  if (!modelKey) return
+
+  const builtinCaps = resolveBuiltinCapabilitiesByModelKey('video', modelKey)
+  if (!builtinCaps) return
+
+  const runtimeSelections = toVideoRuntimeSelections(payload.generationOptions)
+  runtimeSelections.generationMode = resolveVideoGenerationMode(payload)
+
+  const resolvedOptions = await resolveProjectModelCapabilityGenerationOptions({
+    projectId: input.projectId,
+    userId: input.userId,
+    modelType: 'video',
+    modelKey,
+    runtimeSelections,
+  })
+
+  const resolution = resolveBuiltinPricing({
+    apiType: 'video',
+    model: modelKey,
+    selections: {
+      ...resolvedOptions,
+      ...(isSeedance2Model(modelKey) ? { containsVideoInput: false } : {}),
+    },
+  })
+  if (resolution.status === 'missing_capability_match') {
+    throw new Error('PROJECT_AGENT_VIDEO_CAPABILITY_COMBINATION_UNSUPPORTED')
+  }
+}
+
+function buildVideoPanelBillingInfoOrThrow(payload: unknown) {
+  try {
+    return buildDefaultTaskBillingInfo(TASK_TYPE.VIDEO_PANEL, isRecord(payload) ? payload : null)
+  } catch (error) {
+    if (
+      error instanceof BillingOperationError
+      && (
+        error.code === 'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION'
+        || error.code === 'BILLING_UNKNOWN_VIDEO_RESOLUTION'
+      )
+    ) {
+      throw new Error('PROJECT_AGENT_VIDEO_CAPABILITY_COMBINATION_UNSUPPORTED')
+    }
+    if (error instanceof BillingOperationError && error.code === 'BILLING_UNKNOWN_MODEL') {
+      return null
+    }
+    throw error
+  }
+}
+
+async function executeGenerateVideoOperation(params: {
+  ctx: ProjectAgentOperationContext
+  input: Record<string, unknown>
+  operationId: string
+  batch: boolean
+}) {
+  const locale = resolveLocaleFromContext(params.ctx.context.locale)
+  const existingMeta = isRecord(params.input.meta) ? params.input.meta : {}
+  const payload: Record<string, unknown> = {
+    ...params.input,
+    meta: {
+      ...existingMeta,
+      locale,
+    },
+  }
+  delete payload.confirmed
+
+  requireVideoModelKeyFromPayload(payload)
+  validateFirstLastFrameModel(payload.firstLastFrame)
+  await validateVideoCapabilityCombination({
+    payload,
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+  })
+
+  const localeForTask = resolveRequiredTaskLocale(params.ctx.request, payload)
+  if (params.batch) {
+    const episodeId = normalizeString(payload.episodeId) || normalizeString(params.ctx.context.episodeId)
+    if (!episodeId) {
+      throw new Error('PROJECT_AGENT_EPISODE_REQUIRED')
+    }
+    const limit = typeof payload.limit === 'number' && Number.isFinite(payload.limit) ? payload.limit : 20
+
+    const panels = await prisma.projectPanel.findMany({
+      where: {
+        storyboard: { episodeId },
+        imageUrl: { not: null },
+        OR: [
+          { videoUrl: null },
+          { videoUrl: '' },
+        ],
+      },
+      select: { id: true, videoUrl: true },
+      take: limit,
+    })
+
+    if (panels.length === 0) {
+      return { tasks: [], total: 0 }
+    }
+
+    const tasks = await Promise.all(
+      panels.map(async (panel) =>
+        submitTask({
+          userId: params.ctx.userId,
+          locale: localeForTask,
+          requestId: getRequestId(params.ctx.request),
+          projectId: params.ctx.projectId,
+          episodeId,
+          type: TASK_TYPE.VIDEO_PANEL,
+          targetType: 'ProjectPanel',
+          targetId: panel.id,
+          payload: withTaskUiPayload(payload, {
+            hasOutputAtStart: await hasPanelVideoOutput(panel.id),
+          }),
+          dedupeKey: `video_panel:${panel.id}`,
+          billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
+        }),
+      ),
+    )
+
+    const taskIds = tasks.map((task) => task.taskId)
+    const mutationBatch = await createMutationBatch({
+      projectId: params.ctx.projectId,
+      userId: params.ctx.userId,
+      source: params.ctx.source,
+      operationId: params.operationId,
+      summary: `${params.operationId}:${episodeId}:batch`,
+      entries: panels.map((panel) => ({
+        kind: 'panel_video_restore',
+        targetType: 'ProjectPanel',
+        targetId: panel.id,
+        payload: {
+          previousVideoUrl: panel.videoUrl ?? null,
+        },
+      })),
+    })
+    writeOperationDataPart<TaskBatchSubmittedPartData>(params.ctx.writer, 'data-task-batch-submitted', {
+      operationId: params.operationId,
+      total: tasks.length,
+      taskIds,
+      results: panels.map((panel, index) => ({ refId: panel.id, taskId: taskIds[index] || '' })),
+      mutationBatchId: mutationBatch.id,
+    })
+
+    return {
+      tasks,
+      total: tasks.length,
+      mutationBatchId: mutationBatch.id,
+    }
+  }
+
+  let panelId = normalizeString(payload.panelId)
+  let previousVideoUrl: string | null = null
+  if (!panelId) {
+    const storyboardId = normalizeString(payload.storyboardId)
+    const panelIndex = typeof payload.panelIndex === 'number' ? payload.panelIndex : NaN
+    if (!storyboardId || !Number.isFinite(panelIndex)) {
+      throw new Error('PROJECT_AGENT_PANEL_REQUIRED')
+    }
+    const panel = await prisma.projectPanel.findFirst({
+      where: { storyboardId, panelIndex: Number(panelIndex) },
+      select: { id: true, videoUrl: true },
+    })
+    panelId = panel?.id || ''
+    previousVideoUrl = panel?.videoUrl ?? null
+  }
+  if (!panelId) {
+    throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+  }
+  if (normalizeString(payload.panelId)) {
+    const panel = await prisma.projectPanel.findUnique({
+      where: { id: panelId },
+      select: { videoUrl: true },
+    })
+    if (!panel) {
+      throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
+    }
+    previousVideoUrl = panel.videoUrl ?? null
+  }
+
+  const result = await submitTask({
+    userId: params.ctx.userId,
+    locale: localeForTask,
+    requestId: getRequestId(params.ctx.request),
+    projectId: params.ctx.projectId,
+    type: TASK_TYPE.VIDEO_PANEL,
+    targetType: 'ProjectPanel',
+    targetId: panelId,
+    payload: withTaskUiPayload(payload, {
+      hasOutputAtStart: await hasPanelVideoOutput(panelId),
+    }),
+    dedupeKey: `video_panel:${panelId}`,
+    billingInfo: buildVideoPanelBillingInfoOrThrow(payload),
+  })
+
+  const mutationBatch = await createMutationBatch({
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+    source: params.ctx.source,
+    operationId: params.operationId,
+    summary: `${params.operationId}:${panelId}`,
+    entries: [
+      {
+        kind: 'panel_video_restore',
+        targetType: 'ProjectPanel',
+        targetId: panelId,
+        payload: {
+          previousVideoUrl,
+        },
+      },
+    ],
+  })
+
+  writeOperationDataPart<TaskSubmittedPartData>(params.ctx.writer, 'data-task-submitted', {
+    operationId: params.operationId,
+    taskId: result.taskId,
+    status: result.status,
+    runId: result.runId || null,
+    deduped: result.deduped,
+    mutationBatchId: mutationBatch.id,
+  })
+
+  return {
+    ...result,
+    panelId,
+    mutationBatchId: mutationBatch.id,
+  }
+}
+
+const generatePanelVideoInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  panelId: z.string().min(1).optional(),
+  storyboardId: z.string().min(1).optional(),
+  panelIndex: z.number().int().min(0).max(2000).optional(),
+  videoModel: z.string().min(1),
+  firstLastFrame: z.unknown().optional(),
+  generationOptions: z.record(z.unknown()).optional(),
+}).passthrough().refine((value) => Boolean(value.panelId || (value.storyboardId && typeof value.panelIndex === 'number')), {
+  message: 'panelId or (storyboardId + panelIndex) is required',
+  path: ['panelId'],
+})
+
+const generateEpisodeVideosInputSchema = z.object({
+  confirmed: z.boolean().optional(),
+  episodeId: z.string().min(1).optional(),
+  limit: z.number().int().positive().max(50).optional(),
+  videoModel: z.string().min(1),
+  firstLastFrame: z.unknown().optional(),
+  generationOptions: z.record(z.unknown()).optional(),
+}).passthrough()
+
+export function createVideoGenerationOperations(): ProjectAgentOperationRegistryDraft {
+  return {
+    generate_video: defineOperation({
+      id: 'generate_video',
+      summary: 'Generate panel videos for a storyboard panel or an episode batch (async task submission).',
+      intent: 'act',
+      channels: { tool: false, api: true },
+      effects: {
+        writes: true,
+        billable: true,
+        destructive: false,
+        overwrite: true,
+        bulk: true,
+        externalSideEffects: true,
+        longRunning: true,
+      },
+      inputSchema: z.object({
+        confirmed: z.boolean().optional(),
+        all: z.boolean().optional(),
+        limit: z.number().int().positive().max(50).optional(),
+        episodeId: z.string().min(1).optional(),
+        panelId: z.string().min(1).optional(),
+        storyboardId: z.string().min(1).optional(),
+        panelIndex: z.number().int().min(0).max(2000).optional(),
+        videoModel: z.string().min(1),
+        firstLastFrame: z.unknown().optional(),
+        generationOptions: z.record(z.unknown()).optional(),
+      }).passthrough(),
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeGenerateVideoOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'generate_video',
+        batch: input.all === true,
+      }),
+    }),
+
+    generate_panel_video: defineOperation({
+      id: 'generate_panel_video',
+      summary: 'Generate video for a single storyboard panel.',
+      intent: 'act',
+      effects: {
+        writes: true,
+        billable: true,
+        destructive: false,
+        overwrite: true,
+        bulk: false,
+        externalSideEffects: true,
+        longRunning: true,
+      },
+      confirmation: {
+        required: true,
+        summary: '将为单个分镜格生成视频（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: generatePanelVideoInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeGenerateVideoOperation({
+        ctx,
+        input: input as Record<string, unknown>,
+        operationId: 'generate_panel_video',
+        batch: false,
+      }),
+    }),
+
+    generate_episode_videos: defineOperation({
+      id: 'generate_episode_videos',
+      summary: 'Batch generate videos for pending panels in an episode.',
+      intent: 'act',
+      prerequisites: { episodeId: 'required' },
+      effects: {
+        writes: true,
+        billable: true,
+        destructive: false,
+        overwrite: true,
+        bulk: true,
+        externalSideEffects: true,
+        longRunning: true,
+      },
+      confirmation: {
+        required: true,
+        summary: '将为整集待生成分镜批量生成视频（可能消耗额度/产生计费）。确认继续后请重新调用并传入 confirmed=true。',
+      },
+      inputSchema: generateEpisodeVideosInputSchema,
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => executeGenerateVideoOperation({
+        ctx,
+        input: { ...input, all: true } as Record<string, unknown>,
+        operationId: 'generate_episode_videos',
+        batch: true,
+      }),
+    }),
+  }
+}

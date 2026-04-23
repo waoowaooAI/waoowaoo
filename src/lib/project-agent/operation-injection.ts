@@ -19,6 +19,31 @@ function isGroupPrefix(groupPath: OperationGroupPath, prefix: OperationGroupPath
   return true
 }
 
+function assertAlwaysOnOperationIsLowRisk(params: {
+  operationId: string
+  groupPath: OperationGroupPath
+  effects: {
+    writes: boolean
+    billable: boolean
+    destructive: boolean
+    externalSideEffects: boolean
+  }
+}) {
+  const { effects } = params
+  if (effects.writes || effects.billable || effects.destructive || effects.externalSideEffects) {
+    throw new Error([
+      'PROJECT_AGENT_ALWAYS_ON_OPERATION_SIDE_EFFECTS_NOT_ALLOWED',
+      `operationId=${params.operationId}`,
+      `groupPath=${params.groupPath.join('/')}`,
+      `writes=${String(effects.writes)}`,
+      `billable=${String(effects.billable)}`,
+      `destructive=${String(effects.destructive)}`,
+      `externalSideEffects=${String(effects.externalSideEffects)}`,
+      'reason=always-on tools must be low-risk; otherwise they become unavoidably injected everywhere and increase accidental execution risk',
+    ].join(':'))
+  }
+}
+
 function normalizeRequestedGroups(requestedGroups: ReadonlyArray<OperationGroupPath>): OperationGroupPath[] {
   const deduped: OperationGroupPath[] = []
   const seen = new Set<string>()
@@ -69,6 +94,16 @@ export function selectProjectAgentOperationsByGroups(params: {
   for (const [id, operation] of Object.entries(params.registry)) {
     if (!operation.channels.tool) continue
     if (!ALWAYS_ON_GROUP_PREFIXES.some((prefix) => isGroupPrefix(operation.groupPath, prefix))) continue
+    assertAlwaysOnOperationIsLowRisk({
+      operationId: id,
+      groupPath: operation.groupPath,
+      effects: {
+        writes: operation.effects.writes,
+        billable: operation.effects.billable,
+        destructive: operation.effects.destructive,
+        externalSideEffects: operation.effects.externalSideEffects,
+      },
+    })
     alwaysOnIds.push(id)
   }
   alwaysOnIds.sort()
