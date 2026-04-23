@@ -21,6 +21,7 @@ import {
   removeWorkflowStatusParts,
 } from './workflow-timeline'
 import type { ProjectAgentInteractionMode } from '@/lib/project-agent/types'
+import { isPersistableUIMessages } from '@/lib/project-agent/ui-message-validation'
 
 interface UseWorkspaceAssistantRuntimeParams {
   projectId: string
@@ -119,6 +120,8 @@ export function useWorkspaceAssistantRuntime({
 
   useEffect(() => {
     if (hydratedSessionKeyRef.current !== chatId) return
+    if (chat.status === 'submitted' || chat.status === 'streaming') return
+    if (!isPersistableUIMessages(chat.messages)) return
     const signature = JSON.stringify(chat.messages)
     if (signature === lastPersistedSignatureRef.current) return
     if (persistTimerRef.current !== null) {
