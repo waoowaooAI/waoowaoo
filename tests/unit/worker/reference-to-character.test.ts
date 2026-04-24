@@ -185,7 +185,7 @@ describe('worker reference-to-character', () => {
     expect(prompt).toContain('冷静黑发角色')
     expect(prompt).toContain(CHARACTER_PROMPT_SUFFIX)
     expect(options.aspectRatio).toBe(CHARACTER_IMAGE_BANANA_RATIO)
-    expect(options.referenceImages).toBeUndefined()
+    expect(Object.prototype.hasOwnProperty.call(options, 'referenceImages')).toBe(false)
   })
 
   it('keeps three-view suffix in template flow and writes extracted description in background mode', async () => {

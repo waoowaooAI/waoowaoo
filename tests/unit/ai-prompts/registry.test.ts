@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildAiPrompt, getAiPromptTemplate, resolveAiPromptIdFromWorkflowSkillId } from '@/lib/ai-prompts'
-import { AI_PROMPT_IDS } from '@/lib/ai-prompts/ids'
+import { AI_PROMPT_CATALOG } from '@/lib/ai-prompts/registry'
+import { AI_PROMPT_IDS, type AiPromptId } from '@/lib/ai-prompts/ids'
 import { buildDirectorStyleDoc } from '@/lib/director-style'
 
 describe('ai prompt registry', () => {
@@ -42,5 +43,37 @@ describe('ai prompt registry', () => {
     expect(prompt).toContain('【导演风格要求】')
     expect(prompt).toContain('危险感')
     expect(prompt).toContain('"judgement"')
+  })
+
+  it('keeps style requirements wired in every opted-in prompt template locale', () => {
+    const stylePromptIds = Object.entries(AI_PROMPT_CATALOG)
+      .filter((entry) => entry[1].variableKeys.includes('style_requirements'))
+      .map((entry) => entry[0])
+
+    expect(stylePromptIds.length).toBeGreaterThan(0)
+
+    for (const promptId of stylePromptIds) {
+      expect(getAiPromptTemplate(promptId as AiPromptId, 'zh')).toContain('{style_requirements}')
+      expect(getAiPromptTemplate(promptId as AiPromptId, 'en')).toContain('{style_requirements}')
+    }
+  })
+
+  it('renders video style requirements into storyboard detail prompts', () => {
+    const prompt = buildAiPrompt({
+      promptId: AI_PROMPT_IDS.STORYBOARD_REFINE_DETAIL,
+      locale: 'en',
+      variables: {
+        panels_json: '[]',
+        characters_age_gender: 'none',
+        locations_description: 'none',
+        props_description: 'none',
+      },
+      directorStyleDoc: buildDirectorStyleDoc('horror-suspense'),
+    })
+
+    expect(prompt).toContain('Director style requirements:')
+    expect(prompt).toContain('"storyboardDetail"')
+    expect(prompt).toContain('"video"')
+    expect(prompt).toContain('视频运镜')
   })
 })

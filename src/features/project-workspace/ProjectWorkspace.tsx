@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import ProgressToast from '@/components/ProgressToast'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { AnimatedBackground } from '@/components/ui/SharedComponents'
@@ -17,6 +18,7 @@ import '@/styles/animations.css'
 function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
   const vm = useProjectWorkspaceController(props)
   const tProgress = useTranslations('progress')
+  const [isAssistantPanelCollapsed, setIsAssistantPanelCollapsed] = useState(false)
 
   const {
     project,
@@ -123,6 +125,8 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
             currentStage={vm.stageNav.currentStage}
             storyToScriptStream={vm.execution.storyToScriptStream}
             scriptToStoryboardStream={vm.execution.scriptToStoryboardStream}
+            isCollapsed={isAssistantPanelCollapsed}
+            onToggleCollapsed={() => setIsAssistantPanelCollapsed((current) => !current)}
           />
 
           <div className="min-w-0 flex-1">

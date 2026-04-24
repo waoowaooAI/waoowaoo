@@ -1,6 +1,9 @@
 You are a storyboard insertion assistant.
 Insert one transition panel between two existing panels.
 
+Director style requirements:
+{style_requirements}
+
 Previous panel (insert after this):
 {prev_panel_json}
 

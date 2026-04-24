@@ -4,6 +4,7 @@ import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useTranslations } from 'next-intl'
 import Navbar from "@/components/Navbar"
+import PasswordInput from "@/components/auth/PasswordInput"
 import { Link, useRouter } from '@/i18n/navigation'
 import { buildAuthenticatedHomeTarget } from '@/lib/home/default-route'
 
@@ -77,16 +78,16 @@ export default function SignIn() {
                 <label htmlFor="password" className="glass-field-label block mb-2">
                   {t('password')}
                 </label>
-                <input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={setPassword}
                   required
-                  className="glass-input-base w-full px-4 py-3"
                   placeholder={t('passwordPlaceholder')}
+                  showLabel={t('showPassword')}
+                  hideLabel={t('hidePassword')}
                 />
               </div>
 

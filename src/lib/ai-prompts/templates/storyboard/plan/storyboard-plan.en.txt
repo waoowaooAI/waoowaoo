@@ -1,6 +1,9 @@
 You are a storyboard planning director.
 Generate an initial panel sequence for one clip.
 
+Director style requirements:
+{style_requirements}
+
 Character library names:
 {characters_lib_name}
 

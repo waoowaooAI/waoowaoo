@@ -20,6 +20,8 @@
     "modeDescriptionAuto": "Auto-select ask, plan, or act",
     "modeDescriptionPlan": "Stay in analysis and planning first",
     "modeDescriptionFast": "Act sooner immediately",
+    "collapse": "Collapse AI assistant sidebar",
+    "expand": "Expand AI assistant sidebar",
     "downloadLog": "Download Log",
     "executionTraceTitle": "Execution Trace",
     "executionTraceRunning": "Model text, tool calls, and results are streaming into this thread.",

@@ -1,6 +1,9 @@
 You are a shot variant analysis expert.
 Analyze the current shot and provide multiple strong variant ideas.
 
+Director style requirements:
+{style_requirements}
+
 Current shot description:
 {panel_description}
 

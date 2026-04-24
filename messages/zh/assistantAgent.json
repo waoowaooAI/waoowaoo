@@ -20,6 +20,8 @@
     "modeDescriptionAuto": "自主抉择并选择提问、规划或执行",
     "modeDescriptionPlan": "先规划再执行",
     "modeDescriptionFast": "满足规则时尽快执行",
+    "collapse": "折叠 AI 助手侧栏",
+    "expand": "展开 AI 助手侧栏",
     "downloadLog": "下载日志",
     "executionTraceTitle": "执行过程",
     "executionTraceRunning": "模型输出、tool 调用与结果正在同步写入对话",

@@ -152,6 +152,16 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
       index,
     })
 
+    const options: {
+      referenceImages?: string[]
+      aspectRatio: string
+    } = {
+      aspectRatio: CHARACTER_ASSET_IMAGE_RATIO,
+    }
+    if (primaryReferenceImages.length > 0) {
+      options.referenceImages = primaryReferenceImages
+    }
+
     const imageKey = await generateProjectLabeledImageToStorage({
       job,
       userId,
@@ -160,10 +170,7 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
       label,
       targetId: `${appearance.id}-${index}`,
       keyPrefix: 'character',
-      options: {
-        referenceImages: primaryReferenceImages.length > 0 ? primaryReferenceImages : undefined,
-        aspectRatio: CHARACTER_ASSET_IMAGE_RATIO,
-      },
+      options,
     })
 
     while (nextImageUrls.length <= index) {

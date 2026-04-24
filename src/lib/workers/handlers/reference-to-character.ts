@@ -52,14 +52,21 @@ async function generateReferenceImage(params: {
 
   try {
     await assertTaskActive(job, `reference_to_character_generate_${imageIndex + 1}`)
+    const options: {
+      referenceImages?: string[]
+      aspectRatio: string
+    } = {
+      aspectRatio: CHARACTER_IMAGE_BANANA_RATIO,
+    }
+    if (referenceImages && referenceImages.length > 0) {
+      options.referenceImages = referenceImages
+    }
+
     const result = await generateImage(
       userId,
       imageModel,
       prompt,
-      {
-        referenceImages,
-        aspectRatio: CHARACTER_IMAGE_BANANA_RATIO,
-      },
+      options,
     )
 
     let finalImageUrl = result.imageUrl
@@ -226,7 +233,7 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       userId: job.data.userId,
       imageModel,
       prompt,
-      referenceImages: useReferenceImages ? allReferenceImages : undefined,
+      ...(useReferenceImages ? { referenceImages: allReferenceImages } : {}),
       falApiKey,
       keyPrefix,
       ...(isProject ? { labelText: characterName } : {}),

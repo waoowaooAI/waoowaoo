@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { AppIcon } from '@/components/ui/icons'
 
 interface WorkspaceAssistantPanelHeaderProps {
@@ -10,6 +11,8 @@ interface WorkspaceAssistantPanelHeaderProps {
   runLabel: string
   downloadLabel: string
   downloadHref: string
+  collapseLabel: string
+  onCollapse: () => void
 }
 
 export function WorkspaceAssistantPanelHeader(props: WorkspaceAssistantPanelHeaderProps) {
@@ -23,13 +26,23 @@ export function WorkspaceAssistantPanelHeader(props: WorkspaceAssistantPanelHead
           </div>
           <h2 className="mt-2 text-base font-semibold text-[var(--glass-text-primary)]">{props.title}</h2>
         </div>
-        <a
-          href={props.downloadHref}
-          className="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.7)] px-3 py-2 text-xs font-medium text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/40 hover:text-[var(--glass-accent-from)]"
-        >
-          <AppIcon name="download" className="h-4 w-4" />
-          <span>{props.downloadLabel}</span>
-        </a>
+        <div className="flex shrink-0 items-center gap-2">
+          <a
+            href={props.downloadHref}
+            className="inline-flex items-center gap-2 rounded-2xl border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.7)] px-3 py-2 text-xs font-medium text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/40 hover:text-[var(--glass-accent-from)]"
+          >
+            <AppIcon name="download" className="h-4 w-4" />
+            <span>{props.downloadLabel}</span>
+          </a>
+          <button
+            type="button"
+            aria-label={props.collapseLabel}
+            onClick={props.onCollapse}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.7)] text-[var(--glass-text-primary)] transition hover:border-[var(--glass-accent-from)]/40 hover:text-[var(--glass-accent-from)]"
+          >
+            <AppIcon name="chevronLeft" className="h-4 w-4" />
+          </button>
+        </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {[props.episodeLabel, props.stageLabel, props.runLabel].map((item) => (

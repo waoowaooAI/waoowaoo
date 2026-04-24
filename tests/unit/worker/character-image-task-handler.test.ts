@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CHARACTER_PROMPT_SUFFIX, getArtStylePrompt } from '@/lib/constants'
+import { CHARACTER_ASSET_IMAGE_RATIO, CHARACTER_PROMPT_SUFFIX, getArtStylePrompt } from '@/lib/constants'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const utilsMock = vi.hoisted(() => ({
@@ -116,7 +116,7 @@ describe('worker character-image-task-handler behavior', () => {
     expect(generationInput.label).toBe('Hero - 战斗形态')
     expect(generationInput.options).toEqual(expect.objectContaining({
       referenceImages: ['normalized-primary-ref'],
-      aspectRatio: '3:2',
+      aspectRatio: CHARACTER_ASSET_IMAGE_RATIO,
     }))
 
     expect(prismaMock.characterAppearance.update).toHaveBeenCalledWith({
@@ -126,6 +126,33 @@ describe('worker character-image-task-handler behavior', () => {
         imageUrl: 'cos/character-generated-0.png',
       },
     })
+  })
+
+  it('primary appearance generation omits referenceImages option when no reference image exists', async () => {
+    outboundMock.normalizeReferenceImagesForGeneration.mockResolvedValueOnce([])
+    prismaMock.characterAppearance.findUnique.mockResolvedValueOnce({
+      id: 'appearance-1',
+      characterId: 'character-1',
+      appearanceIndex: 0,
+      descriptions: JSON.stringify(['主形象描述A']),
+      description: '主形象描述A',
+      imageUrls: JSON.stringify([]),
+      selectedIndex: 0,
+      imageUrl: null,
+      changeReason: '初始形象',
+      character: { name: 'Hero' },
+    })
+
+    await handleCharacterImageTask(buildJob({ imageIndex: 0 }, 'appearance-1'))
+
+    expect(prismaMock.characterAppearance.findFirst).not.toHaveBeenCalled()
+    const generationInput = sharedMock.generateProjectLabeledImageToStorage.mock.calls[0]?.[0] as {
+      options?: { referenceImages?: string[]; aspectRatio?: string }
+    }
+    expect(generationInput.options).toEqual({
+      aspectRatio: CHARACTER_ASSET_IMAGE_RATIO,
+    })
+    expect(Object.prototype.hasOwnProperty.call(generationInput.options || {}, 'referenceImages')).toBe(false)
   })
 
   it('payload artStyle overrides project artStyle in prompt', async () => {
