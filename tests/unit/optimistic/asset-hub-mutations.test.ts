@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { QueryClient } from '@tanstack/react-query'
 import type { GlobalCharacter, GlobalLocation } from '@/lib/query/hooks/useGlobalAssets'
 import { queryKeys } from '@/lib/query/keys'
 import { MockQueryClient } from '../../helpers/mock-query-client'
@@ -31,21 +32,11 @@ vi.mock('@/lib/query/mutations/mutation-shared', async () => {
   }
 })
 
-vi.mock('@/lib/query/mutations/asset-hub-mutations-shared', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/query/mutations/asset-hub-mutations-shared')>(
-    '@/lib/query/mutations/asset-hub-mutations-shared',
-  )
-  return {
-    ...actual,
-    invalidateGlobalCharacters: vi.fn(),
-    invalidateGlobalLocations: vi.fn(),
-  }
-})
-
 import {
   useSelectCharacterImage,
 } from '@/lib/query/mutations/asset-hub-character-mutations'
 import { useDeleteLocation as useDeleteAssetHubLocation } from '@/lib/query/mutations/asset-hub-location-mutations'
+import { invalidateGlobalCharacters } from '@/lib/query/mutations/asset-hub-mutations-shared'
 
 interface SelectCharacterMutation {
   onMutate: (variables: {
@@ -167,5 +158,23 @@ describe('asset hub optimistic mutations', () => {
     const rolledBackFolder = queryClient.getQueryData<GlobalLocation[]>(folderLocationsKey)
     expect(rolledBackAll?.map((item) => item.id)).toEqual(['loc-1', 'loc-2'])
     expect(rolledBackFolder?.map((item) => item.id)).toEqual(['loc-1'])
+  })
+
+  it('global asset invalidation refreshes unified asset queries and legacy character queries', () => {
+    invalidateGlobalCharacters(queryClient as unknown as QueryClient)
+
+    expect(queryClient.invalidations.some((arg) => {
+      const key = arg.queryKey || []
+      return Array.isArray(key)
+        && key[0] === queryKeys.assets.all('global')[0]
+        && key[1] === 'unified'
+    })).toBe(true)
+
+    expect(queryClient.invalidations.some((arg) => {
+      const key = arg.queryKey || []
+      return Array.isArray(key)
+        && key[0] === queryKeys.globalAssets.characters()[0]
+        && key[1] === 'characters'
+    })).toBe(true)
   })
 })

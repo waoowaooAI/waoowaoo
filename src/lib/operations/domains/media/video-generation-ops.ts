@@ -263,6 +263,7 @@ async function executeGenerateEpisodeVideosOperation(params: {
     userId: params.ctx.userId,
     source: params.ctx.source,
     operationId: params.operationId,
+    episodeId,
     summary: `${params.operationId}:${episodeId}:batch`,
     entries: panels.map((panel) => ({
       kind: 'panel_video_restore',
@@ -306,6 +307,7 @@ async function executeGeneratePanelVideoOperation(params: {
 
   let panelId = normalizeString(payload.panelId)
   let previousVideoUrl: string | null = null
+  let episodeId: string | null = null
   if (!panelId) {
     const storyboardId = normalizeString(payload.storyboardId)
     const panelIndex = typeof payload.panelIndex === 'number' ? payload.panelIndex : NaN
@@ -314,10 +316,11 @@ async function executeGeneratePanelVideoOperation(params: {
     }
     const panel = await prisma.projectPanel.findFirst({
       where: { storyboardId, panelIndex: Number(panelIndex) },
-      select: { id: true, videoUrl: true },
+      select: { id: true, videoUrl: true, storyboard: { select: { episodeId: true } } },
     })
     panelId = panel?.id || ''
     previousVideoUrl = panel?.videoUrl ?? null
+    episodeId = panel?.storyboard.episodeId ?? null
   }
   if (!panelId) {
     throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
@@ -325,12 +328,13 @@ async function executeGeneratePanelVideoOperation(params: {
   if (normalizeString(payload.panelId)) {
     const panel = await prisma.projectPanel.findUnique({
       where: { id: panelId },
-      select: { videoUrl: true },
+      select: { videoUrl: true, storyboard: { select: { episodeId: true } } },
     })
     if (!panel) {
       throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
     }
     previousVideoUrl = panel.videoUrl ?? null
+    episodeId = panel.storyboard.episodeId
   }
 
   const result = await submitTask({
@@ -353,6 +357,7 @@ async function executeGeneratePanelVideoOperation(params: {
     userId: params.ctx.userId,
     source: params.ctx.source,
     operationId: params.operationId,
+    episodeId,
     summary: `${params.operationId}:${panelId}`,
     entries: [
       {

@@ -23,9 +23,14 @@ function keyOf(queryKey: QueryKey): string {
 
 export class MockQueryClient {
   private readonly queryMap = new Map<string, StoredQueryEntry>()
+  readonly invalidations: QueryFilter[] = []
 
   async cancelQueries(filters: QueryFilter): Promise<void> {
     void filters
+  }
+
+  async invalidateQueries(filters: QueryFilter): Promise<void> {
+    this.invalidations.push(filters)
   }
 
   seedQuery<T>(queryKey: QueryKey, data: T | undefined) {

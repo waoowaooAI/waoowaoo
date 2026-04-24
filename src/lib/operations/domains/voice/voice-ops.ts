@@ -243,6 +243,7 @@ async function executeGenerateVoiceLineAudioOperation(params: {
     userId: params.ctx.userId,
     source: params.ctx.source,
     operationId: params.operationId,
+    episodeId,
     summary: `${params.operationId}:${episodeId}:${line.id}`,
     entries: [
       {
@@ -354,6 +355,7 @@ async function executeGenerateEpisodeVoiceAudioOperation(params: {
     userId: params.ctx.userId,
     source: params.ctx.source,
     operationId: params.operationId,
+    episodeId,
     summary: `${params.operationId}:${episodeId}:batch`,
     entries: voiceLines.map((line) => ({
       kind: 'voice_line_restore',

@@ -8,7 +8,7 @@ import { getSharedSubscriber } from '@/lib/sse/shared-subscriber'
 
 function formatSSE(event: SSEEvent) {
   const dataLine = `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`
-  if (typeof event.id === 'string' && /^\d+$/.test(event.id)) {
+  if (typeof event.id === 'string' && event.id.length > 0) {
     return `id: ${event.id}\n${dataLine}`
   }
   return dataLine
@@ -21,14 +21,17 @@ function formatHeartbeat() {
 function isSSEEventLike(value: unknown): value is SSEEvent {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const record = value as Record<string, unknown>
-  return (
-    typeof record.id === 'string'
-    && typeof record.type === 'string'
-    && typeof record.taskId === 'string'
-    && typeof record.projectId === 'string'
-    && typeof record.userId === 'string'
-    && typeof record.ts === 'string'
-  )
+  if (
+    typeof record.id !== 'string'
+    || typeof record.type !== 'string'
+    || typeof record.projectId !== 'string'
+    || typeof record.userId !== 'string'
+    || typeof record.ts !== 'string'
+  ) return false
+  if (record.type === 'mutation.batch') {
+    return typeof record.mutationBatchId === 'string' && Array.isArray(record.targets)
+  }
+  return typeof record.taskId === 'string'
 }
 
 export const GET = apiHandler(async (request: NextRequest) => {

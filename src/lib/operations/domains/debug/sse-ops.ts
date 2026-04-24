@@ -2,7 +2,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { ApiError } from '@/lib/api-errors'
 import { listEventsAfter, getProjectChannel } from '@/lib/task/publisher'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, TASK_STATUS, type SSEEvent } from '@/lib/task/types'
+import { listMutationBatchReplayEvents } from '@/lib/mutation-batch/service'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, TASK_STATUS, type TaskSSEEvent } from '@/lib/task/types'
 import { coerceTaskIntent } from '@/lib/task/intent'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
@@ -15,6 +16,16 @@ function parseReplayCursorId(value: string | null | undefined): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
 }
 
+function parseMutationReplayCursor(value: string | null | undefined): Date | null {
+  if (!value) return null
+  const trimmed = value.trim()
+  const match = /^mb:(\d+):/.exec(trimmed)
+  if (!match) return null
+  const timestamp = Number.parseInt(match[1], 10)
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return null
+  return new Date(timestamp)
+}
+
 function asObject(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   return value as Record<string, unknown>
@@ -25,7 +36,7 @@ async function listActiveLifecycleSnapshot(params: {
   episodeId: string | null
   userId: string
   limit?: number
-}): Promise<SSEEvent[]> {
+}): Promise<TaskSSEEvent[]> {
   const limit = params.limit || 500
   const rows = await prisma.task.findMany({
     where: {
@@ -52,7 +63,7 @@ async function listActiveLifecycleSnapshot(params: {
     },
   })
 
-  return rows.map((row): SSEEvent => {
+  return rows.map((row): TaskSSEEvent => {
     const payload = asObject(row.payload)
     const payloadUi = asObject(payload?.ui)
     const lifecycleType = row.status === TASK_STATUS.QUEUED
@@ -106,6 +117,31 @@ export function createSseOperations(): ProjectAgentOperationRegistryDraft {
       execute: async (ctx, input) => {
         const channel = getProjectChannel(ctx.projectId)
         const lastEventId = parseReplayCursorId(input.lastEventId || null)
+        const lastMutationEventAt = parseMutationReplayCursor(input.lastEventId || null)
+
+        if (lastMutationEventAt) {
+          const replayLimit = input.replayLimit ?? 5000
+          const episodeId = input.episodeId ? input.episodeId.trim() : null
+          const mutationEvents = await listMutationBatchReplayEvents({
+            projectId: ctx.projectId,
+            userId: ctx.userId,
+            after: lastMutationEventAt,
+            episodeId,
+            limit: replayLimit,
+          })
+          const activeTaskEvents = await listActiveLifecycleSnapshot({
+            projectId: ctx.projectId,
+            episodeId,
+            userId: ctx.userId,
+            limit: input.snapshotLimit ?? 500,
+          })
+          return {
+            channel,
+            mode: 'mutation_replay_with_active_snapshot',
+            fromEventId: input.lastEventId,
+            events: [...mutationEvents, ...activeTaskEvents],
+          }
+        }
 
         if (lastEventId > 0) {
           const replayLimit = input.replayLimit ?? 5000

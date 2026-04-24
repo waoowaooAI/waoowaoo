@@ -68,6 +68,7 @@ async function executeAssetImageModificationOperation(params: {
     userId: params.ctx.userId,
     source: params.ctx.source,
     operationId: params.operationId,
+    episodeId: null,
     summary: `${params.operationId}:${assetId}`,
     entries: [
       {
@@ -216,6 +217,7 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
           userId: ctx.userId,
           source: ctx.source,
           operationId: 'generate_character_image',
+          episodeId: null,
           summary: `generate_character_image:${characterId}`,
           entries: [
             {
@@ -341,6 +343,7 @@ export function createAssetImageOperations(): ProjectAgentOperationRegistryDraft
           userId: ctx.userId,
           source: ctx.source,
           operationId: 'generate_location_image',
+          episodeId: null,
           summary: `generate_location_image:${locationId}`,
           entries: [
             {

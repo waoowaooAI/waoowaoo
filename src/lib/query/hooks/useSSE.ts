@@ -4,9 +4,10 @@ import { logError as _ulogError } from '@/lib/logging/core'
 import { useEffect, useMemo, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, WORKSPACE_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
 import { applyTaskLifecycleToOverlay } from '../task-target-overlay'
 import { isTaskIntent, resolveTaskIntent } from '@/lib/task/intent'
+import { invalidateByTarget } from '../invalidation/invalidate-by-target'
 
 type UseSSEOptions = {
   projectId?: string | null
@@ -34,69 +35,35 @@ export function useSSE({ projectId, episodeId, enabled = true, onEvent }: UseSSE
     const source = new EventSource(url)
     sourceRef.current = source
 
-    const invalidateEpisodeScoped = (resolvedEpisodeId: string | null) => {
-      if (!resolvedEpisodeId) return
-      queryClient.invalidateQueries({ queryKey: queryKeys.episodeData(projectId, resolvedEpisodeId) })
-      queryClient.invalidateQueries({ queryKey: queryKeys.storyboards.all(resolvedEpisodeId) })
-      queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(resolvedEpisodeId) })
-      queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.matched(projectId, resolvedEpisodeId) })
-    }
-
-    const invalidateByTarget = (targetType: string | null, resolvedEpisodeId: string | null) => {
-      if (isGlobalAssetProject) {
-        if (targetType?.startsWith('GlobalCharacter')) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.characters() })
-          return
-        }
-        if (targetType?.startsWith('GlobalLocation')) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.locations() })
-          return
-        }
-        if (targetType?.startsWith('GlobalVoice')) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.voices() })
-          return
-        }
-        queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.all() })
-        return
-      }
-
-      if (targetType === 'CharacterAppearance' || targetType === 'ProjectCharacter') {
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.characters(projectId) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) })
-        return
-      }
-      if (targetType === 'LocationImage' || targetType === 'ProjectLocation') {
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.locations(projectId) })
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) })
-        return
-      }
-      if (targetType === 'ProjectVoiceLine') {
-        invalidateEpisodeScoped(resolvedEpisodeId)
-        return
-      }
-      if (
-        targetType === 'ProjectPanel' ||
-        targetType === 'ProjectStoryboard' ||
-        targetType === 'ProjectShot'
-      ) {
-        invalidateEpisodeScoped(resolvedEpisodeId)
-        return
-      }
-      if (targetType === 'ProjectEpisode') {
-        invalidateEpisodeScoped(resolvedEpisodeId)
-        queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
-        return
-      }
-
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
-    }
-
     const handleEvent = (event: MessageEvent) => {
       try {
         const payload = JSON.parse(event.data || '{}')
         if (!payload || !payload.type) return
         onEvent?.(payload as SSEEvent)
         const eventType = payload.type as string
+
+        // mutation.batch 事件：对每个 target 调用 invalidateByTarget
+        if (eventType === WORKSPACE_SSE_EVENT_TYPE.MUTATION_BATCH) {
+          const targets = Array.isArray(payload.targets) ? payload.targets as Array<{ targetType?: string; targetId?: string }> : []
+          const batchEpisodeId = typeof payload.episodeId === 'string' ? payload.episodeId : null
+          const resolvedEid = batchEpisodeId || episodeId || null
+          const seenTargetTypes = new Set<string>()
+          for (const target of targets) {
+            if (typeof target?.targetType === 'string') {
+              if (seenTargetTypes.has(target.targetType)) continue
+              seenTargetTypes.add(target.targetType)
+              invalidateByTarget({
+                queryClient,
+                projectId,
+                targetType: target.targetType,
+                episodeId: resolvedEid,
+                isGlobalAssetProject,
+              })
+            }
+          }
+          return
+        }
+
         const targetType = typeof payload.targetType === 'string'
           ? payload.targetType
           : typeof payload?.payload?.targetType === 'string'
@@ -188,7 +155,13 @@ export function useSSE({ projectId, episodeId, enabled = true, onEvent }: UseSSE
           normalizedLifecycleType === TASK_EVENT_TYPE.COMPLETED ||
           normalizedLifecycleType === TASK_EVENT_TYPE.FAILED
         ) {
-          invalidateByTarget(targetType, resolvedEpisodeId)
+          invalidateByTarget({
+            queryClient,
+            projectId,
+            targetType,
+            episodeId: resolvedEpisodeId,
+            isGlobalAssetProject,
+          })
         }
       } catch (error) {
         _ulogError('[useSSE] failed to parse event', error)
@@ -199,6 +172,7 @@ export function useSSE({ projectId, episodeId, enabled = true, onEvent }: UseSSE
     const namedEvents = [
       TASK_SSE_EVENT_TYPE.LIFECYCLE,
       TASK_SSE_EVENT_TYPE.STREAM,
+      WORKSPACE_SSE_EVENT_TYPE.MUTATION_BATCH,
     ] as const
     const listeners: Array<{ type: string; handler: EventListener }> = []
     for (const type of namedEvents) {

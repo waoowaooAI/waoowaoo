@@ -236,6 +236,7 @@ export async function executeStoryboardMutationOperation(
         imageUrl: true,
         imageHistory: true,
         candidateImages: true,
+        storyboard: { select: { episodeId: true } },
       },
     })
     if (!panel) {
@@ -254,6 +255,7 @@ export async function executeStoryboardMutationOperation(
         userId: ctx.userId,
         source: ctx.source,
         operationId,
+        episodeId: panel.storyboard.episodeId,
         summary: `cancel_panel_candidates:${panelId}`,
         entries: [
           {
@@ -323,6 +325,7 @@ export async function executeStoryboardMutationOperation(
       userId: ctx.userId,
       source: ctx.source,
       operationId,
+      episodeId: panel.storyboard.episodeId,
       summary: `select_panel_candidate:${panelId}`,
       entries: [
         {
@@ -379,7 +382,7 @@ export async function executeStoryboardMutationOperation(
         projectId: ctx.projectId,
       },
     },
-    select: { id: true },
+    select: { id: true, episodeId: true },
   })
   if (!storyboard) {
     throw new Error('PROJECT_AGENT_STORYBOARD_NOT_FOUND')
@@ -433,6 +436,7 @@ export async function executeStoryboardMutationOperation(
       userId: ctx.userId,
       source: ctx.source,
       operationId,
+      episodeId: storyboard.episodeId,
       summary: `create_panel:${createdPanel.id}`,
       entries: [
         {
@@ -568,6 +572,7 @@ export async function executeStoryboardMutationOperation(
       userId: ctx.userId,
       source: ctx.source,
       operationId,
+      episodeId: storyboard.episodeId,
       summary: `delete_panel:${panelId}`,
       entries: [
         {
@@ -681,6 +686,7 @@ export async function executeStoryboardMutationOperation(
         userId: ctx.userId,
         source: ctx.source,
         operationId,
+        episodeId: storyboard.episodeId,
         summary: `update_panel_fields:${existing.id}`,
         entries: [
           {
@@ -725,6 +731,7 @@ export async function executeStoryboardMutationOperation(
       userId: ctx.userId,
       source: ctx.source,
       operationId,
+      episodeId: storyboard.episodeId,
       summary: `create_panel:${createdPanel.id}`,
       entries: [
         {
@@ -795,6 +802,7 @@ export async function executeStoryboardMutationOperation(
         userId: ctx.userId,
         source: ctx.source,
         operationId,
+        episodeId: storyboard.episodeId,
         summary: `create_panel:${createdPanel.id}`,
         entries: [
           {
@@ -835,6 +843,7 @@ export async function executeStoryboardMutationOperation(
       userId: ctx.userId,
       source: ctx.source,
       operationId,
+      episodeId: storyboard.episodeId,
       summary: `update_panel_prompt:${panelId}`,
       entries: [
         {
@@ -908,6 +917,7 @@ export async function executeStoryboardMutationOperation(
       userId: ctx.userId,
       source: ctx.source,
       operationId,
+      episodeId: storyboard.episodeId,
       summary: `reorder_panels:${storyboardId}`,
       entries: [
         {
@@ -958,6 +968,7 @@ export async function executeStoryboardMutationOperation(
     userId: ctx.userId,
     source: ctx.source,
     operationId,
+    episodeId: storyboard.episodeId,
     summary: `insert_panel:${storyboardId}:${input.insertAfterPanelId}`,
     entries: [
       {

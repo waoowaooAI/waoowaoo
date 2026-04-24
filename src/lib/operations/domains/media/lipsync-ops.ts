@@ -95,7 +95,7 @@ export function createLipSyncOperations(): ProjectAgentOperationRegistryDraft {
 
         const panel = await prisma.projectPanel.findFirst({
           where: { storyboardId, panelIndex: Number(panelIndex) },
-          select: { id: true, lipSyncVideoUrl: true },
+          select: { id: true, lipSyncVideoUrl: true, storyboard: { select: { episodeId: true } } },
         })
         if (!panel) {
           throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
@@ -130,6 +130,7 @@ export function createLipSyncOperations(): ProjectAgentOperationRegistryDraft {
           userId: ctx.userId,
           source: ctx.source,
           operationId: 'lip_sync',
+          episodeId: panel.storyboard.episodeId,
           summary: `lip_sync:${panel.id}:${voiceLineId}`,
           entries: [
             {

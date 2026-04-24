@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { queryKeys } from '@/lib/query/keys'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, WORKSPACE_SSE_EVENT_TYPE } from '@/lib/task/types'
 
 type InvalidateArg = { queryKey?: readonly unknown[]; exact?: boolean }
 
@@ -163,5 +163,62 @@ describe('sse invalidation behavior', () => {
         targetId: 'appearance-1',
       }),
     )
+  })
+
+  it('mutation.batch ProjectPanel 事件触发 episode scoped query invalidation', async () => {
+    const { useSSE } = await import('@/lib/query/hooks/useSSE')
+
+    useSSE({
+      projectId: 'project-1',
+      episodeId: 'episode-1',
+      enabled: true,
+    })
+
+    const source = FakeEventSource.instances[0]
+    expect(source).toBeTruthy()
+
+    source.emit(WORKSPACE_SSE_EVENT_TYPE.MUTATION_BATCH, {
+      id: 'mb:batch-1',
+      type: WORKSPACE_SSE_EVENT_TYPE.MUTATION_BATCH,
+      mutationBatchId: 'batch-1',
+      projectId: 'project-1',
+      userId: 'user-1',
+      ts: '2026-04-24T00:00:00.000Z',
+      operationId: 'delete_storyboard_panel',
+      episodeId: 'episode-1',
+      targets: [
+        { targetType: 'ProjectPanel', targetId: 'panel-1' },
+      ],
+    })
+
+    expect(hasInvalidation((arg) => {
+      const key = arg.queryKey || []
+      return Array.isArray(key)
+        && key[0] === queryKeys.episodeData('project-1', 'episode-1')[0]
+        && key[1] === 'project-1'
+        && key[2] === 'episode-1'
+    })).toBe(true)
+
+    expect(hasInvalidation((arg) => {
+      const key = arg.queryKey || []
+      return Array.isArray(key)
+        && key[0] === queryKeys.storyboards.all('episode-1')[0]
+        && key[1] === 'episode-1'
+    })).toBe(true)
+
+    expect(hasInvalidation((arg) => {
+      const key = arg.queryKey || []
+      return Array.isArray(key)
+        && key[0] === queryKeys.voiceLines.all('episode-1')[0]
+        && key[1] === 'episode-1'
+    })).toBe(true)
+
+    expect(hasInvalidation((arg) => {
+      const key = arg.queryKey || []
+      return Array.isArray(key)
+        && key[0] === queryKeys.voiceLines.matched('project-1', 'episode-1')[0]
+        && key[1] === 'project-1'
+        && key[2] === 'episode-1'
+    })).toBe(true)
   })
 })

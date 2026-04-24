@@ -10,6 +10,7 @@ import {
   clearTaskTargetOverlay,
   upsertTaskTargetOverlay,
 } from '@/lib/query/task-target-overlay'
+import { invalidateByTarget } from '@/lib/query/invalidation/invalidate-by-target'
 import type {
   AssetKind,
   AssetQueryInput,
@@ -232,14 +233,26 @@ function resolveGenerateOverlayTarget(
   }
 }
 
-function invalidateScopeQueries(queryClient: ReturnType<typeof useQueryClient>, input: AssetActionScopeInput) {
-  queryClient.invalidateQueries({
-    queryKey: queryKeys.assets.all(input.scope, input.projectId),
-  })
+function resolveAssetTargetType(input: AssetActionScopeInput): string {
   if (input.scope === 'global') {
-    queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.all() })
-  } else if (input.projectId) {
-    queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(input.projectId) })
+    if (input.kind === 'character') return 'GlobalCharacter'
+    if (input.kind === 'location') return 'GlobalLocation'
+    if (input.kind === 'voice') return 'GlobalVoice'
+    return 'GlobalAsset'
+  }
+  if (input.kind === 'character') return 'ProjectCharacter'
+  if (input.kind === 'location') return 'ProjectLocation'
+  return 'ProjectAsset'
+}
+
+function invalidateScopeQueries(queryClient: ReturnType<typeof useQueryClient>, input: AssetActionScopeInput) {
+  invalidateByTarget({
+    queryClient,
+    projectId: input.scope === 'global' ? 'global-asset-hub' : input.projectId ?? '',
+    targetType: resolveAssetTargetType(input),
+    episodeId: null,
+  })
+  if (input.scope === 'project' && input.projectId) {
     queryClient.invalidateQueries({ queryKey: queryKeys.projectData(input.projectId) })
   }
 }
@@ -247,13 +260,13 @@ function invalidateScopeQueries(queryClient: ReturnType<typeof useQueryClient>, 
 export function useRefreshAssets(input: { scope: 'global' | 'project'; projectId?: string | null }) {
   const queryClient = useQueryClient()
   return () => {
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.assets.all(input.scope, input.projectId),
+    invalidateByTarget({
+      queryClient,
+      projectId: input.scope === 'global' ? 'global-asset-hub' : input.projectId ?? '',
+      targetType: input.scope === 'global' ? 'GlobalAsset' : 'ProjectAsset',
+      episodeId: null,
     })
-    if (input.scope === 'global') {
-      queryClient.invalidateQueries({ queryKey: queryKeys.globalAssets.all() })
-    } else if (input.projectId) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(input.projectId) })
+    if (input.scope === 'project' && input.projectId) {
       queryClient.invalidateQueries({ queryKey: queryKeys.projectData(input.projectId) })
     }
   }

@@ -6,7 +6,7 @@ import {
   TASK_TYPE,
   type TaskEventType,
   type TaskLifecycleEventType,
-  type SSEEvent,
+  type TaskSSEEvent,
 } from './types'
 import { coerceTaskIntent, resolveTaskIntent } from './intent'
 import { mapTaskSSEEventToRunEvents } from '@/lib/run-runtime/task-bridge'
@@ -105,7 +105,7 @@ function buildLifecycleEvent(params: {
   targetId?: string | null
   episodeId?: string | null
   payload?: Record<string, unknown> | null
-}): SSEEvent {
+}): TaskSSEEvent {
   return {
     id: params.id,
     type: TASK_SSE_EVENT_TYPE.LIFECYCLE,
@@ -142,7 +142,7 @@ function buildStreamEvent(params: {
   targetId?: string | null
   episodeId?: string | null
   payload?: Record<string, unknown> | null
-}): SSEEvent {
+}): TaskSSEEvent {
   return {
     id: params.id,
     type: TASK_SSE_EVENT_TYPE.STREAM,
@@ -158,7 +158,7 @@ function buildStreamEvent(params: {
   }
 }
 
-async function mapRowsToReplayEvents(rows: TaskEventRow[]): Promise<SSEEvent[]> {
+async function mapRowsToReplayEvents(rows: TaskEventRow[]): Promise<TaskSSEEvent[]> {
   if (rows.length === 0) return []
 
   const taskIds = Array.from(new Set(rows.map((row) => row.taskId)))
@@ -176,7 +176,7 @@ async function mapRowsToReplayEvents(rows: TaskEventRow[]): Promise<SSEEvent[]> 
     : []
   const taskMap = new Map<string, TaskMeta>(tasks.map((task) => [task.id, task]))
 
-  return rows.map((row): SSEEvent => {
+  return rows.map((row): TaskSSEEvent => {
     const task = taskMap.get(row.taskId)
     if (isStreamEventType(row.eventType)) {
       return buildStreamEvent({
@@ -225,7 +225,7 @@ export function getProjectChannel(projectId: string) {
   return `${CHANNEL_PREFIX}${projectId}`
 }
 
-async function mirrorTaskEventToRun(message: SSEEvent) {
+async function mirrorTaskEventToRun(message: TaskSSEEvent) {
   if (message.taskType && TASK_TYPES_WITH_DIRECT_RUN_EVENTS.has(message.taskType)) {
     return
   }

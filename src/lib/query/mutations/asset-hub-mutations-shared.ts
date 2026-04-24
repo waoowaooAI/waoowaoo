@@ -1,17 +1,31 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { queryKeys } from '../keys'
-import { invalidateQueryTemplates } from './mutation-shared'
+import { invalidateByTarget } from '../invalidation/invalidate-by-target'
 
 export const GLOBAL_ASSET_PROJECT_ID = 'global-asset-hub'
 
 export function invalidateGlobalCharacters(queryClient: QueryClient) {
-  return invalidateQueryTemplates(queryClient, [queryKeys.globalAssets.characters()])
+  invalidateByTarget({
+    queryClient,
+    projectId: GLOBAL_ASSET_PROJECT_ID,
+    targetType: 'GlobalCharacter',
+    episodeId: null,
+  })
 }
 
 export function invalidateGlobalLocations(queryClient: QueryClient) {
-  return invalidateQueryTemplates(queryClient, [queryKeys.globalAssets.locations()])
+  invalidateByTarget({
+    queryClient,
+    projectId: GLOBAL_ASSET_PROJECT_ID,
+    targetType: 'GlobalLocation',
+    episodeId: null,
+  })
 }
 
 export function invalidateGlobalVoices(queryClient: QueryClient) {
-  return invalidateQueryTemplates(queryClient, [queryKeys.globalAssets.voices()])
+  invalidateByTarget({
+    queryClient,
+    projectId: GLOBAL_ASSET_PROJECT_ID,
+    targetType: 'GlobalVoice',
+    episodeId: null,
+  })
 }

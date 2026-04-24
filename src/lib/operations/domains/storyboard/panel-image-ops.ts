@@ -217,6 +217,7 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
           userId: ctx.userId,
           source: ctx.source,
           operationId: 'regenerate_panel_image',
+          episodeId: null,
           summary: `regenerate_panel_image:${panelId}`,
           entries: [
             {
@@ -287,6 +288,7 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
           where: { id: storyboardId },
           select: {
             id: true,
+            episodeId: true,
             episode: {
               select: {
                 projectId: true,
@@ -404,6 +406,7 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
           userId: ctx.userId,
           source: ctx.source,
           operationId: 'panel_variant',
+          episodeId: storyboard.episodeId,
           summary: `panel_variant:${createdPanel.id}`,
           entries: [
             {

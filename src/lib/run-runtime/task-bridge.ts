@@ -1,4 +1,4 @@
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type TaskSSEEvent } from '@/lib/task/types'
 import { RUN_EVENT_TYPE, type RunEventInput } from './types'
 
 type JsonRecord = Record<string, unknown>
@@ -62,7 +62,7 @@ function stageLooksFailed(stage: string | null): boolean {
   return stage === 'llm_error' || stage === 'worker_llm_error' || stage === 'error'
 }
 
-export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunEventInput[] {
+export function mapTaskSSEEventToRunEvents(event: TaskSSEEvent): RunEventInput[] {
   const payload = toObject(event.payload)
   const runId = resolveRunId(payload)
   if (!runId) return []

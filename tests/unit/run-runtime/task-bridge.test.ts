@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { mapTaskSSEEventToRunEvents } from '@/lib/run-runtime/task-bridge'
 import { RUN_EVENT_TYPE } from '@/lib/run-runtime/types'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type TaskSSEEvent } from '@/lib/task/types'
 
-function buildEvent(input: Partial<SSEEvent>): SSEEvent {
+function buildEvent(input: Partial<TaskSSEEvent>): TaskSSEEvent {
   return {
     id: input.id || '1',
     type: input.type || TASK_SSE_EVENT_TYPE.LIFECYCLE,

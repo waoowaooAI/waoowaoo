@@ -1,5 +1,5 @@
 import type { RunStreamEvent } from '@/lib/project-workflow/run-stream/types'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type SSEEvent } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, type TaskSSEEvent } from '@/lib/task/types'
 import { resolveTaskErrorMessage as resolveUnifiedTaskErrorMessage } from '@/lib/task/error-message'
 import type { RunResult } from './types'
 
@@ -103,7 +103,7 @@ function extractTerminalPayload(payload: Record<string, unknown>) {
   return payload
 }
 
-export function mapTaskSSEEventToRunEvents(event: SSEEvent): RunStreamEvent[] {
+export function mapTaskSSEEventToRunEvents(event: TaskSSEEvent): RunStreamEvent[] {
   const rawPayload = toObject(event.payload)
   const payloadMeta = toObject(rawPayload.meta)
   const runId = readTextField(rawPayload, 'runId')

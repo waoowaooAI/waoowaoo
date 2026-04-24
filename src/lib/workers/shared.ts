@@ -13,7 +13,7 @@ import {
   updateTaskBillingInfo,
 } from '@/lib/task/service'
 import { publishTaskEvent, publishTaskStreamEvent } from '@/lib/task/publisher'
-import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, TASK_TYPE, type SSEEvent, type TaskBillingInfo, type TaskJobData } from '@/lib/task/types'
+import { TASK_EVENT_TYPE, TASK_SSE_EVENT_TYPE, TASK_TYPE, type TaskSSEEvent, type TaskBillingInfo, type TaskJobData } from '@/lib/task/types'
 import { buildTaskProgressMessage, getTaskStageLabel } from '@/lib/task/progress-message'
 import { normalizeAnyError } from '@/lib/errors/normalize'
 import { rollbackTaskBilling, settleTaskBilling } from '@/lib/billing'
@@ -126,7 +126,7 @@ async function publishMirroredRunEvents(params: {
 }) {
   if (!shouldDirectPublishRunEvents(params.taskType)) return
 
-  const message: SSEEvent = {
+  const message: TaskSSEEvent = {
     id: `direct:${params.taskId}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2, 8)}`,
     type: params.eventType,
     taskId: params.taskId,
@@ -137,7 +137,7 @@ async function publishMirroredRunEvents(params: {
     targetType: params.targetType,
     targetId: params.targetId,
     episodeId: params.episodeId || null,
-    payload: (params.payload || null) as SSEEvent['payload'],
+    payload: (params.payload || null) as TaskSSEEvent['payload'],
   }
   const runEvents = mapTaskSSEEventToRunEvents(message)
   for (const event of runEvents) {

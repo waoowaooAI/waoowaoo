@@ -1,4 +1,8 @@
 import { prisma } from '@/lib/prisma'
+import { redis } from '@/lib/redis'
+import { getProjectChannel } from '@/lib/task/publisher'
+import { createScopedLogger } from '@/lib/logging/core'
+import { WORKSPACE_SSE_EVENT_TYPE, type MutationBatchSSEEvent } from '@/lib/task/types'
 import type { Prisma } from '@prisma/client'
 
 export type MutationBatchStatus = 'active' | 'reverted' | 'failed'
@@ -8,6 +12,15 @@ export type MutationEntrySpec = {
   targetType: string
   targetId: string
   payload?: unknown
+}
+
+type MutationBatchWithEntries = {
+  id: string
+  projectId: string
+  userId: string
+  operationId: string | null
+  createdAt: Date
+  entries: Array<{ targetType: string; targetId: string }>
 }
 
 function hasMutationBatchModel(client: unknown): client is {
@@ -21,6 +34,98 @@ function hasMutationBatchModel(client: unknown): client is {
   return !!candidate?.mutationBatch
 }
 
+export function buildMutationBatchSSEEvent(params: {
+  batchId: string
+  projectId: string
+  userId: string
+  operationId: string | null
+  episodeId: string | null
+  entries: Array<{ targetType: string; targetId: string }>
+  createdAt: Date
+}): MutationBatchSSEEvent {
+  return {
+    id: `mb:${params.createdAt.getTime()}:${params.batchId}`,
+    type: WORKSPACE_SSE_EVENT_TYPE.MUTATION_BATCH,
+    mutationBatchId: params.batchId,
+    projectId: params.projectId,
+    userId: params.userId,
+    ts: params.createdAt.toISOString(),
+    operationId: params.operationId,
+    episodeId: params.episodeId,
+    targets: params.entries.map((entry) => ({ targetType: entry.targetType, targetId: entry.targetId })),
+  }
+}
+
+async function publishMutationBatchEvent(params: Parameters<typeof buildMutationBatchSSEEvent>[0]) {
+  try {
+    const event = buildMutationBatchSSEEvent(params)
+    await redis.publish(getProjectChannel(params.projectId), JSON.stringify(event))
+  } catch (error) {
+    createScopedLogger({
+      module: 'mutation-batch',
+      action: 'mutation_batch.sse_publish_failed',
+      projectId: params.projectId,
+      userId: params.userId,
+    }).error({
+      message: 'failed to publish mutation batch sse event',
+      details: {
+        mutationBatchId: params.batchId,
+        operationId: params.operationId,
+        targetCount: params.entries.length,
+      },
+      error: error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : { message: String(error) },
+    })
+  }
+}
+
+function resolveReplayEpisodeId(entries: Array<{ targetType: string }>, episodeId: string | null) {
+  const hasEpisodeScopedTarget = entries.some((entry) => (
+    entry.targetType === 'ProjectPanel'
+    || entry.targetType === 'ProjectStoryboard'
+    || entry.targetType === 'ProjectShot'
+    || entry.targetType === 'ProjectVoiceLine'
+    || entry.targetType === 'ProjectEpisode'
+  ))
+  return hasEpisodeScopedTarget ? episodeId : null
+}
+
+export async function listMutationBatchReplayEvents(params: {
+  projectId: string
+  userId: string
+  after: Date
+  episodeId?: string | null
+  limit?: number
+}): Promise<MutationBatchSSEEvent[]> {
+  if (!hasMutationBatchModel(prisma)) return []
+  const limit = Math.max(1, Math.min(500, params.limit ?? 200))
+  const batches = await prisma.mutationBatch.findMany({
+    where: {
+      projectId: params.projectId,
+      userId: params.userId,
+      createdAt: { gte: params.after },
+    },
+    orderBy: { createdAt: 'asc' },
+    take: limit,
+    include: {
+      entries: {
+        orderBy: { createdAt: 'asc' },
+      },
+    },
+  }) as MutationBatchWithEntries[]
+
+  return batches.map((batch) => buildMutationBatchSSEEvent({
+    batchId: batch.id,
+    projectId: batch.projectId,
+    userId: batch.userId,
+    operationId: batch.operationId,
+    episodeId: resolveReplayEpisodeId(batch.entries, params.episodeId ?? null),
+    entries: batch.entries,
+    createdAt: batch.createdAt,
+  }))
+}
+
 export async function createMutationBatch(params: {
   projectId: string
   userId: string
@@ -28,13 +133,14 @@ export async function createMutationBatch(params: {
   operationId?: string | null
   summary?: string | null
   entries: MutationEntrySpec[]
+  episodeId?: string | null
 }) {
   // In tests, `prisma` may be mocked with only a subset of models.
   // Fall back to a minimal shape to avoid crashing route-level tests.
   if (!hasMutationBatchModel(prisma)) {
     const now = new Date()
     const batchId = `mutation-batch-mock-${Date.now().toString(36)}`
-    return {
+    const mockBatch = {
       id: batchId,
       projectId: params.projectId,
       userId: params.userId,
@@ -56,9 +162,19 @@ export async function createMutationBatch(params: {
         createdAt: now,
       })),
     }
+    await publishMutationBatchEvent({
+      batchId,
+      projectId: params.projectId,
+      userId: params.userId,
+      operationId: params.operationId ?? null,
+      episodeId: params.episodeId ?? null,
+      entries: params.entries,
+      createdAt: now,
+    })
+    return mockBatch
   }
 
-  return prisma.mutationBatch.create({
+  const batch = await prisma.mutationBatch.create({
     data: {
       projectId: params.projectId,
       userId: params.userId,
@@ -78,6 +194,18 @@ export async function createMutationBatch(params: {
       entries: true,
     },
   })
+
+  await publishMutationBatchEvent({
+    batchId: batch.id,
+    projectId: params.projectId,
+    userId: params.userId,
+    operationId: params.operationId ?? null,
+    episodeId: params.episodeId ?? null,
+    entries: batch.entries,
+    createdAt: batch.createdAt,
+  })
+
+  return batch
 }
 
 export async function listRecentMutationBatches(params: {

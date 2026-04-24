@@ -26,7 +26,12 @@ export const TASK_SSE_EVENT_TYPE = {
   STREAM: 'task.stream',
 } as const
 
+export const WORKSPACE_SSE_EVENT_TYPE = {
+  MUTATION_BATCH: 'mutation.batch',
+} as const
+
 export type TaskSSEEventType = (typeof TASK_SSE_EVENT_TYPE)[keyof typeof TASK_SSE_EVENT_TYPE]
+export type WorkspaceSSEEventType = (typeof WORKSPACE_SSE_EVENT_TYPE)[keyof typeof WORKSPACE_SSE_EVENT_TYPE]
 
 export const TASK_LIFECYCLE_EVENT_TYPES = [
   TASK_EVENT_TYPE.CREATED,
@@ -127,7 +132,7 @@ export type TaskJobData = {
   } | null
 }
 
-export type SSEEvent = {
+export type TaskSSEEvent = {
   id: string
   type: TaskSSEEventType
   taskId: string
@@ -142,6 +147,20 @@ export type SSEEvent = {
     lifecycleType?: TaskLifecycleEventType
   }) | null
 }
+
+export type MutationBatchSSEEvent = {
+  id: string
+  type: typeof WORKSPACE_SSE_EVENT_TYPE.MUTATION_BATCH
+  mutationBatchId: string
+  projectId: string
+  userId: string
+  ts: string
+  operationId: string | null
+  episodeId: string | null
+  targets: Array<{ targetType: string; targetId: string }>
+}
+
+export type SSEEvent = TaskSSEEvent | MutationBatchSSEEvent
 
 export type CreateTaskInput = {
   userId: string
