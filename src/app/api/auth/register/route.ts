@@ -3,6 +3,7 @@ import { logAuthAction } from '@/lib/logging/semantic'
 import { apiHandler, ApiError } from '@/lib/api-errors'
 import { checkRateLimit, getClientIp, AUTH_REGISTER_LIMIT } from '@/lib/rate-limit'
 import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-project-agent-operation'
+import { AUTH_REGISTER_RESULT_CODES } from '@/lib/auth/register-result-codes'
 
 export const POST = apiHandler(async (request: NextRequest) => {
   // 🛡️ IP 限流
@@ -11,7 +12,12 @@ export const POST = apiHandler(async (request: NextRequest) => {
   if (rateResult.limited) {
     logAuthAction('REGISTER', 'unknown', { error: 'Rate limited', ip })
     return NextResponse.json(
-      { success: false, message: `请求过于频繁，请 ${rateResult.retryAfterSeconds} 秒后再试` },
+      {
+        success: false,
+        code: AUTH_REGISTER_RESULT_CODES.rateLimited,
+        message: AUTH_REGISTER_RESULT_CODES.rateLimited,
+        retryAfterSeconds: rateResult.retryAfterSeconds,
+      },
       {
         status: 429,
         headers: { 'Retry-After': String(rateResult.retryAfterSeconds) },
@@ -24,9 +30,9 @@ export const POST = apiHandler(async (request: NextRequest) => {
     body = await request.json()
   } catch {
     throw new ApiError('INVALID_PARAMS', {
-      code: 'BODY_PARSE_FAILED',
+      code: AUTH_REGISTER_RESULT_CODES.bodyParseFailed,
       field: 'body',
-      message: '请求内容格式不正确，请刷新后重试',
+      message: AUTH_REGISTER_RESULT_CODES.bodyParseFailed,
     })
   }
 

@@ -24,5 +24,8 @@ describe('director style', () => {
     expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.CHARACTER_ANALYZE, doc)).toContain('"priorities"')
     expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.PANEL_IMAGE_GENERATE, doc)).toContain('冷色')
     expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.PANEL_IMAGE_GENERATE, doc)).toContain('"allowWhenHelpful"')
+    expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.STORYBOARD_REFINE_DETAIL, doc)).toContain('"storyboardDetail"')
+    expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.STORYBOARD_REFINE_DETAIL, doc)).toContain('"video"')
+    expect(resolveDirectorStyleRequirements(AI_PROMPT_IDS.STORYBOARD_REFINE_DETAIL, doc)).toContain('视频运镜')
   })
 })

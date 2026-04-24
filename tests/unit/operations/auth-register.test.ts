@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NextRequest } from 'next/server'
 import { ApiError } from '@/lib/api-errors'
+import { AUTH_REGISTER_RESULT_CODES } from '@/lib/auth/register-result-codes'
 
 const prismaMock = vi.hoisted(() => {
   const tx = {
@@ -69,7 +70,7 @@ describe('auth register operation', () => {
     bcryptMock.hash.mockResolvedValue('hashed-password')
   })
 
-  it('[重复用户名注册] -> 返回友好的 CONFLICT 错误而不是 Invalid parameters', async () => {
+  it('[重复用户名注册] -> 返回稳定的 CONFLICT 业务码', async () => {
     prismaMock.user.findUnique.mockResolvedValue({ id: 'existing-user' })
 
     const promise = executeRegister({ name: 'alice', password: 'secret1' })
@@ -77,12 +78,13 @@ describe('auth register operation', () => {
     await expect(promise).rejects.toBeInstanceOf(ApiError)
     await expect(promise).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: '该用户名已被注册，请换一个用户名或直接登录',
+      message: AUTH_REGISTER_RESULT_CODES.userExists,
       details: expect.objectContaining({
-        message: '该用户名已被注册，请换一个用户名或直接登录',
+        code: AUTH_REGISTER_RESULT_CODES.userExists,
+        message: AUTH_REGISTER_RESULT_CODES.userExists,
       }),
     })
-    expect(prismaMock.$transaction).not.toHaveBeenCalled()
+    expect(prismaMock.$transaction.mock.calls).toEqual([])
   })
 
   it('[缺少用户名] -> 返回明确的用户名提示', async () => {
@@ -90,12 +92,13 @@ describe('auth register operation', () => {
 
     await expect(promise).rejects.toMatchObject({
       code: 'INVALID_PARAMS',
-      message: '请输入用户名',
+      message: AUTH_REGISTER_RESULT_CODES.missingName,
       details: expect.objectContaining({
-        message: '请输入用户名',
+        code: AUTH_REGISTER_RESULT_CODES.missingName,
+        message: AUTH_REGISTER_RESULT_CODES.missingName,
       }),
     })
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled()
+    expect(prismaMock.user.findUnique.mock.calls).toEqual([])
   })
 
   it('[注册请求体不是对象] -> 返回明确的注册表单提示', async () => {
@@ -103,12 +106,13 @@ describe('auth register operation', () => {
 
     await expect(promise).rejects.toMatchObject({
       code: 'INVALID_PARAMS',
-      message: '请填写用户名和密码',
+      message: AUTH_REGISTER_RESULT_CODES.invalidPayload,
       details: expect.objectContaining({
-        message: '请填写用户名和密码',
+        code: AUTH_REGISTER_RESULT_CODES.invalidPayload,
+        message: AUTH_REGISTER_RESULT_CODES.invalidPayload,
       }),
     })
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled()
+    expect(prismaMock.user.findUnique.mock.calls).toEqual([])
   })
 
   it('[缺少密码] -> 返回明确的密码提示', async () => {
@@ -116,12 +120,13 @@ describe('auth register operation', () => {
 
     await expect(promise).rejects.toMatchObject({
       code: 'INVALID_PARAMS',
-      message: '请输入密码',
+      message: AUTH_REGISTER_RESULT_CODES.missingPassword,
       details: expect.objectContaining({
-        message: '请输入密码',
+        code: AUTH_REGISTER_RESULT_CODES.missingPassword,
+        message: AUTH_REGISTER_RESULT_CODES.missingPassword,
       }),
     })
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled()
+    expect(prismaMock.user.findUnique.mock.calls).toEqual([])
   })
 
   it('[密码过短] -> 返回明确的长度提示', async () => {
@@ -129,12 +134,13 @@ describe('auth register operation', () => {
 
     await expect(promise).rejects.toMatchObject({
       code: 'INVALID_PARAMS',
-      message: '密码长度至少6位',
+      message: AUTH_REGISTER_RESULT_CODES.passwordTooShort,
       details: expect.objectContaining({
-        message: '密码长度至少6位',
+        code: AUTH_REGISTER_RESULT_CODES.passwordTooShort,
+        message: AUTH_REGISTER_RESULT_CODES.passwordTooShort,
       }),
     })
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled()
+    expect(prismaMock.user.findUnique.mock.calls).toEqual([])
   })
 
   it('[并发唯一键冲突] -> 返回和重复用户名一致的友好错误', async () => {
@@ -144,7 +150,7 @@ describe('auth register operation', () => {
 
     await expect(promise).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: '该用户名已被注册，请换一个用户名或直接登录',
+      message: AUTH_REGISTER_RESULT_CODES.userExists,
     })
     expect(bcryptMock.hash).toHaveBeenCalledWith('secret1', 12)
   })
@@ -153,7 +159,7 @@ describe('auth register operation', () => {
     const result = await executeRegister({ name: ' alice ', password: 'secret1' })
 
     expect(result).toEqual({
-      message: '注册成功',
+      message: AUTH_REGISTER_RESULT_CODES.success,
       user: {
         id: 'user-1',
         name: 'alice',

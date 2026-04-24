@@ -6,17 +6,18 @@ import { logAuthAction } from '@/lib/logging/semantic'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 import { getPrismaErrorCode } from '@/lib/prisma-error'
-
-const REGISTER_ERROR_MESSAGES = {
-  invalidPayload: '请填写用户名和密码',
-  missingName: '请输入用户名',
-  missingPassword: '请输入密码',
-  passwordTooShort: '密码长度至少6位',
-  userExists: '该用户名已被注册，请换一个用户名或直接登录',
-} as const
+import { AUTH_REGISTER_RESULT_CODES, type AuthRegisterResultCode } from '@/lib/auth/register-result-codes'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function throwRegisterInvalidParams(code: AuthRegisterResultCode): never {
+  throw new ApiError('INVALID_PARAMS', { code, message: code })
+}
+
+function throwRegisterConflict(code: AuthRegisterResultCode): never {
+  throw new ApiError('CONFLICT', { code, message: code })
 }
 
 function normalizeName(value: unknown): string {
@@ -53,7 +54,7 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
       execute: async (_ctx, input) => {
         if (!isRecord(input)) {
           logAuthAction('REGISTER', 'unknown', { error: 'Invalid payload' })
-          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.invalidPayload })
+          throwRegisterInvalidParams(AUTH_REGISTER_RESULT_CODES.invalidPayload)
         }
 
         const name = normalizeName(input.name)
@@ -61,15 +62,15 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
 
         if (!name) {
           logAuthAction('REGISTER', 'unknown', { error: 'Missing username' })
-          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.missingName })
+          throwRegisterInvalidParams(AUTH_REGISTER_RESULT_CODES.missingName)
         }
         if (!password) {
           logAuthAction('REGISTER', name, { error: 'Missing password' })
-          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.missingPassword })
+          throwRegisterInvalidParams(AUTH_REGISTER_RESULT_CODES.missingPassword)
         }
         if (password.length < 6) {
           logAuthAction('REGISTER', name, { error: 'Password too short' })
-          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.passwordTooShort })
+          throwRegisterInvalidParams(AUTH_REGISTER_RESULT_CODES.passwordTooShort)
         }
 
         const existingUser = await prisma.user.findUnique({
@@ -78,7 +79,7 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
         })
         if (existingUser) {
           logAuthAction('REGISTER', name, { error: 'User already exists' })
-          throw new ApiError('CONFLICT', { message: REGISTER_ERROR_MESSAGES.userExists })
+          throwRegisterConflict(AUTH_REGISTER_RESULT_CODES.userExists)
         }
 
         const hashedPassword = await bcrypt.hash(password, 12)
@@ -105,7 +106,7 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
           } catch (error) {
             if (getPrismaErrorCode(error) === 'P2002') {
               logAuthAction('REGISTER', name, { error: 'User already exists' })
-              throw new ApiError('CONFLICT', { message: REGISTER_ERROR_MESSAGES.userExists })
+              throwRegisterConflict(AUTH_REGISTER_RESULT_CODES.userExists)
             }
             throw error
           }
@@ -114,7 +115,7 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
         logAuthAction('REGISTER', name, { userId: user.id, success: true })
 
         return {
-          message: '注册成功',
+          message: AUTH_REGISTER_RESULT_CODES.success,
           user: {
             id: user.id,
             name: user.name,

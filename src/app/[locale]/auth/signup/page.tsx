@@ -6,6 +6,8 @@ import Navbar from "@/components/Navbar"
 import PasswordInput from "@/components/auth/PasswordInput"
 import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator"
 import { apiFetch } from '@/lib/api-fetch'
+import { AUTH_REGISTER_RESULT_CODES, type AuthRegisterResultCode } from '@/lib/auth/register-result-codes'
+import { readAuthRegisterResultCode } from '@/lib/auth/register-result-response'
 import { Link, useRouter } from '@/i18n/navigation'
 
 export default function SignUp() {
@@ -17,6 +19,33 @@ export default function SignUp() {
   const [success, setSuccess] = useState("")
   const router = useRouter()
   const t = useTranslations('auth')
+
+  const resolveRegisterResultMessage = (code: AuthRegisterResultCode): string => {
+    switch (code) {
+      case AUTH_REGISTER_RESULT_CODES.invalidPayload:
+        return t('serverErrors.invalidPayload')
+      case AUTH_REGISTER_RESULT_CODES.missingName:
+        return t('serverErrors.missingName')
+      case AUTH_REGISTER_RESULT_CODES.missingPassword:
+        return t('serverErrors.missingPassword')
+      case AUTH_REGISTER_RESULT_CODES.passwordTooShort:
+        return t('serverErrors.passwordTooShort')
+      case AUTH_REGISTER_RESULT_CODES.userExists:
+        return t('serverErrors.userExists')
+      case AUTH_REGISTER_RESULT_CODES.bodyParseFailed:
+        return t('serverErrors.bodyParseFailed')
+      case AUTH_REGISTER_RESULT_CODES.rateLimited:
+        return t('serverErrors.rateLimited')
+      case AUTH_REGISTER_RESULT_CODES.success:
+        return t('signupSuccess')
+    }
+  }
+
+  const resolveSignupErrorMessage = (data: unknown): string => {
+    const code = readAuthRegisterResultCode(data)
+    if (!code) return t('signupFailed')
+    return resolveRegisterResultMessage(code)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,7 +85,7 @@ export default function SignUp() {
           router.push({ pathname: '/auth/signin' })
         }, 2000)
       } else {
-        setError(data.message || t('signupFailed'))
+        setError(resolveSignupErrorMessage(data))
       }
     } catch {
       setError(t('signupError'))

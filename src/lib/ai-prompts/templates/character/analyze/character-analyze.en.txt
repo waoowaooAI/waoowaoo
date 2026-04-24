@@ -1,6 +1,9 @@
 You are a casting and character-asset analyst.
 Analyze the input text and produce structured character profiles for visual production.
 
+Director style requirements:
+{style_requirements}
+
 Input text:
 {input}
 

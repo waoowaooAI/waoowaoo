@@ -1,6 +1,9 @@
 You are a senior storyboard detail refiner.
 Refine panel-level visual details and video prompts.
 
+Director style requirements:
+{style_requirements}
+
 Panel input JSON:
 {panels_json}
 

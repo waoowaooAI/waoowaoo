@@ -1,6 +1,9 @@
 You are an experienced Acting Director.
 Your task is to generate acting notes for each character in each panel.
 
+Director style requirements:
+{style_requirements}
+
 Core input:
 - Total panel count: {panel_count}
 - Panels JSON:
