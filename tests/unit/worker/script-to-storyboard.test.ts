@@ -142,6 +142,7 @@ vi.mock('@/lib/config-service', () => ({
 }))
 
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: withInternalLLMStreamCallbacksMock,
 }))
 

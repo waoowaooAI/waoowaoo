@@ -66,10 +66,19 @@ vi.mock('bullmq', () => ({
 vi.mock('@/lib/redis', () => ({ queueRedis: {} }))
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => llmMock)
+vi.mock('@/lib/ai-runtime', () => ({
+  executeAiTextStep: vi.fn(async () => ({
+    text: llmMock.getCompletionContent(),
+    reasoning: '',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    completion: { id: 'completion-1' },
+  })),
+}))
 vi.mock('@/lib/config-service', () => configMock)
 vi.mock('@/lib/workers/shared', () => ({ reportTaskProgress: workerMock.reportTaskProgress }))
 vi.mock('@/lib/workers/utils', () => ({ assertTaskActive: workerMock.assertTaskActive }))
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 vi.mock('@/lib/workers/handlers/llm-stream', () => ({

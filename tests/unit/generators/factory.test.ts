@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createAudioGenerator, createImageGenerator, createVideoGenerator } from '@/lib/generators/factory'
-import { GoogleVeoVideoGenerator } from '@/lib/generators/video/google'
-import { OpenAICompatibleVideoGenerator } from '@/lib/generators/video/openai-compatible'
-import { BailianAudioGenerator, BailianImageGenerator, BailianVideoGenerator, SiliconFlowAudioGenerator } from '@/lib/generators/official'
+import { createAudioGenerator, createImageGenerator, createVideoGenerator } from '@/lib/ai-providers/adapters/media/generators/factory'
+import { GoogleVeoVideoGenerator } from '@/lib/ai-providers/adapters/media/generators/video/google'
+import { OpenAICompatibleVideoGenerator } from '@/lib/ai-providers/adapters/media/generators/video/openai-compatible'
+import { BailianAudioGenerator, BailianImageGenerator, BailianVideoGenerator, SiliconFlowAudioGenerator } from '@/lib/ai-providers/adapters/media/generators/official'
 
 describe('generator factory', () => {
   it('routes gemini-compatible video provider to Google video generator', () => {

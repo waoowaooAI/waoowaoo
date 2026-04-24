@@ -48,4 +48,71 @@ describe('user concurrency gate', () => {
       'second:end',
     ])
   })
+
+  it('allows different users and scopes to run concurrently under independent limits', async () => {
+    const imageDone = deferred<void>()
+    const events: string[] = []
+
+    const firstImage = withUserConcurrencyGate({
+      scope: 'image',
+      userId: 'user-1',
+      limit: 1,
+      run: async () => {
+        events.push('user-1:image:start')
+        await imageDone.promise
+        events.push('user-1:image:end')
+      },
+    })
+
+    const sameUserVideo = withUserConcurrencyGate({
+      scope: 'video',
+      userId: 'user-1',
+      limit: 1,
+      run: async () => {
+        events.push('user-1:video:start')
+        events.push('user-1:video:end')
+      },
+    })
+
+    const otherUserImage = withUserConcurrencyGate({
+      scope: 'image',
+      userId: 'user-2',
+      limit: 1,
+      run: async () => {
+        events.push('user-2:image:start')
+        events.push('user-2:image:end')
+      },
+    })
+
+    await Promise.resolve()
+
+    expect(events).toEqual([
+      'user-1:image:start',
+      'user-1:video:start',
+      'user-1:video:end',
+      'user-2:image:start',
+      'user-2:image:end',
+    ])
+
+    imageDone.resolve()
+    await Promise.all([firstImage, sameUserVideo, otherUserImage])
+
+    expect(events).toEqual([
+      'user-1:image:start',
+      'user-1:video:start',
+      'user-1:video:end',
+      'user-2:image:start',
+      'user-2:image:end',
+      'user-1:image:end',
+    ])
+  })
+
+  it('rejects invalid limits instead of silently bypassing concurrency governance', async () => {
+    await expect(withUserConcurrencyGate({
+      scope: 'image',
+      userId: 'user-1',
+      limit: 0,
+      run: async () => 'not-run',
+    })).rejects.toThrow('WORKFLOW_CONCURRENCY_INVALID: 0')
+  })
 })

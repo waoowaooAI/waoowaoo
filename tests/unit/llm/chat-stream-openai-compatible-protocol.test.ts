@@ -53,7 +53,7 @@ const logLlmRawInputMock = vi.hoisted(() => vi.fn())
 const logLlmRawOutputMock = vi.hoisted(() => vi.fn())
 const recordCompletionUsageMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/model-gateway', () => ({
+vi.mock('@/lib/ai-providers/adapters/openai-compatible/index', () => ({
   resolveModelGatewayRoute: vi.fn(() => 'openai-compat'),
   runOpenAICompatChatCompletion: runOpenAICompatChatCompletionMock,
   runOpenAICompatResponsesCompletion: runOpenAICompatResponsesCompletionMock,
@@ -88,7 +88,7 @@ vi.mock('@/lib/llm/runtime-shared', () => ({
   resolveLlmRuntimeModel: resolveLlmRuntimeModelMock,
 }))
 
-import { chatCompletionStream } from '@/lib/llm/chat-stream'
+import { chatCompletionStream } from '@/lib/ai-exec/engine'
 
 describe('llm chatCompletionStream openai-compatible protocol routing', () => {
   beforeEach(() => {

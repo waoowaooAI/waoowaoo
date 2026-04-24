@@ -30,7 +30,7 @@ vi.mock('@/lib/media/outbound-image', () => ({
   normalizeToBase64ForGeneration: normalizeToBase64ForGenerationMock,
 }))
 
-import { OpenAICompatibleVideoGenerator } from '@/lib/generators/video/openai-compatible'
+import { OpenAICompatibleVideoGenerator } from '@/lib/ai-providers/adapters/media/generators/video/openai-compatible'
 
 describe('OpenAICompatibleVideoGenerator', () => {
   beforeEach(() => {

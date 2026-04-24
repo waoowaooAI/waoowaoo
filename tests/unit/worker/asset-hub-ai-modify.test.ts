@@ -7,11 +7,21 @@ const llmMock = vi.hoisted(() => ({
   getCompletionContent: vi.fn(),
 }))
 
+const aiRuntimeMock = vi.hoisted(() => ({
+  executeAiTextStep: vi.fn(async () => ({
+    text: llmMock.getCompletionContent(),
+    reasoning: '',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    completion: { id: 'completion-1' },
+  })),
+}))
+
 const configMock = vi.hoisted(() => ({
   getUserModelConfig: vi.fn(),
 }))
 
 const streamContextMock = vi.hoisted(() => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 
@@ -36,6 +46,7 @@ const llmStreamMock = vi.hoisted(() => {
 })
 
 vi.mock('@/lib/llm-client', () => llmMock)
+vi.mock('@/lib/ai-runtime', () => aiRuntimeMock)
 vi.mock('@/lib/config-service', () => configMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => streamContextMock)
 vi.mock('@/lib/workers/shared', () => ({
@@ -112,11 +123,11 @@ describe('worker asset-hub-ai-modify behavior', () => {
 
     const result = await handleAssetHubAIModifyTask(job)
 
-    expect(llmMock.chatCompletion).toHaveBeenCalledWith(
-      'user-1',
-      'llm::analysis-1',
-      [{ role: 'user', content: 'final-prompt' }],
+    expect(aiRuntimeMock.executeAiTextStep).toHaveBeenCalledWith(
       expect.objectContaining({
+        userId: 'user-1',
+        model: 'llm::analysis-1',
+        messages: [{ role: 'user', content: 'final-prompt' }],
         projectId: 'asset-hub',
         action: 'ai_modify_character',
       }),

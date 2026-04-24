@@ -35,12 +35,6 @@ const completeSiliconFlowLlmMock = vi.hoisted(() =>
   }),
 )
 
-const runOpenAICompatChatCompletionMock = vi.hoisted(() =>
-  vi.fn(async () => {
-    throw new Error('openai-compat should not be called')
-  }),
-)
-
 const getProviderConfigMock = vi.hoisted(() =>
   vi.fn(async () => ({
     id: 'bailian',
@@ -54,11 +48,6 @@ const getProviderConfigMock = vi.hoisted(() =>
 const logLlmRawInputMock = vi.hoisted(() => vi.fn())
 const logLlmRawOutputMock = vi.hoisted(() => vi.fn())
 const recordCompletionUsageMock = vi.hoisted(() => vi.fn())
-
-vi.mock('@/lib/model-gateway', () => ({
-  resolveModelGatewayRoute: vi.fn(() => 'official'),
-  runOpenAICompatChatCompletion: runOpenAICompatChatCompletionMock,
-}))
 
 vi.mock('@/lib/api-config', () => ({
   getProviderConfig: getProviderConfigMock,
@@ -85,7 +74,7 @@ vi.mock('@/lib/llm/runtime-shared', () => ({
   resolveLlmRuntimeModel: resolveLlmRuntimeModelMock,
 }))
 
-import { chatCompletionStream } from '@/lib/llm/chat-stream'
+import { chatCompletionStream } from '@/lib/ai-exec/engine'
 
 describe('llm chatCompletionStream official provider branch', () => {
   beforeEach(() => {
@@ -114,7 +103,6 @@ describe('llm chatCompletionStream official provider branch', () => {
       baseUrl: undefined,
       temperature: 0.7,
     })
-    expect(runOpenAICompatChatCompletionMock).not.toHaveBeenCalled()
     expect(completeSiliconFlowLlmMock).not.toHaveBeenCalled()
     expect(onComplete).toHaveBeenCalledWith('stream-ok', undefined)
     expect(onChunk).toHaveBeenCalledWith(

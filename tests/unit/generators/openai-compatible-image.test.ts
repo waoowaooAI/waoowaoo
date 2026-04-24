@@ -32,7 +32,7 @@ vi.mock('@/lib/image-cache', () => ({
   getImageBase64Cached: getImageBase64CachedMock,
 }))
 
-import { OpenAICompatibleImageGenerator } from '@/lib/generators/image/openai-compatible'
+import { OpenAICompatibleImageGenerator } from '@/lib/ai-providers/adapters/media/generators/image/openai-compatible'
 
 describe('OpenAICompatibleImageGenerator', () => {
   beforeEach(() => {

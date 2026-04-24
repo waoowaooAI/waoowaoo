@@ -7,6 +7,25 @@ interface GateState {
 
 const gateStateMap = new Map<string, GateState>()
 
+type ConcurrencyGateMode = 'memory' | 'redis'
+
+function resolveConcurrencyGateMode(): ConcurrencyGateMode {
+  const raw = process.env.AI_CONCURRENCY_GATE_MODE
+  if (!raw || raw === 'memory') return 'memory'
+  if (raw === 'redis') return 'redis'
+  throw new Error(`AI_CONCURRENCY_GATE_MODE_INVALID: ${raw}`)
+}
+
+function resolveRedisGateTtlMs(): number {
+  const raw = process.env.AI_CONCURRENCY_GATE_TTL_MS
+  if (!raw) return 30 * 60 * 1000
+  const parsed = Number.parseInt(raw, 10)
+  if (!Number.isFinite(parsed) || parsed < 60_000) {
+    throw new Error(`AI_CONCURRENCY_GATE_TTL_MS_INVALID: ${raw}`)
+  }
+  return parsed
+}
+
 function getGateState(key: string): GateState {
   const existing = gateStateMap.get(key)
   if (existing) return existing
@@ -53,6 +72,63 @@ function releaseConcurrencySlot(key: string) {
   cleanupGateStateIfIdle(key)
 }
 
+async function acquireConcurrencySlotRedis(input: {
+  key: string
+  limit: number
+  ttlMs: number
+}): Promise<{ stopHeartbeat: () => void; release: () => Promise<void> }> {
+  if (!Number.isInteger(input.limit) || input.limit <= 0) {
+    throw new Error(`WORKFLOW_CONCURRENCY_INVALID: ${input.limit}`)
+  }
+
+  const { queueRedis } = await import('@/lib/redis')
+  const acquireScript = [
+    'local key=KEYS[1]',
+    'local limit=tonumber(ARGV[1])',
+    'local ttl=tonumber(ARGV[2])',
+    "local current=tonumber(redis.call('GET', key) or '0')",
+    'if current < limit then',
+    "  redis.call('INCR', key)",
+    "  redis.call('PEXPIRE', key, ttl)",
+    '  return 1',
+    'end',
+    'return 0',
+  ].join('\n')
+
+  const releaseScript = [
+    'local key=KEYS[1]',
+    "local current=tonumber(redis.call('GET', key) or '0')",
+    'if current <= 0 then',
+    '  return 0',
+    'end',
+    "local next=tonumber(redis.call('DECR', key) or '0')",
+    'if next <= 0 then',
+    "  redis.call('DEL', key)",
+    'end',
+    'return next',
+  ].join('\n')
+
+  let attempt = 0
+  while (true) {
+    attempt += 1
+    const acquired = await queueRedis.eval(acquireScript, 1, input.key, String(input.limit), String(input.ttlMs)) as unknown
+    if (acquired === 1 || acquired === '1') break
+    const delayMs = Math.min(200 * attempt, 1000)
+    await new Promise((resolve) => setTimeout(resolve, delayMs))
+  }
+
+  const heartbeat = setInterval(() => {
+    void queueRedis.pexpire(input.key, input.ttlMs).catch(() => undefined)
+  }, Math.max(10_000, Math.floor(input.ttlMs / 2)))
+
+  return {
+    stopHeartbeat: () => clearInterval(heartbeat),
+    release: async () => {
+      await queueRedis.eval(releaseScript, 1, input.key)
+    },
+  }
+}
+
 export function computeRetryDelay(input: {
   attempt: number
   kind: 'llm' | 'vision' | 'worker'
@@ -80,7 +156,24 @@ export async function withAiConcurrencyGate<T>(input: {
   limit: number
   run: () => Promise<T>
 }): Promise<T> {
+  const mode = resolveConcurrencyGateMode()
   const key = `${input.scope}:${input.userId}`
+
+  if (mode === 'redis') {
+    const redisKey = `ai_concurrency_gate:${key}`
+    const gate = await acquireConcurrencySlotRedis({
+      key: redisKey,
+      limit: input.limit,
+      ttlMs: resolveRedisGateTtlMs(),
+    })
+    try {
+      return await input.run()
+    } finally {
+      gate.stopHeartbeat()
+      await gate.release()
+    }
+  }
+
   await acquireConcurrencySlot(key, input.limit)
   try {
     return await input.run()

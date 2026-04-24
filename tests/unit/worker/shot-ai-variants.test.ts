@@ -8,9 +8,8 @@ const prismaMock = vi.hoisted(() => ({
   },
 }))
 
-const llmMock = vi.hoisted(() => ({
-  chatCompletionWithVision: vi.fn(),
-  getCompletionContent: vi.fn(),
+const aiRuntimeMock = vi.hoisted(() => ({
+  executeAiVisionStep: vi.fn(),
 }))
 
 const cosMock = vi.hoisted(() => ({
@@ -18,6 +17,7 @@ const cosMock = vi.hoisted(() => ({
 }))
 
 const streamCtxMock = vi.hoisted(() => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 
@@ -46,7 +46,7 @@ const persistMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => llmMock)
+vi.mock('@/lib/ai-runtime', () => aiRuntimeMock)
 vi.mock('@/lib/storage', () => cosMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => streamCtxMock)
 vi.mock('@/lib/workers/shared', () => ({
@@ -113,8 +113,7 @@ describe('worker shot-ai-variants behavior', () => {
       characters: JSON.stringify([{ name: 'Hero', appearance: 'black coat' }]),
     })
     cosMock.getSignedUrl.mockReturnValue('https://signed.example/panel-1.png')
-    llmMock.chatCompletionWithVision.mockResolvedValue({ id: 'vision-1' })
-    llmMock.getCompletionContent.mockReturnValue('[{"name":"v1"},{"name":"v2"},{"name":"v3"}]')
+    aiRuntimeMock.executeAiVisionStep.mockResolvedValue({ text: '[{"name":"v1"},{"name":"v2"},{"name":"v3"}]' })
   })
 
   it('panel not found -> explicit error', async () => {
@@ -130,12 +129,12 @@ describe('worker shot-ai-variants behavior', () => {
 
     const result = await handleAnalyzeShotVariantsTask(job, payload)
 
-    expect(llmMock.chatCompletionWithVision).toHaveBeenCalledWith(
-      'user-1',
-      'llm::analysis-1',
-      'shot-variants-prompt',
-      ['https://signed.example/panel-1.png'],
+    expect(aiRuntimeMock.executeAiVisionStep).toHaveBeenCalledWith(
       expect.objectContaining({
+        userId: 'user-1',
+        model: 'llm::analysis-1',
+        prompt: 'shot-variants-prompt',
+        imageUrls: ['https://signed.example/panel-1.png'],
         projectId: 'project-1',
         action: 'analyze_shot_variants',
       }),
@@ -160,7 +159,7 @@ describe('worker shot-ai-variants behavior', () => {
   })
 
   it('suggestions fewer than 3 -> explicit error', async () => {
-    llmMock.getCompletionContent.mockReturnValueOnce('[{"name":"only-one"}]')
+    aiRuntimeMock.executeAiVisionStep.mockResolvedValueOnce({ text: '[{"name":"only-one"}]' })
     const payload = { panelId: 'panel-1' }
     const job = buildJob(payload)
 

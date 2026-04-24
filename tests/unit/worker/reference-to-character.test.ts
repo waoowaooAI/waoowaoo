@@ -26,6 +26,7 @@ const generatorApiMock = vi.hoisted(() => ({
     imageUrl: 'https://example.com/generated.jpg',
     async: false,
   })),
+  chatCompletionWithVision: vi.fn(async () => ({ output_text: 'AI_EXTRACTED_DESCRIPTION' })),
 }))
 
 const asyncSubmitMock = vi.hoisted(() => ({

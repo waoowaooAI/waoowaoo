@@ -29,7 +29,7 @@ vi.mock('@/lib/api-config', () => ({
   getProviderKey: (providerId: string) => providerId.split(':')[0] || providerId,
 }))
 
-vi.mock('@/lib/model-gateway', () => ({
+vi.mock('@/lib/ai-providers/adapters/openai-compatible/index', () => ({
   resolveModelGatewayRoute: resolveModelGatewayRouteMock,
   generateImageViaOpenAICompat: generateImageViaOpenAICompatMock,
   generateVideoViaOpenAICompat: generateVideoViaOpenAICompatMock,
@@ -37,7 +37,7 @@ vi.mock('@/lib/model-gateway', () => ({
   generateVideoViaOpenAICompatTemplate: generateVideoViaOpenAICompatTemplateMock,
 }))
 
-vi.mock('@/lib/generators/factory', () => ({
+vi.mock('@/lib/ai-providers/adapters/media/generators/factory', () => ({
   createImageGenerator: vi.fn(() => ({ generate: vi.fn() })),
   createVideoGenerator: vi.fn(() => ({ generate: vi.fn() })),
   createAudioGenerator: vi.fn(() => ({ generate: vi.fn() })),

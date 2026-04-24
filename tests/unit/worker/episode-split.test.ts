@@ -30,6 +30,7 @@ const configServiceMock = vi.hoisted(() => ({
 }))
 
 const internalStreamMock = vi.hoisted(() => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 
@@ -55,6 +56,14 @@ const promptMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => llmClientMock)
+vi.mock('@/lib/ai-runtime', () => ({
+  executeAiTextStep: vi.fn(async () => ({
+    text: llmClientMock.getCompletionContent(),
+    reasoning: '',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    completion: { id: 'completion-1' },
+  })),
+}))
 vi.mock('@/lib/config-service', () => configServiceMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => internalStreamMock)
 vi.mock('@/lib/workers/shared', () => sharedMock)

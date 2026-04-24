@@ -11,7 +11,7 @@ const asyncSubmitMock = vi.hoisted(() => ({
 vi.mock('@/lib/api-config', () => apiConfigMock)
 vi.mock('@/lib/async-submit', () => asyncSubmitMock)
 
-import { FalVideoGenerator } from '@/lib/generators/fal'
+import { FalVideoGenerator } from '@/lib/ai-providers/adapters/media/generators/fal'
 
 type KlingModelCase = {
   modelId: string

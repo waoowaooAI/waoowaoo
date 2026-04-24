@@ -4,7 +4,7 @@ import type {
   TemplateEndpoint,
   TemplateHeaderMap,
 } from '@/lib/openai-compat-media-template'
-import { toUploadFile } from '@/lib/model-gateway/openai-compat/common'
+import { toUploadFile } from '@/lib/ai-providers/adapters/openai-compatible/common'
 
 export type TemplateVariableMap = Record<string, TemplateBodyValue | undefined>
 

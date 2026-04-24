@@ -26,7 +26,16 @@ const workerMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/llm-client', () => llmMock)
+vi.mock('@/lib/ai-runtime', () => ({
+  executeAiTextStep: vi.fn(async () => ({
+    text: llmMock.getCompletionContent(),
+    reasoning: '',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    completion: { id: 'completion-1' },
+  })),
+}))
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 vi.mock('@/lib/constants', async (importOriginal) => {

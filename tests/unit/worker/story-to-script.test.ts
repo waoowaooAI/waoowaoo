@@ -53,6 +53,7 @@ vi.mock('@/lib/llm-client', () => ({
 }))
 vi.mock('@/lib/config-service', () => configMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 vi.mock('@/lib/logging/semantic', () => ({ logAIAnalysis: vi.fn() }))

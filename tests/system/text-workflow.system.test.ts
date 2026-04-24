@@ -137,6 +137,7 @@ vi.mock('@/lib/workers/handlers/script-to-storyboard-helpers', async () => {
 })
 
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
+  getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),
 }))
 

@@ -47,8 +47,8 @@ vi.mock('@/lib/api-config', async (importOriginal) => {
   }
 })
 
-vi.mock('@/lib/model-gateway', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/model-gateway')>()
+vi.mock('@/lib/ai-providers/adapters/openai-compatible/index', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/adapters/openai-compatible/index')>()
   return {
     ...actual,
     generateImageViaOpenAICompat: generateImageViaOpenAICompatMock,
@@ -59,7 +59,7 @@ vi.mock('@/lib/model-gateway', async (importOriginal) => {
   }
 })
 
-vi.mock('@/lib/generators/factory', () => ({
+vi.mock('@/lib/ai-providers/adapters/media/generators/factory', () => ({
   createImageGenerator: createImageGeneratorMock,
   createVideoGenerator: createVideoGeneratorMock,
   createAudioGenerator: createAudioGeneratorMock,

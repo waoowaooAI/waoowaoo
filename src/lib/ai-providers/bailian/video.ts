@@ -3,7 +3,7 @@ import {
   type OfficialModelModality,
 } from '@/lib/ai-providers/official/model-registry'
 import { getProviderConfig } from '@/lib/api-config'
-import type { GenerateResult } from '@/lib/generators/base'
+import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
 import { toFetchableUrl } from '@/lib/storage/utils'
 import { ensureBailianCatalogRegistered } from './catalog'
 import type { BailianGenerateRequestOptions } from './types'

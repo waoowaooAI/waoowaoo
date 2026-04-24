@@ -57,7 +57,7 @@ vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
   getInternalLLMStreamCallbacks: vi.fn(() => null),
 }))
 
-vi.mock('@/lib/model-gateway', () => ({
+vi.mock('@/lib/ai-providers/adapters/openai-compatible/index', () => ({
   resolveModelGatewayRoute: vi.fn(() => 'openai-compat'),
   runOpenAICompatChatCompletion: runOpenAICompatChatCompletionMock,
   runOpenAICompatResponsesCompletion: runOpenAICompatResponsesCompletionMock,
@@ -95,7 +95,7 @@ vi.mock('@/lib/llm/runtime-shared', () => ({
   resolveLlmRuntimeModel: resolveLlmRuntimeModelMock,
 }))
 
-import { chatCompletion } from '@/lib/llm/chat-completion'
+import { chatCompletion } from '@/lib/ai-exec/engine'
 
 describe('llm chatCompletion openai-compatible protocol routing', () => {
   beforeEach(() => {

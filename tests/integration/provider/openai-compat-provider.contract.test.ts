@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { generateVideoViaOpenAICompatTemplate } from '@/lib/model-gateway/openai-compat/template-video'
+import { generateVideoViaOpenAICompatTemplate } from '@/lib/ai-providers/adapters/openai-compatible/template-video'
 import { pollAsyncTask } from '@/lib/async-poll'
 import { startScenarioServer } from '../../helpers/fakes/scenario-server'
 

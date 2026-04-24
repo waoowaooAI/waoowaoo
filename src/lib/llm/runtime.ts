@@ -1,9 +1,9 @@
-export { chatCompletion } from './chat-completion'
-export { chatCompletionStream } from './chat-stream'
 export {
+  chatCompletion,
+  chatCompletionStream,
   chatCompletionWithVision,
   chatCompletionWithVisionStream,
-} from './vision'
+} from '@/lib/ai-exec/engine'
 export {
   getCompletionContent,
   getCompletionParts,

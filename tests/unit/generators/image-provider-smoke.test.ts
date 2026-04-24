@@ -39,9 +39,9 @@ vi.mock('@/lib/media/outbound-image', () => ({
   normalizeToBase64ForGeneration: normalizeToBase64ForGenerationMock,
 }))
 
-import { ArkSeedreamGenerator } from '@/lib/generators/ark'
-import { GeminiCompatibleImageGenerator } from '@/lib/generators/image/gemini-compatible'
-import { GoogleGeminiImageGenerator } from '@/lib/generators/image/google'
+import { ArkSeedreamGenerator } from '@/lib/ai-providers/adapters/media/generators/ark'
+import { GeminiCompatibleImageGenerator } from '@/lib/ai-providers/adapters/media/generators/image/gemini-compatible'
+import { GoogleGeminiImageGenerator } from '@/lib/ai-providers/adapters/media/generators/image/google'
 
 describe('image provider smoke tests', () => {
   beforeEach(() => {

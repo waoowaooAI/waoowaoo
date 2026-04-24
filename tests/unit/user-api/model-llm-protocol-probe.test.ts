@@ -8,7 +8,7 @@ const resolveOpenAICompatClientConfigMock = vi.hoisted(() =>
   })),
 )
 
-vi.mock('@/lib/model-gateway/openai-compat/common', () => ({
+vi.mock('@/lib/ai-providers/adapters/openai-compatible/common', () => ({
   resolveOpenAICompatClientConfig: resolveOpenAICompatClientConfigMock,
 }))
 
