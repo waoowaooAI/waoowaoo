@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTranslations } from 'next-intl'
 import Navbar from "@/components/Navbar"
+import PasswordInput from "@/components/auth/PasswordInput"
 import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator"
 import { apiFetch } from '@/lib/api-fetch'
 import { Link, useRouter } from '@/i18n/navigation'
@@ -99,16 +100,16 @@ export default function SignUp() {
                 <label htmlFor="password" className="glass-field-label block mb-2">
                   {t('password')}
                 </label>
-                <input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   autoComplete="new-password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={setPassword}
                   required
-                  className="glass-input-base w-full px-4 py-3"
                   placeholder={t('passwordMinPlaceholder')}
+                  showLabel={t('showPassword')}
+                  hideLabel={t('hidePassword')}
                 />
                 <PasswordStrengthIndicator password={password} />
               </div>
@@ -117,16 +118,16 @@ export default function SignUp() {
                 <label htmlFor="confirmPassword" className="glass-field-label block mb-2">
                   {t('confirmPassword')}
                 </label>
-                <input
+                <PasswordInput
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
                   autoComplete="new-password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={setConfirmPassword}
                   required
-                  className="glass-input-base w-full px-4 py-3"
                   placeholder={t('confirmPasswordPlaceholder')}
+                  showLabel={t('showPassword')}
+                  hideLabel={t('hidePassword')}
                 />
               </div>
 

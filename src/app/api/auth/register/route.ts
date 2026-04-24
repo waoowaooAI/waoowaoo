@@ -26,6 +26,7 @@ export const POST = apiHandler(async (request: NextRequest) => {
     throw new ApiError('INVALID_PARAMS', {
       code: 'BODY_PARSE_FAILED',
       field: 'body',
+      message: '请求内容格式不正确，请刷新后重试',
     })
   }
 

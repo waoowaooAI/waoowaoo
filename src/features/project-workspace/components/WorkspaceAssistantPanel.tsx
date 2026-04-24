@@ -33,6 +33,8 @@ import { useWorkspaceAssistantRuntime } from './workspace-assistant/useWorkspace
 import { getWorkflowDisplayLabel } from '@/lib/skill-system/project-workflow-machine'
 import { WorkspaceAssistantModePicker } from './workspace-assistant/WorkspaceAssistantModePicker'
 import { WorkspaceAssistantPanelHeader } from './workspace-assistant/WorkspaceAssistantPanelHeader'
+import { WorkspaceAssistantPanelRail } from './workspace-assistant/WorkspaceAssistantPanelRail'
+import { buildWorkspaceAssistantPanelLayout, WORKSPACE_ASSISTANT_TOP_OFFSET } from './workspace-assistant/panel-layout'
 
 interface WorkspaceAssistantPanelProps {
   projectId: string
@@ -40,9 +42,9 @@ interface WorkspaceAssistantPanelProps {
   currentStage: string
   storyToScriptStream: RunStreamView
   scriptToStoryboardStream: RunStreamView
+  isCollapsed: boolean
+  onToggleCollapsed: () => void
 }
-
-const WORKSPACE_ASSISTANT_TOP_OFFSET = '10rem'
 
 export default function WorkspaceAssistantPanel({
   projectId,
@@ -50,8 +52,11 @@ export default function WorkspaceAssistantPanel({
   currentStage,
   storyToScriptStream,
   scriptToStoryboardStream,
+  isCollapsed,
+  onToggleCollapsed,
 }: WorkspaceAssistantPanelProps) {
   const t = useTranslations('assistantAgent')
+  const layout = buildWorkspaceAssistantPanelLayout(isCollapsed)
   const [interactionMode, setInteractionMode] = useState<'auto' | 'plan' | 'fast'>('auto')
   const workflowLabels = useMemo(() => ({
     'story-to-script': getWorkflowDisplayLabel('story-to-script'),
@@ -206,25 +211,38 @@ export default function WorkspaceAssistantPanel({
   }, [episodeId, projectId])
 
   return (
-    <aside className="relative w-[360px] shrink-0 self-stretch">
+    <aside
+      className="relative shrink-0 self-stretch transition-[width] duration-300 ease-out"
+      style={{ width: `${layout.occupiedWidthPx}px` }}
+      data-state={layout.state}
+    >
       <div
-        className="fixed left-0 z-20 w-[360px] overflow-hidden rounded-r-3xl border border-l-0 border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/95 shadow-xl backdrop-blur-md"
+        className="fixed left-0 z-20 overflow-hidden rounded-r-3xl border border-l-0 border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)]/95 shadow-xl backdrop-blur-md transition-transform duration-300 ease-out"
         style={{
           top: WORKSPACE_ASSISTANT_TOP_OFFSET,
+          width: `${layout.panelWidthPx}px`,
           height: `calc(100vh - ${WORKSPACE_ASSISTANT_TOP_OFFSET} - 1.5rem)`,
+          transform: `translateX(${layout.translateXPx}px)`,
         }}
+        data-state={layout.state}
       >
-        <AssistantRuntimeProvider runtime={assistantRuntime.runtime}>
-          <ThreadPrimitive.Root className="flex h-full min-h-0 flex-col">
-            <WorkspaceAssistantPanelHeader
-              eyebrow={t('panel.eyebrow')}
-              title={t('panel.title')}
-              episodeLabel={projectContext?.episodeName || episodeId || t('cards.globalScope')}
-              stageLabel={currentStage}
-              runLabel={t('panel.runs', { count: projectContext?.activeRuns.length || 0 })}
-              downloadLabel={t('panel.downloadLog')}
-              downloadHref={downloadHref}
-            />
+        <div
+          className={`h-full transition-opacity duration-200 ${isCollapsed ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+          aria-hidden={isCollapsed}
+        >
+          <AssistantRuntimeProvider runtime={assistantRuntime.runtime}>
+            <ThreadPrimitive.Root className="flex h-full min-h-0 flex-col">
+              <WorkspaceAssistantPanelHeader
+                eyebrow={t('panel.eyebrow')}
+                title={t('panel.title')}
+                episodeLabel={projectContext?.episodeName || episodeId || t('cards.globalScope')}
+                stageLabel={currentStage}
+                runLabel={t('panel.runs', { count: projectContext?.activeRuns.length || 0 })}
+                downloadLabel={t('panel.downloadLog')}
+                downloadHref={downloadHref}
+                collapseLabel={t('panel.collapse')}
+                onCollapse={onToggleCollapsed}
+              />
 
             <ThreadPrimitive.Viewport
               autoScroll
@@ -384,8 +402,18 @@ export default function WorkspaceAssistantPanel({
                 ) : null}
               </ComposerPrimitive.Root>
             </div>
-          </ThreadPrimitive.Root>
-        </AssistantRuntimeProvider>
+            </ThreadPrimitive.Root>
+          </AssistantRuntimeProvider>
+        </div>
+        <div
+          className={`absolute inset-y-0 right-0 transition-opacity duration-200 ${isCollapsed ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+          aria-hidden={!isCollapsed}
+        >
+          <WorkspaceAssistantPanelRail
+            expandLabel={t('panel.expand')}
+            onExpand={onToggleCollapsed}
+          />
+        </div>
       </div>
     </aside>
   )

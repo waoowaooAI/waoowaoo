@@ -5,6 +5,19 @@ import { ApiError } from '@/lib/api-errors'
 import { logAuthAction } from '@/lib/logging/semantic'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
+import { getPrismaErrorCode } from '@/lib/prisma-error'
+
+const REGISTER_ERROR_MESSAGES = {
+  invalidPayload: '请填写用户名和密码',
+  missingName: '请输入用户名',
+  missingPassword: '请输入密码',
+  passwordTooShort: '密码长度至少6位',
+  userExists: '该用户名已被注册，请换一个用户名或直接登录',
+} as const
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
 
 function normalizeName(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -29,22 +42,34 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
         externalSideEffects: false,
         longRunning: false,
       },
-      inputSchema: z.object({
-        name: z.string().min(1),
-        password: z.string().min(1),
-      }).passthrough(),
-      outputSchema: z.unknown(),
+      inputSchema: z.unknown(),
+      outputSchema: z.object({
+        message: z.string(),
+        user: z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+      }),
       execute: async (_ctx, input) => {
-        const name = normalizeName(input.name) || 'unknown'
+        if (!isRecord(input)) {
+          logAuthAction('REGISTER', 'unknown', { error: 'Invalid payload' })
+          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.invalidPayload })
+        }
+
+        const name = normalizeName(input.name)
         const password = normalizePassword(input.password)
 
-        if (!name || !password) {
-          logAuthAction('REGISTER', name, { error: 'Missing credentials' })
-          throw new ApiError('INVALID_PARAMS')
+        if (!name) {
+          logAuthAction('REGISTER', 'unknown', { error: 'Missing username' })
+          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.missingName })
+        }
+        if (!password) {
+          logAuthAction('REGISTER', name, { error: 'Missing password' })
+          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.missingPassword })
         }
         if (password.length < 6) {
           logAuthAction('REGISTER', name, { error: 'Password too short' })
-          throw new ApiError('INVALID_PARAMS')
+          throw new ApiError('INVALID_PARAMS', { message: REGISTER_ERROR_MESSAGES.passwordTooShort })
         }
 
         const existingUser = await prisma.user.findUnique({
@@ -53,29 +78,37 @@ export function createAuthOperations(): ProjectAgentOperationRegistryDraft {
         })
         if (existingUser) {
           logAuthAction('REGISTER', name, { error: 'User already exists' })
-          throw new ApiError('INVALID_PARAMS')
+          throw new ApiError('CONFLICT', { message: REGISTER_ERROR_MESSAGES.userExists })
         }
 
         const hashedPassword = await bcrypt.hash(password, 12)
 
         const user = await prisma.$transaction(async (tx) => {
-          const newUser = await tx.user.create({
-            data: {
-              name,
-              password: hashedPassword,
-            },
-          })
+          try {
+            const newUser = await tx.user.create({
+              data: {
+                name,
+                password: hashedPassword,
+              },
+            })
 
-          await tx.userBalance.create({
-            data: {
-              userId: newUser.id,
-              balance: 0,
-              frozenAmount: 0,
-              totalSpent: 0,
-            },
-          })
+            await tx.userBalance.create({
+              data: {
+                userId: newUser.id,
+                balance: 0,
+                frozenAmount: 0,
+                totalSpent: 0,
+              },
+            })
 
-          return newUser
+            return newUser
+          } catch (error) {
+            if (getPrismaErrorCode(error) === 'P2002') {
+              logAuthAction('REGISTER', name, { error: 'User already exists' })
+              throw new ApiError('CONFLICT', { message: REGISTER_ERROR_MESSAGES.userExists })
+            }
+            throw error
+          }
         })
 
         logAuthAction('REGISTER', name, { userId: user.id, success: true })
