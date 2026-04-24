@@ -201,21 +201,6 @@ export function normalizeAnyError(input: unknown, options: NormalizeOptions = {}
   const lowerMessage = toLowerMessage(message)
   const provider = typeof errorLike.provider === 'string' ? errorLike.provider : null
 
-  const outboundImageCode = typeof errorLike.code === 'string' && errorLike.code.startsWith('OUTBOUND_IMAGE_')
-    ? errorLike.code.trim().toUpperCase()
-    : null
-  if (outboundImageCode) {
-    const mergedDetails = {
-      ...(typeof errorLike.details === 'object' && errorLike.details ? (errorLike.details as Record<string, unknown>) : {}),
-      ...(options.details || {}),
-      outboundImageCode,
-    }
-    const mapped = outboundImageCode === 'OUTBOUND_IMAGE_FETCH_EXCEPTION'
-      ? 'NETWORK_ERROR'
-      : 'INVALID_PARAMS'
-    return buildNormalizedError(mapped, message, mergedDetails, provider)
-  }
-
   if (input instanceof TypeError) {
     if (lowerMessage === 'terminated' || containsAny(lowerMessage, ['aborted', 'socket hang up'])) {
       return buildNormalizedError(

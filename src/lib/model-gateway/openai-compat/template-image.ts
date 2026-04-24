@@ -53,38 +53,6 @@ function readTemplateOutputUrls(value: unknown): string[] {
   return urls
 }
 
-function buildTemplateRequestError(input: {
-  request: OpenAICompatImageRequest
-  template: NonNullable<OpenAICompatImageRequest['template']>
-  payload: unknown
-  status: number
-}): Error {
-  const message = extractTemplateError(input.template, input.payload, input.status)
-  const lowerMessage = message.toLowerCase()
-  if (lowerMessage.includes('not supported model') && lowerMessage.includes('image generation')) {
-    const modelRef = input.request.modelKey || input.request.modelId || resolveModelRef(input.request)
-    return Object.assign(
-      new Error(`MODEL_NOT_REGISTERED: ${modelRef} is not supported for image generation by provider ${input.request.providerId}: ${message}`),
-      {
-        code: 'MODEL_NOT_REGISTERED',
-        status: input.status,
-        provider: input.request.providerId,
-        details: {
-          mediaType: 'image',
-          modelId: input.request.modelId,
-          modelKey: input.request.modelKey,
-          providerId: input.request.providerId,
-        },
-      },
-    )
-  }
-
-  return Object.assign(new Error(message), {
-    status: input.status,
-    provider: input.request.providerId,
-  })
-}
-
 export async function generateImageViaOpenAICompatTemplate(
   request: OpenAICompatImageRequest,
 ): Promise<GenerateResult> {
@@ -127,7 +95,7 @@ export async function generateImageViaOpenAICompatTemplate(
   const rawText = await response.text().catch(() => '')
   const payload = normalizeResponseJson(rawText)
   if (!response.ok) {
-    throw buildTemplateRequestError({ request, template: request.template, payload, status: response.status })
+    throw new Error(extractTemplateError(request.template, payload, response.status))
   }
 
   if (request.template.mode === 'sync') {

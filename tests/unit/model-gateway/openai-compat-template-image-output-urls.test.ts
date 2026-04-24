@@ -95,44 +95,4 @@ describe('openai-compat template image output urls', () => {
       imageUrl: 'https://cdn.test/only.png',
     })
   })
-
-  it('classifies unsupported image generation models as model configuration errors', async () => {
-    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({
-      error: {
-        message: 'not supported model for image generation (request id: req_1)',
-      },
-    }), { status: 400 })) as unknown as typeof fetch
-
-    await expect(generateImageViaOpenAICompatTemplate({
-      userId: 'user-1',
-      providerId: 'openai-compatible:test-provider',
-      modelId: 'gpt-4.1-mini',
-      modelKey: 'openai-compatible:test-provider::gpt-4.1-mini',
-      prompt: 'draw a cat',
-      profile: 'openai-compatible',
-      template: {
-        version: 1,
-        mediaType: 'image',
-        mode: 'sync',
-        create: {
-          method: 'POST',
-          path: '/images/generations',
-          contentType: 'application/json',
-          bodyTemplate: {
-            model: '{{model}}',
-            prompt: '{{prompt}}',
-          },
-        },
-        response: {
-          outputUrlPath: '$.data[0].url',
-          errorPath: '$.error.message',
-        },
-      },
-    })).rejects.toMatchObject({
-      code: 'MODEL_NOT_REGISTERED',
-      status: 400,
-      provider: 'openai-compatible:test-provider',
-      message: expect.stringContaining('gpt-4.1-mini'),
-    })
-  })
 })

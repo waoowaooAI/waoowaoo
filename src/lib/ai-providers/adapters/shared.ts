@@ -19,7 +19,6 @@ function buildAllowedKeys(
       'provider',
       'modelId',
       'modelKey',
-      'referenceImages',
       'aspectRatio',
       'resolution',
       'outputFormat',
