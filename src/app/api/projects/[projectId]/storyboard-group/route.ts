@@ -97,16 +97,24 @@ export const DELETE = apiHandler(async (
     throw new ApiError('INVALID_PARAMS')
   }
 
-  await executeProjectAgentOperationFromApi({
-    request,
-    operationId: 'delete_storyboard_group',
-    projectId,
-    userId: authResult.session.user.id,
-    input: {
-      storyboardId,
-    },
-    source: 'project-ui',
-  })
+  try {
+    await executeProjectAgentOperationFromApi({
+      request,
+      operationId: 'delete_storyboard_group',
+      projectId,
+      userId: authResult.session.user.id,
+      input: {
+        storyboardId,
+      },
+      source: 'project-ui',
+    })
+  } catch (error) {
+    // Make DELETE idempotent: deleting a missing storyboard group is a no-op.
+    if (error instanceof ApiError && error.code === 'NOT_FOUND') {
+      return NextResponse.json({ success: true, skipped: true })
+    }
+    throw error
+  }
 
   return NextResponse.json({ success: true })
 })

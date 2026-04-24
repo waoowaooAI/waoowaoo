@@ -24,19 +24,23 @@ vi.mock('node:dns/promises', () => ({
   lookup: vi.fn(),
 }))
 
-describe('outbound-image normalization', () => {
-  const fetchMock = vi.fn()
-  const resolveStorageKeyMock = vi.mocked(resolveStorageKeyFromMediaValue)
-  const dnsLookupMock = vi.mocked(lookup)
+	describe('outbound-image normalization', () => {
+	  const fetchMock = vi.fn()
+	  const resolveStorageKeyMock = vi.mocked(resolveStorageKeyFromMediaValue)
+	  const dnsLookupMock = vi.mocked(lookup)
 
-  beforeEach(() => {
-    vi.clearAllMocks()
-    vi.stubGlobal('fetch', fetchMock)
+	  beforeEach(() => {
+	    vi.clearAllMocks()
+	    vi.stubGlobal('fetch', fetchMock)
+	    delete process.env.INTERNAL_APP_URL
+	    delete process.env.INTERNAL_TASK_API_BASE_URL
+	    delete process.env.MINIO_ENDPOINT
+	    delete process.env.MINIO_BUCKET
 
-    resolveStorageKeyMock.mockImplementation(async (value: unknown) => {
-      if (value === '/m/pub-1') return 'images/from-media.png'
-      return null
-    })
+	    resolveStorageKeyMock.mockImplementation(async (value: unknown) => {
+	      if (value === '/m/pub-1') return 'images/from-media.png'
+	      return null
+	    })
 
     fetchMock.mockResolvedValue({
       ok: true,
@@ -117,6 +121,43 @@ describe('outbound-image normalization', () => {
     await expect(normalizeToBase64ForGeneration('https://example.com/a.png')).rejects.toMatchObject({
       code: 'OUTBOUND_IMAGE_UNSAFE_URL',
       stage: 'normalize_base64',
+    })
+  })
+
+	  it('allows redirects to minio endpoint hostnames', async () => {
+	    process.env.INTERNAL_APP_URL = 'http://127.0.0.1:3000'
+	    process.env.MINIO_ENDPOINT = 'http://localhost:9000'
+	    process.env.MINIO_BUCKET = 'waoowaoo'
+
+	    fetchMock
+	      .mockResolvedValueOnce({
+	        ok: false,
+	        status: 302,
+	        headers: new Headers({ location: 'http://localhost:9000/waoowaoo/images/a.png?X-Amz-Signature=1' }),
+	        arrayBuffer: async () => new ArrayBuffer(0),
+	      } as unknown as Response)
+	      .mockResolvedValueOnce({
+	        ok: true,
+	        status: 200,
+	        headers: new Headers({ 'content-type': 'image/png' }),
+	        arrayBuffer: async () => Uint8Array.from([1, 2, 3]).buffer,
+	      } as unknown as Response)
+
+	    const result = await normalizeToBase64ForGeneration('https://example.com/a.png')
+	    expect(result.startsWith('data:image/png;base64,')).toBe(true)
+	  })
+
+  it('throws enriched error when all reference images fail', async () => {
+    await expect(normalizeReferenceImagesForGeneration([
+      '/foo/bar.png',
+      'http://127.0.0.1/a.png',
+    ])).rejects.toMatchObject({
+      code: 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED',
+      stage: 'normalize_reference',
+      details: expect.objectContaining({
+        candidateCount: 2,
+        issues: expect.any(Array),
+      }),
     })
   })
 

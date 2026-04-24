@@ -487,29 +487,30 @@ export async function withTaskLifecycle(job: Job<TaskJobData>, handler: (job: Jo
       normalizedError,
     })
     const errorCauseChain = buildErrorCauseChain(error)
-    const workerFailureLog = {
-      action: 'worker.failed',
-      message: normalizedError.message,
-      errorCode: normalizedError.code,
-      retryable: normalizedError.retryable,
-      provider: normalizedError.provider || undefined,
-      durationMs: Date.now() - startedAt,
-      details: {
-        queue: job.queueName,
-        taskType: data.type,
-        targetType: data.targetType,
-        targetId: data.targetId,
-      },
-      error:
-        error instanceof Error
-          ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-            code: normalizedError.code,
-            retryable: normalizedError.retryable,
-            causeChain: errorCauseChain,
-          }
+	    const workerFailureLog = {
+	      action: 'worker.failed',
+	      message: normalizedError.message,
+	      errorCode: normalizedError.code,
+	      retryable: normalizedError.retryable,
+	      provider: normalizedError.provider || undefined,
+	      durationMs: Date.now() - startedAt,
+	      details: {
+	        queue: job.queueName,
+	        taskType: data.type,
+	        targetType: data.targetType,
+	        targetId: data.targetId,
+	        normalizedErrorDetails: normalizedError.details || null,
+	      },
+	      error:
+	        error instanceof Error
+	          ? {
+	            name: error.name,
+	            message: error.message,
+	            stack: error.stack,
+	            code: normalizedError.code,
+	            retryable: normalizedError.retryable,
+	            causeChain: errorCauseChain,
+	          }
           : {
             message: String(error),
             code: normalizedError.code,

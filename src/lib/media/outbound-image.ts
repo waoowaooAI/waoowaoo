@@ -38,18 +38,21 @@ export class OutboundImageNormalizeError extends Error {
   readonly code: OutboundImageNormalizeErrorCode
   readonly stage: OutboundImageNormalizeStage
   readonly input: string
+  readonly details?: Record<string, unknown>
 
   constructor(params: {
     code: OutboundImageNormalizeErrorCode
     stage: OutboundImageNormalizeStage
     input: string
     message: string
+    details?: Record<string, unknown>
   }) {
     super(params.message)
     this.name = 'OutboundImageNormalizeError'
     this.code = params.code
     this.stage = params.stage
     this.input = params.input
+    this.details = params.details
   }
 }
 
@@ -187,6 +190,28 @@ function isLikelyInternalHostname(hostname: string): boolean {
   return false
 }
 
+function resolveAdditionalAllowedHostnames(): ReadonlySet<string> {
+  const allowed = new Set<string>()
+
+  const minioEndpoint = (process.env.MINIO_ENDPOINT || '').trim()
+  if (minioEndpoint) {
+    try {
+      const parsed = new URL(minioEndpoint)
+      if (parsed.hostname) {
+        allowed.add(parsed.hostname.toLowerCase())
+      }
+      const minioBucket = (process.env.MINIO_BUCKET || '').trim()
+      if (minioBucket && parsed.hostname) {
+        allowed.add(`${minioBucket.toLowerCase()}.${parsed.hostname.toLowerCase()}`)
+      }
+    } catch {
+      // ignore invalid config here; other code paths will surface config errors
+    }
+  }
+
+  return allowed
+}
+
 async function assertSafeOutboundHttpUrl(input: string, stage: OutboundImageNormalizeStage): Promise<void> {
   let url: URL
   try {
@@ -212,6 +237,7 @@ async function assertSafeOutboundHttpUrl(input: string, stage: OutboundImageNorm
   const internalHost = new URL(getInternalBaseUrl()).hostname.toLowerCase()
   const hostname = url.hostname.toLowerCase()
   if (hostname === internalHost) return
+  if (resolveAdditionalAllowedHostnames().has(hostname)) return
 
   if (isLikelyInternalHostname(hostname)) {
     throw new OutboundImageNormalizeError({
@@ -639,6 +665,7 @@ export async function normalizeReferenceImagesForGeneration(
 ): Promise<string[]> {
   const seen = new Set<string>()
   const normalized: string[] = []
+  const issues: OutboundImageNormalizationIssue[] = []
   let candidateCount = 0
 
   for (let index = 0; index < inputs.length; index += 1) {
@@ -653,6 +680,7 @@ export async function normalizeReferenceImagesForGeneration(
       normalized.push(await normalizeToBase64ForGeneration(trimmed))
     } catch (error) {
       const issue = toNormalizationIssue(error, trimmed, index)
+      issues.push(issue)
       options.onIssue?.(issue)
       logger.warn({
         message: 'reference image normalize failed',
@@ -669,7 +697,16 @@ export async function normalizeReferenceImagesForGeneration(
       code: 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED',
       stage: 'normalize_reference',
       input: `candidates=${candidateCount}`,
-      message: 'all reference images failed to normalize',
+      message: issues.length > 0
+        ? `all reference images failed to normalize: ${issues
+          .slice(0, 3)
+          .map((issue) => `${issue.code}@${issue.stage}`)
+          .join(', ')}`
+        : 'all reference images failed to normalize',
+      details: {
+        candidateCount,
+        issues: issues.slice(0, 6),
+      },
     })
   }
 

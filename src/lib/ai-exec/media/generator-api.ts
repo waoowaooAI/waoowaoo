@@ -62,9 +62,12 @@ export async function generateImage(
   _ulogInfo(`[generateImage] resolved model selection: ${selection.modelKey}`)
   const imageAdapter = resolveMediaAdapter(selection)
   const imageDescriptor = imageAdapter.describeVariant('image', selection)
+  // `referenceImages` is passed separately (edit-mode), and many providers don't expose it
+  // via optionSchema. Validate the rest to avoid false "AI_OPTION_UNSUPPORTED".
+  const { referenceImages, ...generatorOptions } = options || {}
   validateAiOptions({
     schema: imageDescriptor.optionSchema,
-    options,
+    options: generatorOptions,
     context: `image:${selection.modelKey}`,
   })
   const providerConfig = await getProviderConfig(userId, selection.provider)
@@ -73,7 +76,7 @@ export async function generateImage(
     return await generateBailianImage({
       userId,
       prompt,
-      referenceImages: options?.referenceImages,
+      referenceImages,
       options: {
         ...(options || {}),
         provider: selection.provider,
@@ -86,7 +89,7 @@ export async function generateImage(
     return await generateSiliconFlowImage({
       userId,
       prompt,
-      referenceImages: options?.referenceImages,
+      referenceImages,
       options: {
         ...(options || {}),
         provider: selection.provider,
@@ -105,8 +108,7 @@ export async function generateImage(
     gatewayRoute = providerConfig.apiMode === 'openai-official' ? 'openai-compat' : 'official'
   }
 
-  // 调用生成（提取 referenceImages 单独传递，其余选项合并进 options）
-  const { referenceImages, ...generatorOptions } = options || {}
+  // 调用生成（referenceImages 单独传递，其余选项合并进 options）
   if (gatewayRoute === 'openai-compat') {
     const compatTemplate = selection.compatMediaTemplate
     if (providerKey === 'openai-compatible' && !compatTemplate) {

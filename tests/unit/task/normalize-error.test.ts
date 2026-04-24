@@ -62,4 +62,24 @@ describe('normalizeAnyError provider-specific mapping', () => {
     expect(normalized.code).toBe('VIDEO_API_FORMAT_UNSUPPORTED')
     expect(normalized.retryable).toBe(false)
   })
+
+  it('maps outbound image reference failures to INVALID_PARAMS', () => {
+    const normalized = normalizeAnyError({
+      code: 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED',
+      message: 'all reference images failed to normalize',
+      details: { candidateCount: 2 },
+    })
+    expect(normalized.code).toBe('INVALID_PARAMS')
+    expect(normalized.retryable).toBe(false)
+    expect(normalized.details).toMatchObject({ outboundImageCode: 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED' })
+  })
+
+  it('maps outbound image fetch exceptions to NETWORK_ERROR', () => {
+    const normalized = normalizeAnyError({
+      code: 'OUTBOUND_IMAGE_FETCH_EXCEPTION',
+      message: 'normalizeToBase64ForGeneration fetch exception',
+    })
+    expect(normalized.code).toBe('NETWORK_ERROR')
+    expect(normalized.retryable).toBe(true)
+  })
 })
