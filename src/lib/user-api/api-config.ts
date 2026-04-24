@@ -17,10 +17,10 @@ import {
 } from '@/lib/model-config-contract'
 import {
   getCapabilityOptionFields,
+  resolveBuiltinCapabilitiesByModelKey,
   resolveBuiltinModelContext,
   validateCapabilitySelectionsPayload,
 } from '@/lib/model-capabilities/lookup'
-import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
 import {
   findBuiltinPricingCatalogEntry,
   listBuiltinPricingCatalog,
@@ -39,6 +39,7 @@ import type {
   OpenAICompatMediaTemplateSource,
 } from '@/lib/openai-compat-media-template'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template/validator'
+import { buildApiConfigServerCatalog } from '@/lib/user-api/api-config-catalog'
 
 type ApiModeType = 'gemini-sdk' | 'openai-official'
 type GatewayRouteType = 'official' | 'openai-compat'
@@ -238,11 +239,17 @@ function composePricingDisplayKey(modelType: UnifiedModelType, provider: string,
   return `${modelType}::${provider}::${modelId}`
 }
 
+function resolveBuiltinCapabilities(modelType: UnifiedModelType, provider: string, modelId: string): ModelCapabilities | undefined {
+  const modelKey = composeModelKey(provider, modelId)
+  if (!modelKey) return undefined
+  return resolveBuiltinCapabilitiesByModelKey(modelType, modelKey)
+}
+
 function resolveVideoDurationRangeFromCapabilities(
   provider: string,
   modelId: string,
 ): { min: number; max: number } | null {
-  const capabilities = findBuiltinCapabilities('video', provider, modelId)
+  const capabilities = resolveBuiltinCapabilities('video', provider, modelId)
   const options = capabilities?.video?.durationOptions
   if (!Array.isArray(options) || options.length === 0) return null
 
@@ -525,7 +532,7 @@ function resolveProviderByIdOrKey(providers: StoredProvider[], providerId: strin
 }
 
 function withBuiltinCapabilities(model: StoredModel): StoredModel {
-  const capabilities = findBuiltinCapabilities(model.type, model.provider, model.modelId)
+  const capabilities = resolveBuiltinCapabilities(model.type, model.provider, model.modelId)
   if (!capabilities) {
     return {
       ...model,
@@ -1714,7 +1721,7 @@ export async function getUserApiConfig(userId: string) {
         provider: p.id,
         price: 0,
         // alias 回退自动从 google catalog 获取 capabilities
-        capabilities: findBuiltinCapabilities(preset.type, p.id, preset.modelId),
+        capabilities: resolveBuiltinCapabilities(preset.type, p.id, preset.modelId),
       }
       disabledPresets.push({ ...withDisplayPricing(base, pricingDisplay), enabled: false })
     }
@@ -1747,6 +1754,9 @@ export async function getUserApiConfig(userId: string) {
   return {
     models: [...pricedModels, ...disabledPresets],
     providers,
+    catalog: buildApiConfigServerCatalog({
+      resolveCapabilities: (model) => resolveBuiltinCapabilities(model.type, model.provider, model.modelId),
+    }),
     defaultModels,
     capabilityDefaults,
     workflowConcurrency,

@@ -52,10 +52,6 @@ interface DefaultModelCardsProps {
     locale: string
     updateDefaultModel: (field: string, value: string, capFields?: Array<{ field: string; options: CapabilityValue[] }>) => void
     batchUpdateDefaultModels: (fields: string[], value: string, capFields?: Array<{ field: string; options: CapabilityValue[] }>) => void
-    extractCapabilityFieldsFromModel: (
-        caps: Record<string, unknown> | undefined,
-        modelType: string,
-    ) => Array<{ field: string; options: CapabilityValue[] }>
     toCapabilityFieldLabel: (field: string) => string
     capabilityDefaults: Record<string, Record<string, CapabilityValue>>
     updateCapabilityDefault: (modelKey: string, field: string, value: CapabilityValue | null) => void
@@ -186,12 +182,9 @@ function SmartSelector({
                 }))}
                 value={normalizedKey || undefined}
                 onModelChange={(newModelKey) => {
-                    const newModel = options.find((opt) => opt.modelKey === newModelKey)
-                    const newCapFields = props.extractCapabilityFieldsFromModel(
-                        newModel?.capabilities as Record<string, unknown> | undefined,
-                        modelType,
-                    )
-                    props.updateDefaultModel(field, newModelKey, newCapFields)
+                    const newModel = options.find((option) => option.modelKey === newModelKey) ?? null
+                    const newCapabilityFields = computeCapabilityFields(newModel, modelType as keyof ModelCapabilities)
+                    props.updateDefaultModel(field, newModelKey, newCapabilityFields)
                 }}
                 capabilityFields={capabilityFields.map((d) => ({
                     ...d,
@@ -244,18 +237,18 @@ function SmartSelector({
 // ---------- main component ----------
 
 export function DefaultModelCards(allProps: DefaultModelCardsProps) {
-    const {
-        t,
-        defaultModels,
-        getEnabledModelsByType,
-        parseModelKey,
-        encodeModelKey,
-        getProviderDisplayName,
-        locale,
-        extractCapabilityFieldsFromModel,
-        workflowConcurrency,
-        handleWorkflowConcurrencyChange,
-    } = allProps
+  const {
+    t,
+    defaultModels,
+    getEnabledModelsByType,
+    parseModelKey,
+    encodeModelKey,
+    getProviderDisplayName,
+    locale,
+    batchUpdateDefaultModels,
+    workflowConcurrency,
+    handleWorkflowConcurrencyChange,
+  } = allProps
 
     // Pipeline unified override state
     const [pipelineGlobalKey, setPipelineGlobalKey] = useState('')
@@ -271,19 +264,16 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
         })
     }, [])
 
-    const handlePipelineGlobalChange = useCallback((newModelKey: string) => {
-        setPipelineGlobalKey(newModelKey)
-        setPipelineGlobalCapOverrides({})
-        if (newModelKey) {
-            const pipelineFields = ['characterModel', 'locationModel', 'storyboardModel', 'editModel']
-            const newModel = pipelineGlobalOptions.find((opt) => opt.modelKey === newModelKey)
-            const newCapFields = extractCapabilityFieldsFromModel(
-                newModel?.capabilities as Record<string, unknown> | undefined,
-                'image',
-            )
-            allProps.batchUpdateDefaultModels(pipelineFields, newModelKey, newCapFields)
-        }
-    }, [pipelineGlobalOptions, extractCapabilityFieldsFromModel, allProps])
+  const handlePipelineGlobalChange = useCallback((newModelKey: string) => {
+    setPipelineGlobalKey(newModelKey)
+    setPipelineGlobalCapOverrides({})
+    if (newModelKey) {
+      const pipelineFields = ['characterModel', 'locationModel', 'storyboardModel', 'editModel']
+      const newModel = pipelineGlobalOptions.find((option) => option.modelKey === newModelKey) ?? null
+      const newCapabilityFields = computeCapabilityFields(newModel, 'image')
+      batchUpdateDefaultModels(pipelineFields, newModelKey, newCapabilityFields)
+    }
+  }, [batchUpdateDefaultModels, pipelineGlobalOptions])
 
     const handlePipelineGlobalCapChange = useCallback((field: string, rawValue: string, sample: CapabilityValue) => {
         if (!pipelineGlobalCurrent) return

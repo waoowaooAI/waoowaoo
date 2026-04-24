@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Provider, PRESET_PROVIDERS } from './types'
+import { Provider } from './types'
 import { AppIcon } from '@/components/ui/icons'
 
 interface ProviderSectionProps {
@@ -36,8 +36,6 @@ export function ProviderSection({
     const [newProvider, setNewProvider] = useState({ name: '', baseUrl: '', apiKey: '' })
     const t = useTranslations('providerSection')
     const tc = useTranslations('common')
-
-    const isPreset = (id: string) => PRESET_PROVIDERS.some(p => p.id === id)
 
     const handleSaveEdit = (provider: Provider) => {
         onUpdateInfo?.(provider.id, editData.name, editData.baseUrl || undefined)
@@ -179,7 +177,7 @@ export function ProviderSection({
                                     <AppIcon name="checkDot" className="h-3 w-3" />
                                 </span>
                             )}
-                            {!isPreset(provider.id) && onDelete && (
+                            {onDelete && (
                                 <button
                                     onClick={() => onDelete(provider.id)}
                                     className="glass-btn-base glass-btn-tone-danger cursor-pointer rounded-lg p-1.5"

@@ -56,29 +56,6 @@ const Icons = {
 
 
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value)
-}
-
-function isCapabilityValue(value: unknown): value is CapabilityValue {
-  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-}
-
-function extractCapabilityFieldsFromModel(
-  capabilities: Record<string, unknown> | undefined,
-  modelType: string,
-): Array<{ field: string; options: CapabilityValue[] }> {
-  if (!capabilities) return []
-  const namespace = capabilities[modelType]
-  if (!isRecord(namespace)) return []
-  return Object.entries(namespace)
-    .filter(([key, value]) => key.endsWith('Options') && Array.isArray(value) && value.every(isCapabilityValue) && value.length > 0)
-    .map(([key, value]) => ({
-      field: key.slice(0, -'Options'.length),
-      options: value as CapabilityValue[],
-    }))
-}
-
 function parseBySample(input: string, sample: CapabilityValue): CapabilityValue {
   if (typeof sample === 'number') return Number(input)
   if (typeof sample === 'boolean') return input === 'true'
@@ -267,7 +244,6 @@ export function ApiConfigTabContainer() {
             locale={locale}
             updateDefaultModel={updateDefaultModel}
             batchUpdateDefaultModels={batchUpdateDefaultModels}
-            extractCapabilityFieldsFromModel={extractCapabilityFieldsFromModel}
             toCapabilityFieldLabel={toCapabilityFieldLabel}
             capabilityDefaults={capabilityDefaults}
             updateCapabilityDefault={updateCapabilityDefault}

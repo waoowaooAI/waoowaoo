@@ -21,7 +21,7 @@ describe('changed-file-test-impact-guard', () => {
 
   it('accepts provider changes when provider contract coverage is updated', () => {
     const violations = inspectChangedFiles([
-      'src/lib/model-gateway/openai-compat/image.ts',
+      'src/lib/ai-providers/adapters/openai-compatible/image.ts',
       'tests/unit/model-gateway/openai-compat-template-image-output-urls.test.ts',
     ])
     expect(violations).toEqual([])

@@ -3,8 +3,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import {
   encodeModelKey,
-  PRESET_MODELS,
-  PRESET_PROVIDERS,
   getProviderKey,
   getProviderTutorial,
   matchesModelKey,
@@ -397,9 +395,7 @@ export function useProviderCardState({
 
   const providerKey = getProviderKey(provider.id)
   const assistantEnabled = providerKey === 'openai-compatible'
-  const isPresetProvider = PRESET_PROVIDERS.some(
-    (presetProvider) => presetProvider.id === provider.id,
-  )
+  const isPresetProvider = !provider.id.includes(':')
   const showBaseUrlEdit =
     ['gemini-compatible', 'openai-compatible'].includes(providerKey) &&
     Boolean(onUpdateBaseUrl)
@@ -411,8 +407,7 @@ export function useProviderCardState({
   )
 
   const hasModels = Object.keys(groupedModels).length > 0
-  const isPresetModel = (modelKey: string) =>
-    PRESET_MODELS.some((model) => encodeModelKey(model.provider, model.modelId) === modelKey)
+  const isPresetModel = (_modelKey: string) => false
 
   const isDefaultModel = (model: CustomModel) => {
     if (model.type === 'llm' && matchesModelKey(defaultModels.analysisModel, model.provider, model.modelId)) {

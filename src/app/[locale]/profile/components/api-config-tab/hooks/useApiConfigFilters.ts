@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import type { CustomModel, Provider } from '../../api-config'
-import { PRESET_PROVIDERS, getProviderKey } from '../../api-config'
+import { getProviderKey } from '../../api-config'
 
 interface UseApiConfigFiltersParams {
   providers: Provider[]
@@ -67,9 +67,9 @@ export function useApiConfigFilters({
   }, [models])
 
   const isPresetProvider = (providerId: string) => {
-    return PRESET_PROVIDERS.some(
-      (provider) => provider.id === getProviderKey(providerId),
-    )
+    // Custom providers are always namespaced (e.g. gemini-compatible:uuid).
+    // Built-in catalog providers use plain ids without ':'.
+    return !providerId.includes(':')
   }
 
   const modelProviders = useMemo(() => {

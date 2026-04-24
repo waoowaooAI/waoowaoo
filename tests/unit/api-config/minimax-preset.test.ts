@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { PRESET_MODELS, PRESET_PROVIDERS } from '@/app/[locale]/profile/components/api-config/types'
+import { API_CONFIG_CATALOG_MODELS, API_CONFIG_CATALOG_PROVIDERS } from '@/lib/user-api/api-config-catalog'
 
 describe('api-config minimax preset', () => {
   it('uses official minimax baseUrl in preset provider', () => {
-    const minimaxProvider = PRESET_PROVIDERS.find((provider) => provider.id === 'minimax')
+    const minimaxProvider = API_CONFIG_CATALOG_PROVIDERS.find((provider) => provider.id === 'minimax')
     expect(minimaxProvider).toBeDefined()
     expect(minimaxProvider?.baseUrl).toBe('https://api.minimaxi.com/v1')
   })
 
   it('includes all required minimax official llm preset models', () => {
-    const minimaxLlmModelIds = PRESET_MODELS
+    const minimaxLlmModelIds = API_CONFIG_CATALOG_MODELS
       .filter((model) => model.provider === 'minimax' && model.type === 'llm')
       .map((model) => model.modelId)
 

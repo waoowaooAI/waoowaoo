@@ -6,7 +6,7 @@ import {
 } from '@/lib/model-config-contract'
 import { resolveGenerationOptionsForModel } from '@/lib/model-capabilities/lookup'
 
-describe('model-capabilities/lookup - image resolution defaulting', () => {
+describe('model-capabilities/lookup - image resolution strict selection', () => {
   const modelType: UnifiedModelType = 'image'
   const modelKey = 'google::test-image-model'
 
@@ -16,7 +16,7 @@ describe('model-capabilities/lookup - image resolution defaulting', () => {
     },
   }
 
-  it('auto-fills resolution with first option when missing and required', () => {
+  it('does not implicitly require resolution capability for image models', () => {
     const capabilityDefaults: CapabilitySelections = {}
 
     const result = resolveGenerationOptionsForModel({
@@ -27,10 +27,8 @@ describe('model-capabilities/lookup - image resolution defaulting', () => {
       requireAllFields: true,
     })
 
+    expect(result.options).toEqual({})
     expect(result.issues).toEqual([])
-    expect(result.options).toEqual({
-      resolution: '0.5K',
-    })
   })
 
   it('does not override user-provided resolution', () => {
@@ -54,4 +52,3 @@ describe('model-capabilities/lookup - image resolution defaulting', () => {
     })
   })
 })
-

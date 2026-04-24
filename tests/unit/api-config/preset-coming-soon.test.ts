@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
-  PRESET_MODELS,
   encodeModelKey,
   isPresetComingSoonModel,
   isPresetComingSoonModelKey,
 } from '@/app/[locale]/profile/components/api-config/types'
+import { API_CONFIG_CATALOG_MODELS } from '@/lib/user-api/api-config-catalog'
 
 describe('api-config preset coming soon', () => {
   it('registers Nano Banana 2 under Google AI Studio presets', () => {
-    const model = PRESET_MODELS.find(
+    const model = API_CONFIG_CATALOG_MODELS.find(
       (entry) => entry.provider === 'google' && entry.modelId === 'gemini-3.1-flash-image-preview',
     )
     expect(model).toBeDefined()
@@ -16,7 +16,7 @@ describe('api-config preset coming soon', () => {
   })
 
   it('registers Seedance 2.0 and Seedance 2.0 Fast as preset video models', () => {
-    const modelIds = PRESET_MODELS
+    const modelIds = API_CONFIG_CATALOG_MODELS
       .filter((entry) => entry.provider === 'ark' && entry.type === 'video')
       .map((entry) => entry.modelId)
 
@@ -45,7 +45,7 @@ describe('api-config preset coming soon', () => {
   })
 
   it('registers Bailian Wan i2v preset models', () => {
-    const modelIds = PRESET_MODELS
+    const modelIds = API_CONFIG_CATALOG_MODELS
       .filter((entry) => entry.provider === 'bailian' && entry.type === 'video')
       .map((entry) => entry.modelId)
 

@@ -68,6 +68,45 @@ describe('api specific - user api-config persistence', () => {
     expect(model?.customPricing?.llm?.outputPerMillion).toBe(5.5)
   })
 
+  it('returns server-driven catalog with provider and model capabilities on GET', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'GET',
+    })
+
+    const res = await route.GET(req, routeContext)
+    expect(res.status).toBe(200)
+    const json = await res.json() as {
+      catalog?: {
+        providers?: Array<{ id?: string; name?: string; baseUrl?: string }>
+        models?: Array<{
+          provider?: string
+          modelId?: string
+          type?: string
+          name?: string
+          capabilities?: { image?: { resolutionOptions?: string[] } }
+        }>
+      }
+    }
+
+    expect(json.catalog?.providers?.some((provider) => (
+      provider.id === 'openrouter'
+      && provider.name === 'OpenRouter'
+      && provider.baseUrl === 'https://openrouter.ai/api/v1'
+    ))).toBe(true)
+    expect(json.catalog?.models?.some((model) => (
+      model.provider === 'fal'
+      && model.modelId === 'banana-2'
+      && model.type === 'image'
+      && model.name === 'Banana 2'
+      && model.capabilities?.image?.resolutionOptions?.includes('4K') === true
+    ))).toBe(true)
+  })
+
   it('accepts bailian lipsync models and persists them', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')

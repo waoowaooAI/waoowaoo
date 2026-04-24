@@ -2,10 +2,16 @@
 
 > 2026-04-23 阶段性状态（本次停留点）
 > - 已完成：`src/lib/providers/** -> src/lib/ai-providers/**` 迁移；删除 `src/lib/generator-api.ts`；新增 `src/lib/ai-exec/**` 与 `src/lib/ai-registry/**` 骨架；media 入口开始通过 adapter descriptor 做 execution mode / optionSchema 收敛；worker 并发 gate 与 LLM/Vision retry delay 开始复用 `src/lib/ai-exec/governance.ts`。
-> - 未完成：`src/lib/ai-providers/**` 仍是迁移中间态，还没完全整理成 3.2 的最终目录；`models/*` 还不是 capability / optionSchema / inputContracts 的唯一真相源；`src/lib/llm/chat-stream.ts` 等实现仍部分保留在旧 runtime 目录；并发 gate 仍是进程内实现，尚未升级为跨进程 limiter。
-> - 因此当前仓库状态应视为“Phase 1 完成 + Phase 2/3 起步”，不是全文档目标结构已完全落地。
+> - 2026-04-24 进展：API Config 预设模型/厂商清单已从前端 `types.ts` 提升到 `src/lib/user-api/api-config-catalog.ts`；`GET /api/user/api-config` 返回 `catalog`；前端 `useProviders` 优先使用服务端 catalog，仅保留同源 re-export 作为空态/兼容入口。
+> - 2026-04-24 代码核对补记：`src/lib/llm/chat-completion.ts` 与 `src/lib/llm/vision.ts` 已改为 re-export 到 `src/lib/ai-exec/llm/*`；`src/lib/llm/chat-stream.ts` 后续已迁为 re-export；`src/lib/ai-runtime/client.ts` 后续已统一到 `ai-exec/engine`。
+> - 2026-04-24 迁移执行补记：LLM sync 与 Vision provider 分支已从 `src/lib/ai-exec/llm/chat-completion.ts` / `src/lib/ai-exec/llm/vision.ts` 下沉到 `src/lib/ai-providers/adapters/llm/execution.ts`；stream 实现已从 `src/lib/ai-exec/llm/chat-stream.ts` 下沉到 `src/lib/ai-providers/adapters/llm/stream-execution.ts`，旧 `src/lib/llm/chat-stream.ts` 与 `ai-exec` stream facade 均仅保留 re-export；`src/lib/ai-runtime/client.ts` 已改为调用 `src/lib/ai-exec/engine`；media 分流逻辑已从 `src/lib/ai-exec/media/generator-api.ts` 抽到 `src/lib/ai-providers/adapters/media/execution.ts`。
+> - 2026-04-24 物理迁移补记：`src/lib/model-gateway/openai-compat/**` 真实实现已迁入 `src/lib/ai-providers/adapters/openai-compatible/**`，旧 compat 目录已删除；`src/lib/model-gateway/llm.ts` 已删除，相关测试迁到 `ai-runtime -> ai-exec` 入口；`src/lib/model-gateway/router.ts` / `types.ts` 真实定义已迁到 `src/lib/ai-registry/gateway-route.ts` 与 OpenAI-compatible adapter types，旧 `src/lib/model-gateway/**` 目录已删除；`src/lib/generators/**` 真实实现已迁入 `src/lib/ai-providers/adapters/media/generators/**`，旧路径保留 re-export。
+> - 2026-04-24 Phase 2 追加：media option schema 已支持 required / oneOf / conflict / field validator / object validator；关键 image/video provider 规则已前置到 adapter descriptor；模型规格常量已按 provider 拆到 `src/lib/ai-providers/adapters/models/{ark,fal,minimax,openai-compatible,vidu}.ts`，作为 capability/inputContracts 合并前的 adapter models 真相源。
+> - 2026-04-24 Phase 1 补齐：`src/lib/ai-exec/engine.ts` 已不再只是 re-export facade；media 的 resolve selection → adapter descriptor → option validation → provider execution 流程已上收到 engine；LLM / LLM stream / Vision 也已提供 request-object engine 入口并由旧函数签名 wrapper 转发；`src/lib/ai-exec/media/generator-api.ts` 与 `src/lib/ai-exec/llm/*` 旧入口降级为兼容 re-export。
+> - 未完成：`src/lib/ai-providers/**` 仍是迁移中间态，还没完全整理成 3.2 的最终目录；provider `models/*` 还不是 capability / inputContracts 的唯一真相源；旧 AI 执行入口已物理删除并由 guard 禁止恢复；并发 gate 仍是进程内实现，尚未升级为跨进程 limiter。
+> - 因此当前仓库状态应视为“Phase 1 入口/engine 层已补齐 + Phase 2 optionSchema 收敛完成/能力合同待统一 + Phase 5 旧入口清理完成 + Phase 3/4 继续推进”，不是全文档目标结构已完全落地。
 
-> 本文是设计文档，用于指导后续分阶段迁移与清理旧逻辑。  
+> 本文是设计文档，用于指导后续分阶段迁移与清理旧逻辑。
 > 目标：解决“模型定义与调用散乱、能力(特性)定义不闭环、同一模型多平台能力差异难表达、执行治理多层叠加、前端设置硬编码与后端漂移”等问题。
 >
 > 关键约束（来自仓库 AGENTS 规范与既有架构）：
@@ -46,7 +52,7 @@
 - 项目/用户默认模型 + capability defaults/overrides + 并发配置：`src/lib/config-service.ts`
 - 媒体生成入口：`src/lib/ai-exec/media/generator-api.ts`
 - 生成器实现：`src/lib/generators/*`
-- OpenAI-compatible gateway：`src/lib/model-gateway/openai-compat/*`
+- OpenAI-compatible adapter：`src/lib/ai-providers/adapters/openai-compatible/*`
 - LLM：`src/lib/llm/chat-completion.ts`、`src/lib/llm/vision.ts`
 - 任务队列与 worker：`src/lib/task/*`、`src/lib/workers/*`
 - 异步轮询：`src/lib/async-poll.ts`（externalId 标准化）
@@ -354,7 +360,7 @@ export type ModelVariantDescriptor = {
 
 每个平台一个 adapter，内部**先薄封装复用现有逻辑**：
 
-- `openai-compatible` adapter：复用 `src/lib/model-gateway/openai-compat/*`
+- `openai-compatible` adapter：使用 `src/lib/ai-providers/adapters/openai-compatible/*`
 - `ark` adapter：复用 `src/lib/generators/ark.ts` / `src/lib/ai-providers/llm/ark.ts`
 - `google` adapter：复用 `src/lib/generators/image/google.ts` / `src/lib/generators/video/google.ts`
 - `bailian/siliconflow` adapter：复用 `src/lib/ai-providers/*`
@@ -412,7 +418,7 @@ export type ProviderAdapter = {
 - **长任务（image/video/audio/lipsync）**：以 BullMQ 为主治理（attempts/backoff/并发）
 - adapter/generator 内部避免再做多层重试（最多一次幂等网络抖动重试且可观测）
 - 统一错误：归一化为 `AiRuntimeError`（可复用 `src/lib/ai-runtime/errors.ts` 思路）
- 
+
 当前 `src/lib/generators/base.ts` 与 `src/lib/llm/*` 仍在做重试循环；迁移阶段应把重试“上收”到单一层，并用测试锁住 attempts/backoff 的总上限。
 
 ### 6.2 并发：从进程内 gate 升级为跨进程 gate
@@ -440,7 +446,7 @@ export type ProviderAdapter = {
 
 - 来自任务 payload、交互输入
 - 必须通过 descriptor.optionSchema 严格白名单 + 值域校验；未知字段直接报错
- 
+
 当前能力校验主要通过 `src/lib/model-config-contract.ts` + `src/lib/model-capabilities/*` 实现，且存在 provider alias 与 image resolution autofill。后续阶段应把 “alias/默认值”显式化为数据层规则（可审计、可测试），避免散落在 lookup/runtime 分支中。
 
 ### 7.2 解决“同模型多平台能力不一致”
@@ -519,14 +525,16 @@ UI 展示策略：
 
 产物：
 
-- [ ] `src/lib/ai-registry/types.ts`：定义 ModelFamily/Variant/Descriptor/ExecutionMode
-- [ ] `src/lib/ai-registry/registry.ts`：注册与解析 adapter
-- [ ] `src/lib/ai-exec/engine.ts`：统一入口（内部先调用旧逻辑）
+- [x] `src/lib/ai-registry/types.ts`：已定义 `AiModality` / `AiExecutionMode` / `AiModelVariantDescriptor` / `AiMediaAdapter` 等骨架类型
+- [x] `src/lib/ai-registry/registry.ts`：已提供按 providerKey 注册与按 providerId 解析 adapter 的基础能力
+- [x] `src/lib/ai-exec/engine.ts`：已提供 media / LLM / LLM stream / Vision 的 request-object execution engine；旧函数签名保留为 wrapper，便于渐进迁移调用点
 
 迁移（保持行为不变）：
 
 - [x] 删除 `src/lib/generator-api.ts`，由 `src/lib/ai-exec/engine.ts` / `src/lib/ai-exec/media/generator-api.ts` 直接承接 media 入口
-- [ ] `src/lib/llm/chat-completion.ts` / `src/lib/llm/vision.ts`：解析 selection 后 → `AiExecutionEngine.executeLlm()/executeVision()`
+- [x] `src/lib/llm/chat-completion.ts` / `src/lib/llm/vision.ts`：旧路径已 re-export 到 `src/lib/ai-exec/llm/*`；LLM sync 与 Vision provider 分支已下沉到 `src/lib/ai-providers/adapters/llm/execution.ts`
+- [x] `src/lib/llm/chat-stream.ts`：已迁移到 `src/lib/ai-providers/adapters/llm/stream-execution.ts`；旧路径与 `src/lib/ai-exec/llm/chat-stream.ts` 均仅保留 re-export
+- [x] `src/lib/ai-runtime/client.ts`：已从 `model-gateway/llm` 改为调用 `ai-exec/engine`，避免形成第二套 runtime 外观
 
 测试：
 
@@ -536,52 +544,98 @@ UI 展示策略：
 
 产物：
 
-- [ ] 各 provider 的 `models/*` 补齐 capability/options/inputContracts 声明，形成单一真相源
-- [ ] adapter.describeVariant 从 `models/*` 输出 `ModelVariantDescriptor`（capabilities + optionSchema + inputContracts）
+- [x] 各 provider 的 media option/model 规格已按 provider 拆入 `src/lib/ai-providers/adapters/models/{ark,fal,minimax,openai-compatible,vidu}.ts`，作为 optionSchema 单一真相源
+- [~] adapter.describeVariant 从 models 输出 `ModelVariantDescriptor`：media descriptor 已读取 provider models 规格生成 optionSchema；capabilities 仍来自 `model-capabilities` catalog，inputContracts 仍待后续统一
 - [x] 已建立 `src/lib/ai-providers/adapters/*` 的 descriptor 起点，media 入口会读取 `execution.mode` 与 `optionSchema`
-- [x] 已建立 `src/lib/ai-exec/normalize.ts`，未知 options 会在 media 入口直接失败
+- [x] 已建立 `src/lib/ai-exec/normalize.ts`，未知 options / required / oneOf / conflict / field validator / object validator 会在 media 入口直接失败
+- [x] media 实际执行分流已从 `src/lib/ai-exec/media/generator-api.ts` 抽到 `src/lib/ai-providers/adapters/media/execution.ts`；selection、descriptor 校验与执行转发已上收到 `src/lib/ai-exec/engine.ts`，media facade 仅保留兼容 re-export
 
 迁移：
 
-- [ ] 将 `openai-compat`、`ark/minimax/vidu/fal` 的 option keys 与值校验迁移到各自 provider 的 catalog（或 model definition）
-- [ ] engine 统一 `normalizeAndValidate(requestOptions, optionSchema)`；未知字段直接报错
+- [~] 将 `openai-compat`、`ark/minimax/vidu/fal` 的 option keys 与值校验迁移到各自 provider 的 catalog（或 model definition）：已把 `openai-compatible` image/video、`ark` image/video、`fal` image/video、`bailian` video、`minimax` video、`vidu` video 的关键字段和值/组合校验收敛到 adapter descriptor，并把规格常量按 provider 拆到 adapter models；capabilities/inputContracts 合并仍待后续推进
+- [x] engine 统一 `normalizeAndValidate(requestOptions, optionSchema)`：media engine 已统一读取 descriptor optionSchema 并显式失败；LLM/Vision 已新增 descriptor optionSchema 校验（unknown key/值域校验），由 runner 在 resolved selection 后统一验证
 
 清理（逐步）：
 
-- [ ] 下线 `Base*Generator` 内部重试（避免与 BullMQ/worker 重试叠加）
-- [ ] 精简 gateway/generator 内部重复校验（保留最底层安全校验）
-- [ ] 移除/替换 `image resolution autofill`：将默认值改为显式配置（capabilityDefaults / variant overlay defaultSelection），或在严格模式下报错
+- [x] 下线 `Base*Generator` 内部重试（避免与 BullMQ/worker 重试叠加）：`BaseImageGenerator` / `BaseVideoGenerator` 已改为单次执行失败返回，由 worker/BullMQ 负责重试治理，并补 `tests/unit/ai-providers/media-base-generator.test.ts`
+- [~] 精简 gateway/generator 内部重复校验（保留最底层安全校验）：入口层已由 descriptor optionSchema 前置失败，底层 provider 仍保留安全校验
+- [x] 移除/替换 `image resolution autofill`：image capability 不再强制要求 resolution；前端切换默认模型时不再自动写入 capabilityDefaults（避免隐式“选第一个”），resolution 作为 request option 仍可显式传入并由 optionSchema 校验
 
 ### Phase 3：并发治理升级（跨进程 gate）
 
-- [ ] Redis semaphore/BullMQ limiter 替换 `src/lib/workers/user-concurrency-gate.ts` 的内存 gate
+- [~] Redis semaphore/BullMQ limiter 替换 `src/lib/workers/user-concurrency-gate.ts` 的内存 gate：已落地可显式开启的 Redis gate 模式（`AI_CONCURRENCY_GATE_MODE=redis`），默认仍保持 memory gate；后续需结合基础设施与 system 测试验证
 - [x] `src/lib/workers/user-concurrency-gate.ts` 已改为复用 `src/lib/ai-exec/governance.ts`
-- [ ] 系统测试覆盖“多任务并发 + 限流”边界
+- [~] 系统测试覆盖“多任务并发 + 限流”边界：已补 unit 边界覆盖同用户同 scope 串行、不同用户/scope 独立运行、非法 limit 显式失败；跨进程 limiter 落地后仍需补 system/integration 覆盖
 
 ### Phase 4：Server-driven Catalog（前端设置重构）
 
 产物：
 
-- [ ] `/api/user/api-config` GET 返回 `catalog + userConfig`
-- [ ] 前端移除 `PRESET_MODELS/PRESET_PROVIDERS`（或仅保留极少 fallback skeleton）
+- [x] `/api/user/api-config` GET 返回 `catalog + userConfig`
+- [x] 前端移除巨大 `PRESET_MODELS/PRESET_PROVIDERS` 内联列表，改为同源 catalog re-export；`useProviders` 优先使用 server catalog
 
 迁移：
 
-- [ ] `src/app/[locale]/profile/components/api-config/hooks.ts` 拆分为 query/editor/selectors
-- [ ] ProviderCard/DefaultModelSection 基于 catalog 渲染（来源/label 统一）
+- [x] `src/app/[locale]/profile/components/api-config/hooks.ts` 拆分为 query/editor/selectors：新增 `query.ts`（拉取 + reload）与 `editor.ts`（保存），纯派生已下沉 `selectors.ts`；并移除客户端内联 preset 列表（不再把 server catalog 常量打进 client bundle）
+- [~] ProviderCard/DefaultModelSection 基于 catalog 渲染（当前主列表已由 catalog 驱动；来源/label 统一仍待 descriptor 化）
 
 测试：
 
-- [ ] 更新 `tests/unit/api-config/*`（provider alias、label、排序、pricing display、capability defaults）
+- [x] 补 `GET /api/user/api-config` 返回 catalog 的契约覆盖，并复跑 api-config preset 相关测试
+- [~] 继续补 provider alias、label、排序、pricing display、capability defaults 的细粒度单测：已新增 selector 单测覆盖 server catalog model 排序/启用状态、provider alias pricing、默认模型清理；capability defaults 仍待补更细覆盖
 
 ### Phase 5：清理旧入口（完成收敛）
 
+当前清理状态：
+
+- [x] `scripts/guards/no-legacy-ai-entry-imports.mjs` 禁止业务/测试新增 `@/lib/generators/**`、`@/lib/model-gateway/**`、`@/lib/llm/{chat-completion,chat-stream,vision}` 与 `@/lib/ai-exec` 兼容入口 import；现有相关测试已改为新 adapter/engine 路径。
+- [x] `src/lib/generators/**`、`src/lib/llm/{chat-completion,chat-stream,vision}.ts`、`src/lib/ai-exec/{media/generator-api,llm/chat-completion,llm/chat-stream,llm/vision}.ts` 兼容入口已物理删除。
+
+原则：旧执行入口已经物理删除，新业务代码只能依赖 `src/lib/ai-exec/**` 与必要的 `src/lib/ai-registry/**`。后续只保留非执行型公共纯函数目录（如 `src/lib/llm/*helpers`），禁止恢复旧 facade。
+
+目标依赖方向：
+
+```txt
+业务 / worker / route
+        ↓
+src/lib/ai-exec
+        ↓
+src/lib/ai-registry
+        ↓
+src/lib/ai-providers/adapters/<providerKey>
+        ↓
+具体 SDK / HTTP / gateway 细节
+```
+
+目录迁移策略：
+
+- `src/lib/llm/{chat-completion,chat-stream,vision}.ts`：已删除；公共纯函数暂保留在 `src/lib/llm/**` 支撑 runtime-shared / stream helpers，执行入口统一走 `src/lib/ai-exec/engine`。
+- `src/lib/generators/**`：已删除；真实实现位于 `src/lib/ai-providers/adapters/media/generators/**`，测试与业务均应走 adapter/engine 路径。
+- `src/lib/model-gateway/**`：已删除；OpenAI-compatible 实现位于 `src/lib/ai-providers/adapters/openai-compatible/**`，路由类型位于 `src/lib/ai-registry/gateway-route.ts`。
+- `src/lib/ai-runtime/**`：若保留，只作为业务 step runtime，内部必须调用 `src/lib/ai-exec/engine`；不得再形成第二入口。
+- `src/lib/ai-exec/media/generator-api.ts`：已删除；selection、descriptor 校验与执行转发归属 `src/lib/ai-exec/engine.ts`。
+
 候选清理项（按阶段删，不一次性删光）：
 
-- `src/lib/generators/factory.ts` 的 switch/case（由 registry 替代）
-- `src/lib/ai-exec/media/generator-api.ts` 内 providerKey 分支（由 engine + adapter 替代）
+- 已完成：`src/lib/generators/factory.ts` 所在旧目录已删除；真实 factory 位于 `src/lib/ai-providers/adapters/media/generators/factory.ts`，后续再由 registry/adapter 替代内部 switch/case。
+- 已完成：`src/lib/ai-exec/media/generator-api.ts` 已删除；media providerKey 分支位于 adapter execution，入口编排归属 engine。
 - `src/app/[locale]/profile/components/api-config/types.ts` 的巨大 preset 列表（由 catalog 替代）
-- `src/lib/ai-exec/media/generator-api.ts` 的 `gemini-compatible` DEPRECATED runtime 分支（通过数据迁移或 config 标准化清理）
+- 后续：清理 adapter execution 中仍保留的 `gemini-compatible` DEPRECATED runtime 语义（通过数据迁移或 config 标准化清理）。
+
+推荐落地顺序：
+
+1) 先给 `AiProviderAdapter` 增加统一执行接口（`executeLlm` / `executeVision` / `executeImage` / `executeVideo` / `executeAudio`，可按 provider 支持度逐步实现）。
+2) 已完成：LLM sync / stream / vision 旧执行入口已删除或下沉，engine 提供 request-object 入口。
+3) 已完成：media facade 已删除，入口编排在 engine，provider 分支在 adapter execution。
+4) 后续：把 adapter execution 内部 switch/case 继续替换为 provider adapter execute 接口。
+5) 最后合并模型真相源：由 provider `models/*` 生成 API Config catalog / capabilities / pricing display 所需数据，避免 catalog 与 runtime descriptor 双写。
+
+当前物理迁移状态：
+
+- [x] `src/lib/model-gateway/openai-compat/**` 已迁入 `src/lib/ai-providers/adapters/openai-compatible/**`；旧 compat 目录已删除。
+- [x] `src/lib/generators/**` 已迁入 `src/lib/ai-providers/adapters/media/generators/**`；旧目录已删除。
+- [x] `src/lib/model-gateway/llm.ts` 已删除；旧 `model-gateway` LLM wrapper 测试已迁到 `ai-runtime -> ai-exec` 入口。
+- [x] `src/lib/model-gateway/router.ts` / `types.ts` 已删除；真实定义迁到 `src/lib/ai-registry/gateway-route.ts` 与 `src/lib/ai-providers/adapters/openai-compatible/types.ts`。
 
 ---
 
@@ -608,9 +662,9 @@ Phase 1/2 完成后再接入 `gpt-image-2`：
 
 ## 12. 附：新增平台/新视频模型的“实现配方”（开发 checklist）
 
-1) 定义 providerKey 与 provider config 字段（严格校验缺失即报错）  
-2) 实现 `ProviderAdapter.describeVariant`（能力声明与 schema）  
-3) 实现 `ProviderAdapter.execute`（只做翻译与调用，不做复杂回退/多层重试）  
-4) 若为 async：定义 externalId 格式，并在 `async-poll` 增加状态映射  
-5) 保持 route 薄：鉴权/校验/创建 task/enqueue/响应；worker 执行业务与落库  
-6) 补测试：contract + regression（覆盖新特性字段、互斥字段、范围校验、失败场景）  
+1) 定义 providerKey 与 provider config 字段（严格校验缺失即报错）
+2) 实现 `ProviderAdapter.describeVariant`（能力声明与 schema）
+3) 实现 `ProviderAdapter.execute`（只做翻译与调用，不做复杂回退/多层重试）
+4) 若为 async：定义 externalId 格式，并在 `async-poll` 增加状态映射
+5) 保持 route 薄：鉴权/校验/创建 task/enqueue/响应；worker 执行业务与落库
+6) 补测试：contract + regression（覆盖新特性字段、互斥字段、范围校验、失败场景）
