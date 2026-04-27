@@ -187,6 +187,34 @@ function isLikelyInternalHostname(hostname: string): boolean {
   return false
 }
 
+function isLoopbackHostname(hostname: string): boolean {
+  const lower = hostname.toLowerCase()
+  return lower === 'localhost' || lower === '127.0.0.1' || lower === '::1'
+}
+
+function readHostnameFromUrl(value: string): string | null {
+  const raw = typeof value === 'string' ? value.trim() : ''
+  if (!raw) return null
+  try {
+    return new URL(raw).hostname.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
+function getAllowedInternalHostnames(): Set<string> {
+  const candidates: string[] = [
+    getInternalBaseUrl(),
+    process.env.INTERNAL_APP_URL || '',
+    process.env.INTERNAL_TASK_API_BASE_URL || '',
+    process.env.NEXTAUTH_URL || '',
+  ]
+  const hostnames = candidates
+    .map(readHostnameFromUrl)
+    .filter((item): item is string => Boolean(item))
+  return new Set(hostnames)
+}
+
 async function assertSafeOutboundHttpUrl(input: string, stage: OutboundImageNormalizeStage): Promise<void> {
   let url: URL
   try {
@@ -209,9 +237,10 @@ async function assertSafeOutboundHttpUrl(input: string, stage: OutboundImageNorm
     })
   }
 
-  const internalHost = new URL(getInternalBaseUrl()).hostname.toLowerCase()
   const hostname = url.hostname.toLowerCase()
-  if (hostname === internalHost) return
+  const allowedInternalHosts = getAllowedInternalHostnames()
+  if (allowedInternalHosts.has(hostname)) return
+  if (isLoopbackHostname(hostname) && [...allowedInternalHosts].some(isLoopbackHostname)) return
 
   if (isLikelyInternalHostname(hostname)) {
     throw new OutboundImageNormalizeError({
@@ -674,6 +703,37 @@ export async function normalizeReferenceImagesForGeneration(
   }
 
   return normalized
+}
+
+/**
+ * 可选参考图归一化（fail-open）：
+ * - 仅当“候选非空但全部归一化失败”时（OUTBOUND_IMAGE_REFERENCE_ALL_FAILED）返回 [] 并告警
+ * - 其他异常照抛（保持显式失败）
+ */
+export async function normalizeOptionalReferenceImagesForGeneration(
+  inputs: string[],
+  options: {
+    onIssue?: (issue: OutboundImageNormalizationIssue) => void
+    context?: Record<string, unknown>
+  } = {},
+): Promise<string[]> {
+  try {
+    return await normalizeReferenceImagesForGeneration(inputs, options)
+  } catch (error) {
+    if (error instanceof OutboundImageNormalizeError && error.code === 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED') {
+      logger.warn({
+        message: 'optional reference images all failed to normalize (fail-open)',
+        details: {
+          code: error.code,
+          stage: error.stage,
+          input: error.input,
+          context: options.context || null,
+        },
+      })
+      return []
+    }
+    throw error
+  }
 }
 
 export function sanitizeImageInputsForTaskPayload(inputs: unknown[]): {

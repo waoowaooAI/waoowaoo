@@ -14,7 +14,7 @@ import {
   withLabelBar,
 } from '../utils'
 import {
-  normalizeReferenceImagesForGeneration,
+  normalizeOptionalReferenceImagesForGeneration,
   normalizeToBase64ForGeneration,
 } from '@/lib/media/outbound-image'
 import {
@@ -94,7 +94,9 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
         }
       }
     }
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: { taskType: String(job.data.type), scope: 'image-task-handlers-core.extra' },
+    })
     const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
     const currentDescription = readIndexedDescription({
       descriptions: appearance.descriptions,
@@ -202,7 +204,9 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
         }
       }
     }
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: { taskType: String(job.data.type), scope: 'image-task-handlers-core.extra' },
+    })
     const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
 
     const isProp = type === 'prop'
@@ -333,7 +337,9 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
       }
     }
 
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: { taskType: String(job.data.type), scope: 'image-task-handlers-core.extra' },
+    })
     const uniqueReferences = Array.from(new Set([requiredReference, ...normalizedExtras]))
     const prompt = `请根据以下指令修改分镜图片，保持镜头语言和主体一致：\n${modifyPrompt}`
     const source = await resolveImageSourceFromGeneration(job, {

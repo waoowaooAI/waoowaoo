@@ -50,7 +50,7 @@ const sharedMock = vi.hoisted(() => ({
 }))
 
 const outboundMock = vi.hoisted(() => ({
-  normalizeReferenceImagesForGeneration: vi.fn(async () => ['normalized-ref-1']),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async () => ['normalized-ref-1']),
 }))
 
 const promptMock = vi.hoisted(() => ({

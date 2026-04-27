@@ -16,6 +16,7 @@ const utilsMock = vi.hoisted(() => ({
 
 const outboundImageMock = vi.hoisted(() => ({
   normalizeReferenceImagesForGeneration: vi.fn(async (input?: string[]) => input?.map((item) => item.trim()) || []),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async (input?: string[]) => input?.map((item) => item.trim()) || []),
   normalizeToBase64ForGeneration: vi.fn(async () => 'base64-reference'),
 }))
 

@@ -1,9 +1,12 @@
 import 'dotenv/config'
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
+import { installYunwuFetchTraceIfEnabled } from '@/lib/http/fetch-trace'
 import { createImageWorker } from './image.worker'
 import { createVideoWorker } from './video.worker'
 import { createVoiceWorker } from './voice.worker'
 import { createTextWorker } from './text.worker'
+
+installYunwuFetchTraceIfEnabled()
 
 const workers = [createImageWorker(), createVideoWorker(), createVoiceWorker(), createTextWorker()]
 

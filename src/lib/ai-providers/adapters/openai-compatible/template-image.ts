@@ -12,6 +12,36 @@ import { resolveOpenAICompatClientConfig } from './common'
 
 const OPENAI_COMPAT_PROVIDER_PREFIX = 'openai-compatible:'
 const PROVIDER_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const MAX_ERROR_BODY_PREVIEW_CHARS = 1200
+const SENSITIVE_HEADER_KEYS = new Set([
+  'authorization',
+  'proxy-authorization',
+  'x-api-key',
+  'api-key',
+  'x-auth-token',
+  'x-access-token',
+  'cookie',
+  'set-cookie',
+])
+
+function truncate(value: string, maxChars: number): string {
+  if (value.length <= maxChars) return value
+  return `${value.slice(0, maxChars)}…(truncated)`
+}
+
+function sanitizeHeaders(input: Record<string, string> | undefined): Record<string, string> | null {
+  if (!input) return null
+  const out: Record<string, string> = {}
+  for (const [key, rawValue] of Object.entries(input)) {
+    const lower = key.toLowerCase()
+    if (SENSITIVE_HEADER_KEYS.has(lower)) {
+      out[lower] = '[REDACTED]'
+      continue
+    }
+    out[lower] = String(rawValue)
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
 
 function encodeProviderToken(providerId: string): string {
   const value = providerId.trim()
@@ -91,11 +121,34 @@ export async function generateImageViaOpenAICompatTemplate(
     method: createRequest.method,
     headers: createRequest.headers,
     ...(createRequest.body ? { body: createRequest.body } : {}),
+  }).catch((error: unknown) => {
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_REQUEST_FAILED',
+        `providerId=${request.providerId}`,
+        `endpointUrl=${createRequest.endpointUrl}`,
+        `method=${createRequest.method}`,
+        `cause=${error instanceof Error ? error.message : String(error)}`,
+      ].join(' '),
+      { cause: error },
+    )
   })
   const rawText = await response.text().catch(() => '')
   const payload = normalizeResponseJson(rawText)
   if (!response.ok) {
-    throw new Error(extractTemplateError(request.template, payload, response.status))
+    const templateError = extractTemplateError(request.template, payload, response.status)
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_HTTP_ERROR',
+        `providerId=${request.providerId}`,
+        `status=${response.status}`,
+        `endpointUrl=${createRequest.endpointUrl}`,
+        `method=${createRequest.method}`,
+        `headers=${JSON.stringify(sanitizeHeaders(createRequest.headers) || {})}`,
+        `bodyPreview=${JSON.stringify(truncate(rawText, MAX_ERROR_BODY_PREVIEW_CHARS))}`,
+        `templateError=${truncate(templateError, 400)}`,
+      ].join(' '),
+    )
   }
 
   if (request.template.mode === 'sync') {

@@ -55,7 +55,7 @@ const sharedMock = vi.hoisted(() => ({
 }))
 
 const outboundMock = vi.hoisted(() => ({
-  normalizeReferenceImagesForGeneration: vi.fn(async (refs: string[]) => refs.map((item) => `normalized:${item}`)),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async (refs: string[]) => refs.map((item) => `normalized:${item}`)),
 }))
 
 const promptMock = vi.hoisted(() => ({
@@ -204,9 +204,14 @@ describe('worker panel-variant-task-handler behavior', () => {
 
     await handlePanelVariantTask(buildJob(payload))
 
-    expect(outboundMock.normalizeReferenceImagesForGeneration).toHaveBeenCalledWith([
-      'https://signed.example/cos/panel-source.png',
-    ])
+    expect(outboundMock.normalizeOptionalReferenceImagesForGeneration).toHaveBeenCalledWith(
+      ['https://signed.example/cos/panel-source.png'],
+      expect.objectContaining({
+        context: expect.objectContaining({
+          scope: 'panel-variant.refs',
+        }),
+      }),
+    )
     expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
       variables: expect.objectContaining({
         character_assets: '未使用角色参考图',

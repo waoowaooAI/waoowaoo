@@ -17,9 +17,9 @@ describe('image reference normalization guard', () => {
 
   it('passes handlers that normalize reference images before generation', () => {
     const content = `
-      import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
+      import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
       async function run() {
-        const normalizedRefs = await normalizeReferenceImagesForGeneration(refs)
+        const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs)
         return await resolveImageSourceFromGeneration(job, {
           options: {
             referenceImages: normalizedRefs,
@@ -47,7 +47,7 @@ describe('image reference normalization guard', () => {
     expect(
       inspectImageReferenceNormalization('src/lib/workers/handlers/bad-handler.ts', content),
     ).toEqual([
-      'src/lib/workers/handlers/bad-handler.ts uses resolveImageSourceFromGeneration with referenceImages but does not reference normalizeReferenceImagesForGeneration/normalizeToBase64ForGeneration/generateProjectLabeledImageToStorage/generateCleanImageToStorage',
+      'src/lib/workers/handlers/bad-handler.ts uses resolveImageSourceFromGeneration with referenceImages but does not reference normalizeReferenceImagesForGeneration/normalizeOptionalReferenceImagesForGeneration/normalizeToBase64ForGeneration/generateProjectLabeledImageToStorage/generateCleanImageToStorage',
     ])
   })
 })

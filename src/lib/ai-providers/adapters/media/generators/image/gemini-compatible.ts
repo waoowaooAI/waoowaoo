@@ -15,6 +15,13 @@ type GeminiCompatibleOptions = {
   modelKey?: string
 }
 
+function normalizeGeminiImageSize(value: string | undefined): string | undefined {
+  const normalized = typeof value === 'string' ? value.trim() : ''
+  if (!normalized) return undefined
+  if (normalized === '0.5K') return '512'
+  return normalized
+}
+
 function toAbsoluteUrlIfNeeded(value: string): string {
   if (!value.startsWith('/')) return value
   const baseUrl = getInternalBaseUrl()
@@ -90,6 +97,7 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
     })
     const normalizedOptions = options as GeminiCompatibleOptions
     const parts: GeminiCompatibleContentPart[] = []
+    const imageSize = normalizeGeminiImageSize(normalizedOptions.resolution)
 
     for (const referenceImage of referenceImages.slice(0, 14)) {
       const inlineData = await toInlineData(referenceImage)
@@ -115,7 +123,7 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
           ? {
             imageConfig: {
               ...(normalizedOptions.aspectRatio ? { aspectRatio: normalizedOptions.aspectRatio } : {}),
-              ...(normalizedOptions.resolution ? { imageSize: normalizedOptions.resolution } : {}),
+              ...(imageSize ? { imageSize } : {}),
             },
           }
           : {}),

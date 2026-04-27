@@ -261,4 +261,54 @@ describe('image provider smoke tests', () => {
     expect(content.contents[0].parts[1].text).toBe('restyle this portrait')
     expect(content.config.imageConfig).toEqual({ imageSize: '2K' })
   })
+
+  it('Gemini 兼容层 0.5K 分辨率会归一化为 imageSize=512', async () => {
+    getProviderConfigMock.mockResolvedValueOnce({
+      id: 'gemini-compatible:gm-1',
+      apiKey: 'gm-key',
+      baseUrl: 'https://gm.test',
+    })
+    googleGenerateContentMock.mockResolvedValueOnce({
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'image/png',
+                  data: 'R01fNTEy',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+
+    const generator = new GeminiCompatibleImageGenerator('gemini-2.5-flash-image-preview', 'gemini-compatible:gm-1')
+    const result = await generator.generate({
+      userId: 'user-1',
+      prompt: 'restyle this portrait',
+      referenceImages: ['/api/files/ref-image'],
+      options: {
+        resolution: '0.5K',
+      },
+    })
+
+    expect(result).toEqual({
+      success: true,
+      imageBase64: 'R01fNTEy',
+      imageUrl: 'data:image/png;base64,R01fNTEy',
+    })
+    const call = googleGenerateContentMock.mock.calls[0]
+    expect(call).toBeTruthy()
+    if (!call) {
+      throw new Error('Gemini generateContent should be called')
+    }
+    const content = call[0] as {
+      contents: Array<{ parts: Array<{ inlineData?: { mimeType: string; data: string }; text?: string }> }>
+      config: { imageConfig?: { imageSize?: string } }
+    }
+    expect(content.config.imageConfig).toEqual({ imageSize: '512' })
+  })
 })

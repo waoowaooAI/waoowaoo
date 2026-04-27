@@ -22,6 +22,28 @@ import { prisma } from '@/lib/prisma'
 const DEFAULT_POLL_TIMEOUT_MS = Number.parseInt(process.env.WORKER_EXTERNAL_TIMEOUT_MS || String(20 * 60 * 1000), 10)
 const DEFAULT_POLL_INTERVAL_MS = Number.parseInt(process.env.WORKER_EXTERNAL_POLL_MS || '3000', 10)
 
+function summarizeImageGenerationOptions(options: Record<string, unknown> | undefined): Record<string, unknown> {
+  const value = options || {}
+  const referenceImagesValue = (value as { referenceImages?: unknown }).referenceImages
+  const referenceImageCount = Array.isArray(referenceImagesValue) ? referenceImagesValue.length : 0
+  return {
+    provider: typeof (value as { provider?: unknown }).provider === 'string' ? (value as { provider: string }).provider : undefined,
+    aspectRatio: typeof (value as { aspectRatio?: unknown }).aspectRatio === 'string' ? (value as { aspectRatio: string }).aspectRatio : undefined,
+    resolution: typeof (value as { resolution?: unknown }).resolution === 'string' ? (value as { resolution: string }).resolution : undefined,
+    size: typeof (value as { size?: unknown }).size === 'string' ? (value as { size: string }).size : undefined,
+    referenceImageCount,
+    optionKeys: Object.keys(value),
+  }
+}
+
+function jsonStringifySafe(value: unknown): string {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return '"<unserializable>"'
+  }
+}
+
 /**
  * 查询 DB 中任务是否已有 externalId（服务重启后续接轮询用，避免重复提交外部 API）
  */
@@ -233,15 +255,47 @@ export async function resolveImageSourceFromGeneration(
     },
   })
 
-  const result = await withLogContext(
-    { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
-    () => generateImage(params.userId, params.modelId, params.prompt, {
-      ...params.options,
-      ...capabilityOptions,
-    }),
-  )
+  const finalOptions = {
+    ...(params.options || {}),
+    ...capabilityOptions,
+  } as Record<string, unknown>
+
+  let result: Awaited<ReturnType<typeof generateImage>>
+  try {
+    result = await withLogContext(
+      { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
+      () => generateImage(params.userId, params.modelId, params.prompt, finalOptions),
+    )
+  } catch (error) {
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
+    throw new Error(
+      [
+        'IMAGE_GENERATION_THROWN',
+        `modelKey=${params.modelId}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `cause=${error instanceof Error ? error.message : String(error)}`,
+      ].join(' '),
+      { cause: error },
+    )
+  }
   if (!result.success) {
-    throw new Error(result.error || 'Image generation failed')
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
+    throw new Error(
+      [
+        'IMAGE_GENERATION_FAILED',
+        `modelKey=${params.modelId}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `error=${result.error || '<empty>'}`,
+      ].join(' '),
+    )
   }
 
   if (result.imageUrl) {
@@ -347,15 +401,47 @@ export async function resolveImageSourcesFromGeneration(
     runtimeSelections,
   })
 
-  const result = await withLogContext(
-    { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
-    () => generateImage(params.userId, params.modelId, params.prompt, {
-      ...params.options,
-      ...capabilityOptions,
-    }),
-  )
+  const finalOptions = {
+    ...(params.options || {}),
+    ...capabilityOptions,
+  } as Record<string, unknown>
+
+  let result: Awaited<ReturnType<typeof generateImage>>
+  try {
+    result = await withLogContext(
+      { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
+      () => generateImage(params.userId, params.modelId, params.prompt, finalOptions),
+    )
+  } catch (error) {
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
+    throw new Error(
+      [
+        'IMAGE_GENERATION_THROWN',
+        `modelKey=${params.modelId}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `cause=${error instanceof Error ? error.message : String(error)}`,
+      ].join(' '),
+      { cause: error },
+    )
+  }
   if (!result.success) {
-    throw new Error(result.error || 'Image generation failed')
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
+    throw new Error(
+      [
+        'IMAGE_GENERATION_FAILED',
+        `modelKey=${params.modelId}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `error=${result.error || '<empty>'}`,
+      ].join(' '),
+    )
   }
 
   // 优先使用多图列表

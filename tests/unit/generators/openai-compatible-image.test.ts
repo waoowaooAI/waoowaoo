@@ -100,10 +100,29 @@ describe('OpenAICompatibleImageGenerator', () => {
     expect(call[0]).toMatchObject({
       model: 'gpt-image-1',
       prompt: 'edit this image',
-      response_format: 'b64_json',
       quality: 'medium',
     })
+    expect('response_format' in (call[0] as Record<string, unknown>)).toBe(false)
     expect(Array.isArray((call[0] as { image?: unknown }).image)).toBe(true)
+  })
+
+  it('wraps upstream request errors with context', async () => {
+    openAIState.generate.mockRejectedValueOnce(new Error('upstream boom'))
+
+    const generator = new OpenAICompatibleImageGenerator('gpt-image-1', 'openai-compatible:oa-1')
+    const result = await generator.generate({
+      userId: 'user-1',
+      prompt: 'draw',
+      options: {
+        size: '1024x1024',
+      },
+    })
+
+    expect(result.success).toBe(false)
+    expect(result.error).toContain('OPENAI_COMPAT_IMAGE_REQUEST_FAILED')
+    expect(result.error).toContain('operation=generate')
+    expect(result.error).toContain('providerId=openai-compatible:oa-1')
+    expect(result.error).toContain('model=gpt-image-1')
   })
 
   it('fails explicitly on unsupported option values', async () => {

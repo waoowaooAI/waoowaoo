@@ -10,7 +10,7 @@ import {
   getProjectModels,
   toSignedUrlIfCos,
 } from '../utils'
-import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
+import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
   generateProjectLabeledImageToStorage,
@@ -55,6 +55,7 @@ interface CharacterRecord {
 interface PrimaryAppearanceRecord {
   imageUrl: string | null
   imageUrls: string | null
+  selectedIndex: number | null
 }
 
 interface CharacterImageDb {
@@ -119,18 +120,21 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
         characterId: appearance.characterId,
         appearanceIndex: PRIMARY_APPEARANCE_INDEX,
       },
-      select: { imageUrl: true, imageUrls: true },
+      select: { imageUrl: true, imageUrls: true, selectedIndex: true },
     })
     if (primaryAppearance) {
-      const primaryMainUrl = primaryAppearance.imageUrl
-        ? toSignedUrlIfCos(primaryAppearance.imageUrl, 3600)
-        : null
-      if (primaryMainUrl) {
-        primaryReferenceInputs.push(primaryMainUrl)
-      }
+      const primaryImageUrls = parseImageUrls(primaryAppearance.imageUrls, 'primaryAppearance.imageUrls')
+      const selectedIndex = primaryAppearance.selectedIndex
+      const selectedKey = typeof selectedIndex === 'number' ? primaryImageUrls[selectedIndex] : null
+      const fallbackKey = primaryImageUrls.find((value) => typeof value === 'string' && value) || primaryAppearance.imageUrl
+      const primaryKey = (typeof selectedKey === 'string' && selectedKey) ? selectedKey : fallbackKey
+      const primaryMainUrl = primaryKey ? toSignedUrlIfCos(primaryKey, 3600) : null
+      if (primaryMainUrl) primaryReferenceInputs.push(primaryMainUrl)
     }
   }
-  const primaryReferenceImages = await normalizeReferenceImagesForGeneration(primaryReferenceInputs)
+  const primaryReferenceImages = await normalizeOptionalReferenceImagesForGeneration(primaryReferenceInputs, {
+    context: { taskType: String(job.data.type), scope: 'character.primaryAppearance' },
+  })
 
   const singleIndex = payload.imageIndex ?? payload.descriptionIndex
   const count = normalizeImageGenerationCount('character', payload.count)

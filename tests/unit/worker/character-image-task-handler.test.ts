@@ -10,7 +10,7 @@ const utilsMock = vi.hoisted(() => ({
 }))
 
 const outboundMock = vi.hoisted(() => ({
-  normalizeReferenceImagesForGeneration: vi.fn(async () => ['normalized-primary-ref']),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async () => ['normalized-primary-ref']),
 }))
 
 const prismaMock = vi.hoisted(() => ({
@@ -82,8 +82,9 @@ describe('worker character-image-task-handler behavior', () => {
     })
 
     prismaMock.characterAppearance.findFirst.mockResolvedValue({
-      imageUrl: 'cos/primary.png',
-      imageUrls: JSON.stringify(['cos/primary.png']),
+      imageUrl: 'cos/primary-fallback.png',
+      imageUrls: JSON.stringify(['cos/primary-fallback.png', 'cos/primary-selected.png']),
+      selectedIndex: 1,
     })
   })
 
@@ -114,6 +115,7 @@ describe('worker character-image-task-handler behavior', () => {
     expect(generationInput.prompt.split(CHARACTER_PROMPT_SUFFIX).length - 1).toBe(1)
     expect(generationInput.prompt.split(realisticStylePrompt).length - 1).toBe(1)
     expect(generationInput.label).toBe('Hero - 战斗形态')
+    expect(utilsMock.toSignedUrlIfCos).toHaveBeenCalledWith('cos/primary-selected.png', 3600)
     expect(generationInput.options).toEqual(expect.objectContaining({
       referenceImages: ['normalized-primary-ref'],
       aspectRatio: CHARACTER_ASSET_IMAGE_RATIO,
@@ -129,7 +131,7 @@ describe('worker character-image-task-handler behavior', () => {
   })
 
   it('primary appearance generation omits referenceImages option when no reference image exists', async () => {
-    outboundMock.normalizeReferenceImagesForGeneration.mockResolvedValueOnce([])
+    outboundMock.normalizeOptionalReferenceImagesForGeneration.mockResolvedValueOnce([])
     prismaMock.characterAppearance.findUnique.mockResolvedValueOnce({
       id: 'appearance-1',
       characterId: 'character-1',

@@ -40,9 +40,9 @@ function assertAllowedOptions(options: Record<string, unknown>) {
   }
 }
 
-function normalizeResponseFormat(value: unknown): OpenAIImageResponseFormat {
+function normalizeResponseFormat(value: unknown): OpenAIImageResponseFormat | undefined {
   const normalized = readStringOption(value, 'responseFormat')
-  if (!normalized) return 'b64_json'
+  if (!normalized) return undefined
   if (normalized === 'url' || normalized === 'b64_json') return normalized
   throw new Error(`OPENAI_COMPAT_IMAGE_OPTION_UNSUPPORTED: responseFormat=${normalized}`)
 }
@@ -145,8 +145,42 @@ function readAllImagePayloads(response: unknown): ImagePayloads {
   return {
     b64Json: firstB64,
     url: urls[0] ?? null,
-    urls,
+  urls,
   }
+}
+
+function toSafeOpenAICompatImageRequestError(params: {
+  operation: 'generate' | 'edit'
+  providerId: string
+  modelId: string
+  size: string | undefined
+  responseFormat: OpenAIImageResponseFormat | undefined
+  outputFormat: OpenAIImageOutputFormat | undefined
+  quality: OpenAIImageGenerateQuality | undefined
+  referenceImageCount: number
+  cause: unknown
+}): Error {
+  const causeMessage = params.cause instanceof Error ? params.cause.message : String(params.cause)
+  const responseFormatValue = params.responseFormat ? `response_format=${params.responseFormat}` : 'response_format=<unset>'
+  const sizeValue = params.size ? `size=${params.size}` : 'size=<unset>'
+  const outputFormatValue = params.outputFormat ? `output_format=${params.outputFormat}` : 'output_format=<unset>'
+  const qualityValue = params.quality ? `quality=${params.quality}` : 'quality=<unset>'
+
+  return new Error(
+    [
+      'OPENAI_COMPAT_IMAGE_REQUEST_FAILED',
+      `operation=${params.operation}`,
+      `providerId=${params.providerId}`,
+      `model=${params.modelId}`,
+      sizeValue,
+      responseFormatValue,
+      outputFormatValue,
+      qualityValue,
+      `referenceImageCount=${params.referenceImageCount}`,
+      `cause=${causeMessage}`,
+    ].join(' '),
+    { cause: params.cause },
+  )
 }
 
 export async function generateImageViaOpenAICompat(request: OpenAICompatImageRequest): Promise<GenerateResult> {
@@ -171,15 +205,30 @@ export async function generateImageViaOpenAICompat(request: OpenAICompatImageReq
   const size = normalizeOpenAIImageSize(rawSize)
 
   if (referenceImages.length > 0) {
-    const response = await client.images.edit({
-      model: normalizedModelId,
-      prompt,
-      image: await Promise.all(referenceImages.map((image, index) => toUploadFile(image, index))),
-      response_format: responseFormat,
-      ...(outputFormat ? { output_format: outputFormat } : {}),
-      ...(quality ? { quality } : {}),
-      ...(size ? { size } : {}),
-    } as unknown as Parameters<typeof client.images.edit>[0])
+    let response: unknown
+    try {
+      response = await client.images.edit({
+        model: normalizedModelId,
+        prompt,
+        image: await Promise.all(referenceImages.map((image, index) => toUploadFile(image, index))),
+        ...(responseFormat ? { response_format: responseFormat } : {}),
+        ...(outputFormat ? { output_format: outputFormat } : {}),
+        ...(quality ? { quality } : {}),
+        ...(size ? { size } : {}),
+      } as unknown as Parameters<typeof client.images.edit>[0])
+    } catch (error) {
+      throw toSafeOpenAICompatImageRequestError({
+        operation: 'edit',
+        providerId,
+        modelId: normalizedModelId,
+        size,
+        responseFormat,
+        outputFormat,
+        quality,
+        referenceImageCount: referenceImages.length,
+        cause: error,
+      })
+    }
 
     const imagePayload = readAllImagePayloads(response)
     const imageBase64 = imagePayload.b64Json
@@ -202,14 +251,29 @@ export async function generateImageViaOpenAICompat(request: OpenAICompatImageReq
     throw new Error('OPENAI_COMPAT_IMAGE_EMPTY_RESPONSE: no image data returned')
   }
 
-  const response = await client.images.generate({
-    model: normalizedModelId,
-    prompt,
-    response_format: responseFormat,
-    ...(outputFormat ? { output_format: outputFormat } : {}),
-    ...(quality ? { quality } : {}),
-    ...(size ? { size } : {}),
-  } as unknown as Parameters<typeof client.images.generate>[0])
+  let response: unknown
+  try {
+    response = await client.images.generate({
+      model: normalizedModelId,
+      prompt,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
+      ...(outputFormat ? { output_format: outputFormat } : {}),
+      ...(quality ? { quality } : {}),
+      ...(size ? { size } : {}),
+    } as unknown as Parameters<typeof client.images.generate>[0])
+  } catch (error) {
+    throw toSafeOpenAICompatImageRequestError({
+      operation: 'generate',
+      providerId,
+      modelId: normalizedModelId,
+      size,
+      responseFormat,
+      outputFormat,
+      quality,
+      referenceImageCount: referenceImages.length,
+      cause: error,
+    })
+  }
 
   const imagePayload = readAllImagePayloads(response)
   const imageBase64 = imagePayload.b64Json

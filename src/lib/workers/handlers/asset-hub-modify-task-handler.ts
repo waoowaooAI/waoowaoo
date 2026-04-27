@@ -10,7 +10,7 @@ import {
   uploadImageSourceToCos,
 } from '../utils'
 import {
-  normalizeReferenceImagesForGeneration,
+  normalizeOptionalReferenceImagesForGeneration,
 } from '@/lib/media/outbound-image'
 import {
   type LocationAvailableSlot,
@@ -123,7 +123,9 @@ export async function handleAssetHubModifyTask(job: Job<TaskJobData>) {
         }
       }
     }
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: { taskType: String(job.data.type), scope: 'asset-hub-modify.extra' },
+    })
     const referenceImages = Array.from(new Set([currentUrl, ...normalizedExtras]))
     const currentDescription = readIndexedDescription({
       descriptions: appearance.descriptions,
@@ -213,7 +215,9 @@ export async function handleAssetHubModifyTask(job: Job<TaskJobData>) {
         }
       }
     }
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: { taskType: String(job.data.type), scope: 'asset-hub-modify.extra' },
+    })
     const referenceImages = Array.from(new Set([currentUrl, ...normalizedExtras]))
 
     const isProp = payload.type === 'prop'
