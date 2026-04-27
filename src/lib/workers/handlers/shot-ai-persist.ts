@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/model-config-contract'
 import { type LocationAvailableSlot, stringifyLocationAvailableSlots } from '@/lib/location-available-slots'
+import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
 
 function normalizeModelKey(value: unknown): string | null {
   if (typeof value !== 'string') return null
@@ -16,7 +17,7 @@ export async function resolveAnalysisModel(projectId: string, userId: string): P
   analysisModel: string
   directorStyleDoc: string | null
 }> {
-  const [project, userPreference] = await Promise.all([
+  const [project, userPreference, directorStyleDoc] = await Promise.all([
     prisma.project.findUnique({
       where: { id: projectId },
       select: { id: true, analysisModel: true, directorStyleDoc: true },
@@ -25,6 +26,7 @@ export async function resolveAnalysisModel(projectId: string, userId: string): P
       where: { userId },
       select: { analysisModel: true },
     }),
+    resolveProjectDirectorStyleDoc({ projectId, userId }),
   ])
   if (!project) throw new Error('Project not found')
 
@@ -37,7 +39,7 @@ export async function resolveAnalysisModel(projectId: string, userId: string): P
   return {
     id: project.id,
     analysisModel,
-    directorStyleDoc: project.directorStyleDoc,
+    directorStyleDoc: directorStyleDoc ? JSON.stringify(directorStyleDoc) : null,
   }
 }
 

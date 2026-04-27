@@ -1,6 +1,6 @@
 import { type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { getArtStylePrompt } from '@/lib/constants'
+import { resolveProjectVisualStylePreset } from '@/lib/style-preset'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { type TaskJobData } from '@/lib/task/types'
 import {
@@ -25,7 +25,6 @@ import {
 } from './image-task-handler-shared'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS } from '@/lib/ai-prompts'
 
-// ── 构建变体提示词 ──────────────────────────────────────
 interface VariantPromptParams {
   locale: TaskJobData['locale']
   originalDescription: string
@@ -69,7 +68,6 @@ function buildVariantPrompt(params: VariantPromptParams): string {
   })
 }
 
-// ── 构建角色和场景描述信息 ─────────────────────────────
 function buildCharactersInfo(
   panel: { characters: string | null },
   projectData: { characters?: Array<{ name: string; introduction?: string | null; appearances?: Array<{ changeReason?: string | null }> }> },
@@ -210,14 +208,13 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
     throw new Error('panel_variant missing newPanelId/sourcePanelId')
   }
 
-  // Panel 已在 API route 中创建，这里只需获取它
   const newPanel = await prisma.projectPanel.findUnique({ where: { id: newPanelId } })
   if (!newPanel) throw new Error('New panel not found (should have been created by API route)')
 
   const sourcePanel = await prisma.projectPanel.findUnique({ where: { id: sourcePanelId } })
   if (!sourcePanel) throw new Error('Source panel not found')
 
-  const projectData = await resolveNovelData(job.data.projectId)
+  const projectData = await resolveNovelData(job.data.projectId, job.data.userId)
   if (!projectData.videoRatio) throw new Error('Project videoRatio not configured')
   const aspectRatio = projectData.videoRatio
 
@@ -225,7 +222,6 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
   const storyboardModel = modelConfig.storyboardModel
   if (!storyboardModel) throw new Error('Storyboard model not configured')
 
-  // 收集参考图（与 panel-image-task-handler 共用同一链路）
   const sourcePanelImageUrl = toSignedUrlIfCos(sourcePanel.imageUrl, 3600)
   const refs = buildVariantReferenceImages({
     includeCharacterAssets,
@@ -238,8 +234,11 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
     context: { taskType: String(job.data.type), scope: 'panel-variant.refs' },
   })
 
-  // 使用 agent_shot_variant_generate.txt 提示词模板
-  const artStyle = getArtStylePrompt(modelConfig.artStyle, job.data.locale)
+  const artStyle = (await resolveProjectVisualStylePreset({
+    projectId: job.data.projectId,
+    userId: job.data.userId,
+    locale: job.data.locale,
+  })).prompt
   const charactersInfo = buildCharactersInfo(newPanel, projectData)
   const characterAssetsDesc = includeCharacterAssets
     ? buildCharacterAssetsDescription(newPanel, projectData)
@@ -266,7 +265,7 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
       projectData,
     }),
     aspectRatio,
-    style: artStyle || '与参考图风格一致',
+    style: artStyle,
     directorStyleDoc: projectData.directorStyleDoc,
   })
 

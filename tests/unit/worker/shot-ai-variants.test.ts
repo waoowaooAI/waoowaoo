@@ -1,5 +1,6 @@
 import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildDirectorStyleDoc } from '@/lib/director-style'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
@@ -90,17 +91,7 @@ describe('worker shot-ai-variants behavior', () => {
     persistMock.resolveAnalysisModel.mockResolvedValue({
       id: 'np-1',
       analysisModel: 'llm::analysis-1',
-      directorStyleDoc: JSON.stringify({
-        character: { intent: '角色风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        location: { intent: '场景风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        prop: { intent: '道具风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        storyboardPlan: { intent: '分镜风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        cinematography: { intent: '摄影风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        acting: { intent: '表演风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        storyboardDetail: { intent: '细化风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        image: { intent: '图片风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        video: { intent: '视频风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      }),
+      directorStyleDoc: JSON.stringify(buildDirectorStyleDoc('horror-suspense')),
     })
     prismaMock.projectPanel.findUnique.mockResolvedValue({
       id: 'panel-1',
@@ -151,7 +142,7 @@ describe('worker shot-ai-variants behavior', () => {
     expect(buildAiPrompt).toHaveBeenCalledWith(expect.objectContaining({
       directorStyleDoc: expect.objectContaining({
         storyboardDetail: expect.objectContaining({
-          intent: '细化风格',
+          frameComposition: expect.stringContaining('主体'),
         }),
       }),
     }))

@@ -16,12 +16,27 @@ import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
 import { DEFAULT_STYLE_PRESET_VALUE, STYLE_PRESETS } from '@/lib/style-presets'
+import { decodeStylePresetRef, encodeStylePresetRef } from '@/lib/style-preset/ref'
+import type { StylePresetRef, StylePresetView } from '@/lib/style-preset/types'
 import { PROJECT_STORY_INPUT_MIN_ROWS } from '@/lib/ui/textarea-height'
 import { apiFetch } from '@/lib/api-fetch'
 import { expandHomeStory } from '@/lib/home/ai-story-expand'
 
 /** 触发智能分集建议的字数阈值 */
 const LONG_TEXT_THRESHOLD = 1000
+
+function readStylePresetList(value: unknown): StylePresetView[] {
+  if (!value || typeof value !== 'object') return []
+  const presets = (value as { presets?: unknown }).presets
+  if (!Array.isArray(presets)) return []
+  return presets.filter((preset): preset is StylePresetView => {
+    if (!preset || typeof preset !== 'object') return false
+    const record = preset as { id?: unknown; kind?: unknown; name?: unknown }
+    return typeof record.id === 'string'
+      && (record.kind === 'visual_style' || record.kind === 'director_style')
+      && typeof record.name === 'string'
+  })
+}
 
 
 
@@ -44,9 +59,14 @@ interface ProjectInputStageProps {
   // 配置项 - 比例与风格
   videoRatio?: string
   artStyle?: string
+  visualStylePresetSource?: string
+  visualStylePresetId?: string
+  directorStylePresetSource?: string
   directorStylePresetId?: string
   onVideoRatioChange?: (value: string) => void
   onArtStyleChange?: (value: string) => void
+  onVisualStylePresetChange?: (value: StylePresetRef) => void
+  onDirectorStylePresetRefChange?: (value: StylePresetRef | null) => void
   onDirectorStylePresetChange?: (value: string) => void
 }
 
@@ -62,9 +82,14 @@ export default function ProjectInputStage({
   onEnableNarrationChange,
   videoRatio = '9:16',
   artStyle = 'american-comic',
+  visualStylePresetSource = 'system',
+  visualStylePresetId,
+  directorStylePresetSource,
   directorStylePresetId = DEFAULT_STYLE_PRESET_VALUE,
   onVideoRatioChange,
   onArtStyleChange,
+  onVisualStylePresetChange,
+  onDirectorStylePresetRefChange,
   onDirectorStylePresetChange,
 }: ProjectInputStageProps) {
   const t = useTranslations('projectWorkflow')
@@ -79,6 +104,23 @@ export default function ProjectInputStage({
   const [localText, setLocalText] = useState(novelText)
   const [aiWriteOpen, setAiWriteOpen] = useState(false)
   const [aiWriteLoading, setAiWriteLoading] = useState(false)
+  const [userStylePresets, setUserStylePresets] = useState<StylePresetView[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadUserStylePresets() {
+      const response = await apiFetch('/api/user/style-presets')
+      if (!response.ok) return
+      const data = await response.json() as unknown
+      if (!cancelled) {
+        setUserStylePresets(readStylePresetList(data))
+      }
+    }
+    void loadUserStylePresets()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // 当父组件的 novelText 变化（非本地编辑触发）时，同步到本地 state
   useEffect(() => {
@@ -147,6 +189,53 @@ export default function ProjectInputStage({
   const getRatioUsageTag = (ratio: string): string =>
     ratioUsageTagMap[ratio] ?? ''
 
+  const visualStyleValue = encodeStylePresetRef({
+    presetSource: visualStylePresetSource === 'user' ? 'user' : 'system',
+    presetId: visualStylePresetId || artStyle,
+  })
+  const visualStyleOptions = [
+    ...ART_STYLES.map((option) => ({
+      value: encodeStylePresetRef({ presetSource: 'system', presetId: option.value }),
+      label: option.label,
+      recommended: option.value === 'realistic',
+    })),
+    ...userStylePresets
+      .filter((preset) => preset.kind === 'visual_style')
+      .map((preset) => ({
+        value: encodeStylePresetRef({ presetSource: 'user', presetId: preset.id }),
+        label: preset.name,
+      })),
+  ]
+  const directorStyleValue = directorStylePresetId
+    ? encodeStylePresetRef({
+        presetSource: directorStylePresetSource === 'user' ? 'user' : 'system',
+        presetId: directorStylePresetId,
+      })
+    : ''
+  const disabledDirectorPreset = STYLE_PRESETS.find((preset) => preset.value === '')
+  if (!disabledDirectorPreset) throw new Error('director style disabled preset is missing')
+  const directorStyleOptions = [
+    {
+      value: '',
+      label: disabledDirectorPreset.label,
+      description: disabledDirectorPreset.description,
+    },
+    ...STYLE_PRESETS
+      .filter((preset) => preset.value)
+      .map((preset) => ({
+        value: encodeStylePresetRef({ presetSource: 'system', presetId: preset.value }),
+        label: preset.label,
+        description: preset.description,
+      })),
+    ...userStylePresets
+      .filter((preset) => preset.kind === 'director_style')
+      .map((preset) => ({
+        value: encodeStylePresetRef({ presetSource: 'user', presetId: preset.id }),
+        label: preset.name,
+        description: preset.summary ?? '',
+      })),
+  ]
+
   const stageSwitchingState = isSwitchingStage
     ? resolveTaskPresentationState({
       phase: 'processing',
@@ -192,15 +281,29 @@ export default function ProjectInputStage({
             recommended: option.value === '9:16'
           }))}
           getRatioUsage={getRatioUsageTag}
-          artStyle={artStyle}
-          onArtStyleChange={(value) => onArtStyleChange?.(value)}
-          styleOptions={ART_STYLES.map((option) => ({
-            ...option,
-            recommended: option.value === 'realistic'
-          }))}
-          stylePresetValue={directorStylePresetId}
-          onStylePresetChange={(value) => onDirectorStylePresetChange?.(value)}
-          stylePresetOptions={STYLE_PRESETS}
+          artStyle={visualStyleValue}
+          onArtStyleChange={(value) => {
+            const ref = decodeStylePresetRef(value)
+            onVisualStylePresetChange?.(ref)
+            if (ref.presetSource === 'system') {
+              onArtStyleChange?.(ref.presetId)
+            }
+          }}
+          styleOptions={visualStyleOptions}
+          stylePresetValue={directorStyleValue}
+          onStylePresetChange={(value) => {
+            if (!value) {
+              onDirectorStylePresetRefChange?.(null)
+              onDirectorStylePresetChange?.('')
+              return
+            }
+            const ref = decodeStylePresetRef(value)
+            onDirectorStylePresetRefChange?.(ref)
+            if (ref.presetSource === 'system') {
+              onDirectorStylePresetChange?.(ref.presetId)
+            }
+          }}
+          stylePresetOptions={directorStyleOptions}
           textareaClassName="px-0 pt-0 pb-3 align-top"
           primaryAction={(
             <button

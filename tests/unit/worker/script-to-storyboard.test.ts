@@ -1,5 +1,6 @@
 import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildDirectorStyleDoc } from '@/lib/director-style'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 type VoiceLineInput = {
@@ -270,17 +271,7 @@ describe('worker script-to-storyboard behavior', () => {
       id: 'project-1',
       name: 'Project One',
       analysisModel: 'llm::analysis-model',
-      directorStyleDoc: JSON.stringify({
-        character: { intent: '角色风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        location: { intent: '场景风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        prop: { intent: '道具风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        storyboardPlan: { intent: '分镜风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        cinematography: { intent: '摄影风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        acting: { intent: '表演风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        storyboardDetail: { intent: '细化风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        image: { intent: '图片风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        video: { intent: '视频风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      }),
+      directorStyleDoc: JSON.stringify(buildDirectorStyleDoc('horror-suspense')),
       characters: [{ id: 'char-1', name: 'Narrator' }],
       locations: [{ id: 'loc-1', name: 'Office' }],
     })
@@ -376,7 +367,7 @@ describe('worker script-to-storyboard behavior', () => {
       projectData: expect.objectContaining({
         directorStyleDoc: expect.objectContaining({
           storyboardPlan: expect.objectContaining({
-            intent: '分镜风格',
+            shotSelection: expect.stringContaining('反应镜头'),
           }),
         }),
       }),

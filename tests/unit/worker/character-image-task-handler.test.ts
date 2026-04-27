@@ -14,6 +14,9 @@ const outboundMock = vi.hoisted(() => ({
 }))
 
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(),
+  },
   characterAppearance: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
@@ -67,6 +70,12 @@ function buildJob(payload: Record<string, unknown>, targetId = 'appearance-2'): 
 describe('worker character-image-task-handler behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    prismaMock.project.findUnique.mockResolvedValue({
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
+      artStyle: 'realistic',
+    })
 
     prismaMock.characterAppearance.findUnique.mockResolvedValue({
       id: 'appearance-2',

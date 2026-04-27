@@ -41,8 +41,8 @@ describe('ai prompt registry', () => {
     })
 
     expect(prompt).toContain('【导演风格要求】')
-    expect(prompt).toContain('危险感')
-    expect(prompt).toContain('"judgement"')
+    expect(prompt).toContain('"character"')
+    expect(prompt).toContain('"temperament"')
   })
 
   it('keeps style requirements wired in every opted-in prompt template locale', () => {
@@ -56,6 +56,18 @@ describe('ai prompt registry', () => {
       expect(getAiPromptTemplate(promptId as AiPromptId, 'zh')).toContain('{style_requirements}')
       expect(getAiPromptTemplate(promptId as AiPromptId, 'en')).toContain('{style_requirements}')
     }
+  })
+
+  it('registers style preset design prompts in both locales', () => {
+    const visualZh = getAiPromptTemplate(AI_PROMPT_IDS.DESIGN_VISUAL_STYLE_PRESET, 'zh')
+    const visualEn = getAiPromptTemplate(AI_PROMPT_IDS.DESIGN_VISUAL_STYLE_PRESET, 'en')
+    const directorZh = getAiPromptTemplate(AI_PROMPT_IDS.DESIGN_DIRECTOR_STYLE_PRESET, 'zh')
+    const directorEn = getAiPromptTemplate(AI_PROMPT_IDS.DESIGN_DIRECTOR_STYLE_PRESET, 'en')
+
+    expect(visualZh).toContain('"detailLevel"')
+    expect(visualEn).toContain('"negativePrompt"')
+    expect(directorZh).toContain('"storyboardPlan"')
+    expect(directorEn).toContain('"cameraMotion"')
   })
 
   it('renders video style requirements into storyboard detail prompts', () => {
@@ -74,6 +86,6 @@ describe('ai prompt registry', () => {
     expect(prompt).toContain('Director style requirements:')
     expect(prompt).toContain('"storyboardDetail"')
     expect(prompt).toContain('"video"')
-    expect(prompt).toContain('视频运镜')
+    expect(prompt).toContain('"cameraMotion"')
   })
 })

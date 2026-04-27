@@ -9,6 +9,9 @@ const utilsMock = vi.hoisted(() => ({
 }))
 
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(),
+  },
   locationImage: {
     findUnique: vi.fn(),
     update: vi.fn(async () => ({})),
@@ -57,6 +60,12 @@ function buildJob(payload: Record<string, unknown>, targetId = 'location-image-1
 describe('worker location-image-task-handler behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    prismaMock.project.findUnique.mockResolvedValue({
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'japanese-anime',
+      artStyle: 'japanese-anime',
+    })
 
     prismaMock.locationImage.findUnique.mockResolvedValue({
       id: 'location-image-1',

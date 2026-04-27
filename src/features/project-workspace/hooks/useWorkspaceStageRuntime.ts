@@ -15,6 +15,9 @@ interface UseWorkspaceStageRuntimeParams {
   isStartingScriptToStoryboard: boolean
   videoRatio: string | undefined
   artStyle: string | undefined
+  visualStylePresetSource: string | undefined
+  visualStylePresetId: string | undefined
+  directorStylePresetSource: string | undefined
   directorStylePresetId: string | undefined
   videoModel: string | undefined
   capabilityOverrides: CapabilitySelections
@@ -66,6 +69,9 @@ export function useWorkspaceStageRuntime({
   isStartingScriptToStoryboard,
   videoRatio,
   artStyle,
+  visualStylePresetSource,
+  visualStylePresetId,
+  directorStylePresetSource,
   directorStylePresetId,
   videoModel,
   capabilityOverrides,
@@ -97,6 +103,9 @@ export function useWorkspaceStageRuntime({
     isStartingScriptToStoryboard,
     videoRatio,
     artStyle,
+    visualStylePresetSource,
+    visualStylePresetId,
+    directorStylePresetSource,
     directorStylePresetId,
     videoModel,
     capabilityOverrides,
@@ -104,6 +113,8 @@ export function useWorkspaceStageRuntime({
     onNovelTextChange: (value) => handleUpdateEpisode('novelText', value),
     onVideoRatioChange: (value) => handleUpdateConfig('videoRatio', value),
     onArtStyleChange: (value) => handleUpdateConfig('artStyle', value),
+    onVisualStylePresetChange: (value) => handleUpdateConfig('visualStylePreset', value),
+    onDirectorStylePresetRefChange: (value) => handleUpdateConfig('directorStylePreset', value),
     onDirectorStylePresetChange: (value) => handleUpdateConfig('directorStylePresetId', value),
     onRunStoryToScript: () => runWithRebuildConfirm('storyToScript', runStoryToScriptFlow),
     onClipUpdate: (clipId, data) => {
@@ -122,6 +133,9 @@ export function useWorkspaceStageRuntime({
     onOpenAssetLibraryForCharacter: (characterId, refreshAssets) => openAssetLibrary(characterId, refreshAssets),
   }), [
     artStyle,
+    visualStylePresetSource,
+    visualStylePresetId,
+    directorStylePresetSource,
     directorStylePresetId,
     assetsLoading,
     handleGenerateAllVideos,

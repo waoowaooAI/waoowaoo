@@ -59,9 +59,14 @@ export default function ConfigStage() {
       isSwitchingStage={runtime.isTransitioning}
       videoRatio={runtime.videoRatio ?? undefined}
       artStyle={runtime.artStyle ?? undefined}
+      visualStylePresetSource={runtime.visualStylePresetSource ?? undefined}
+      visualStylePresetId={runtime.visualStylePresetId ?? undefined}
+      directorStylePresetSource={runtime.directorStylePresetSource ?? undefined}
       directorStylePresetId={runtime.directorStylePresetId ?? undefined}
       onVideoRatioChange={runtime.onVideoRatioChange}
       onArtStyleChange={runtime.onArtStyleChange}
+      onVisualStylePresetChange={runtime.onVisualStylePresetChange}
+      onDirectorStylePresetRefChange={runtime.onDirectorStylePresetRefChange}
       onDirectorStylePresetChange={runtime.onDirectorStylePresetChange}
       onNext={runtime.onRunStoryToScript}
       onSmartSplit={handleSmartSplit}

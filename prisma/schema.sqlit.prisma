@@ -327,6 +327,9 @@ model Project {
   artStylePrompt     String?
   directorStylePresetId String?
   directorStyleDoc   String?
+  visualStylePresetSource String            @default("system")
+  visualStylePresetId String                @default("american-comic")
+  directorStylePresetSource String?
   characterModel     String?
   locationModel      String?
   storyboardModel    String?
@@ -405,8 +408,27 @@ model User {
   globalVoices       GlobalVoice[]
   tasks              Task[]
   taskEvents         TaskEvent[]
+  stylePresets       UserStylePreset[]
 
   @@map("user")
+}
+
+model UserStylePreset {
+  id         String    @id @default(uuid())
+  userId     String
+  kind       String
+  name       String
+  summary    String?
+  config     String
+  version    Int       @default(1)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@map("user_style_presets")
 }
 
 model UserPreference {

@@ -23,6 +23,9 @@ export interface WorkspaceStageRuntimeValue {
   isStartingScriptToStoryboard: boolean
   videoRatio: string | null | undefined
   artStyle: string | null | undefined
+  visualStylePresetSource: string | null | undefined
+  visualStylePresetId: string | null | undefined
+  directorStylePresetSource: string | null | undefined
   directorStylePresetId: string | null | undefined
   videoModel: string | null | undefined
   capabilityOverrides: CapabilitySelections
@@ -30,6 +33,8 @@ export interface WorkspaceStageRuntimeValue {
   onNovelTextChange: (value: string) => Promise<void>
   onVideoRatioChange: (value: string) => Promise<void>
   onArtStyleChange: (value: string) => Promise<void>
+  onVisualStylePresetChange: (value: { presetSource: 'system' | 'user'; presetId: string }) => Promise<void>
+  onDirectorStylePresetRefChange: (value: { presetSource: 'system' | 'user'; presetId: string } | null) => Promise<void>
   onDirectorStylePresetChange: (value: string) => Promise<void>
   onRunStoryToScript: () => Promise<void>
   onClipUpdate: (clipId: string, data: unknown) => Promise<void>

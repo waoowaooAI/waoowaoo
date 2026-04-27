@@ -30,6 +30,9 @@ interface ProjectSnapshotInput {
   videoRatio: string | undefined
   capabilityOverrides: CapabilitySelections
   artStyle: string | undefined
+  visualStylePresetSource: string | undefined
+  visualStylePresetId: string | undefined
+  directorStylePresetSource: string | undefined
   directorStylePresetId: string | undefined
 }
 

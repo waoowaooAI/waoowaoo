@@ -44,6 +44,9 @@ export function useWorkspaceProjectSnapshot({
       videoRatio: project.videoRatio ?? undefined,
       capabilityOverrides,
       artStyle: project.artStyle ?? undefined,
+      visualStylePresetSource: project.visualStylePresetSource ?? undefined,
+      visualStylePresetId: project.visualStylePresetId ?? undefined,
+      directorStylePresetSource: project.directorStylePresetSource ?? undefined,
       directorStylePresetId: project.directorStylePresetId ?? undefined,
     }
   }, [episode?.novelText, episode?.storyboards, project, urlStage])

@@ -90,6 +90,14 @@ const aiPromptMock = vi.hoisted(() => ({
 }))
 
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(async () => ({
+      id: 'project-1',
+      artStyle: 'realistic',
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
+    })),
+  },
   globalCharacterAppearance: {
     update: vi.fn<(input: { data?: Record<string, unknown>; where?: Record<string, unknown> }) => Promise<Record<string, never>>>(
       async () => ({}),
