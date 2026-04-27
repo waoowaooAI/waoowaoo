@@ -1,5 +1,5 @@
-import type { DescribeOnlyMediaAdapter } from './types'
-import { describeMediaVariantBase } from './shared'
+import { describeMediaVariantBase } from '@/lib/ai-providers/adapters/shared'
+import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/adapters/types'
 
 export const siliconFlowMediaAdapter: DescribeOnlyMediaAdapter = {
   providerKey: 'siliconflow',

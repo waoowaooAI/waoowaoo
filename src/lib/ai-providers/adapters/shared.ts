@@ -1,8 +1,8 @@
 import { getProviderKey } from '@/lib/api-config'
 import type {
   AiExecutionMode,
-  AiModelVariantDescriptor,
-  AiResolvedMediaSelection,
+  AiResolvedSelection,
+  AiVariantDescriptor,
 } from '@/lib/ai-registry/types'
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
 import {
@@ -13,9 +13,9 @@ import {
 
 export function describeMediaVariantBase(input: {
   modality: MediaModality
-  selection: AiResolvedMediaSelection
+  selection: AiResolvedSelection
   executionMode: AiExecutionMode
-}): AiModelVariantDescriptor {
+}): AiVariantDescriptor {
   const providerKey = getProviderKey(input.selection.provider).toLowerCase()
   const contracts = resolveAiContractsForDescriptor({
     modality: input.modality,

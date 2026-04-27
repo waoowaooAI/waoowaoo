@@ -1,13 +1,16 @@
 import { AiRegistry } from '@/lib/ai-registry/registry'
-import type { AiMediaAdapter, AiResolvedMediaSelection } from '@/lib/ai-registry/types'
-import { arkMediaAdapter } from './ark'
-import { bailianMediaAdapter } from './bailian'
-import { falMediaAdapter, minimaxMediaAdapter, viduMediaAdapter } from './generator-backed'
-import { geminiCompatibleMediaAdapter, googleMediaAdapter } from './google'
-import { openAiCompatibleMediaAdapter } from './openai-compatible'
-import { siliconFlowMediaAdapter } from './siliconflow'
+import type { AiResolvedSelection } from '@/lib/ai-registry/types'
+import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
+import { bailianMediaAdapter } from '@/lib/ai-providers/bailian/adapter'
+import { falMediaAdapter } from '@/lib/ai-providers/fal/adapter'
+import { geminiCompatibleMediaAdapter, googleMediaAdapter } from '@/lib/ai-providers/google/adapter'
+import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
+import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
+import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
+import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
+import type { DescribeOnlyMediaAdapter } from './types'
 
-const mediaAdapters: AiMediaAdapter[] = [
+const mediaAdapters: DescribeOnlyMediaAdapter[] = [
   bailianMediaAdapter,
   siliconFlowMediaAdapter,
   openAiCompatibleMediaAdapter,
@@ -19,8 +22,8 @@ const mediaAdapters: AiMediaAdapter[] = [
   viduMediaAdapter,
 ]
 
-const mediaRegistry = new AiRegistry<AiMediaAdapter>(mediaAdapters)
+const mediaRegistry = new AiRegistry<DescribeOnlyMediaAdapter>(mediaAdapters)
 
-export function resolveMediaAdapter(selection: AiResolvedMediaSelection): AiMediaAdapter {
-  return mediaRegistry.getAdapterByProviderId(selection.provider) as AiMediaAdapter
+export function resolveMediaAdapter(selection: AiResolvedSelection): DescribeOnlyMediaAdapter {
+  return mediaRegistry.getAdapterByProviderId(selection.provider) as DescribeOnlyMediaAdapter
 }

@@ -1,5 +1,5 @@
 import { getProviderKey } from '@/lib/api-config'
-import type { AiExecutionMode, AiModelVariantDescriptor, AiResolvedLlmSelection } from '@/lib/ai-registry/types'
+import type { AiExecutionMode, AiResolvedLlmSelection, AiVariantDescriptor } from '@/lib/ai-registry/types'
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
 import { buildLlmOptionSchema } from './option-schema'
 
@@ -7,7 +7,7 @@ export function describeLlmVariantBase(input: {
   modality: 'llm' | 'vision'
   selection: AiResolvedLlmSelection
   executionMode: AiExecutionMode
-}): AiModelVariantDescriptor {
+}): AiVariantDescriptor {
   const providerKey = getProviderKey(input.selection.provider).toLowerCase()
   const contracts = resolveAiContractsForDescriptor({
     modality: input.modality,

@@ -2,6 +2,7 @@ import type OpenAI from 'openai'
 
 export type AiModality = 'llm' | 'vision' | 'image' | 'video' | 'audio' | 'lipsync'
 export type AiExecutionMode = 'sync' | 'async' | 'stream' | 'batch'
+export type AiVariantSubKind = 'official' | 'user-template'
 
 export type AiOptionValidationResult =
   | { ok: true }
@@ -19,7 +20,7 @@ export type AiOptionSchema = {
   objectValidators?: readonly AiOptionObjectValidator[]
 }
 
-export type AiModelVariantDescriptor = {
+export type AiVariantDescriptor = {
   modelKey: string
   providerKey: string
   providerId: string
@@ -44,19 +45,15 @@ export type AiModelVariantDescriptor = {
   inputContracts?: Record<string, unknown>
 }
 
-export type AiResolvedMediaSelection = {
+export type AiResolvedSelection = {
   provider: string
   modelId: string
   modelKey: string
-  compatMediaTemplate?: {
-    mode?: 'sync' | 'async'
-  } | null
+  variantSubKind: AiVariantSubKind
+  variantData?: Record<string, unknown>
 }
 
-export type AiResolvedLlmSelection = {
-  provider: string
-  modelId: string
-  modelKey: string
+export type AiResolvedLlmSelection = AiResolvedSelection & {
   llmProtocol?: 'responses' | 'chat-completions'
 }
 
@@ -98,12 +95,4 @@ export type AiLlmExecutionResult = {
   reasoning: string
   usage?: AiLlmUsage | null
   successDetails?: Record<string, unknown>
-}
-
-export interface AiMediaAdapter {
-  readonly providerKey: string
-  describeVariant(
-    modality: Extract<AiModality, 'image' | 'video' | 'audio'>,
-    selection: AiResolvedMediaSelection,
-  ): AiModelVariantDescriptor
 }

@@ -1,7 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+function modelSelection(input: {
+  provider: string
+  modelId: string
+  modelKey: string
+  mediaType: 'image' | 'video' | 'audio'
+  compatMediaTemplate?: {
+    version: 1
+    mediaType: 'image' | 'video'
+    mode: 'sync' | 'async'
+    create: { method: 'POST'; path: string }
+    response: Record<string, string>
+  }
+}) {
+  return {
+    provider: input.provider,
+    modelId: input.modelId,
+    modelKey: input.modelKey,
+    mediaType: input.mediaType,
+    variantSubKind: input.compatMediaTemplate ? 'user-template' as const : 'official' as const,
+    ...(input.compatMediaTemplate
+      ? {
+        variantData: { compatMediaTemplate: input.compatMediaTemplate },
+        compatMediaTemplate: input.compatMediaTemplate,
+      }
+      : {}),
+  }
+}
+
 const resolveModelSelectionMock = vi.hoisted(() =>
-  vi.fn<typeof import('@/lib/api-config').resolveModelSelection>(async () => ({
+  vi.fn<typeof import('@/lib/api-config').resolveModelSelection>(async () => modelSelection({
     provider: 'google',
     modelId: 'gemini-3.1',
     modelKey: 'google::gemini-3.1',
@@ -94,7 +122,7 @@ describe('generator gateway routing', () => {
   })
 
   it('routes openai-compatible image requests to openai-compat gateway', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'openai-compatible:oa-1',
       modelId: 'gpt-image-1',
       modelKey: 'openai-compatible:oa-1::gpt-image-1',
@@ -106,7 +134,7 @@ describe('generator gateway routing', () => {
         create: { method: 'POST', path: '/v1/images/generations' },
         response: { outputUrlPath: 'data[0].url' },
       },
-    })
+    }))
     resolveModelGatewayRouteMock.mockReturnValueOnce('openai-compat')
 
     const result = await generateImage('user-1', 'openai-compatible:oa-1::gpt-image-1', 'draw cat', {
@@ -119,12 +147,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes official image requests to provider generator', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'google',
       modelId: 'imagen-4.0',
       modelKey: 'google::imagen-4.0',
       mediaType: 'image',
-    })
+    }))
     resolveModelGatewayRouteMock.mockReturnValueOnce('official')
 
     const result = await generateImage('user-1', 'google::imagen-4.0', 'draw house')
@@ -135,12 +163,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes gemini-compatible image to official generator', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'gemini-compatible:gm-1',
       modelId: 'gemini-2.5-flash-image-preview',
       modelKey: 'gemini-compatible:gm-1::gemini-2.5-flash-image-preview',
       mediaType: 'image',
-    })
+    }))
     getProviderConfigMock.mockResolvedValueOnce({
       id: 'gemini-compatible:gm-1',
       name: 'Gemini Compatible',
@@ -163,7 +191,7 @@ describe('generator gateway routing', () => {
   })
 
   it('routes openai-compatible video requests to openai-compat gateway', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'openai-compatible:oa-1',
       modelId: 'sora-2',
       modelKey: 'openai-compatible:oa-1::sora-2',
@@ -175,7 +203,7 @@ describe('generator gateway routing', () => {
         create: { method: 'POST', path: '/v1/videos/generations' },
         response: { taskIdPath: 'id' },
       },
-    })
+    }))
     resolveModelGatewayRouteMock.mockReturnValueOnce('openai-compat')
 
     const result = await generateVideo(
@@ -191,12 +219,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes gemini-compatible video to official provider generator', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'gemini-compatible:gm-1',
       modelId: 'veo-3.1-generate-preview',
       modelKey: 'gemini-compatible:gm-1::veo-3.1-generate-preview',
       mediaType: 'video',
-    })
+    }))
     resolveModelGatewayRouteMock.mockReturnValueOnce('official')
 
     const result = await generateVideo('user-1', 'gemini-compatible:gm-1::veo-3.1-generate-preview', 'https://example.com/source.png')
@@ -207,12 +235,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes official video requests to provider generator', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'fal',
       modelId: 'kling',
       modelKey: 'fal::kling',
       mediaType: 'video',
-    })
+    }))
     resolveModelGatewayRouteMock.mockReturnValueOnce('official')
 
     const result = await generateVideo('user-1', 'fal::kling', 'https://example.com/source.png')
@@ -223,12 +251,12 @@ describe('generator gateway routing', () => {
   })
 
   it('keeps audio generation on provider generator path', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'fal',
       modelId: 'tts-1',
       modelKey: 'fal::tts-1',
       mediaType: 'audio',
-    })
+    }))
 
     const result = await generateAudio('user-1', 'fal::tts-1', 'hello')
 
@@ -237,12 +265,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes bailian image generation to official provider adapter', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'bailian',
       modelId: 'wanx-image',
       modelKey: 'bailian::wanx-image',
       mediaType: 'image',
-    })
+    }))
     getProviderConfigMock.mockResolvedValueOnce({
       id: 'bailian',
       name: 'Bailian',
@@ -260,12 +288,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes siliconflow video generation to official provider adapter', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'siliconflow',
       modelId: 'sf-video',
       modelKey: 'siliconflow::sf-video',
       mediaType: 'video',
-    })
+    }))
     getProviderConfigMock.mockResolvedValueOnce({
       id: 'siliconflow',
       name: 'SiliconFlow',
@@ -285,12 +313,12 @@ describe('generator gateway routing', () => {
   })
 
   it('routes bailian audio generation to official provider adapter', async () => {
-    resolveModelSelectionMock.mockResolvedValueOnce({
+    resolveModelSelectionMock.mockResolvedValueOnce(modelSelection({
       provider: 'bailian',
       modelId: 'bailian-tts',
       modelKey: 'bailian::bailian-tts',
       mediaType: 'audio',
-    })
+    }))
 
     const result = await generateAudio('user-1', 'bailian::bailian-tts', 'hello')
 

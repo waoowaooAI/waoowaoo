@@ -42,6 +42,8 @@ export interface ModelSelection {
   modelId: string
   modelKey: string
   mediaType: ModelMediaType
+  variantSubKind: 'official' | 'user-template'
+  variantData?: Record<string, unknown>
   llmProtocol?: 'responses' | 'chat-completions'
   compatMediaTemplate?: OpenAICompatMediaTemplate
 }
@@ -340,12 +342,16 @@ export async function resolveModelSelection(
   const compatMediaTemplate = (mediaType === 'image' || mediaType === 'video') && providerKey === 'openai-compatible'
     ? exact.compatMediaTemplate
     : undefined
+  const variantSubKind = compatMediaTemplate ? 'user-template' as const : 'official' as const
+  const variantData = compatMediaTemplate ? { compatMediaTemplate } : undefined
 
   return {
     provider: exact.provider,
     modelId: exact.modelId,
     modelKey: composeModelKey(exact.provider, exact.modelId),
     mediaType,
+    variantSubKind,
+    ...(variantData ? { variantData } : {}),
     ...(llmProtocol ? { llmProtocol } : {}),
     ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
   }
@@ -371,12 +377,16 @@ async function resolveSingleModelSelection(
   const compatMediaTemplate = (mediaType === 'image' || mediaType === 'video') && providerKey === 'openai-compatible'
     ? model.compatMediaTemplate
     : undefined
+  const variantSubKind = compatMediaTemplate ? 'user-template' as const : 'official' as const
+  const variantData = compatMediaTemplate ? { compatMediaTemplate } : undefined
 
   return {
     provider: model.provider,
     modelId: model.modelId,
     modelKey: composeModelKey(model.provider, model.modelId),
     mediaType,
+    variantSubKind,
+    ...(variantData ? { variantData } : {}),
     ...(llmProtocol ? { llmProtocol } : {}),
     ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
   }

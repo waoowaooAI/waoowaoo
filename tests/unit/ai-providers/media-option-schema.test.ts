@@ -1,12 +1,31 @@
 import { describe, expect, it, vi } from 'vitest'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
-import { arkMediaAdapter } from '@/lib/ai-providers/adapters/ark'
-import { falMediaAdapter, minimaxMediaAdapter, viduMediaAdapter } from '@/lib/ai-providers/adapters/generator-backed'
-import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/adapters/openai-compatible'
+import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
+import { falMediaAdapter } from '@/lib/ai-providers/fal/adapter'
+import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
+import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
+import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
 
 vi.mock('@/lib/model-capabilities/lookup', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({})),
 }))
+
+function mediaSelection(input: {
+  provider: string
+  modelId: string
+  modelKey: string
+  compatMode?: 'sync' | 'async'
+}) {
+  return {
+    provider: input.provider,
+    modelId: input.modelId,
+    modelKey: input.modelKey,
+    variantSubKind: input.compatMode ? 'user-template' as const : 'official' as const,
+    ...(input.compatMode
+      ? { variantData: { compatMediaTemplate: { mode: input.compatMode } } }
+      : {}),
+  }
+}
 
 function validateDescriptorOptions(input: {
   schema: ReturnType<typeof arkMediaAdapter.describeVariant>['optionSchema']
@@ -22,11 +41,11 @@ function validateDescriptorOptions(input: {
 
 describe('media adapter option schema', () => {
   it('rejects Ark image requests before generator when aspect ratio or size is missing', () => {
-    const descriptor = arkMediaAdapter.describeVariant('image', {
+    const descriptor = arkMediaAdapter.describeVariant('image', mediaSelection({
       provider: 'ark',
       modelId: 'doubao-seedream-4-5-251128',
       modelKey: 'ark::doubao-seedream-4-5-251128',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -36,11 +55,11 @@ describe('media adapter option schema', () => {
   })
 
   it('rejects provider-specific invalid Ark image values from descriptor schema', () => {
-    const descriptor = arkMediaAdapter.describeVariant('image', {
+    const descriptor = arkMediaAdapter.describeVariant('image', mediaSelection({
       provider: 'ark',
       modelId: 'doubao-seedream-4-5-251128',
       modelKey: 'ark::doubao-seedream-4-5-251128',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -49,11 +68,11 @@ describe('media adapter option schema', () => {
   })
 
   it('rejects provider-specific invalid Fal image resolution from descriptor schema', () => {
-    const descriptor = falMediaAdapter.describeVariant('image', {
+    const descriptor = falMediaAdapter.describeVariant('image', mediaSelection({
       provider: 'fal',
       modelId: 'banana',
       modelKey: 'fal::banana',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -62,12 +81,12 @@ describe('media adapter option schema', () => {
   })
 
   it('allows same OpenAI compatible image size and resolution but rejects conflicts', () => {
-    const descriptor = openAiCompatibleMediaAdapter.describeVariant('image', {
+    const descriptor = openAiCompatibleMediaAdapter.describeVariant('image', mediaSelection({
       provider: 'openai-compatible:oa-1',
       modelId: 'gpt-image-1',
       modelKey: 'openai-compatible:oa-1::gpt-image-1',
-      compatMediaTemplate: { mode: 'sync' },
-    })
+      compatMode: 'sync',
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -80,11 +99,11 @@ describe('media adapter option schema', () => {
   })
 
   it('rejects Ark video duration outside model descriptor bounds', () => {
-    const descriptor = arkMediaAdapter.describeVariant('video', {
+    const descriptor = arkMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'ark',
       modelId: 'doubao-seedance-2-0-260128',
       modelKey: 'ark::doubao-seedance-2-0-260128',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -95,11 +114,11 @@ describe('media adapter option schema', () => {
 
 describe('media adapter video option schema', () => {
   it('rejects MiniMax invalid duration/resolution combinations before generator', () => {
-    const descriptor = minimaxMediaAdapter.describeVariant('video', {
+    const descriptor = minimaxMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'minimax',
       modelId: 'minimax-hailuo-2.3',
       modelKey: 'minimax::minimax-hailuo-2.3',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -108,11 +127,11 @@ describe('media adapter video option schema', () => {
   })
 
   it('rejects MiniMax first-last-frame mode for models that do not support it', () => {
-    const descriptor = minimaxMediaAdapter.describeVariant('video', {
+    const descriptor = minimaxMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'minimax',
       modelId: 'minimax-hailuo-2.3',
       modelKey: 'minimax::minimax-hailuo-2.3',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -121,11 +140,11 @@ describe('media adapter video option schema', () => {
   })
 
   it('rejects Vidu invalid duration/resolution combinations from descriptor schema', () => {
-    const descriptor = viduMediaAdapter.describeVariant('video', {
+    const descriptor = viduMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'vidu',
       modelId: 'vidu2.0',
       modelKey: 'vidu::vidu2.0',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -134,11 +153,11 @@ describe('media adapter video option schema', () => {
   })
 
   it('rejects Vidu audioType unless audio generation is explicitly enabled', () => {
-    const descriptor = viduMediaAdapter.describeVariant('video', {
+    const descriptor = viduMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'vidu',
       modelId: 'viduq2-turbo',
       modelKey: 'vidu::viduq2-turbo',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -147,12 +166,12 @@ describe('media adapter video option schema', () => {
   })
 
   it('rejects OpenAI-compatible video size and resolution conflicts from descriptor schema', () => {
-    const descriptor = openAiCompatibleMediaAdapter.describeVariant('video', {
+    const descriptor = openAiCompatibleMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'openai-compatible:oa-1',
       modelId: 'sora-2',
       modelKey: 'openai-compatible:oa-1::sora-2',
-      compatMediaTemplate: { mode: 'async' },
-    })
+      compatMode: 'async',
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,
@@ -161,11 +180,11 @@ describe('media adapter video option schema', () => {
   })
 
   it('rejects unknown Fal video models from descriptor schema', () => {
-    const descriptor = falMediaAdapter.describeVariant('video', {
+    const descriptor = falMediaAdapter.describeVariant('video', mediaSelection({
       provider: 'fal',
       modelId: 'unknown-fal-video',
       modelKey: 'fal::unknown-fal-video',
-    })
+    }))
 
     expect(() => validateDescriptorOptions({
       schema: descriptor.optionSchema,

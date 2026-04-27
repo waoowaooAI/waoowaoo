@@ -3,17 +3,38 @@ import type {
   AiOptionSchema,
   AiOptionValidationResult,
   AiOptionValidator,
-  AiResolvedMediaSelection,
+  AiResolvedSelection,
 } from '@/lib/ai-registry/types'
+import type {
+  MediaOptionSchemaConfig,
+  MediaOptionValidatorConfig,
+} from '@/lib/ai-providers/shared/media-option-schema-config'
 import {
+  ARK_IMAGE_OPTION_SCHEMA_CONFIG,
   ARK_IMAGE_RATIOS,
   ARK_IMAGE_RESOLUTIONS,
+  ARK_VIDEO_OPTION_SCHEMA_CONFIG,
   ARK_VIDEO_RATIOS,
   ARK_VIDEO_SPECS,
+} from '@/lib/ai-providers/ark/models'
+import {
+  BAILIAN_VIDEO_OPTION_SCHEMA_CONFIG,
+} from '@/lib/ai-providers/bailian/models'
+import {
+  FAL_IMAGE_OPTION_SCHEMA_CONFIG,
   FAL_IMAGE_RESOLUTIONS,
+  FAL_VIDEO_OPTION_SCHEMA_CONFIG,
   FAL_VIDEO_MODEL_IDS,
+} from '@/lib/ai-providers/fal/models'
+import {
+  MINIMAX_VIDEO_OPTION_SCHEMA_CONFIG,
   MINIMAX_VIDEO_MODES,
   MINIMAX_VIDEO_SPECS,
+  type ResolutionDurationRule,
+} from '@/lib/ai-providers/minimax/models'
+import {
+  OPENAI_COMPATIBLE_IMAGE_OPTION_SCHEMA_CONFIG,
+  OPENAI_COMPATIBLE_VIDEO_OPTION_SCHEMA_CONFIG,
   OPENAI_IMAGE_OUTPUT_FORMATS,
   OPENAI_IMAGE_QUALITIES,
   OPENAI_IMAGE_RESPONSE_FORMATS,
@@ -21,27 +42,26 @@ import {
   OPENAI_VIDEO_DURATIONS,
   OPENAI_VIDEO_RATIOS,
   OPENAI_VIDEO_SIZES,
+} from '@/lib/ai-providers/openai-compatible/models'
+import {
+  VIDU_VIDEO_OPTION_ALLOWED_KEYS,
   VIDU_AUDIO_TYPES,
   VIDU_MAX_PAYLOAD_LENGTH,
   VIDU_MOVEMENT_AMPLITUDES,
   VIDU_Q2_EXTRA_RATIOS,
   VIDU_RATIO_PATTERN,
   VIDU_STANDARD_RATIOS,
+  VIDU_VIDEO_OPTION_SCHEMA_CONFIG,
   VIDU_VIDEO_MODES,
   VIDU_VIDEO_SPECS,
-  type ResolutionDurationRule,
   type ViduSpec,
-} from './models/media-option-models'
+} from '@/lib/ai-providers/vidu/models'
 
 export type MediaModality = 'image' | 'video' | 'audio'
 
-type MediaOptionSchemaOverride = {
-  allowedKeys?: readonly string[]
-  required?: readonly string[]
-  requiresOneOf?: AiOptionSchema['requiresOneOf']
-  conflicts?: AiOptionSchema['conflicts']
-  validators?: Readonly<Record<string, AiOptionValidator>>
+type MediaOptionSchemaOverride = Omit<MediaOptionSchemaConfig, 'validators'> & {
   objectValidators?: readonly AiOptionObjectValidator[]
+  validators?: Readonly<Record<string, AiOptionValidator>>
 }
 
 function passthroughValidator(): AiOptionValidationResult {
@@ -83,6 +103,22 @@ function nonEmptyStringValidator(): AiOptionValidator {
       ? { ok: true }
       : { ok: false, reason: 'expected_non_empty_string' }
   }
+}
+
+function buildValidatorFromConfig(config: MediaOptionValidatorConfig): AiOptionValidator {
+  if (config.kind === 'enum') return enumValidator(config.values)
+  if (config.kind === 'integer') return integerRangeValidator({ min: config.min, max: config.max })
+  if (config.kind === 'boolean') return booleanValidator()
+  return nonEmptyStringValidator()
+}
+
+function buildValidatorsFromConfig(
+  validators: MediaOptionSchemaConfig['validators'],
+): Readonly<Record<string, AiOptionValidator>> {
+  if (!validators) return {}
+  return Object.fromEntries(
+    Object.entries(validators).map(([key, value]) => [key, buildValidatorFromConfig(value)]),
+  )
 }
 
 function pickFirstDefined(options: Readonly<Record<string, unknown>>, keys: readonly string[]): unknown {
@@ -311,99 +347,88 @@ function falVideoObjectValidator(modelId: string): AiOptionObjectValidator {
   return () => FAL_VIDEO_MODEL_IDS.has(modelId) ? { ok: true } : { ok: false, reason: `modelId=${modelId}` }
 }
 
+function resolveObjectValidators(input: {
+  config: MediaOptionSchemaConfig
+  selection: AiResolvedSelection
+}): readonly AiOptionObjectValidator[] | undefined {
+  const kind = input.config.objectValidatorKind
+  if (!kind) return undefined
+  if (kind === 'falVideoModel') return [falVideoObjectValidator(input.selection.modelId)]
+  if (kind === 'minimaxVideo') return [minimaxVideoObjectValidator(input.selection.modelId)]
+  if (kind === 'viduVideo') return [viduVideoObjectValidator(input.selection.modelId)]
+  return [openAiCompatibleVideoObjectValidator()]
+}
+
 export function buildProviderSchemaOverride(input: {
   modality: MediaModality
   providerKey: string
-  selection: AiResolvedMediaSelection
+  selection: AiResolvedSelection
 }): MediaOptionSchemaOverride {
   if (input.modality === 'image' && input.providerKey === 'ark') {
     return {
-      requiresOneOf: [{ keys: ['aspectRatio', 'size'], message: 'aspectRatio_or_size' }],
-      validators: { aspectRatio: enumValidator(ARK_IMAGE_RATIOS), resolution: enumValidator(ARK_IMAGE_RESOLUTIONS), size: nonEmptyStringValidator() },
+      ...ARK_IMAGE_OPTION_SCHEMA_CONFIG,
+      validators: buildValidatorsFromConfig(ARK_IMAGE_OPTION_SCHEMA_CONFIG.validators),
     }
   }
   if (input.modality === 'image' && input.providerKey === 'fal') {
-    return { validators: { resolution: enumValidator(FAL_IMAGE_RESOLUTIONS), outputFormat: enumValidator(OPENAI_IMAGE_OUTPUT_FORMATS) } }
+    return {
+      ...FAL_IMAGE_OPTION_SCHEMA_CONFIG,
+      validators: {
+        ...buildValidatorsFromConfig(FAL_IMAGE_OPTION_SCHEMA_CONFIG.validators),
+        outputFormat: enumValidator(OPENAI_IMAGE_OUTPUT_FORMATS),
+      },
+    }
   }
   if (input.modality === 'image' && input.providerKey === 'openai-compatible') {
     return {
-      conflicts: [{ keys: ['size', 'resolution'], message: 'size_and_resolution_must_match', allowSameValue: true }],
-      validators: {
-        size: enumValidator(OPENAI_IMAGE_SIZES),
-        resolution: enumValidator(OPENAI_IMAGE_SIZES),
-        outputFormat: enumValidator(OPENAI_IMAGE_OUTPUT_FORMATS),
-        responseFormat: enumValidator(OPENAI_IMAGE_RESPONSE_FORMATS),
-        quality: enumValidator(OPENAI_IMAGE_QUALITIES),
-      },
+      ...OPENAI_COMPATIBLE_IMAGE_OPTION_SCHEMA_CONFIG,
+      validators: buildValidatorsFromConfig(OPENAI_COMPATIBLE_IMAGE_OPTION_SCHEMA_CONFIG.validators),
     }
   }
   if (input.modality === 'video' && input.providerKey === 'ark') {
     const spec = ARK_VIDEO_SPECS[input.selection.modelId]
     return {
+      ...ARK_VIDEO_OPTION_SCHEMA_CONFIG,
       validators: {
-        aspectRatio: enumValidator(ARK_VIDEO_RATIOS),
+        ...buildValidatorsFromConfig(ARK_VIDEO_OPTION_SCHEMA_CONFIG.validators),
         resolution: enumValidator(spec?.resolutions || ['480p', '720p', '1080p']),
         duration: integerRangeValidator({ min: spec?.durationMin, max: spec?.durationMax }),
-        generateAudio: booleanValidator(),
-        returnLastFrame: booleanValidator(),
-        draft: booleanValidator(),
-        cameraFixed: booleanValidator(),
-        watermark: booleanValidator(),
-        seed: integerRangeValidator({ min: 0 }),
-        serviceTier: enumValidator(['default', 'flex']),
-        executionExpiresAfter: integerRangeValidator({ min: 1 }),
       },
     }
   }
   if (input.modality === 'video' && input.providerKey === 'bailian') {
-    return { validators: { duration: integerRangeValidator({ min: 1 }), watermark: booleanValidator(), promptExtend: booleanValidator() } }
+    return {
+      ...BAILIAN_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: buildValidatorsFromConfig(BAILIAN_VIDEO_OPTION_SCHEMA_CONFIG.validators),
+    }
   }
   if (input.modality === 'video' && input.providerKey === 'fal') {
     return {
-      objectValidators: [falVideoObjectValidator(input.selection.modelId)],
-      validators: { duration: integerRangeValidator({ min: 1 }), aspectRatio: nonEmptyStringValidator(), resolution: nonEmptyStringValidator() },
+      ...FAL_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: buildValidatorsFromConfig(FAL_VIDEO_OPTION_SCHEMA_CONFIG.validators),
+      objectValidators: resolveObjectValidators({ config: FAL_VIDEO_OPTION_SCHEMA_CONFIG, selection: input.selection }),
     }
   }
   if (input.modality === 'video' && input.providerKey === 'minimax') {
     return {
-      allowedKeys: ['generationMode'],
-      objectValidators: [minimaxVideoObjectValidator(input.selection.modelId)],
-      validators: { generationMode: enumValidator(MINIMAX_VIDEO_MODES), aspectRatio: nonEmptyStringValidator(), lastFrameImageUrl: nonEmptyStringValidator() },
+      ...MINIMAX_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: buildValidatorsFromConfig(MINIMAX_VIDEO_OPTION_SCHEMA_CONFIG.validators),
+      objectValidators: resolveObjectValidators({ config: MINIMAX_VIDEO_OPTION_SCHEMA_CONFIG, selection: input.selection }),
     }
   }
   if (input.modality === 'video' && input.providerKey === 'vidu') {
     return {
-      allowedKeys: [
-        'aspect_ratio', 'generationMode', 'audio', 'audioType', 'audio_type',
-        'movementAmplitude', 'movement_amplitude', 'bgm', 'isRec', 'is_rec',
-        'voiceId', 'voice_id', 'payload', 'offPeak', 'off_peak', 'wmPosition',
-        'wm_position', 'wmUrl', 'wm_url', 'metaData', 'meta_data', 'callbackUrl', 'callback_url',
-      ],
-      objectValidators: [viduVideoObjectValidator(input.selection.modelId)],
-      validators: {
-        generationMode: enumValidator(VIDU_VIDEO_MODES),
-        bgm: booleanValidator(),
-        isRec: booleanValidator(),
-        is_rec: booleanValidator(),
-        offPeak: booleanValidator(),
-        off_peak: booleanValidator(),
-        watermark: booleanValidator(),
-        voiceId: nonEmptyStringValidator(),
-        voice_id: nonEmptyStringValidator(),
-        wmUrl: nonEmptyStringValidator(),
-        wm_url: nonEmptyStringValidator(),
-        metaData: nonEmptyStringValidator(),
-        meta_data: nonEmptyStringValidator(),
-        callbackUrl: nonEmptyStringValidator(),
-        callback_url: nonEmptyStringValidator(),
-      },
+      ...VIDU_VIDEO_OPTION_SCHEMA_CONFIG,
+      allowedKeys: VIDU_VIDEO_OPTION_ALLOWED_KEYS,
+      validators: buildValidatorsFromConfig(VIDU_VIDEO_OPTION_SCHEMA_CONFIG.validators),
+      objectValidators: resolveObjectValidators({ config: VIDU_VIDEO_OPTION_SCHEMA_CONFIG, selection: input.selection }),
     }
   }
   if (input.modality === 'video' && input.providerKey === 'openai-compatible') {
     return {
-      allowedKeys: ['aspect_ratio', 'generationMode'],
-      objectValidators: [openAiCompatibleVideoObjectValidator()],
-      validators: { generateAudio: booleanValidator(), generationMode: nonEmptyStringValidator() },
+      ...OPENAI_COMPATIBLE_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: buildValidatorsFromConfig(OPENAI_COMPATIBLE_VIDEO_OPTION_SCHEMA_CONFIG.validators),
+      objectValidators: resolveObjectValidators({ config: OPENAI_COMPATIBLE_VIDEO_OPTION_SCHEMA_CONFIG, selection: input.selection }),
     }
   }
   return {}
