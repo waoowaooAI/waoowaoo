@@ -3,10 +3,11 @@ import {
   generateVideoViaOpenAICompatTemplate,
 } from '@/lib/ai-providers/adapters/openai-compatible/index'
 import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime-types'
+import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
 
 export async function executeOpenAiCompatibleVideoGeneration(input: AiProviderVideoExecutionContext) {
   const { prompt, ...providerOptions } = input.options || {}
-  const compatTemplate = input.selection.compatMediaTemplate
+  const compatTemplate = input.selection.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
   if (!compatTemplate) {
     throw new Error(`MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED: ${input.selection.modelKey}`)
   }

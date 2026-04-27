@@ -1,4 +1,13 @@
 import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-option-schema-config'
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import {
+  booleanValidator,
+  buildMediaOptionSchema,
+  createOpenAiCompatibleVideoObjectValidator,
+  enumValidator,
+  nonEmptyStringValidator,
+  type MediaModality,
+} from '@/lib/ai-providers/shared/option-schema'
 
 export const OPENAI_IMAGE_SIZES = ['auto', '1024x1024', '1536x1024', '1024x1536', '256x256', '512x512', '1792x1024', '1024x1792'] as const
 export const OPENAI_IMAGE_OUTPUT_FORMATS = ['png', 'jpeg', 'webp'] as const
@@ -27,3 +36,33 @@ export const OPENAI_COMPATIBLE_VIDEO_OPTION_SCHEMA_CONFIG = {
     generationMode: { kind: 'nonEmptyString' },
   },
 } satisfies MediaOptionSchemaConfig
+
+export function resolveOpenAiCompatibleOptionSchema(modality: MediaModality): AiOptionSchema {
+  if (modality === 'image') {
+    return buildMediaOptionSchema('image', {
+      ...OPENAI_COMPATIBLE_IMAGE_OPTION_SCHEMA_CONFIG,
+      validators: {
+        size: enumValidator(OPENAI_IMAGE_SIZES),
+        resolution: enumValidator(OPENAI_IMAGE_SIZES),
+        outputFormat: enumValidator(OPENAI_IMAGE_OUTPUT_FORMATS),
+        responseFormat: enumValidator(OPENAI_IMAGE_RESPONSE_FORMATS),
+        quality: enumValidator(OPENAI_IMAGE_QUALITIES),
+      },
+    })
+  }
+  if (modality === 'video') {
+    return buildMediaOptionSchema('video', {
+      ...OPENAI_COMPATIBLE_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: {
+        generateAudio: booleanValidator(),
+        generationMode: nonEmptyStringValidator(),
+      },
+      objectValidators: [createOpenAiCompatibleVideoObjectValidator({
+        durations: OPENAI_VIDEO_DURATIONS,
+        ratios: OPENAI_VIDEO_RATIOS,
+        sizes: OPENAI_VIDEO_SIZES,
+      })],
+    })
+  }
+  return buildMediaOptionSchema(modality)
+}

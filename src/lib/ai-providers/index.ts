@@ -1,6 +1,6 @@
 import { AiRegistry } from '@/lib/ai-registry/registry'
-import { getProviderKey, type ProviderConfig } from '@/lib/api-config'
 import { resolveAiGatewayRoute } from '@/lib/ai-registry/gateway-route'
+import type { AiLlmProviderConfig } from '@/lib/ai-registry/types'
 import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
 import { executeArkImageGeneration } from '@/lib/ai-providers/ark/image'
 import { runArkLlmCompletion, runArkLlmStream, runArkVisionCompletion } from '@/lib/ai-providers/ark/llm'
@@ -29,6 +29,7 @@ import { runOpenAiCompatibleLlmCompletion, runOpenAiCompatibleLlmStream } from '
 import { executeOpenAiCompatibleVideoGeneration } from '@/lib/ai-providers/openai-compatible/video'
 import { openRouterMediaAdapter } from '@/lib/ai-providers/openrouter/adapter'
 import { runOpenRouterLlmCompletion, runOpenRouterLlmStream } from '@/lib/ai-providers/openrouter/llm'
+import { executeGenericAudioGeneration } from '@/lib/ai-providers/shared/audio'
 import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import {
   executeSiliconFlowAudioGeneration,
@@ -56,9 +57,22 @@ const mediaAdapterRegistry = new AiRegistry<DescribeOnlyMediaAdapter>([
   viduMediaAdapter,
 ])
 
+function getProviderKey(providerId: string): string {
+  const marker = providerId.indexOf(':')
+  return (marker === -1 ? providerId : providerId.slice(0, marker)).toLowerCase()
+}
+
 const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
   {
     providerKey: 'ark',
+    image: {
+      describe: (selection) => arkMediaAdapter.describeVariant('image', selection),
+      execute: executeArkImageGeneration,
+    },
+    video: {
+      describe: (selection) => arkMediaAdapter.describeVariant('video', selection),
+      execute: executeArkVideoGeneration,
+    },
     completeLlm: (input) => runArkLlmCompletion({
       apiKey: input.providerConfig.apiKey,
       modelId: input.selection.modelId,
@@ -67,11 +81,21 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     }),
     streamLlm: runArkLlmStream,
     completeVision: runArkVisionCompletion,
-    executeImage: executeArkImageGeneration,
-    executeVideo: executeArkVideoGeneration,
   },
   {
     providerKey: 'bailian',
+    image: {
+      describe: (selection) => bailianMediaAdapter.describeVariant('image', selection),
+      execute: executeBailianImageGeneration,
+    },
+    video: {
+      describe: (selection) => bailianMediaAdapter.describeVariant('video', selection),
+      execute: executeBailianVideoGeneration,
+    },
+    audio: {
+      describe: (selection) => bailianMediaAdapter.describeVariant('audio', selection),
+      execute: executeBailianAudioGeneration,
+    },
     completeLlm: (input) => runBailianLlmCompletion({
       modelId: input.selection.modelId,
       messages: input.messages,
@@ -81,17 +105,32 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     }),
     streamLlm: runBailianLlmStream,
     completeVision: runBailianVisionCompletion,
-    executeImage: executeBailianImageGeneration,
-    executeVideo: executeBailianVideoGeneration,
-    executeAudio: executeBailianAudioGeneration,
   },
   {
     providerKey: 'fal',
-    executeImage: executeFalImageGeneration,
-    executeVideo: executeFalVideoGeneration,
+    image: {
+      describe: (selection) => falMediaAdapter.describeVariant('image', selection),
+      execute: executeFalImageGeneration,
+    },
+    video: {
+      describe: (selection) => falMediaAdapter.describeVariant('video', selection),
+      execute: executeFalVideoGeneration,
+    },
+    audio: {
+      describe: (selection) => falMediaAdapter.describeVariant('audio', selection),
+      execute: executeGenericAudioGeneration,
+    },
   },
   {
     providerKey: 'google',
+    image: {
+      describe: (selection) => googleMediaAdapter.describeVariant('image', selection),
+      execute: executeGoogleImageGeneration,
+    },
+    video: {
+      describe: (selection) => googleMediaAdapter.describeVariant('video', selection),
+      execute: executeGoogleVideoGeneration,
+    },
     completeLlm: (input) => runGoogleLlmCompletion({
       apiKey: input.providerConfig.apiKey,
       baseUrl: input.providerConfig.baseUrl,
@@ -104,11 +143,17 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     }),
     streamLlm: runGoogleLlmStream,
     completeVision: runGoogleVisionCompletion,
-    executeImage: executeGoogleImageGeneration,
-    executeVideo: executeGoogleVideoGeneration,
   },
   {
     providerKey: 'gemini-compatible',
+    image: {
+      describe: (selection) => geminiCompatibleMediaAdapter.describeVariant('image', selection),
+      execute: executeGoogleImageGeneration,
+    },
+    video: {
+      describe: (selection) => geminiCompatibleMediaAdapter.describeVariant('video', selection),
+      execute: executeGoogleVideoGeneration,
+    },
     completeLlm: (input) => runGoogleLlmCompletion({
       apiKey: input.providerConfig.apiKey,
       baseUrl: input.providerConfig.baseUrl,
@@ -121,15 +166,24 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     }),
     streamLlm: runGoogleLlmStream,
     completeVision: runGoogleVisionCompletion,
-    executeImage: executeGoogleImageGeneration,
-    executeVideo: executeGoogleVideoGeneration,
   },
   {
     providerKey: 'minimax',
-    executeVideo: executeMinimaxVideoGeneration,
+    video: {
+      describe: (selection) => minimaxMediaAdapter.describeVariant('video', selection),
+      execute: executeMinimaxVideoGeneration,
+    },
   },
   {
     providerKey: 'openai-compatible',
+    image: {
+      describe: (selection) => openAiCompatibleMediaAdapter.describeVariant('image', selection),
+      execute: executeOpenAiCompatibleImageGeneration,
+    },
+    video: {
+      describe: (selection) => openAiCompatibleMediaAdapter.describeVariant('video', selection),
+      execute: executeOpenAiCompatibleVideoGeneration,
+    },
     completeLlm: (input) => runOpenAiCompatibleLlmCompletion({
       gatewayRoute: input.providerConfig.gatewayRoute || 'openai-compat',
       userId: input.userId,
@@ -147,8 +201,6 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       ...input,
       gatewayRoute: input.providerConfig.gatewayRoute || 'openai-compat',
     }),
-    executeImage: executeOpenAiCompatibleImageGeneration,
-    executeVideo: executeOpenAiCompatibleVideoGeneration,
   },
   {
     providerKey: 'openrouter',
@@ -165,6 +217,18 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
   },
   {
     providerKey: 'siliconflow',
+    image: {
+      describe: (selection) => siliconFlowMediaAdapter.describeVariant('image', selection),
+      execute: executeSiliconFlowImageGeneration,
+    },
+    video: {
+      describe: (selection) => siliconFlowMediaAdapter.describeVariant('video', selection),
+      execute: executeSiliconFlowVideoGeneration,
+    },
+    audio: {
+      describe: (selection) => siliconFlowMediaAdapter.describeVariant('audio', selection),
+      execute: executeSiliconFlowAudioGeneration,
+    },
     completeLlm: (input) => runSiliconFlowLlmCompletion({
       modelId: input.selection.modelId,
       messages: input.messages,
@@ -174,13 +238,13 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     }),
     streamLlm: runSiliconFlowLlmStream,
     completeVision: runSiliconFlowVisionCompletion,
-    executeImage: executeSiliconFlowImageGeneration,
-    executeVideo: executeSiliconFlowVideoGeneration,
-    executeAudio: executeSiliconFlowAudioGeneration,
   },
   {
     providerKey: 'vidu',
-    executeVideo: executeViduVideoGeneration,
+    video: {
+      describe: (selection) => viduMediaAdapter.describeVariant('video', selection),
+      execute: executeViduVideoGeneration,
+    },
   },
 ])
 
@@ -194,9 +258,9 @@ export function resolveRegisteredMediaAdapter(providerId: string): DescribeOnlyM
 
 export function resolveRegisteredMediaGatewayRoute(input: {
   providerId: string
-  providerConfig: ProviderConfig
+  providerConfig: AiLlmProviderConfig
 }): 'official' | 'openai-compat' {
-  const providerKey = getProviderKey(input.providerId).toLowerCase()
+  const providerKey = getProviderKey(input.providerId)
   const defaultGatewayRoute = resolveAiGatewayRoute(input.providerId)
   if (providerKey === 'gemini-compatible') {
     return input.providerConfig.apiMode === 'openai-official' ? 'openai-compat' : 'official'

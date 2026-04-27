@@ -3,6 +3,7 @@ import {
   generateImageViaOpenAICompatTemplate,
 } from '@/lib/ai-providers/adapters/openai-compatible/index'
 import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
+import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
 
 function aspectRatioToOpenAISize(aspectRatio: string | undefined): string | undefined {
   if (!aspectRatio) return undefined
@@ -19,7 +20,7 @@ function aspectRatioToOpenAISize(aspectRatio: string | undefined): string | unde
 
 export async function executeOpenAiCompatibleImageGeneration(input: AiProviderImageExecutionContext) {
   const { referenceImages, ...generatorOptions } = input.options || {}
-  const compatTemplate = input.selection.compatMediaTemplate
+  const compatTemplate = input.selection.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
   if (!compatTemplate) {
     throw new Error(`MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED: ${input.selection.modelKey}`)
   }

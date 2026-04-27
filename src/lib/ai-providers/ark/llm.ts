@@ -8,6 +8,12 @@ import {
   resolveStreamStepMeta,
   withStreamChunkTimeout,
 } from '@/lib/ai-providers/shared/llm-support'
+import {
+  arkResponsesCompletion,
+  arkResponsesStream,
+  buildArkThinkingParam,
+  convertChatMessagesToArkInput,
+} from './responses'
 import type {
   AiProviderLlmResult,
   AiProviderLlmStreamContext,
@@ -21,7 +27,6 @@ export async function runArkLlmCompletion(input: {
   messages: { role: 'user' | 'assistant' | 'system'; content: string }[]
   reasoning: boolean
 }): Promise<AiProviderLlmResult> {
-  const { arkResponsesCompletion, convertChatMessagesToArkInput, buildArkThinkingParam } = await import('@/lib/ark-llm')
   const arkThinkingParams = buildArkThinkingParam(input.modelId, input.reasoning)
   const arkResult = await arkResponsesCompletion({
     apiKey: input.apiKey,
@@ -45,7 +50,6 @@ export async function runArkLlmCompletion(input: {
 }
 
 export async function runArkLlmStream(input: AiProviderLlmStreamContext): Promise<AiProviderLlmResult> {
-  const { arkResponsesStream, convertChatMessagesToArkInput, buildArkThinkingParam } = await import('@/lib/ark-llm')
   const stepMeta = resolveStreamStepMeta(input.options)
   const useReasoning = input.options.reasoning ?? true
   const arkThinkingParams = buildArkThinkingParam(input.selection.modelId, useReasoning)
@@ -123,14 +127,12 @@ export async function runArkVisionCompletion(input: AiProviderVisionExecutionCon
   }
 
   const thinkingType = input.reasoning ? 'enabled' : 'disabled'
-  const { text, usage } = await import('@/lib/ai-providers/llm/ark').then(({ arkResponsesCompletion }) =>
-    arkResponsesCompletion({
-      apiKey: input.providerConfig.apiKey,
-      model: input.selection.modelId,
-      input: [{ role: 'user', content }],
-      thinking: { type: thinkingType },
-    }),
-  )
+  const { text, usage } = await arkResponsesCompletion({
+    apiKey: input.providerConfig.apiKey,
+    model: input.selection.modelId,
+    input: [{ role: 'user', content }],
+    thinking: { type: thinkingType },
+  })
 
   const completion = buildOpenAIChatCompletion(input.selection.modelId, text, usage)
   return buildAiProviderLlmResult({

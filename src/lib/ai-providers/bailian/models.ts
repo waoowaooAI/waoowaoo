@@ -1,4 +1,6 @@
 import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-option-schema-config'
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import { booleanValidator, buildMediaOptionSchema, integerRangeValidator, type MediaModality } from '@/lib/ai-providers/shared/option-schema'
 
 export const BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   {
@@ -67,3 +69,17 @@ export const BAILIAN_VIDEO_OPTION_SCHEMA_CONFIG = {
     promptExtend: { kind: 'boolean' },
   },
 } satisfies MediaOptionSchemaConfig
+
+export function resolveBailianOptionSchema(modality: MediaModality): AiOptionSchema {
+  if (modality === 'video') {
+    return buildMediaOptionSchema('video', {
+      ...BAILIAN_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: {
+        duration: integerRangeValidator({ min: 1 }),
+        watermark: booleanValidator(),
+        promptExtend: booleanValidator(),
+      },
+    })
+  }
+  return buildMediaOptionSchema(modality)
+}

@@ -1,4 +1,13 @@
 import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-option-schema-config'
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import {
+  booleanValidator,
+  buildMediaOptionSchema,
+  createViduVideoObjectValidator,
+  enumValidator,
+  nonEmptyStringValidator,
+  type MediaModality,
+} from '@/lib/ai-providers/shared/option-schema'
 
 export const VIDU_VIDEO_MODES = ['normal', 'firstlastframe'] as const
 export const VIDU_STANDARD_RATIOS = new Set(['16:9', '9:16', '1:1'])
@@ -374,3 +383,40 @@ export const VIDU_VIDEO_OPTION_SCHEMA_CONFIG = {
     callback_url: { kind: 'nonEmptyString' },
   },
 } satisfies MediaOptionSchemaConfig
+
+export function resolveViduOptionSchema(modality: MediaModality, modelId: string): AiOptionSchema {
+  if (modality === 'video') {
+    return buildMediaOptionSchema('video', {
+      ...VIDU_VIDEO_OPTION_SCHEMA_CONFIG,
+      allowedKeys: VIDU_VIDEO_OPTION_ALLOWED_KEYS,
+      validators: {
+        generationMode: enumValidator(VIDU_VIDEO_MODES),
+        bgm: booleanValidator(),
+        isRec: booleanValidator(),
+        is_rec: booleanValidator(),
+        offPeak: booleanValidator(),
+        off_peak: booleanValidator(),
+        watermark: booleanValidator(),
+        voiceId: nonEmptyStringValidator(),
+        voice_id: nonEmptyStringValidator(),
+        wmUrl: nonEmptyStringValidator(),
+        wm_url: nonEmptyStringValidator(),
+        metaData: nonEmptyStringValidator(),
+        meta_data: nonEmptyStringValidator(),
+        callbackUrl: nonEmptyStringValidator(),
+        callback_url: nonEmptyStringValidator(),
+      },
+      objectValidators: [createViduVideoObjectValidator({
+        modelId,
+        specs: VIDU_VIDEO_SPECS,
+        standardRatios: VIDU_STANDARD_RATIOS,
+        extraRatios: VIDU_Q2_EXTRA_RATIOS,
+        ratioPattern: VIDU_RATIO_PATTERN,
+        audioTypes: VIDU_AUDIO_TYPES,
+        movementAmplitudes: VIDU_MOVEMENT_AMPLITUDES,
+        maxPayloadLength: VIDU_MAX_PAYLOAD_LENGTH,
+      })],
+    })
+  }
+  return buildMediaOptionSchema(modality)
+}

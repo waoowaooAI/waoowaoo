@@ -1,5 +1,6 @@
 import type { DescribeOnlyMediaAdapter } from './types'
 import { describeMediaVariantBase } from './shared'
+import { buildMediaOptionSchema } from '@/lib/ai-providers/shared/option-schema'
 
 export const googleMediaAdapter: DescribeOnlyMediaAdapter = {
   providerKey: 'google',
@@ -13,6 +14,7 @@ export const googleMediaAdapter: DescribeOnlyMediaAdapter = {
       modality,
       selection,
       executionMode,
+      optionSchema: buildMediaOptionSchema(modality),
     })
   },
 }
@@ -24,6 +26,7 @@ export const geminiCompatibleMediaAdapter: DescribeOnlyMediaAdapter = {
       modality,
       selection,
       executionMode: modality === 'video' ? 'async' : 'sync',
+      optionSchema: buildMediaOptionSchema(modality),
     })
   },
 }

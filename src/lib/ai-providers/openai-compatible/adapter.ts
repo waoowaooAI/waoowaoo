@@ -1,5 +1,6 @@
 import { describeMediaVariantBase } from '@/lib/ai-providers/adapters/shared'
 import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/adapters/types'
+import { resolveOpenAiCompatibleOptionSchema } from './models'
 
 export const openAiCompatibleMediaAdapter: DescribeOnlyMediaAdapter = {
   providerKey: 'openai-compatible',
@@ -9,6 +10,7 @@ export const openAiCompatibleMediaAdapter: DescribeOnlyMediaAdapter = {
       modality,
       selection,
       executionMode: compatTemplate?.mode === 'async' ? 'async' : 'sync',
+      optionSchema: resolveOpenAiCompatibleOptionSchema(modality),
     })
   },
 }

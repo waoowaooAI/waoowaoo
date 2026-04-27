@@ -1,4 +1,12 @@
 import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-option-schema-config'
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import {
+  buildMediaOptionSchema,
+  enumValidator,
+  integerRangeValidator,
+  nonEmptyStringValidator,
+  type MediaModality,
+} from '@/lib/ai-providers/shared/option-schema'
 
 export const ARK_IMAGE_RATIOS = ['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3', '21:9', '9:21'] as const
 export const ARK_VIDEO_RATIOS = ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', 'adaptive'] as const
@@ -299,3 +307,36 @@ export const ARK_VIDEO_OPTION_SCHEMA_CONFIG = {
     executionExpiresAfter: { kind: 'integer', min: 1 },
   },
 } satisfies MediaOptionSchemaConfig
+
+export function resolveArkOptionSchema(modality: MediaModality, modelId: string): AiOptionSchema {
+  if (modality === 'image') {
+    return buildMediaOptionSchema('image', {
+      ...ARK_IMAGE_OPTION_SCHEMA_CONFIG,
+      validators: {
+        aspectRatio: enumValidator(ARK_IMAGE_RATIOS),
+        resolution: enumValidator(ARK_IMAGE_RESOLUTIONS),
+        size: nonEmptyStringValidator(),
+      },
+    })
+  }
+  if (modality === 'video') {
+    const spec = ARK_VIDEO_SPECS[modelId]
+    return buildMediaOptionSchema('video', {
+      ...ARK_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: {
+        aspectRatio: enumValidator(ARK_VIDEO_RATIOS),
+        resolution: enumValidator(spec?.resolutions || ['480p', '720p', '1080p']),
+        duration: integerRangeValidator({ min: spec?.durationMin, max: spec?.durationMax }),
+        generateAudio: (value) => value === undefined || typeof value === 'boolean' ? { ok: true } : { ok: false, reason: 'expected_boolean' },
+        returnLastFrame: (value) => value === undefined || typeof value === 'boolean' ? { ok: true } : { ok: false, reason: 'expected_boolean' },
+        draft: (value) => value === undefined || typeof value === 'boolean' ? { ok: true } : { ok: false, reason: 'expected_boolean' },
+        cameraFixed: (value) => value === undefined || typeof value === 'boolean' ? { ok: true } : { ok: false, reason: 'expected_boolean' },
+        watermark: (value) => value === undefined || typeof value === 'boolean' ? { ok: true } : { ok: false, reason: 'expected_boolean' },
+        seed: integerRangeValidator({ min: 0 }),
+        serviceTier: enumValidator(ARK_VIDEO_SERVICE_TIERS),
+        executionExpiresAfter: integerRangeValidator({ min: 1 }),
+      },
+    })
+  }
+  return buildMediaOptionSchema('audio')
+}

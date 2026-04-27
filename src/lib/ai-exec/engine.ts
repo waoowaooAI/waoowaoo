@@ -5,12 +5,7 @@ import type { AiModality } from '@/lib/ai-registry/types'
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks, ChatMessage } from '@/lib/llm/types'
 import { resolveModelSelection } from '@/lib/api-config'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
-import { resolveMediaAdapter } from '@/lib/ai-providers/adapters'
-import {
-  executeAudioGeneration,
-  executeImageGeneration,
-  executeVideoGeneration,
-} from '@/lib/ai-providers/adapters/media/execution'
+import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
 import { runChatCompletion } from '@/lib/ai-exec/llm/completion-runner'
 import { chatCompletionStream as runChatCompletionStream } from '@/lib/ai-providers/adapters/llm/stream-execution'
 import {
@@ -98,17 +93,18 @@ export type AiMediaExecutionInput =
 export async function executeMediaGeneration(input: AiMediaExecutionInput): Promise<GenerateResult> {
   const selection = await resolveModelSelection(input.userId, input.modelKey, input.modality)
   _ulogInfo(`[ai-exec:${input.modality}] resolved model selection: ${selection.modelKey}`)
-
-  const adapter = resolveMediaAdapter(selection)
-  const descriptor = adapter.describeVariant(input.modality, selection)
-  validateAiOptions({
-    schema: descriptor.optionSchema,
-    options: input.options,
-    context: `${input.modality}:${selection.modelKey}`,
-  })
-
+  const adapter = resolveRegisteredAiProvider(selection.provider)
   if (input.modality === 'image') {
-    return await executeImageGeneration({
+    if (!adapter.image) {
+      throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+    }
+    const descriptor = adapter.image.describe(selection)
+    validateAiOptions({
+      schema: descriptor.optionSchema,
+      options: input.options,
+      context: `${input.modality}:${selection.modelKey}`,
+    })
+    return await adapter.image.execute({
       userId: input.userId,
       selection,
       prompt: input.prompt,
@@ -117,7 +113,16 @@ export async function executeMediaGeneration(input: AiMediaExecutionInput): Prom
   }
 
   if (input.modality === 'video') {
-    return await executeVideoGeneration({
+    if (!adapter.video) {
+      throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+    }
+    const descriptor = adapter.video.describe(selection)
+    validateAiOptions({
+      schema: descriptor.optionSchema,
+      options: input.options,
+      context: `${input.modality}:${selection.modelKey}`,
+    })
+    return await adapter.video.execute({
       userId: input.userId,
       selection,
       imageUrl: input.imageUrl,
@@ -125,7 +130,16 @@ export async function executeMediaGeneration(input: AiMediaExecutionInput): Prom
     })
   }
 
-  return await executeAudioGeneration({
+  if (!adapter.audio) {
+    throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+  }
+  const descriptor = adapter.audio.describe(selection)
+  validateAiOptions({
+    schema: descriptor.optionSchema,
+    options: input.options,
+    context: `${input.modality}:${selection.modelKey}`,
+  })
+  return await adapter.audio.execute({
     userId: input.userId,
     selection,
     text: input.text,
@@ -246,4 +260,3 @@ export async function generateAudio(
     options,
   })
 }
-

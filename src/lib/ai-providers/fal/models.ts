@@ -1,4 +1,14 @@
 import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-option-schema-config'
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import {
+  buildMediaOptionSchema,
+  createFalVideoObjectValidator,
+  enumValidator,
+  integerRangeValidator,
+  nonEmptyStringValidator,
+  type MediaModality,
+} from '@/lib/ai-providers/shared/option-schema'
+import { OPENAI_IMAGE_OUTPUT_FORMATS } from '@/lib/ai-providers/openai-compatible/models'
 
 export const FAL_IMAGE_RESOLUTIONS = ['1K', '2K', '4K'] as const
 
@@ -113,3 +123,27 @@ export const FAL_VIDEO_OPTION_SCHEMA_CONFIG = {
     resolution: { kind: 'nonEmptyString' },
   },
 } satisfies MediaOptionSchemaConfig
+
+export function resolveFalOptionSchema(modality: MediaModality, modelId: string): AiOptionSchema {
+  if (modality === 'image') {
+    return buildMediaOptionSchema('image', {
+      ...FAL_IMAGE_OPTION_SCHEMA_CONFIG,
+      validators: {
+        resolution: enumValidator(FAL_IMAGE_RESOLUTIONS),
+        outputFormat: enumValidator(OPENAI_IMAGE_OUTPUT_FORMATS),
+      },
+    })
+  }
+  if (modality === 'video') {
+    return buildMediaOptionSchema('video', {
+      ...FAL_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: {
+        duration: integerRangeValidator({ min: 1 }),
+        aspectRatio: nonEmptyStringValidator(),
+        resolution: nonEmptyStringValidator(),
+      },
+      objectValidators: [createFalVideoObjectValidator(modelId, FAL_VIDEO_MODEL_IDS)],
+    })
+  }
+  return buildMediaOptionSchema('audio')
+}

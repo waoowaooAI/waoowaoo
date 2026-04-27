@@ -1,20 +1,18 @@
 import { getProviderKey } from '@/lib/api-config'
 import type {
   AiExecutionMode,
+  AiOptionSchema,
   AiResolvedSelection,
   AiVariantDescriptor,
 } from '@/lib/ai-registry/types'
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
-import {
-  buildMediaOptionSchema,
-  buildProviderSchemaOverride,
-  type MediaModality,
-} from './media-option-schema'
+import type { MediaModality } from '@/lib/ai-providers/shared/option-schema'
 
 export function describeMediaVariantBase(input: {
   modality: MediaModality
   selection: AiResolvedSelection
   executionMode: AiExecutionMode
+  optionSchema: AiOptionSchema
 }): AiVariantDescriptor {
   const providerKey = getProviderKey(input.selection.provider).toLowerCase()
   const contracts = resolveAiContractsForDescriptor({
@@ -22,11 +20,6 @@ export function describeMediaVariantBase(input: {
     modelKey: input.selection.modelKey,
     providerId: input.selection.provider,
     modelId: input.selection.modelId,
-    selection: input.selection,
-  })
-  const schemaOverride = buildProviderSchemaOverride({
-    modality: input.modality,
-    providerKey,
     selection: input.selection,
   })
   return {
@@ -44,7 +37,7 @@ export function describeMediaVariantBase(input: {
       mode: input.executionMode,
     },
     capabilities: contracts.capabilities,
-    optionSchema: buildMediaOptionSchema(input.modality, schemaOverride),
+    optionSchema: input.optionSchema,
     ...(contracts.inputContracts ? { inputContracts: contracts.inputContracts } : {}),
   }
 }

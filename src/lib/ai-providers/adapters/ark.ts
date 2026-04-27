@@ -1,5 +1,6 @@
 import type { DescribeOnlyMediaAdapter } from './types'
 import { describeMediaVariantBase } from './shared'
+import { resolveArkOptionSchema } from '@/lib/ai-providers/ark/models'
 
 export const arkMediaAdapter: DescribeOnlyMediaAdapter = {
   providerKey: 'ark',
@@ -11,6 +12,7 @@ export const arkMediaAdapter: DescribeOnlyMediaAdapter = {
       modality,
       selection,
       executionMode,
+      optionSchema: resolveArkOptionSchema(modality, selection.modelId),
     })
   },
 }

@@ -1,4 +1,12 @@
 import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-option-schema-config'
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import {
+  buildMediaOptionSchema,
+  createMinimaxVideoObjectValidator,
+  enumValidator,
+  nonEmptyStringValidator,
+  type MediaModality,
+} from '@/lib/ai-providers/shared/option-schema'
 
 export const MINIMAX_VIDEO_MODES = ['normal', 'firstlastframe'] as const
 
@@ -180,3 +188,18 @@ export const MINIMAX_VIDEO_OPTION_SCHEMA_CONFIG = {
     lastFrameImageUrl: { kind: 'nonEmptyString' },
   },
 } satisfies MediaOptionSchemaConfig
+
+export function resolveMinimaxOptionSchema(modality: MediaModality, modelId: string): AiOptionSchema {
+  if (modality === 'video') {
+    return buildMediaOptionSchema('video', {
+      ...MINIMAX_VIDEO_OPTION_SCHEMA_CONFIG,
+      validators: {
+        generationMode: enumValidator(MINIMAX_VIDEO_MODES),
+        aspectRatio: nonEmptyStringValidator(),
+        lastFrameImageUrl: nonEmptyStringValidator(),
+      },
+      objectValidators: [createMinimaxVideoObjectValidator({ modelId, specs: MINIMAX_VIDEO_SPECS })],
+    })
+  }
+  return buildMediaOptionSchema(modality)
+}

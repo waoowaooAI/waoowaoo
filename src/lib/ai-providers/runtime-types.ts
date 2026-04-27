@@ -1,9 +1,11 @@
 import type OpenAI from 'openai'
 import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
-import type { ProviderConfig, ModelSelection } from '@/lib/api-config'
 import type {
   AiLlmExecutionInput,
   AiLlmExecutionResult,
+  AiResolvedSelection,
+  AiVariantDescriptor,
+  AiLlmProviderConfig,
 } from '@/lib/ai-registry/types'
 import type { ProviderChatCompletionOptions, ProviderChatCompletionStreamCallbacks } from '@/lib/ai-providers/shared/llm-support'
 
@@ -20,7 +22,7 @@ export type AiProviderLlmStreamContext = {
     modelKey: string
     llmProtocol?: 'responses' | 'chat-completions'
   }
-  providerConfig: ProviderConfig
+  providerConfig: AiLlmProviderConfig
   messages: { role: 'user' | 'assistant' | 'system'; content: string }[]
   options: ProviderChatCompletionOptions
   callbacks?: ProviderChatCompletionStreamCallbacks
@@ -39,7 +41,12 @@ export type AiProviderVisionExecutionContext = {
 
 export type AiProviderImageExecutionContext = {
   userId: string
-  selection: ModelSelection
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+    compatMediaTemplate?: unknown
+  }
   prompt: string
   options?: {
     referenceImages?: string[]
@@ -56,7 +63,12 @@ export type AiProviderImageExecutionContext = {
 
 export type AiProviderVideoExecutionContext = {
   userId: string
-  selection: ModelSelection
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+    compatMediaTemplate?: unknown
+  }
   imageUrl: string
   options?: {
     prompt?: string
@@ -72,7 +84,11 @@ export type AiProviderVideoExecutionContext = {
 
 export type AiProviderAudioExecutionContext = {
   userId: string
-  selection: ModelSelection
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+  }
   text: string
   options?: {
     voice?: string
@@ -81,8 +97,22 @@ export type AiProviderAudioExecutionContext = {
   }
 }
 
+export type RegisteredMediaProviderModalityAdapter<M extends 'image' | 'video' | 'audio'> = {
+  describe: (selection: AiResolvedSelection) => AiVariantDescriptor
+  execute: (
+    input: M extends 'image'
+      ? AiProviderImageExecutionContext
+      : M extends 'video'
+        ? AiProviderVideoExecutionContext
+        : AiProviderAudioExecutionContext,
+  ) => Promise<GenerateResult>
+}
+
 export interface RegisteredAiProvider {
   readonly providerKey: string
+  image?: RegisteredMediaProviderModalityAdapter<'image'>
+  video?: RegisteredMediaProviderModalityAdapter<'video'>
+  audio?: RegisteredMediaProviderModalityAdapter<'audio'>
   completeLlm?: (input: AiLlmExecutionInput) => Promise<AiProviderLlmResult>
   streamLlm?: (input: AiProviderLlmStreamContext) => Promise<AiProviderLlmResult>
   completeVision?: (input: AiProviderVisionExecutionContext) => Promise<AiProviderLlmResult>
