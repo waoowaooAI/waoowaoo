@@ -3,6 +3,7 @@ import {
   authState,
   configServiceMock,
   DIRECT_MEDIA_CASES,
+  executeProjectAgentOperationFromApiMock,
   hasOutputMock,
   invokePostRoute,
   prismaMock,
@@ -41,6 +42,9 @@ vi.mock('@/lib/api-auth', () => {
 
 vi.mock('@/lib/task/submitter', () => ({
   submitTask: submitTaskMock,
+}))
+vi.mock('@/lib/adapters/api/execute-project-agent-operation', () => ({
+  executeProjectAgentOperationFromApi: executeProjectAgentOperationFromApiMock,
 }))
 vi.mock('@/lib/task/resolve-locale', () => ({
   resolveRequiredTaskLocale: vi.fn(() => 'zh'),

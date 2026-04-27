@@ -1,0 +1,21 @@
+{
+  "note": "由 no-ai-outside-ai-dirs.mjs --update-snapshot 生成；只可缩短。",
+  "generatedAt": "2026-04-27T03:28:39.751Z",
+  "files": [
+    "src/components/ui/config-modals/ModelCapabilityDropdown.tsx",
+    "src/lib/ai-runtime/client.ts",
+    "src/lib/ai-runtime/types.ts",
+    "src/lib/billing/cost.ts",
+    "src/lib/constants.ts",
+    "src/lib/gemini-batch-utils.ts",
+    "src/lib/llm/completion-parts.ts",
+    "src/lib/llm/runtime-shared.ts",
+    "src/lib/operations/domains/media/lipsync-ops.ts",
+    "src/lib/operations/domains/media/video-generation-ops.ts",
+    "src/lib/user-api/api-config-catalog.ts",
+    "src/lib/user-api/api-config.ts",
+    "src/lib/user-api/llm-test-connection.ts",
+    "src/lib/user-api/provider-test.ts",
+    "src/lib/voice/generate-voice-line.ts"
+  ]
+}

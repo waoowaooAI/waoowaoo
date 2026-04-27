@@ -1,0 +1,28 @@
+{
+  "note": "由 no-cross-provider-model-data.mjs --update-snapshot 生成；只可缩短。",
+  "generatedAt": "2026-04-27T03:28:39.407Z",
+  "files": [
+    "src/components/ui/config-modals/ModelCapabilityDropdown.tsx",
+    "src/lib/ai-providers/adapters/media/generators/ark.ts",
+    "src/lib/ai-providers/adapters/media/generators/fal.ts",
+    "src/lib/ai-providers/adapters/media/generators/image/gemini-compatible.ts",
+    "src/lib/ai-providers/adapters/media/generators/image/google.ts",
+    "src/lib/ai-providers/adapters/media/generators/minimax.ts",
+    "src/lib/ai-providers/adapters/media/generators/video/google.ts",
+    "src/lib/ai-providers/adapters/media/generators/vidu.ts",
+    "src/lib/ai-providers/adapters/models/ark.ts",
+    "src/lib/ai-providers/adapters/models/fal.ts",
+    "src/lib/ai-providers/adapters/models/minimax.ts",
+    "src/lib/ai-providers/adapters/models/vidu.ts",
+    "src/lib/ai-providers/adapters/openai-compatible/image.ts",
+    "src/lib/ai-providers/adapters/openai-compatible/template-image.ts",
+    "src/lib/ai-providers/adapters/openai-compatible/video.ts",
+    "src/lib/billing/cost.ts",
+    "src/lib/constants.ts",
+    "src/lib/operations/domains/media/lipsync-ops.ts",
+    "src/lib/operations/domains/media/video-generation-ops.ts",
+    "src/lib/user-api/api-config-catalog.ts",
+    "src/lib/user-api/api-config.ts",
+    "src/lib/user-api/provider-test.ts"
+  ]
+}

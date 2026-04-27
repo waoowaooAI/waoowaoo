@@ -1,0 +1,10 @@
+{
+  "note": "由 no-cross-provider-switch.mjs --update-snapshot 生成；只可缩短。",
+  "generatedAt": "2026-04-27T03:28:39.468Z",
+  "files": [
+    "src/lib/ai-providers/adapters/llm/execution.ts",
+    "src/lib/ai-providers/adapters/llm/stream-execution.ts",
+    "src/lib/ai-providers/adapters/media-option-schema.ts",
+    "src/lib/ai-providers/adapters/media/execution.ts"
+  ]
+}
