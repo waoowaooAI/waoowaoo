@@ -52,9 +52,9 @@ export interface ModelCustomPricing {
   video?: MediaCustomPricing
 }
 
-const DEFAULT_VOICE_MODEL_ID = 'index-tts2'
-const DEFAULT_VOICE_DESIGN_MODEL_ID = 'bailian-voice-design'
-const DEFAULT_LIP_SYNC_MODEL_ID = 'kling'
+const DEFAULT_VOICE_MODEL_ID = 'fal::fal-ai/index-tts-2/text-to-speech'
+const DEFAULT_VOICE_DESIGN_MODEL_ID = 'bailian::qwen-voice-design'
+const DEFAULT_LIP_SYNC_MODEL_ID = 'fal::fal-ai/kling-video/lipsync/audio-to-video'
 
 function getMarkup(category: MarkupCategory): number {
   return MARKUP[category] ?? MARKUP.global

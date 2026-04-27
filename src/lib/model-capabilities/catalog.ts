@@ -1,11 +1,15 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import {
   composeModelKey,
   validateModelCapabilities,
   type ModelCapabilities,
   type UnifiedModelType,
 } from '@/lib/model-config-contract'
+import { ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
+import { BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
+import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
+import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
+import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
+import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 
 export interface BuiltinCapabilityCatalogEntry {
   modelType: UnifiedModelType
@@ -21,7 +25,6 @@ interface CatalogCache {
   byProviderKey: Map<string, BuiltinCapabilityCatalogEntry>
 }
 
-const CATALOG_DIR = path.resolve(process.cwd(), 'standards/capabilities')
 let cache: CatalogCache | null = null
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -109,45 +112,26 @@ function buildCache(entries: BuiltinCapabilityCatalogEntry[], signature: string)
   return { signature, entries, exact, byProviderKey }
 }
 
-function resolveCatalogFiles(): string[] {
-  return fs
-    .readdirSync(CATALOG_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
-    .map((entry) => path.join(CATALOG_DIR, entry.name))
-    .sort((left, right) => left.localeCompare(right))
-}
-
-function buildCatalogSignature(files: string[]): string {
-  return files
-    .map((filePath) => {
-      const stat = fs.statSync(filePath)
-      return `${filePath}:${stat.mtimeMs}:${stat.size}`
-    })
-    .join('|')
-}
+const BUILTIN_CATALOG_ENTRIES: readonly unknown[] = [
+  ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+]
 
 function loadCatalog(): CatalogCache {
-  const entries: BuiltinCapabilityCatalogEntry[] = []
-  const files = resolveCatalogFiles()
-
-  if (files.length === 0) {
-    throw new Error(`CAPABILITY_CATALOG_MISSING: no json file in ${CATALOG_DIR}`)
-  }
-  const signature = buildCatalogSignature(files)
-  if (cache && cache.signature === signature) return cache
-
-  for (const filePath of files) {
-    const raw = fs.readFileSync(filePath, 'utf8')
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) {
-      throw new Error(`CAPABILITY_CATALOG_INVALID: ${filePath} must be array`)
-    }
-    for (let index = 0; index < parsed.length; index += 1) {
-      entries.push(normalizeEntry(parsed[index], filePath, index))
-    }
+  if (cache) return cache
+  if (BUILTIN_CATALOG_ENTRIES.length === 0) {
+    throw new Error('CAPABILITY_CATALOG_MISSING: empty builtin catalog')
   }
 
-  cache = buildCache(entries, signature)
+  const entries: BuiltinCapabilityCatalogEntry[] = BUILTIN_CATALOG_ENTRIES.map(
+    (entry, index) => normalizeEntry(entry, 'builtin', index),
+  )
+
+  cache = buildCache(entries, 'builtin')
   return cache
 }
 

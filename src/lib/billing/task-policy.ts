@@ -208,7 +208,7 @@ function buildVoiceTaskInfo(taskType: TaskType, payload: AnyPayload): TaskBillin
     source: 'task',
     taskType,
     apiType: 'voice',
-    model: 'index-tts2',
+    model: 'fal::fal-ai/index-tts-2/text-to-speech',
     quantity: maxSeconds,
     unit: 'second',
     maxFrozenCost: calcVoice(maxSeconds),
@@ -225,7 +225,7 @@ function buildVoiceDesignTaskInfo(taskType: TaskType): TaskBillingInfo {
     source: 'task',
     taskType,
     apiType: 'voice-design',
-    model: 'bailian-voice-design',
+    model: 'bailian::qwen-voice-design',
     quantity: 1,
     unit: 'call',
     maxFrozenCost: calcVoiceDesign(),
@@ -254,7 +254,7 @@ export function buildDefaultTaskBillingInfo(taskType: TaskType, payload: AnyPayl
     case TASK_TYPE.VIDEO_PANEL:
       return buildVideoTaskInfo(taskType, payload)
     case TASK_TYPE.LIP_SYNC: {
-      const lipSyncModel = pickFirstString([payload?.lipSyncModel]) || 'kling'
+      const lipSyncModel = pickFirstString([payload?.lipSyncModel]) || 'fal::fal-ai/kling-video/lipsync/audio-to-video'
       return {
         billable: true,
         source: 'task',

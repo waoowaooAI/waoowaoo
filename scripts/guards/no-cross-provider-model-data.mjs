@@ -66,10 +66,16 @@ const PROVIDER_TOKENS = {
   ],
 }
 
+const OPENROUTER_UPSTREAM_PROVIDERS = new Set([
+  'google',
+  'openai-compatible',
+])
+
 function isAllowedHomeDir(file, providerKey) {
   const rel = file.replaceAll(path.sep, '/')
   if (rel.startsWith('tests/')) return true
   if (rel.startsWith(`src/lib/ai-providers/${providerKey}/`)) return true
+  if (rel.startsWith('src/lib/ai-providers/openrouter/') && OPENROUTER_UPSTREAM_PROVIDERS.has(providerKey)) return true
   return false
 }
 

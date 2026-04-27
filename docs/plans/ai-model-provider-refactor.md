@@ -140,6 +140,11 @@ src/lib/ai-providers/
     image.ts
     video.ts
 
+  openrouter/
+    adapter.ts
+    models.ts
+    llm.ts
+
   fal/
     adapter.ts
     models.ts
@@ -197,6 +202,8 @@ src/lib/ai-exec/
 - 目录名一律 **小写 kebab**；provider 目录名 = `providerKey`，**严禁**别名。
 - 每个 provider 目录**必须**有 `adapter.ts` + `models.ts`，其余 modality 文件按需。
 - `ai-providers/<x>/models.ts` 是**该 provider 所有 model 真相的唯一来源**。任何能力 / 价格 / 选项规格不允许写在 `models.ts` 之外。
+- `openrouter` 视为真实 provider，必须落在 `ai-providers/openrouter/`。
+- `legacy` / `system` **不是 provider**。旧 pricing 数据必须在迁移时归并到真实 provider 或物理删除，**禁止**保留 `legacy/`、`system/` 伪 provider 目录或兼容层。
 - `ai-providers/shared/` **只放跨 provider 的纯工具**（无 provider 名）。出现任何 `if (providerKey === ...)` 立刻拒收。
 - 不再有 `src/lib/ai-providers/adapters/` 这一层中间目录。
 - 不再有 `src/lib/ai-providers/llm/`、`ai-providers/official/`、`ai-providers/fal/base-url.ts` 这种"按 modality 跨 provider 切"的目录。
@@ -278,7 +285,7 @@ src/lib/ai-exec/
 
 > 原则：**先合真相源，再合实现，再删散文件，最后替 catalog**。每一步独立可上线、可回滚、由 guard 锁定不可逆。
 
-### Step 1 — 合并 6 套 catalog 为 `ai-providers/<x>/models.ts`
+### Step 1 — 合并 catalog 数据为 `ai-providers/<x>/models.ts`
 
 **只动数据**，不改任何运行时调用路径，行为零变化。
 
@@ -287,10 +294,12 @@ src/lib/ai-exec/
   - `model-pricing/catalog.ts`
   - `ai-providers/adapters/models/<x>.ts`
   - `ai-providers/adapters/media-option-schema.ts` 中该 provider 的 override
+- `model-pricing/catalog.ts` 中 `openrouter` 价格数据并入 `ai-providers/openrouter/models.ts`。
+- `model-pricing/catalog.ts` 中 `legacy` / `system` 条目必须在本步完成归并或删除，**禁止**以伪 provider 形式保留。
 - 老的 4 处文件改为**纯 re-export**（一次性，仅用于本步骤上线，Step 3 全部删除）。
 - 新增 guard：`scripts/guards/no-cross-provider-model-data.mjs` —— 禁止 provider X 的 model 常量出现在 provider Y 的目录或 `model-*` 顶层目录。
 
-**完成判据**：6 套 catalog 文件均无原始数据，仅 re-export；`models.ts` 单测覆盖每个 provider 的 capabilities/pricing/optionSchema 三件套。
+**完成判据**：catalog 文件均无原始数据，仅 re-export；`models.ts` 单测覆盖每个 provider 的 capabilities/pricing/optionSchema 三件套；`legacy` / `system` pricing 条目清零。
 
 ### Step 2 — 抽象升级：`AiMediaAdapter` → `AiProviderAdapter`，拆 switch
 

@@ -1,6 +1,11 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import { type CapabilityValue } from '@/lib/model-config-contract'
+import { ARK_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
+import { BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
+import { FAL_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
+import { GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
+import { MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
+import { OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
+import { VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 
 export type PricingApiType =
   | 'text'
@@ -33,8 +38,6 @@ interface PricingCatalogCache {
   exact: Map<string, BuiltinPricingCatalogEntry>
   byModelId: Map<string, BuiltinPricingCatalogEntry[]>
 }
-
-const PRICING_CATALOG_DIR = path.resolve(process.cwd(), 'standards/pricing')
 
 let cache: PricingCatalogCache | null = null
 
@@ -181,29 +184,25 @@ function cloneEntry(entry: BuiltinPricingCatalogEntry): BuiltinPricingCatalogEnt
   return JSON.parse(JSON.stringify(entry)) as BuiltinPricingCatalogEntry
 }
 
+const BUILTIN_PRICING_CATALOG_ENTRIES: readonly unknown[] = [
+  ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...VIDU_BUILTIN_PRICING_CATALOG_ENTRIES,
+]
+
 function loadPricingCatalog(): PricingCatalogCache {
   if (cache) return cache
-
-  const files = fs
-    .readdirSync(PRICING_CATALOG_DIR, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
-    .map((entry) => path.join(PRICING_CATALOG_DIR, entry.name))
-
-  if (files.length === 0) {
-    throw new Error(`PRICING_CATALOG_MISSING: no json file in ${PRICING_CATALOG_DIR}`)
+  if (BUILTIN_PRICING_CATALOG_ENTRIES.length === 0) {
+    throw new Error('PRICING_CATALOG_MISSING: empty builtin catalog')
   }
 
   const entries: BuiltinPricingCatalogEntry[] = []
-  for (const filePath of files) {
-    const raw = fs.readFileSync(filePath, 'utf8')
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) {
-      throw new Error(`PRICING_CATALOG_INVALID: ${filePath} must be array`)
-    }
-
-    for (let index = 0; index < parsed.length; index += 1) {
-      entries.push(normalizePricingEntry(parsed[index], filePath, index))
-    }
+  for (let index = 0; index < BUILTIN_PRICING_CATALOG_ENTRIES.length; index += 1) {
+    entries.push(normalizePricingEntry(BUILTIN_PRICING_CATALOG_ENTRIES[index], 'builtin', index))
   }
 
   cache = buildCache(entries)

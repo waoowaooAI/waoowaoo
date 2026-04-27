@@ -716,7 +716,7 @@ export async function withVoiceBilling<T>(
       projectId: recordParams.projectId,
       action: recordParams.action,
       apiType: 'voice',
-      model: 'index-tts2',
+      model: 'fal::fal-ai/index-tts-2/text-to-speech',
       quantity: maxFreezeSeconds,
       unit: 'second',
       metadata: recordParams.metadata,
@@ -745,7 +745,7 @@ export async function withVoiceDesignBilling<T>(
       projectId: recordParams.projectId,
       action: recordParams.action,
       apiType: 'voice-design',
-      model: 'bailian',
+      model: 'bailian::qwen-voice-design',
       quantity: 1,
       unit: 'call',
       metadata: recordParams.metadata,
@@ -758,7 +758,7 @@ export async function withVoiceDesignBilling<T>(
 export async function withLipSyncBilling<T>(
   userId: string,
   recordParams: BillingRecordParams,
-  model = 'kling',
+  model = 'fal::fal-ai/kling-video/lipsync/audio-to-video',
   generateFn: () => Promise<T>,
 ): Promise<T> {
   return await withSyncBillingCore(

@@ -11,6 +11,7 @@ describe('ai-providers/<x>/models.ts entrypoints', () => {
     const expectedFiles = [
       'src/lib/ai-providers/ark/models.ts',
       'src/lib/ai-providers/openai-compatible/models.ts',
+      'src/lib/ai-providers/openrouter/models.ts',
       'src/lib/ai-providers/google/models.ts',
       'src/lib/ai-providers/minimax/models.ts',
       'src/lib/ai-providers/vidu/models.ts',

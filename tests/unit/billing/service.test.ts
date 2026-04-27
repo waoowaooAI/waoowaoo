@@ -16,8 +16,17 @@ const modeMock = vi.hoisted(() => ({
   getBillingMode: vi.fn(),
 }))
 
+const prismaMock = vi.hoisted(() => ({
+  userPreference: {
+    findUnique: vi.fn(),
+  },
+}))
+
 vi.mock('@/lib/billing/ledger', () => ledgerMock)
 vi.mock('@/lib/billing/mode', () => modeMock)
+vi.mock('@/lib/prisma', () => ({
+  prisma: prismaMock,
+}))
 
 import { BillingOperationError, InsufficientBalanceError } from '@/lib/billing/errors'
 import {
@@ -39,6 +48,7 @@ describe('billing/service', () => {
     ledgerMock.increasePendingFreezeAmount.mockResolvedValue(true)
     ledgerMock.recordShadowUsage.mockResolvedValue(true)
     ledgerMock.rollbackFreeze.mockResolvedValue(true)
+    prismaMock.userPreference.findUnique.mockResolvedValue(null)
   })
 
   it('returns raw execution result in OFF mode', async () => {
@@ -220,7 +230,7 @@ describe('billing/service', () => {
         source: 'task',
         taskType: 'voice_line',
         apiType: 'voice',
-        model: 'index-tts2',
+        model: 'fal::fal-ai/index-tts-2/text-to-speech',
         quantity: 5,
         unit: 'second',
         maxFrozenCost: calcVoice(5),

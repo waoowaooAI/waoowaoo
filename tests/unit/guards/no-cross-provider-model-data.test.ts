@@ -32,4 +32,19 @@ describe('no-cross-provider-model-data guard', () => {
     const passing = runNoCrossProviderModelDataGuard()
     expect(passing.status).toBe(0)
   })
+
+  it('allows upstream model ids inside the openrouter provider directory', () => {
+    const tmpDir = path.join(process.cwd(), 'src', 'lib', 'ai-providers', 'openrouter')
+    const tmpFile = path.join(tmpDir, `no-cross-provider-model-data.${Date.now()}.ts`)
+
+    mkdirSync(tmpDir, { recursive: true })
+    writeFileSync(tmpFile, "export const routed = 'google/gemini-3.1-pro-preview' as const\n", 'utf8')
+
+    try {
+      const passing = runNoCrossProviderModelDataGuard()
+      expect(passing.status).toBe(0)
+    } finally {
+      rmSync(tmpFile, { force: true })
+    }
+  })
 })
