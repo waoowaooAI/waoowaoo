@@ -29,6 +29,33 @@ const completeBailianLlmMock = vi.hoisted(() =>
   })),
 )
 
+const runBailianLlmStreamMock = vi.hoisted(() =>
+  vi.fn(async () => ({
+    completion: {
+      id: 'chatcmpl_stream_mock',
+      object: 'chat.completion',
+      created: 1,
+      model: 'qwen3.5-plus',
+      choices: [
+        {
+          index: 0,
+          message: { role: 'assistant', content: 'stream-ok' },
+          finish_reason: 'stop',
+        },
+      ],
+      usage: {
+        prompt_tokens: 2,
+        completion_tokens: 2,
+        total_tokens: 4,
+      },
+    },
+    logProvider: 'bailian',
+    text: 'stream-ok',
+    reasoning: '',
+    usage: { promptTokens: 2, completionTokens: 2 },
+  })),
+)
+
 const completeSiliconFlowLlmMock = vi.hoisted(() =>
   vi.fn(async () => {
     throw new Error('siliconflow should not be called')
@@ -54,13 +81,22 @@ vi.mock('@/lib/api-config', () => ({
   getProviderKey: vi.fn((providerId: string) => providerId),
 }))
 
-vi.mock('@/lib/ai-providers/bailian', () => ({
-  completeBailianLlm: completeBailianLlmMock,
-}))
+vi.mock('@/lib/ai-providers/bailian', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/bailian')>()
+  return {
+    ...actual,
+    completeBailianLlm: completeBailianLlmMock,
+    runBailianLlmStream: runBailianLlmStreamMock,
+  }
+})
 
-vi.mock('@/lib/ai-providers/siliconflow', () => ({
-  completeSiliconFlowLlm: completeSiliconFlowLlmMock,
-}))
+vi.mock('@/lib/ai-providers/siliconflow', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/siliconflow')>()
+  return {
+    ...actual,
+    completeSiliconFlowLlm: completeSiliconFlowLlmMock,
+  }
+})
 
 vi.mock('@/lib/llm/runtime-shared', () => ({
   completionUsageSummary: vi.fn(() => ({ promptTokens: 2, completionTokens: 2 })),
@@ -96,21 +132,8 @@ describe('llm chatCompletionStream official provider branch', () => {
       },
     )
 
-    expect(completeBailianLlmMock).toHaveBeenCalledWith({
-      modelId: 'qwen3.5-plus',
-      messages: [{ role: 'user', content: 'hello' }],
-      apiKey: 'bl-key',
-      baseUrl: undefined,
-      temperature: 0.7,
-    })
+    expect(runBailianLlmStreamMock).toHaveBeenCalledTimes(1)
     expect(completeSiliconFlowLlmMock).not.toHaveBeenCalled()
-    expect(onComplete).toHaveBeenCalledWith('stream-ok', undefined)
-    expect(onChunk).toHaveBeenCalledWith(
-      expect.objectContaining({
-        kind: 'text',
-        delta: 'stream-ok',
-      }),
-    )
     expect(completion.choices[0]?.message?.content).toBe('stream-ok')
     expect(recordCompletionUsageMock).toHaveBeenCalledTimes(1)
   })

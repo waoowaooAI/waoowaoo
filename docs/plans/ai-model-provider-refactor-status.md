@@ -24,11 +24,11 @@
 
 - [x] `ai-registry/types.ts` 新类型上线，删除 `AiMediaAdapter` / `AiResolvedMediaSelection`
 - [x] 每 provider `adapter.ts` 落地
-- [ ] `adapters/llm/{execution,stream-execution}.ts` switch 拆光
-- [ ] `adapters/media/execution.ts` switch 拆光
+- [x] `adapters/llm/{execution,stream-execution}.ts` switch 拆光
+- [x] `adapters/media/execution.ts` switch 拆光
 - [ ] `adapters/media-option-schema.ts` 删除（数据已在 Step 1 搬走）
 - [ ] `ai-exec/engine.ts` 路由改为 `adapter[modality]`
-- [ ] guard：`no-cross-provider-switch.mjs`
+- [x] guard：`no-cross-provider-switch.mjs`
 
 ### Step 3 — 删散文件 + 取消 `adapters/` 中间层
 

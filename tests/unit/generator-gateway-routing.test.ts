@@ -97,12 +97,24 @@ vi.mock('@/lib/ai-providers/bailian', () => ({
   generateBailianImage: generateBailianImageMock,
   generateBailianVideo: generateBailianVideoMock,
   generateBailianAudio: generateBailianAudioMock,
+  executeBailianImageGeneration: generateBailianImageMock,
+  executeBailianVideoGeneration: generateBailianVideoMock,
+  executeBailianAudioGeneration: generateBailianAudioMock,
+  runBailianLlmCompletion: vi.fn(),
+  runBailianLlmStream: vi.fn(),
+  runBailianVisionCompletion: vi.fn(),
 }))
 
 vi.mock('@/lib/ai-providers/siliconflow', () => ({
   generateSiliconFlowImage: generateSiliconFlowImageMock,
   generateSiliconFlowVideo: generateSiliconFlowVideoMock,
   generateSiliconFlowAudio: generateSiliconFlowAudioMock,
+  executeSiliconFlowImageGeneration: generateSiliconFlowImageMock,
+  executeSiliconFlowVideoGeneration: generateSiliconFlowVideoMock,
+  executeSiliconFlowAudioGeneration: generateSiliconFlowAudioMock,
+  runSiliconFlowLlmCompletion: vi.fn(),
+  runSiliconFlowLlmStream: vi.fn(),
+  runSiliconFlowVisionCompletion: vi.fn(),
 }))
 
 import { generateAudio, generateImage, generateVideo } from '@/lib/ai-exec/engine'

@@ -43,17 +43,31 @@ vi.mock('@/lib/ai-providers/adapters/media/generators/factory', () => ({
   createAudioGenerator: vi.fn(() => ({ generate: vi.fn() })),
 }))
 
-vi.mock('@/lib/ai-providers/bailian', () => ({
-  generateBailianImage: vi.fn(),
-  generateBailianVideo: vi.fn(),
-  generateBailianAudio: vi.fn(),
-}))
+vi.mock('@/lib/ai-providers/bailian', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/bailian')>()
+  return {
+    ...actual,
+    generateBailianImage: vi.fn(),
+    generateBailianVideo: vi.fn(),
+    generateBailianAudio: vi.fn(),
+    executeBailianImageGeneration: vi.fn(),
+    executeBailianVideoGeneration: vi.fn(),
+    executeBailianAudioGeneration: vi.fn(),
+  }
+})
 
-vi.mock('@/lib/ai-providers/siliconflow', () => ({
-  generateSiliconFlowImage: vi.fn(),
-  generateSiliconFlowVideo: vi.fn(),
-  generateSiliconFlowAudio: vi.fn(),
-}))
+vi.mock('@/lib/ai-providers/siliconflow', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/siliconflow')>()
+  return {
+    ...actual,
+    generateSiliconFlowImage: vi.fn(),
+    generateSiliconFlowVideo: vi.fn(),
+    generateSiliconFlowAudio: vi.fn(),
+    executeSiliconFlowImageGeneration: vi.fn(),
+    executeSiliconFlowVideoGeneration: vi.fn(),
+    executeSiliconFlowAudioGeneration: vi.fn(),
+  }
+})
 
 import { generateImage, generateVideo } from '@/lib/ai-exec/engine'
 

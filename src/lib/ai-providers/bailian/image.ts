@@ -2,6 +2,7 @@ import {
   assertOfficialModelRegistered,
   type OfficialModelModality,
 } from '@/lib/ai-providers/official/model-registry'
+import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
 import { ensureBailianCatalogRegistered } from './catalog'
 import type { BailianGenerateRequestOptions } from './types'
 
@@ -24,4 +25,18 @@ function assertRegistered(modelId: string): void {
 export async function generateBailianImage(params: BailianImageGenerateParams): Promise<never> {
   assertRegistered(params.options.modelId)
   throw new Error('OFFICIAL_PROVIDER_NOT_IMPLEMENTED: bailian image')
+}
+
+export async function executeBailianImageGeneration(input: AiProviderImageExecutionContext) {
+  return await generateBailianImage({
+    userId: input.userId,
+    prompt: input.prompt,
+    referenceImages: input.options?.referenceImages,
+    options: {
+      ...(input.options || {}),
+      provider: input.selection.provider,
+      modelId: input.selection.modelId,
+      modelKey: input.selection.modelKey,
+    } as BailianGenerateRequestOptions,
+  })
 }

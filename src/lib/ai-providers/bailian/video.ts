@@ -4,6 +4,7 @@ import {
 } from '@/lib/ai-providers/official/model-registry'
 import { getProviderConfig } from '@/lib/api-config'
 import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
+import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime-types'
 import { toFetchableUrl } from '@/lib/storage/utils'
 import { ensureBailianCatalogRegistered } from './catalog'
 import type { BailianGenerateRequestOptions } from './types'
@@ -223,4 +224,18 @@ export async function generateBailianVideo(params: BailianVideoGenerateParams): 
     requestId: taskId,
     externalId: `BAILIAN:VIDEO:${taskId}`,
   }
+}
+
+export async function executeBailianVideoGeneration(input: AiProviderVideoExecutionContext): Promise<GenerateResult> {
+  return await generateBailianVideo({
+    userId: input.userId,
+    imageUrl: input.imageUrl,
+    prompt: input.options?.prompt,
+    options: {
+      ...(input.options || {}),
+      provider: input.selection.provider,
+      modelId: input.selection.modelId,
+      modelKey: input.selection.modelKey,
+    } as BailianGenerateRequestOptions,
+  })
 }

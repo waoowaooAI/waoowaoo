@@ -68,17 +68,25 @@ vi.mock('@/lib/api-config', () => ({
   getProviderKey: vi.fn((providerId: string) => providerId.split(':')[0] || providerId),
 }))
 
-vi.mock('@/lib/ai-providers/bailian', () => ({
-  completeBailianLlm: vi.fn(async () => {
-    throw new Error('bailian should not be called')
-  }),
-}))
+vi.mock('@/lib/ai-providers/bailian', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/bailian')>()
+  return {
+    ...actual,
+    completeBailianLlm: vi.fn(async () => {
+      throw new Error('bailian should not be called')
+    }),
+  }
+})
 
-vi.mock('@/lib/ai-providers/siliconflow', () => ({
-  completeSiliconFlowLlm: vi.fn(async () => {
-    throw new Error('siliconflow should not be called')
-  }),
-}))
+vi.mock('@/lib/ai-providers/siliconflow', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/siliconflow')>()
+  return {
+    ...actual,
+    completeSiliconFlowLlm: vi.fn(async () => {
+      throw new Error('siliconflow should not be called')
+    }),
+  }
+})
 
 vi.mock('@/lib/llm/runtime-shared', () => ({
   _ulogError: vi.fn(),

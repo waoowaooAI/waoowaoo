@@ -1,19 +1,20 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
+import { ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES, ARK_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
 import { bailianMediaAdapter } from '@/lib/ai-providers/bailian/adapter'
+import { BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES, BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
 import { falMediaAdapter } from '@/lib/ai-providers/fal/adapter'
+import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES, FAL_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
 import { googleMediaAdapter } from '@/lib/ai-providers/google/adapter'
+import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
 import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
+import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES, MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
 import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
-import { findBuiltinCapabilityCatalogEntry } from '@/lib/model-capabilities/catalog'
-import { findBuiltinPricingCatalogEntry } from '@/lib/model-pricing/catalog'
-
-vi.mock('@/lib/model-capabilities/lookup', () => ({
-  resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({})),
-}))
+import { OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
+import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 
 function mediaSelection(input: {
   provider: string
@@ -42,22 +43,22 @@ function expectValidOptions(
 
 describe('provider models truth', () => {
   it('wires representative capability catalog entries from provider models', () => {
-    expect(findBuiltinCapabilityCatalogEntry('video', 'ark', 'doubao-seedance-2-0-260128')?.capabilities?.video?.resolutionOptions).toEqual(['480p', '720p'])
-    expect(findBuiltinCapabilityCatalogEntry('video', 'bailian', 'wan2.7-i2v')?.capabilities?.video?.generationModeOptions).toEqual(['normal', 'firstlastframe'])
-    expect(findBuiltinCapabilityCatalogEntry('image', 'fal', 'banana-2')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
-    expect(findBuiltinCapabilityCatalogEntry('image', 'google', 'gemini-3.1-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['0.5K', '1K', '2K', '4K'])
-    expect(findBuiltinCapabilityCatalogEntry('video', 'minimax', 'minimax-hailuo-02')?.capabilities?.video?.firstlastframe).toBe(true)
-    expect(findBuiltinCapabilityCatalogEntry('video', 'vidu', 'viduq2-pro')?.capabilities?.video?.generateAudioOptions).toEqual([false, true])
+    expect(ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'doubao-seedance-2-0-260128')?.capabilities?.video?.resolutionOptions).toEqual(['480p', '720p'])
+    expect(BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'wan2.7-i2v')?.capabilities?.video?.generationModeOptions).toEqual(['normal', 'firstlastframe'])
+    expect(FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'banana-2')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
+    expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3.1-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['0.5K', '1K', '2K', '4K'])
+    expect(MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'minimax-hailuo-02')?.capabilities?.video?.firstlastframe).toBe(true)
+    expect(VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'viduq2-pro')?.capabilities?.video?.generateAudioOptions).toEqual([false, true])
   })
 
   it('wires representative pricing catalog entries from provider models', () => {
-    expect(findBuiltinPricingCatalogEntry('image', 'ark', 'doubao-seedream-4-5-251128')?.pricing.flatAmount).toBe(0.25)
-    expect(findBuiltinPricingCatalogEntry('voice-design', 'bailian', 'qwen-voice-design')?.pricing.flatAmount).toBe(0.2)
-    expect(findBuiltinPricingCatalogEntry('lip-sync', 'fal', 'fal-ai/kling-video/lipsync/audio-to-video')?.pricing.flatAmount).toBe(0.5)
-    expect(findBuiltinPricingCatalogEntry('video', 'google', 'veo-3.1-fast-generate-preview')?.pricing.tiers?.[0]?.amount).toBe(4.32)
-    expect(findBuiltinPricingCatalogEntry('video', 'minimax', 't2v-01-director')?.pricing.tiers?.[0]?.amount).toBe(6)
-    expect(findBuiltinPricingCatalogEntry('text', 'openrouter', 'google/gemini-3.1-pro-preview')?.pricing.tiers?.[1]?.amount).toBe(72)
-    expect(findBuiltinPricingCatalogEntry('lip-sync', 'vidu', 'vidu-lipsync')?.pricing.flatAmount).toBe(0.5)
+    expect(ARK_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'doubao-seedream-4-5-251128')?.pricing.flatAmount).toBe(0.25)
+    expect(BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'qwen-voice-design')?.pricing.flatAmount).toBe(0.2)
+    expect(FAL_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'fal-ai/kling-video/lipsync/audio-to-video')?.pricing.flatAmount).toBe(0.5)
+    expect(GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'veo-3.1-fast-generate-preview')?.pricing.tiers?.[0]?.amount).toBe(4.32)
+    expect(MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 't2v-01-director')?.pricing.tiers?.[0]?.amount).toBe(6)
+    expect(OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.pricing.tiers?.[1]?.amount).toBe(72)
+    expect(VIDU_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'vidu-lipsync')?.pricing.flatAmount).toBe(0.5)
   })
 
   it('builds option schemas from provider models data', () => {

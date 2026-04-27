@@ -4,6 +4,7 @@ import {
 } from '@/lib/ai-providers/official/model-registry'
 import { getProviderConfig } from '@/lib/api-config'
 import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
+import type { AiProviderAudioExecutionContext } from '@/lib/ai-providers/runtime-types'
 import { ensureBailianCatalogRegistered } from './catalog'
 import { synthesizeWithBailianTTS } from './tts'
 import type { BailianGenerateRequestOptions } from './types'
@@ -57,4 +58,18 @@ export async function generateBailianAudio(params: BailianAudioGenerateParams): 
     audioUrl,
     requestId: result.requestId,
   }
+}
+
+export async function executeBailianAudioGeneration(input: AiProviderAudioExecutionContext): Promise<GenerateResult> {
+  return await generateBailianAudio({
+    userId: input.userId,
+    text: input.text,
+    voice: input.options?.voice,
+    rate: input.options?.rate,
+    options: {
+      provider: input.selection.provider,
+      modelId: input.selection.modelId,
+      modelKey: input.selection.modelKey,
+    } as BailianGenerateRequestOptions,
+  })
 }
