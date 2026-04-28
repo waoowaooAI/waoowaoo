@@ -2,6 +2,7 @@ import type { AiProviderImageExecutionContext, GenerateResult } from '@/lib/ai-p
 import { createOpenAICompatClient, readStringOption, resolveOpenAICompatClientConfig, toUploadFile } from '@/lib/ai-providers/openai-compatible/errors'
 import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { generateImageViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 type OpenAICompatImageOptions = NonNullable<AiProviderImageExecutionContext['options']>
 
@@ -94,11 +95,10 @@ function resolveRawSize(options: OpenAICompatImageOptions): string | undefined {
   return size || resolution
 }
 
-function resolveModelId(modelId: string | undefined, options: OpenAICompatImageOptions): string {
-  const optionModelId = readStringOption(options.modelId, 'modelId')
-  const selected = (modelId || optionModelId || '').trim()
+function resolveModelId(modelId: string | undefined): string {
+  const selected = typeof modelId === 'string' ? modelId.trim() : ''
   if (selected) return selected
-  return 'gpt-image-1'
+  throw new Error('OPENAI_COMPAT_IMAGE_MODEL_ID_REQUIRED')
 }
 
 function toMimeFromOutputFormat(outputFormat: string | undefined): string {
@@ -196,7 +196,7 @@ async function generateImageViaOpenAICompat(input: {
   const config = await resolveOpenAICompatClientConfig(input.userId, input.providerId)
   const client = createOpenAICompatClient(config)
 
-  const normalizedModelId = resolveModelId(input.modelId, input.options)
+  const normalizedModelId = resolveModelId(input.modelId)
   const responseFormat = normalizeResponseFormat(input.options.responseFormat)
   const outputFormat = normalizeOutputFormat(input.options.outputFormat)
   const quality = normalizeGenerateQuality(input.options.quality)
@@ -313,19 +313,20 @@ export async function executeOpenAiCompatibleImageGeneration(input: AiProviderIm
   const referenceImages = options.referenceImages ?? []
   const generatorOptions: OpenAICompatImageOptions = { ...options }
   delete generatorOptions.referenceImages
-  const compatTemplate = input.selection.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
+  const modelId = requireSelectedModelId(input.selection, 'openai-compatible:image')
+  const compatTemplate = input.selection.variantData?.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
   if (compatTemplate) {
     return await generateImageViaOpenAICompatTemplate({
       userId: input.userId,
       providerId: input.selection.provider,
-      modelId: input.selection.modelId,
+      modelId,
       modelKey: input.selection.modelKey,
       prompt: input.prompt,
       referenceImages,
       options: {
         ...generatorOptions,
         provider: input.selection.provider,
-        modelId: input.selection.modelId,
+        modelId,
         modelKey: input.selection.modelKey,
       },
       profile: 'openai-compatible',
@@ -345,13 +346,13 @@ export async function executeOpenAiCompatibleImageGeneration(input: AiProviderIm
   return await generateImageViaOpenAICompat({
     userId: input.userId,
     providerId: input.selection.provider,
-    modelId: input.selection.modelId,
+    modelId,
     prompt: input.prompt,
     referenceImages,
     options: {
       ...openaiCompatOptions,
       provider: input.selection.provider,
-      modelId: input.selection.modelId,
+      modelId,
       modelKey: input.selection.modelKey,
     } as OpenAICompatImageOptions,
   })

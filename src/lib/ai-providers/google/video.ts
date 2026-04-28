@@ -1,11 +1,10 @@
 import { GoogleGenAI } from '@google/genai'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
 
-type GoogleVeoOptions = NonNullable<AiProviderVideoExecutionContext['options']> & {
-  modelId?: string
-}
+type GoogleVeoOptions = NonNullable<AiProviderVideoExecutionContext['options']>
 
 type GoogleVeoInlineData = { mimeType: string; imageBytes: string }
 
@@ -49,7 +48,6 @@ function extractOperationName(response: unknown): string | null {
 function assertAllowedGoogleVideoOptions(options: GoogleVeoOptions) {
   const allowedOptionKeys = new Set([
     'provider',
-    'modelId',
     'modelKey',
     'aspectRatio',
     'resolution',
@@ -73,7 +71,7 @@ export async function executeGoogleVideoGeneration(input: AiProviderVideoExecuti
   const { apiKey } = await getProviderConfig(input.userId, input.selection.provider)
   const ai = new GoogleGenAI({ apiKey })
 
-  const modelId = input.selection.modelId || options.modelId || 'veo-3.1-generate-preview'
+  const modelId = requireSelectedModelId(input.selection, 'google:video')
   const aspectRatio = options.aspectRatio
   const resolution = options.resolution
   const duration = options.duration

@@ -239,12 +239,15 @@ async function pollOpenAiCompatibleTemplateTask(input: {
   const models = await context.getUserModels(context.userId)
   const model = models.find((item) => item.modelKey === modelKey)
   const template = readTemplate(model, modelKey)
+  if (!model?.modelId) {
+    throw new Error(`OCOMPAT_MODEL_ID_MISSING: ${modelKey}`)
+  }
   if (template.mode !== 'async' || !template.status) {
     throw new Error(`OCOMPAT_TEMPLATE_NOT_ASYNC: ${modelKey}`)
   }
 
   const variables = buildTemplateVariables({
-    model: model?.modelId || '',
+    model: model.modelId,
     prompt: '',
     taskId: parsed.requestId,
   })

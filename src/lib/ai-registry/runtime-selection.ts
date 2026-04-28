@@ -22,9 +22,10 @@ export interface RuntimeModelSelection<TCompatMediaTemplate = AiUnknownObject> {
   modelKey: string
   mediaType: RuntimeModelMediaType
   variantSubKind: 'official' | 'user-template'
-  variantData?: { compatMediaTemplate: TCompatMediaTemplate }
-  llmProtocol?: RuntimeLlmProtocolType
-  compatMediaTemplate?: TCompatMediaTemplate
+  variantData?: {
+    compatMediaTemplate?: TCompatMediaTemplate
+    llmProtocol?: RuntimeLlmProtocolType
+  }
 }
 
 export function normalizeProviderRuntimeBaseUrl(providerId: string, rawBaseUrl?: string): string | undefined {
@@ -79,7 +80,10 @@ function buildRuntimeModelSelection<TCompatMediaTemplate>(
     ? model.compatMediaTemplate
     : undefined
   const variantSubKind = compatMediaTemplate ? 'user-template' as const : 'official' as const
-  const variantData = compatMediaTemplate ? { compatMediaTemplate } : undefined
+  const variantData = {
+    ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
+    ...(llmProtocol ? { llmProtocol } : {}),
+  }
 
   return {
     provider: model.provider,
@@ -87,9 +91,7 @@ function buildRuntimeModelSelection<TCompatMediaTemplate>(
     modelKey: composeModelKey(model.provider, model.modelId),
     mediaType,
     variantSubKind,
-    ...(variantData ? { variantData } : {}),
-    ...(llmProtocol ? { llmProtocol } : {}),
-    ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
+    ...(Object.keys(variantData).length > 0 ? { variantData } : {}),
   }
 }
 

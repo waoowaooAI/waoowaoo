@@ -2,6 +2,7 @@ import { createScopedLogger, logError as _ulogError } from '@/lib/logging/core'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { buildFalQueueUrl } from '@/lib/ai-providers/fal/base-url'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 type FalVideoOptions = NonNullable<AiProviderVideoExecutionContext['options']>
 
@@ -80,7 +81,7 @@ export async function executeFalVideoGeneration(input: AiProviderVideoExecutionC
   const duration = options.duration
   const resolution = options.resolution
   const aspectRatio = options.aspectRatio
-  const modelId = input.selection.modelId || 'fal-wan25'
+  const modelId = requireSelectedModelId(input.selection, 'fal:video')
 
   const endpoint = FAL_VIDEO_ENDPOINTS[modelId]
   if (!endpoint) {

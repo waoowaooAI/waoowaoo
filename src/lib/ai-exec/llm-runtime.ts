@@ -146,7 +146,6 @@ export interface ResolvedLlmRuntimeModel {
   modelKey: string
   variantSubKind: 'official' | 'user-template'
   variantData?: { [key: string]: unknown }
-  llmProtocol?: 'responses' | 'chat-completions'
 }
 
 export async function resolveLlmRuntimeModel(
@@ -160,6 +159,5 @@ export async function resolveLlmRuntimeModel(
     modelKey: selection.modelKey,
     variantSubKind: selection.variantSubKind,
     ...(selection.variantData ? { variantData: selection.variantData } : {}),
-    llmProtocol: selection.llmProtocol,
   }
 }

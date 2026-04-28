@@ -4,7 +4,7 @@ type MockRuntimeModel = {
   provider: string
   modelId: string
   modelKey: string
-  llmProtocol: 'responses' | 'chat-completions' | undefined
+  variantData?: { llmProtocol?: 'responses' | 'chat-completions' }
 }
 
 const resolveLlmRuntimeModelMock = vi.hoisted(() =>
@@ -12,7 +12,7 @@ const resolveLlmRuntimeModelMock = vi.hoisted(() =>
     provider: 'openai-compatible:node-1',
     modelId: 'gpt-4.1-mini',
     modelKey: 'openai-compatible:node-1::gpt-4.1-mini',
-    llmProtocol: 'responses',
+    variantData: { llmProtocol: 'responses' },
   })),
 )
 
@@ -110,7 +110,7 @@ describe('llm chatCompletion openai-compatible protocol routing', () => {
       provider: 'openai-compatible:node-1',
       modelId: 'gpt-4.1-mini',
       modelKey: 'openai-compatible:node-1::gpt-4.1-mini',
-      llmProtocol: 'chat-completions',
+      variantData: { llmProtocol: 'chat-completions' },
     })
 
     const fetchMock = vi.fn(async (input: unknown) => {
@@ -145,7 +145,6 @@ describe('llm chatCompletion openai-compatible protocol routing', () => {
       provider: 'openai-compatible:node-1',
       modelId: 'gpt-4.1-mini',
       modelKey: 'openai-compatible:node-1::gpt-4.1-mini',
-      llmProtocol: undefined,
     })
 
     const fetchMock = vi.fn(async () => new Response('unexpected', { status: 500 }))

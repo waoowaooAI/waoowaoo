@@ -3,6 +3,7 @@ import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime
 import { fetchWithTimeoutAndRetry } from './image'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'
 
@@ -315,7 +316,7 @@ export async function executeArkVideoGeneration(input: AiProviderVideoExecutionC
   const { apiKey } = await getProviderConfig(input.userId, input.selection.provider)
   const { prompt, ...providerOptions } = options
 
-  const modelId = input.selection.modelId || 'doubao-seedance-1-0-pro-fast-251015'
+  const modelId = requireSelectedModelId(input.selection, 'ark:video')
 
   const isBatchMode = modelId.endsWith('-batch')
   const realModel = isBatchMode ? modelId.replace('-batch', '') : modelId

@@ -4,6 +4,7 @@ import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-p
 import { createOpenAICompatClient, parseDataUrl, resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
 import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { generateVideoViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 type OpenAICompatVideoOptions = NonNullable<AiProviderVideoExecutionContext['options']>
 
@@ -164,7 +165,7 @@ async function generateVideoViaOpenAICompat(request: {
   const config = await resolveOpenAICompatClientConfig(request.userId, request.providerId)
   const client = createOpenAICompatClient(config)
 
-  const selectedModelId = normalizeModel(request.modelId || request.options.modelId)
+  const selectedModelId = normalizeModel(request.modelId)
   const seconds = normalizeDuration(request.options.duration)
   const size = resolveFinalSize(request.options)
   const trimmedPrompt = request.prompt.trim()
@@ -196,19 +197,20 @@ async function generateVideoViaOpenAICompat(request: {
 
 export async function executeOpenAiCompatibleVideoGeneration(input: AiProviderVideoExecutionContext) {
   const { prompt, ...providerOptions } = input.options || {}
-  const compatTemplate = input.selection.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
+  const modelId = requireSelectedModelId(input.selection, 'openai-compatible:video')
+  const compatTemplate = input.selection.variantData?.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
   if (compatTemplate) {
     return await generateVideoViaOpenAICompatTemplate({
       userId: input.userId,
       providerId: input.selection.provider,
-      modelId: input.selection.modelId,
+      modelId,
       modelKey: input.selection.modelKey,
       imageUrl: input.imageUrl,
       prompt: prompt || '',
       options: {
         ...providerOptions,
         provider: input.selection.provider,
-        modelId: input.selection.modelId,
+        modelId,
         modelKey: input.selection.modelKey,
       },
       profile: 'openai-compatible',
@@ -219,14 +221,14 @@ export async function executeOpenAiCompatibleVideoGeneration(input: AiProviderVi
   return await generateVideoViaOpenAICompat({
     userId: input.userId,
     providerId: input.selection.provider,
-    modelId: input.selection.modelId,
+    modelId,
     modelKey: input.selection.modelKey,
     imageUrl: input.imageUrl,
     prompt: prompt || '',
     options: {
       ...providerOptions,
       provider: input.selection.provider,
-      modelId: input.selection.modelId,
+      modelId,
       modelKey: input.selection.modelKey,
     } as OpenAICompatVideoOptions,
   })

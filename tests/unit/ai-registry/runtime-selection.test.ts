@@ -37,7 +37,7 @@ describe('runtime selection registry helpers', () => {
       modelKey: 'openai-compatible:node-1::gpt-like',
       mediaType: 'llm',
       variantSubKind: 'official',
-      llmProtocol: 'responses',
+      variantData: { llmProtocol: 'responses' },
     })
   })
 

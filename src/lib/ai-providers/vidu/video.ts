@@ -2,6 +2,7 @@ import { logError as _ulogError, logInfo as _ulogInfo } from '@/lib/logging/core
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 const VIDU_BASE_URL = 'https://api.vidu.cn/ent/v2'
 const VIDU_STANDARD_RATIOS = new Set(['16:9', '9:16', '1:1'])
@@ -381,7 +382,7 @@ export async function executeViduVideoGeneration(input: AiProviderVideoExecution
   assertAllowedViduVideoOptions(rawOptions)
 
   const prompt = typeof rawOptions.prompt === 'string' ? rawOptions.prompt : ''
-  const modelId = input.selection.modelId || rawOptions.modelId || 'viduq2-turbo'
+  const modelId = requireSelectedModelId(input.selection, 'vidu:video')
   const modelSpec = VIDU_MODEL_SPECS[modelId]
   if (!modelSpec) {
     throw new Error(`VIDU_VIDEO_MODEL_UNSUPPORTED: ${modelId}`)

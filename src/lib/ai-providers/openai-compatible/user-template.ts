@@ -622,6 +622,14 @@ function buildUnsupportedVideoFormatError(detail: string): Error {
   return new Error(`VIDEO_API_FORMAT_UNSUPPORTED: ${detail}`)
 }
 
+function requireTemplateModelId(modelId: string | undefined, context: string): string {
+  const selected = typeof modelId === 'string' ? modelId.trim() : ''
+  if (!selected) {
+    throw new Error(`OPENAI_COMPAT_TEMPLATE_MODEL_ID_REQUIRED:${context}`)
+  }
+  return selected
+}
+
 export async function generateImageViaOpenAICompatTemplate(request: {
   userId: string
   providerId: string
@@ -642,7 +650,7 @@ export async function generateImageViaOpenAICompatTemplate(request: {
     ? request.referenceImages[0]
     : ''
   const variables = buildTemplateVariables({
-    model: request.modelId || 'gpt-image-1',
+    model: requireTemplateModelId(request.modelId, 'image'),
     prompt: request.prompt,
     image: firstReference,
     images: request.referenceImages || [],
@@ -750,7 +758,7 @@ export async function generateVideoViaOpenAICompatTemplate(request: {
 
   const config = await resolveOpenAICompatClientConfig(request.userId, request.providerId)
   const variables = buildTemplateVariables({
-    model: request.modelId || '',
+    model: requireTemplateModelId(request.modelId, 'video'),
     prompt: request.prompt,
     image: request.imageUrl,
     images: [request.imageUrl],

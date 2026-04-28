@@ -2,6 +2,7 @@ import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { logError as _ulogError, logInfo as _ulogInfo } from '@/lib/logging/core'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 const MINIMAX_BASE_URL = 'https://api.minimaxi.com/v1'
 type MinimaxVideoGenerationMode = 'normal' | 'firstlastframe'
@@ -9,7 +10,6 @@ type MinimaxResolution = '512P' | '720P' | '768P' | '1080P'
 
 type MinimaxVideoOptions = NonNullable<AiProviderVideoExecutionContext['options']> & {
   generationMode?: MinimaxVideoGenerationMode
-  modelId?: string
   serviceTier?: string
 }
 
@@ -187,10 +187,7 @@ export async function executeMinimaxVideoGeneration(input: AiProviderVideoExecut
   const { apiKey } = await getProviderConfig(input.userId, input.selection.provider)
   const prompt = typeof options.prompt === 'string' ? options.prompt : ''
 
-  const modelId = input.selection.modelId || options.modelId
-  if (!modelId) {
-    throw new Error('MINIMAX_VIDEO_OPTION_REQUIRED: modelId')
-  }
+  const modelId = requireSelectedModelId(input.selection, 'minimax:video')
 
   const duration = options.duration
   const resolution = options.resolution

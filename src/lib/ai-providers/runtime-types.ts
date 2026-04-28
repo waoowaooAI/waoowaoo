@@ -41,7 +41,7 @@ export type AiProviderLlmStreamContext = {
     provider: string
     modelId: string
     modelKey: string
-    llmProtocol?: 'responses' | 'chat-completions'
+    variantData?: { [key: string]: unknown }
   }
   providerConfig: AiLlmProviderConfig
   messages: { role: 'user' | 'assistant' | 'system'; content: string }[]
@@ -76,7 +76,6 @@ export type AiProviderImageExecutionContext = {
     provider: string
     modelId: string
     modelKey: string
-    compatMediaTemplate?: unknown
   }
   prompt: string
   options?: {
@@ -98,7 +97,6 @@ export type AiProviderVideoExecutionContext = {
     provider: string
     modelId: string
     modelKey: string
-    compatMediaTemplate?: unknown
   }
   imageUrl: string
   options?: {
@@ -209,7 +207,4 @@ export interface AiProviderAdapter {
   completeLlm?: (input: AiLlmExecutionInput) => Promise<AiProviderLlmResult>
   streamLlm?: (input: AiProviderLlmStreamContext) => Promise<AiProviderLlmResult>
   completeVision?: (input: AiProviderVisionExecutionContext) => Promise<AiProviderLlmResult>
-  executeImage?: (input: AiProviderImageExecutionContext) => Promise<GenerateResult>
-  executeVideo?: (input: AiProviderVideoExecutionContext) => Promise<GenerateResult>
-  executeAudio?: (input: AiProviderAudioExecutionContext) => Promise<GenerateResult>
 }

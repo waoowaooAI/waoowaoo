@@ -3,6 +3,7 @@ import { logError as _ulogError, logInfo as _ulogInfo } from '@/lib/logging/core
 import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'
 
@@ -226,7 +227,7 @@ export async function executeArkImageGeneration(input: AiProviderImageExecutionC
   assertAllowedArkImageOptions(options)
 
   const { apiKey } = await getProviderConfig(input.userId, input.selection.provider)
-  const modelId = input.selection.modelId || 'doubao-seedream-4-5-251128'
+  const modelId = requireSelectedModelId(input.selection, 'ark:image')
 
   const resolution = options.resolution
   if (resolution !== undefined && resolution !== '4K' && resolution !== '3K') {

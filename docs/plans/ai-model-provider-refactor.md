@@ -1,4 +1,4 @@
-# AI 模型/平台接入统一化重构（目标态 + 物理迁移映射 + 4 步自下而上落地）
+# AI 模型/平台接入统一化重构（目标态 + 物理迁移映射 + 5 步自下而上落地）
 
 > 本文是 **设计契约**，不是状态板。任何"已完成 / 进行中 / 时间戳"信息一律放在 [`./ai-model-provider-refactor-status.md`](./ai-model-provider-refactor-status.md)。
 >
@@ -26,7 +26,7 @@ src/lib/ai-exec/        ← 唯一执行入口 + 治理（动作层）
 
 - 不接入 `gpt-image-2`（地基稳定后再说）
 - 不重做并发 gate / 跨进程 limiter（独立工单，与本重构正交）
-- 不重做前端 Profile/API Config UI 拆分（独立工单，前端只负责消费 `ai-registry/catalog.ts` 输出）
+- 不重做前端 Profile/API Config UI 拆分（独立工单，前端只负责消费 `ai-registry/api-config-catalog.ts` 等命名明确的 registry 输出）
 
 ---
 
@@ -37,7 +37,8 @@ src/lib/ai-exec/        ← 唯一执行入口 + 治理（动作层）
 `AiMediaAdapter` 这种"按 modality 切的 adapter"是错误抽象。**统一为 `AiProviderAdapter`，按 modality 暴露可选子接口**：
 
 ```ts
-// src/lib/ai-registry/types.ts
+// descriptor: src/lib/ai-registry/types.ts
+// adapter runtime contract: src/lib/ai-providers/runtime-types.ts
 
 export type AiModality =
   | 'llm' | 'vision' | 'image' | 'video' | 'audio' | 'lipsync'
@@ -54,7 +55,7 @@ export interface AiVariantDescriptor {
   display: { name: string; sourceLabel: string; label: string }
   execution: { mode: AiExecutionMode; externalIdPrefix?: string }
 
-  capabilities: AiCapabilities      // 强类型，禁止 Record<string, unknown>
+  capabilities: ModelCapabilities   // 强类型，禁止 Record<string, unknown>
   optionSchema: AiOptionSchema      // request options 白名单 + 校验
 }
 
@@ -98,7 +99,7 @@ export interface AiResolvedSelection {
   modelId: string
   modelKey: string
   variantSubKind: AiVariantSubKind
-  variantData?: Record<string, unknown>   // 仅本 provider 自己解读
+  variantData?: Record<string, unknown>   // 仅本 provider 自己解读；provider-specific 字段不得出现在顶层
 }
 ```
 
@@ -112,7 +113,8 @@ export interface AiResolvedSelection {
 
 ```
 src/lib/ai-providers/
-  index.ts                           ← 注册所有 adapter，导出 registry
+  index.ts                           ← composition root：注册 adapter / async task / provider-local contract，禁止承载 probe HTTP 实现
+  runtime-types.ts                   ← AiProviderAdapter / provider runtime context
   shared/                            ← 跨 provider 复用工具（错误归一/HTTP/类型 helpers）
     http.ts
     errors.ts
@@ -187,9 +189,13 @@ src/lib/ai-providers/
     probe.ts
 
 src/lib/ai-registry/
-  types.ts          ← AiModality / AiProviderAdapter / AiVariantDescriptor / AiOptionSchema / 等所有合同
+  types.ts          ← AiModality / AiVariantDescriptor / AiOptionSchema / ModelCapabilities / selection 数据合同
   selection.ts      ← parseModelKey / resolveSelection / getProviderKey（取代 src/lib/api-config.ts 中模型解析部分）
-  catalog.ts        ← fan-out 各 adapter.describe → 给前端的 catalog（取代 user-api/api-config-catalog.ts）
+  api-config-catalog.ts
+  capabilities-catalog.ts
+  pricing-catalog.ts
+  pricing-resolution.ts
+  video-capabilities.ts
   guards.ts         ← 严格 modelKey、ProviderKey 校验工具
 
 src/lib/ai-exec/
@@ -208,7 +214,7 @@ src/lib/ai-exec/
 - `legacy` / `system` **不是 provider**。旧 pricing 数据必须在迁移时归并到真实 provider 或物理删除，**禁止**保留 `legacy/`、`system/` 伪 provider 目录或兼容层。
 - `ai-providers/shared/` **只放跨 provider 的纯工具**（无 provider 名）。出现任何 `if (providerKey === ...)` 立刻拒收。
 - 不再有 `src/lib/ai-providers/adapters/` 这一层中间目录。
-- 不再有 `src/lib/ai-providers/llm/`、`ai-providers/official/`、`ai-providers/fal/base-url.ts` 这种"按 modality 跨 provider 切"的目录。
+- 不再有 `src/lib/ai-providers/llm/`、`ai-providers/official/` 这种"按 modality 跨 provider 切"的目录；provider-local helper 允许留在对应 provider 目录。
 
 ---
 
@@ -358,6 +364,7 @@ src/lib/ai-providers/
 ### Step 4 — `ai-registry` 专职模块取代 `user-api/api-config-catalog.ts` 与 `user-api/api-config.ts` 的 catalog 部分
 
 - `ai-registry/api-config-catalog.ts` 产出前端所需 catalog（providers + modelVariants + displayLabel + pricingDisplay + capabilityDefaults shape）。
+- `ai-registry/catalog.ts` 不作为终态保留；pricing、capability、API-config、video helper 必须拆入命名明确的同级模块。
 - `user-api/api-config-catalog.ts` 必须物理删除，不允许用 `export * from '@/lib/ai-registry/*'` 留兼容层。
 - `user-api/api-config.ts`（1905 行）保留：
   - 用户启用集合、默认模型字段、capability defaults、并发配置的**读写与校验**。
@@ -403,6 +410,7 @@ Step 5 完成判据：
 - `src/lib/async-poll.ts` 不再存在；`ai-exec/async-poll.ts` 不含 provider 字面量分支，新增 provider 的 HTTP 细节只允许进入对应 `ai-providers/<x>`。
 - `src/lib/user-api/**` 不再直接 import `openai` 或写 provider probe 逻辑；模板 schema/validator/save 只处理用户配置数据，不执行探测请求。
 - `ai-registry` 不再用 barrel 承担多类职责；新增 registry helper 必须进入命名明确的同级模块，且不得作为旧路径兼容 re-export。
+- provider 执行代码不得出现 `selection.modelId || <默认模型>`、`request.modelId || <默认模型>`、`options.modelId || <默认模型>`；模型缺失必须显式失败。
 - `npm run check:ai-refactor-guards` 通过，且 snapshot 只允许缩短，不允许新增。
 
 ---
@@ -430,6 +438,7 @@ Step 5 完成判据：
 | `scripts/guards/no-cross-provider-model-data.mjs` | 新增（Step 1）：provider X 的 modelId 常量不得出现在 provider Y 的目录或顶层 `model-*` 目录 |
 | `scripts/guards/no-cross-provider-switch.mjs` | 新增（Step 2）：`ai-providers/`、`ai-exec/`、`ai-registry/` 中禁止跨 provider 的 `providerKey/provider/providerId` 字面量比较（`===` / `!==` / `==` / `!=`）；白名单仅限注册表、runtime selection 等明确 composition/selection root |
 | `scripts/guards/no-ai-outside-ai-dirs.mjs` | 新增（Step 3 终态）：`src/lib/` 内除 `ai-providers/`、`ai-registry/`、`ai-exec/`、`llm-observe/` 外，禁止出现 OpenAI / Anthropic / Ark / Google AI / Vidu / Fal / Minimax / Bailian SDK 调用、AI model token、旧 `user-api` probe import，以及 `src/lib/user-api/**probe*.ts` provider probe 实现 |
+| `scripts/guards/no-provider-model-fallback.mjs` | 新增（Step 5 收尾）：禁止 provider 执行代码从 `selection.modelId` / `request.modelId` / `options.modelId` 隐式回退到默认模型 |
 | `scripts/guards/no-model-key-downgrade.mjs` | 已有，保持 |
 | `scripts/guards/no-provider-guessing.mjs` | 已有，保持 |
 | `scripts/guards/no-media-provider-bypass.mjs` | 已有，保持 |

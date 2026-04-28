@@ -2,6 +2,7 @@ import { createScopedLogger } from '@/lib/logging/core'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { buildFalQueueUrl } from '@/lib/ai-providers/fal/base-url'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 import type { AiProviderImageExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
 
 type FalImageOptions = NonNullable<AiProviderImageExecutionContext['options']>
@@ -48,14 +49,17 @@ export async function executeFalImageGeneration(input: AiProviderImageExecutionC
   const aspectRatio = options.aspectRatio
   const resolution = options.resolution
   const outputFormat = options.outputFormat ?? 'png'
-  const modelId = input.selection.modelId || 'banana'
+  const modelId = requireSelectedModelId(input.selection, 'fal:image')
 
   if (resolution !== undefined && resolution !== '1K' && resolution !== '2K' && resolution !== '4K') {
     throw new Error(`FAL_IMAGE_OPTION_VALUE_UNSUPPORTED: resolution=${resolution}`)
   }
 
   const hasReferenceImages = referenceImages.length > 0
-  const endpointConfig = FAL_IMAGE_ENDPOINTS[modelId] || FAL_IMAGE_ENDPOINTS.banana
+  const endpointConfig = FAL_IMAGE_ENDPOINTS[modelId]
+  if (!endpointConfig) {
+    throw new Error(`FAL_IMAGE_MODEL_UNSUPPORTED: ${modelId}`)
+  }
   const endpoint = hasReferenceImages ? endpointConfig.edit : endpointConfig.base
 
   const logger = createScopedLogger({ module: 'worker.fal-image', action: 'fal_image_generate' })

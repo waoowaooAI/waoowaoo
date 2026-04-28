@@ -26,6 +26,11 @@ type ResponsesUsage = {
 type ErrorWithStatus = Error & { status?: number }
 
 type UnknownObject = { [key: string]: unknown }
+type OpenAiCompatLlmProtocol = 'responses' | 'chat-completions'
+
+function readOpenAiCompatLlmProtocol(value: unknown): OpenAiCompatLlmProtocol | null {
+  return value === 'responses' || value === 'chat-completions' ? value : null
+}
 
 function isUnknownObject(value: unknown): value is UnknownObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -226,11 +231,12 @@ export async function runOpenAiCompatibleLlmStream(
 ): Promise<AiProviderLlmResult> {
   if (input.gatewayRoute === 'openai-compat') {
     const stepMeta = resolveStreamStepMeta(input.options)
-    if (!input.selection.llmProtocol) {
+    const llmProtocol = readOpenAiCompatLlmProtocol(input.selection.variantData?.llmProtocol)
+    if (!llmProtocol) {
       throw new Error(`MODEL_LLM_PROTOCOL_REQUIRED: ${input.selection.modelKey}`)
     }
     emitStreamStage(input.callbacks, stepMeta, 'streaming', 'openai-compat')
-    const completion = input.selection.llmProtocol === 'responses'
+    const completion = llmProtocol === 'responses'
       ? await runOpenAICompatResponsesCompletion({
         userId: input.userId,
         providerId: input.selection.provider,
@@ -268,10 +274,10 @@ export async function runOpenAiCompatibleLlmStream(
     input.callbacks?.onComplete?.(completionParts.text, stepMeta)
     return buildAiProviderLlmResult({
       completion,
-      logProvider: input.selection.llmProtocol === 'responses' ? 'openai_compat_responses' : 'openai_compat_chat_completions',
+      logProvider: llmProtocol === 'responses' ? 'openai_compat_responses' : 'openai_compat_chat_completions',
       text: completionParts.text,
       reasoning: completionParts.reasoning,
-      successDetails: { llmProtocol: input.selection.llmProtocol },
+      successDetails: { llmProtocol },
     })
   }
 

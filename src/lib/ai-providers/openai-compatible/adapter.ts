@@ -19,6 +19,10 @@ function describeOpenAiCompatibleMediaVariant(
   })
 }
 
+function readOpenAiCompatibleLlmProtocol(value: unknown): 'responses' | 'chat-completions' | undefined {
+  return value === 'responses' || value === 'chat-completions' ? value : undefined
+}
+
 export const openAiCompatibleAdapter: AiProviderAdapter = {
   providerKey: 'openai-compatible',
   image: {
@@ -34,7 +38,7 @@ export const openAiCompatibleAdapter: AiProviderAdapter = {
     userId: input.userId,
     providerId: input.selection.provider,
     modelId: input.selection.modelId,
-    llmProtocol: input.selection.llmProtocol,
+    llmProtocol: readOpenAiCompatibleLlmProtocol(input.selection.variantData?.llmProtocol),
     providerConfig: input.providerConfig,
     messages: input.messages,
     temperature: input.temperature,

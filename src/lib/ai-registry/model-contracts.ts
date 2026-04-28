@@ -1,5 +1,5 @@
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
-import type { AiUnknownObject } from '@/lib/ai-registry/types'
+import type { AiUnknownObject, ModelCapabilities } from '@/lib/ai-registry/types'
 import type { AiModality, AiResolvedLlmSelection, AiResolvedSelection } from '@/lib/ai-registry/types'
 
 function resolveCapabilityModelType(modality: AiModality): 'llm' | 'image' | 'video' | 'audio' | 'lipsync' {
@@ -13,7 +13,7 @@ export function resolveAiContractsForDescriptor(input: {
   providerId: string
   modelId: string
   selection?: AiResolvedSelection | AiResolvedLlmSelection | null
-}): { capabilities: AiUnknownObject; inputContracts?: AiUnknownObject } {
+}): { capabilities: ModelCapabilities; inputContracts?: AiUnknownObject } {
   const capabilityModelType = resolveCapabilityModelType(input.modality)
   const capabilities = resolveBuiltinCapabilitiesByModelKey(capabilityModelType, input.modelKey)
 
@@ -22,8 +22,12 @@ export function resolveAiContractsForDescriptor(input: {
 
   if (input.modality === 'llm' || input.modality === 'vision') {
     const llmSelection = selection as AiResolvedLlmSelection | null | undefined
-    if (llmSelection?.llmProtocol) {
-      contracts.llmProtocol = llmSelection.llmProtocol
+    const variantData = llmSelection?.variantData
+    const llmProtocol = variantData && typeof variantData === 'object'
+      ? variantData.llmProtocol
+      : undefined
+    if (llmProtocol === 'responses' || llmProtocol === 'chat-completions') {
+      contracts.llmProtocol = llmProtocol
     }
   }
 
@@ -40,7 +44,7 @@ export function resolveAiContractsForDescriptor(input: {
   }
 
   return {
-    capabilities: (capabilities || {}) as AiUnknownObject,
+    capabilities: capabilities || {},
     ...(Object.keys(contracts).length > 0 ? { inputContracts: contracts } : {}),
   }
 }

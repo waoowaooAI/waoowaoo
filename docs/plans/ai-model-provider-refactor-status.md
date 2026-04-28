@@ -6,8 +6,18 @@
 
 ## 当前阶段
 
-- **当前状态**：Step 5 主体迁移已完成；lipsync、voice、assistant/project-agent LanguageModel、async poll provider HTTP、billing token-pricing provider contract 与 `api-config-service.ts` 瘦身已落地，旧散入口与兼容层已删除。
-- **下一阶段**：继续 Step 5 收尾 — 收敛 `user-api` probe、runtime selection/provider config 边界、隐式 fallback、guard 扫描范围，以及最终单 adapter 形态。
+- **当前状态**：Step 5 收尾已完成；lipsync、voice、assistant/project-agent LanguageModel、async poll provider HTTP、billing token-pricing provider contract、provider probe、runtime selection provider-specific 字段、隐式模型 fallback guard 与 `api-config-service.ts` 瘦身已落地，旧散入口与兼容层已删除。
+- **下一阶段**：进入新模型接入验收；`gpt-image-2` 只能按验收条目小范围修改 `ai-providers/openai-compatible/{models,image}.ts`。
+
+## 2026-04-29 收尾事实
+
+- [x] provider 执行代码中的隐式模型 fallback 已移除；模型缺失统一显式失败。
+- [x] 新增 guard：`no-provider-model-fallback`，并纳入 `check:ai-refactor-guards`。
+- [x] LLM connection probe 已从 `ai-providers/index.ts` 拆入 `ai-exec/llm-test-connection.ts`。
+- [x] `AiVariantDescriptor.capabilities` 改为 `ModelCapabilities` 强类型。
+- [x] runtime selection 不再暴露顶层 `compatMediaTemplate` / `llmProtocol`；provider-specific 数据统一通过 `variantData` 传递。
+- [x] `AiProviderAdapter` 旧 `executeImage/executeVideo/executeAudio` 字段删除。
+- [x] `ai-providers/index.ts` 收敛为 composition root，不再承载 provider probe HTTP 实现。
 
 ## 2026-04-28 复审事实
 
@@ -24,7 +34,7 @@
 - [x] `src/lib/async-poll.ts` 已迁入 `src/lib/ai-exec/async-poll.ts`，旧入口删除；provider 具体 HTTP poll/query 实现已下沉到各 provider。
 - [x] Ark Seedance 2 token 估算/模型判断已从 `billing/cost.ts` 下沉到 `ai-providers/ark/video-token-pricing.ts`，billing 只依赖 provider token-pricing contract。
 - [x] provider builtin catalog 聚合已从 `ai-registry/builtin-catalog.ts` 移到 `ai-providers/builtin-catalog.ts`，旧路径物理删除且不留 re-export。
-- [x] `ai-providers/index.ts` 已删除独立 media adapter 注册表，只保留 runtime provider registry。
+- [x] `ai-providers/index.ts` 已删除独立 media adapter 注册表，只保留 composition-root 绑定。
 - [x] `assistant-platform/runtime.ts` 与 `project-agent/model.ts` 已移除 Google/OpenAI SDK 分支，LanguageModel 创建迁入 provider runtime registry。
 
 ## Step 进度
@@ -106,4 +116,4 @@
 - [x] `src/lib/user-api/runtime-config.ts` 仅保留用户配置读取/解密；runtime selection 与 provider baseUrl 策略迁入 `ai-registry/runtime-selection.ts`。
 - [x] LLM vision 与 OpenAI-compatible 模板链路移除隐式 fallback，未声明能力或缺少模板时显式失败。
 - [x] guard 扫描覆盖 `user-api/**` 中的 provider probe / providerKey 字面量分支，防止非 `ai-*` 目录重新长出模型调用逻辑。
-- [x] 每个 provider 最终只导出一个完整 adapter，`ai-providers/index.ts` 只做注册。
+- [x] 每个 provider 最终只导出一个完整 adapter，`ai-providers/index.ts` 只做 composition-root 绑定，不承载 provider probe HTTP 实现。

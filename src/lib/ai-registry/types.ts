@@ -51,7 +51,7 @@ export type AiVariantDescriptor = {
     externalIdPrefix?: string
   }
 
-  capabilities: AiUnknownObject
+  capabilities: ModelCapabilities
   optionSchema: AiOptionSchema
   inputContracts?: AiUnknownObject
 }
@@ -64,9 +64,7 @@ export type AiResolvedSelection = {
   variantData?: AiUnknownObject
 }
 
-export type AiResolvedLlmSelection = AiResolvedSelection & {
-  llmProtocol?: 'responses' | 'chat-completions'
-}
+export type AiResolvedLlmSelection = AiResolvedSelection
 
 export type AiLlmMessage = {
   role: 'user' | 'assistant' | 'system'

@@ -7,6 +7,7 @@ import {
   toGoogleInlineData,
   type GoogleContentPart,
 } from '@/lib/ai-providers/shared/google-image-helpers'
+import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 import { setProxy } from '../../../../lib/prompts/proxy'
 
 type GoogleImageOptions = NonNullable<AiProviderImageExecutionContext['options']>
@@ -48,7 +49,7 @@ export async function executeGeminiCompatibleImageGeneration(
   }
   parts.push({ text: input.prompt })
 
-  const modelId = input.selection.modelId || 'gemini-2.5-flash-image-preview'
+  const modelId = requireSelectedModelId(input.selection, 'gemini-compatible:image')
 
   const safetySettings = [
     { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -104,7 +105,7 @@ async function executeGoogleImageGenerationInternal(input: AiProviderImageExecut
   await setProxy()
   const ai = new GoogleGenAI({ apiKey })
 
-  const modelId = input.selection.modelId || 'gemini-3-pro-image-preview'
+  const modelId = requireSelectedModelId(input.selection, 'google:image')
   const referenceImages = options.referenceImages ?? []
 
   if (modelId === 'gemini-3-pro-image-preview-batch') {
