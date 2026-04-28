@@ -116,6 +116,7 @@
     "clean": "rimraf .next"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.71",
     "@ai-sdk/google": "^3.0.22",
     "@ai-sdk/openai": "^3.0.26",
     "@ai-sdk/react": "^3.0.118",

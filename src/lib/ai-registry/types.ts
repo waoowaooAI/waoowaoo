@@ -5,20 +5,29 @@ import type { LLMStreamKind } from '@/lib/llm-observe/types'
 export type AiModality = 'llm' | 'vision' | 'image' | 'video' | 'audio' | 'lipsync'
 export type AiExecutionMode = 'sync' | 'async' | 'stream' | 'batch'
 export type AiVariantSubKind = 'official' | 'user-template'
+export type AiLipSyncProviderKey = 'fal' | 'vidu' | 'bailian'
 
 export type AiOptionValidationResult =
   | { ok: true }
   | { ok: false; reason: string }
 
+export interface AiUnknownObject {
+  [key: string]: unknown
+}
+
+export interface AiReadonlyUnknownObject {
+  readonly [key: string]: unknown
+}
+
 export type AiOptionValidator = (value: unknown) => AiOptionValidationResult
-export type AiOptionObjectValidator = (options: Readonly<Record<string, unknown>>) => AiOptionValidationResult
+export type AiOptionObjectValidator = (options: AiReadonlyUnknownObject) => AiOptionValidationResult
 
 export type AiOptionSchema = {
   allowedKeys: ReadonlySet<string>
   required?: readonly string[]
   requiresOneOf?: ReadonlyArray<{ keys: readonly string[]; message: string }>
   conflicts?: ReadonlyArray<{ keys: readonly string[]; message: string; allowSameValue?: boolean }>
-  validators: Readonly<Record<string, AiOptionValidator>>
+  validators: { readonly [key: string]: AiOptionValidator }
   objectValidators?: readonly AiOptionObjectValidator[]
 }
 
@@ -42,9 +51,9 @@ export type AiVariantDescriptor = {
     externalIdPrefix?: string
   }
 
-  capabilities: Record<string, unknown>
+  capabilities: AiUnknownObject
   optionSchema: AiOptionSchema
-  inputContracts?: Record<string, unknown>
+  inputContracts?: AiUnknownObject
 }
 
 export type AiResolvedSelection = {
@@ -52,7 +61,7 @@ export type AiResolvedSelection = {
   modelId: string
   modelKey: string
   variantSubKind: AiVariantSubKind
-  variantData?: Record<string, unknown>
+  variantData?: AiUnknownObject
 }
 
 export type AiResolvedLlmSelection = AiResolvedSelection & {
@@ -174,6 +183,27 @@ export type AiVisionStepExecutionResult = {
   completion: OpenAI.Chat.Completions.ChatCompletion
 }
 
+export interface AiLipSyncResult {
+  videoUrl?: string
+  requestId: string
+  externalId?: string
+  async?: boolean
+}
+
+export interface AiLipSyncParams {
+  videoUrl: string
+  audioUrl: string
+  audioDurationMs?: number | null
+  videoDurationMs?: number | null
+}
+
+export interface AiLipSyncSubmitContext {
+  userId: string
+  providerId: string
+  modelId: string
+  modelKey: string
+}
+
 export type AiLlmProviderConfig = {
   id: string
   name: string
@@ -206,7 +236,7 @@ export type AiLlmExecutionResult = {
   text: string
   reasoning: string
   usage?: AiLlmUsage | null
-  successDetails?: Record<string, unknown>
+  successDetails?: AiUnknownObject
 }
 
 export type UnifiedModelType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync'
@@ -315,7 +345,7 @@ const LIPSYNC_ALLOWED_FIELDS = new Set<keyof LipSyncCapabilities>([
   'fieldI18n',
 ])
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is AiUnknownObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 

@@ -1,12 +1,20 @@
 import type OpenAI from 'openai'
+import type { LanguageModel } from 'ai'
 import type {
   AiLlmExecutionInput,
   AiLlmExecutionResult,
   AiResolvedSelection,
   AiVariantDescriptor,
   AiLlmProviderConfig,
+  AiLipSyncParams,
+  AiLipSyncResult,
 } from '@/lib/ai-registry/types'
 import type { ProviderChatCompletionOptions, ProviderChatCompletionStreamCallbacks } from '@/lib/ai-providers/shared/llm-support'
+import type {
+  CharacterVoiceFields,
+  SpeakerVoiceEntry,
+  VoiceLineBindingSource,
+} from '@/lib/ai-providers/shared/voice-line-binding'
 
 export type GenerateResult = {
   success: boolean
@@ -50,6 +58,16 @@ export type AiProviderVisionExecutionContext = {
   imageUrls: string[]
   temperature: number
   reasoning: boolean
+}
+
+export type AiProviderLanguageModelContext = {
+  providerKey: string
+  selection: {
+    provider: string
+    modelId: string
+    modelKey: string
+  }
+  providerConfig: AiLlmProviderConfig
 }
 
 export type AiProviderImageExecutionContext = {
@@ -110,6 +128,51 @@ export type AiProviderAudioExecutionContext = {
   }
 }
 
+export type AiProviderLipSyncExecutionContext = {
+  userId: string
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+  }
+  params: AiLipSyncParams
+}
+
+export type AiProviderVoiceLineBinding =
+  | {
+    provider: 'fal'
+    source: VoiceLineBindingSource
+    referenceAudioUrl: string
+  }
+  | {
+    provider: 'bailian'
+    source: VoiceLineBindingSource
+    voiceId: string
+  }
+
+export type AiProviderVoiceLineBindingInput = {
+  character?: CharacterVoiceFields | null
+  speakerVoice?: SpeakerVoiceEntry | null
+}
+
+export type AiProviderVoiceLineExecutionContext = {
+  userId: string
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+  }
+  text: string
+  emotionPrompt?: string | null
+  emotionStrength?: number | null
+  binding: AiProviderVoiceLineBinding
+}
+
+export type AiProviderVoiceLineResult = {
+  audioData: Buffer
+  audioDuration: number
+}
+
 export type RegisteredMediaProviderModalityAdapter<M extends 'image' | 'video' | 'audio'> = {
   describe: (selection: AiResolvedSelection) => AiVariantDescriptor
   execute: (
@@ -121,11 +184,28 @@ export type RegisteredMediaProviderModalityAdapter<M extends 'image' | 'video' |
   ) => Promise<GenerateResult>
 }
 
+export type RegisteredLipSyncProviderModalityAdapter = {
+  execute: (input: AiProviderLipSyncExecutionContext) => Promise<AiLipSyncResult>
+}
+
+export type RegisteredVoiceLineProviderModalityAdapter = {
+  resolveBinding: (input: AiProviderVoiceLineBindingInput) => AiProviderVoiceLineBinding | null
+  createMissingBindingError: (input: AiProviderVoiceLineBindingInput) => Error
+  execute: (input: AiProviderVoiceLineExecutionContext) => Promise<AiProviderVoiceLineResult>
+}
+
+export type RegisteredLanguageModelProviderAdapter = {
+  create: (input: AiProviderLanguageModelContext) => LanguageModel
+}
+
 export interface RegisteredAiProvider {
   readonly providerKey: string
   image?: RegisteredMediaProviderModalityAdapter<'image'>
   video?: RegisteredMediaProviderModalityAdapter<'video'>
   audio?: RegisteredMediaProviderModalityAdapter<'audio'>
+  lipsync?: RegisteredLipSyncProviderModalityAdapter
+  voiceLine?: RegisteredVoiceLineProviderModalityAdapter
+  languageModel?: RegisteredLanguageModelProviderAdapter
   completeLlm?: (input: AiLlmExecutionInput) => Promise<AiProviderLlmResult>
   streamLlm?: (input: AiProviderLlmStreamContext) => Promise<AiProviderLlmResult>
   completeVision?: (input: AiProviderVisionExecutionContext) => Promise<AiProviderLlmResult>

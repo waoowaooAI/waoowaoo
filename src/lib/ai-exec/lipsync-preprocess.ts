@@ -2,11 +2,12 @@ import { randomUUID } from 'node:crypto'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { normalizeToOriginalMediaUrl } from '@/lib/media/outbound-image'
 import { toFetchableUrl } from '@/lib/storage/utils'
-import type { LipSyncParams } from '@/lib/lipsync/types'
+import type { AiLipSyncParams, AiLipSyncProviderKey } from '@/lib/ai-registry/types'
 
 const LIPSYNC_MIN_AUDIO_DURATION_MS = 2000
+const PUBLIC_AUDIO_UPLOAD_PROVIDER_KEYS = new Set<LipSyncProviderKey>(['vidu'])
 
-export type LipSyncProviderKey = 'fal' | 'vidu' | 'bailian'
+export type LipSyncProviderKey = AiLipSyncProviderKey
 
 interface LoadedBinary {
   buffer: Buffer
@@ -32,7 +33,7 @@ export interface LipSyncPreprocessContext {
 }
 
 export interface LipSyncPreprocessResult {
-  params: LipSyncParams
+  params: AiLipSyncParams
   paddedAudio: boolean
   trimmedAudio: boolean
 }
@@ -299,7 +300,7 @@ function parseMp4DurationMs(buffer: Buffer): number {
   throw new Error('LIPSYNC_VIDEO_DURATION_PARSE_FAILED')
 }
 
-async function resolveVideoDurationMs(params: LipSyncParams): Promise<number | null> {
+async function resolveVideoDurationMs(params: AiLipSyncParams): Promise<number | null> {
   const knownDuration = normalizeDurationMs(params.videoDurationMs)
   if (knownDuration) return knownDuration
   const videoBinary = await loadBinaryFromInput(params.videoUrl)
@@ -314,7 +315,7 @@ async function toProviderAudioInput(
   providerKey: LipSyncProviderKey,
   buffer: Buffer,
 ): Promise<string> {
-  if (providerKey === 'vidu') {
+  if (PUBLIC_AUDIO_UPLOAD_PROVIDER_KEYS.has(providerKey)) {
     const { uploadObject, getSignedUrl } = await import('@/lib/storage')
     const storageKey = `voice/temp/lip-sync-preprocessed/${randomUUID()}.wav`
     await uploadObject(buffer, storageKey, 1, 'audio/wav')
@@ -325,7 +326,7 @@ async function toProviderAudioInput(
 }
 
 export async function preprocessLipSyncParams(
-  params: LipSyncParams,
+  params: AiLipSyncParams,
   context: LipSyncPreprocessContext,
 ): Promise<LipSyncPreprocessResult> {
   const inputAudioDurationMs = normalizeDurationMs(params.audioDurationMs)

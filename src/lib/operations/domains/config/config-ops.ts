@@ -11,12 +11,7 @@ import {
   type UnifiedModelType,
 } from '@/lib/ai-registry/types'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
-import {
-  resolveBuiltinModelContext,
-  getCapabilityOptionFields,
-  validateCapabilitySelectionsPayload,
-  type CapabilityModelContext,
-} from '@/lib/ai-registry/catalog'
+import { resolveBuiltinModelContext, getCapabilityOptionFields, validateCapabilitySelectionsPayload, type CapabilityModelContext } from '@/lib/ai-registry/capabilities-catalog'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 
 const MODEL_FIELDS = [

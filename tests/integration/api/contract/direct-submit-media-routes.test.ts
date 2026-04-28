@@ -67,7 +67,7 @@ vi.mock('@/lib/media/outbound-image', () => ({
     issues: [] as Array<{ reason: string }>,
   })),
 }))
-vi.mock('@/lib/ai-registry/catalog', () => ({
+vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
   resolveBuiltinPricing: vi.fn(() => ({
     status: 'resolved',

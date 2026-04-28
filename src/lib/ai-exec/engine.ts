@@ -1,8 +1,16 @@
 import OpenAI from 'openai'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
-import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
+import type {
+  AiProviderVoiceLineBinding,
+  AiProviderVoiceLineResult,
+  GenerateResult,
+} from '@/lib/ai-providers/runtime-types'
 import type {
   AiModality,
+  AiLipSyncParams,
+  AiLipSyncProviderKey,
+  AiLipSyncResult,
+  AiResolvedSelection,
   AiStepExecutionInput,
   AiStepExecutionResult,
   AiVisionStepExecutionInput,
@@ -11,7 +19,8 @@ import type {
   ChatCompletionStreamCallbacks,
   ChatMessage,
 } from '@/lib/ai-registry/types'
-import { resolveModelSelection } from '@/lib/user-api/runtime-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
+import { resolveModelSelection, resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
 import { runChatCompletion } from '@/lib/ai-exec/llm/completion-runner'
@@ -22,6 +31,7 @@ import {
 } from '@/lib/ai-exec/llm/vision-runner'
 import { getCompletionContent, getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 import { toAiRuntimeError } from '@/lib/ai-exec/governance'
+import { preprocessLipSyncParams } from '@/lib/ai-exec/lipsync-preprocess'
 
 export type AiMediaExecutionModality = Extract<AiModality, 'image' | 'video' | 'audio'>
 
@@ -100,6 +110,35 @@ export type AiMediaExecutionInput =
     options?: AiAudioExecutionOptions
   }
 
+export type AiLipSyncExecutionInput = {
+  userId: string
+  modelKey?: string | null
+  params: AiLipSyncParams
+}
+
+export type AiVoiceLineExecutionInput = {
+  userId: string
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+  }
+  text: string
+  emotionPrompt?: string | null
+  emotionStrength?: number | null
+  binding: AiProviderVoiceLineBinding
+}
+
+const LIPSYNC_PROVIDER_KEYS = new Set<AiLipSyncProviderKey>(['fal', 'vidu', 'bailian'])
+
+function requireLipSyncProviderKey(providerId: string): AiLipSyncProviderKey {
+  const providerKey = getProviderKey(providerId).toLowerCase()
+  if (LIPSYNC_PROVIDER_KEYS.has(providerKey as AiLipSyncProviderKey)) {
+    return providerKey as AiLipSyncProviderKey
+  }
+  throw new Error(`LIPSYNC_PROVIDER_UNSUPPORTED: ${providerId}`)
+}
+
 export async function executeMediaGeneration(input: AiMediaExecutionInput): Promise<GenerateResult> {
   const selection = await resolveModelSelection(input.userId, input.modelKey, input.modality)
   _ulogInfo(`[ai-exec:${input.modality}] resolved model selection: ${selection.modelKey}`)
@@ -160,6 +199,30 @@ export async function executeMediaGeneration(input: AiMediaExecutionInput): Prom
       })
     }
   }
+}
+
+export async function executeLipSyncGeneration(input: AiLipSyncExecutionInput): Promise<AiLipSyncResult> {
+  const selection = await resolveModelSelectionOrSingle(input.userId, input.modelKey, 'lipsync')
+  const providerKey = requireLipSyncProviderKey(selection.provider)
+  const adapter = resolveRegisteredAiProvider(selection.provider)
+  if (!adapter.lipsync) {
+    throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:lipsync`)
+  }
+
+  const { params } = await preprocessLipSyncParams(input.params, { providerKey })
+  return await adapter.lipsync.execute({
+    userId: input.userId,
+    selection,
+    params,
+  })
+}
+
+export async function executeVoiceLineGeneration(input: AiVoiceLineExecutionInput): Promise<AiProviderVoiceLineResult> {
+  const adapter = resolveRegisteredAiProvider(input.selection.provider)
+  if (!adapter.voiceLine) {
+    throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${input.selection.provider}:voiceLine`)
+  }
+  return await adapter.voiceLine.execute(input)
 }
 
 export async function executeLlmCompletion(input: AiLlmExecutionInput): Promise<OpenAI.Chat.Completions.ChatCompletion> {
@@ -273,6 +336,18 @@ export async function generateAudio(
     modelKey,
     text,
     options,
+  })
+}
+
+export async function generateLipSync(
+  params: AiLipSyncParams,
+  userId: string,
+  modelKey?: string | null,
+): Promise<AiLipSyncResult> {
+  return await executeLipSyncGeneration({
+    userId,
+    modelKey,
+    params,
   })
 }
 

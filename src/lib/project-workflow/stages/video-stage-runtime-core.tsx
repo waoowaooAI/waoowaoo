@@ -22,14 +22,7 @@ import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapa
 import VideoTimelinePanel from '@/features/project-workspace/components/video-stage/VideoTimelinePanel'
 import VideoRenderPanel from '@/features/project-workspace/components/video-stage/VideoRenderPanel'
 import type { VideoStageShellProps } from './video-stage-runtime/types'
-import {
-  type EffectiveVideoCapabilityDefinition,
-  normalizeVideoGenerationSelections,
-  resolveEffectiveVideoCapabilityDefinitions,
-  resolveEffectiveVideoCapabilityFields,
-  filterNormalVideoModelOptions,
-  projectVideoPricingTiersByFixedSelections,
-} from '@/lib/ai-registry/catalog'
+import { type EffectiveVideoCapabilityDefinition, normalizeVideoGenerationSelections, resolveEffectiveVideoCapabilityDefinitions, resolveEffectiveVideoCapabilityFields, filterNormalVideoModelOptions, projectVideoPricingTiersByFixedSelections } from '@/lib/ai-registry/video-capabilities'
 import { useVideoTaskStates } from './video-stage-runtime/useVideoTaskStates'
 import { useVideoPanelsProjection } from './video-stage-runtime/useVideoPanelsProjection'
 import { useVideoPromptState } from './video-stage-runtime/useVideoPromptState'

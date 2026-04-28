@@ -17,8 +17,12 @@ export interface ArkResponsesResult {
   raw: unknown
 }
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+interface ArkResponseObject {
+  [key: string]: unknown
+}
+
+function asRecord(value: unknown): ArkResponseObject | null {
+  return value && typeof value === 'object' ? (value as ArkResponseObject) : null
 }
 
 function collectText(node: unknown, acc: string[]) {
@@ -181,7 +185,7 @@ export function arkResponsesStream(options: ArkResponsesOptions & { temperature?
     resolveResult = resolve
     rejectResult = reject
   })
-  const body: Record<string, unknown> = {
+  const body: ArkResponseObject = {
     model: options.model,
     input: options.input,
     stream: true,
@@ -229,7 +233,7 @@ export function arkResponsesStream(options: ArkResponsesOptions & { temperature?
           if (!line.startsWith('data:')) continue
           const data = line.slice(5).trim()
           if (!data || data === '[DONE]') continue
-          const parsed = JSON.parse(data) as Record<string, unknown>
+          const parsed = JSON.parse(data) as ArkResponseObject
           finalText = extractArkText(parsed) || finalText
           finalReasoning = extractArkReasoning(parsed) || finalReasoning
           finalUsage = extractArkUsage(parsed)

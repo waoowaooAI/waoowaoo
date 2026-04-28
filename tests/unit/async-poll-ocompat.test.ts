@@ -14,7 +14,7 @@ vi.mock('@/lib/user-api/runtime-config', () => ({
   getUserModels: getUserModelsMock,
 }))
 
-import { pollAsyncTask } from '@/lib/async-poll'
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 
 function encode(value: string): string {
   return Buffer.from(value, 'utf8').toString('base64url')

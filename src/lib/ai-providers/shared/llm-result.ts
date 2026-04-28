@@ -8,7 +8,7 @@ export function buildAiProviderLlmResult(input: {
   text: string
   reasoning: string
   usage?: { promptTokens: number; completionTokens: number } | null
-  successDetails?: Record<string, unknown>
+  successDetails?: { [key: string]: unknown }
 }): Pick<
   AiLlmExecutionResult,
   'completion' | 'logProvider' | 'text' | 'reasoning' | 'usage' | 'successDetails'

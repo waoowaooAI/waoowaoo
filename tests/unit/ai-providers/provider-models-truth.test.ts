@@ -20,11 +20,9 @@ import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES, SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
-import {
-  registerBuiltinCapabilityCatalogEntries,
-  registerBuiltinPricingCatalogEntries,
-  resolveBuiltinPricing,
-} from '@/lib/ai-registry/catalog'
+import { registerBuiltinCapabilityCatalogEntries } from '@/lib/ai-registry/capabilities-catalog'
+import { registerBuiltinPricingCatalogEntries } from '@/lib/ai-registry/pricing-catalog'
+import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
 
 registerBuiltinCapabilityCatalogEntries([
   ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,

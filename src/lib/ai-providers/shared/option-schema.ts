@@ -136,7 +136,7 @@ function buildAllowedKeys(modality: MediaModality): ReadonlySet<string> {
   return new Set(['provider', 'modelId', 'modelKey', 'voice', 'rate'])
 }
 
-function pickFirstDefined(options: Readonly<Record<string, unknown>>, keys: readonly string[]): unknown {
+function pickFirstDefined(options: { readonly [key: string]: unknown }, keys: readonly string[]): unknown {
   for (const key of keys) {
     if (options[key] !== undefined) return options[key]
   }

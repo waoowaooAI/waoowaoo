@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToOriginalMediaUrl } from '@/lib/media/outbound-image'
 import { toFetchableUrl } from '@/lib/storage/utils'
-import type { LipSyncParams, LipSyncResult, LipSyncSubmitContext } from '@/lib/lipsync/types'
+import type { AiLipSyncParams, AiLipSyncResult, AiLipSyncSubmitContext } from '@/lib/ai-registry/types'
 
 const BAILIAN_LIPSYNC_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/image2video/video-synthesis'
 const BAILIAN_UPLOAD_POLICY_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/uploads'
@@ -276,9 +276,9 @@ async function parseBailianLipSyncSubmitResponse(response: Response): Promise<Ba
 }
 
 export async function submitBailianLipSync(
-  params: LipSyncParams,
-  context: LipSyncSubmitContext,
-): Promise<LipSyncResult> {
+  params: AiLipSyncParams,
+  context: AiLipSyncSubmitContext,
+): Promise<AiLipSyncResult> {
   const modelId = readTrimmedString(context.modelId)
   if (!modelId) {
     throw new Error(`LIPSYNC_ENDPOINT_MISSING: ${context.modelKey}`)

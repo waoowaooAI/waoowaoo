@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { arkCreateVideoTask } from '@/lib/ai-providers/ark/video'
-import { querySeedanceVideoStatus } from '@/lib/async-task-utils'
+import { querySeedanceVideoStatus } from '@/lib/ai-providers/ark/poll'
 
 describe('provider contract - ark seedance', () => {
   beforeEach(() => {

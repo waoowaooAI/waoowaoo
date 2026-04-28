@@ -9,19 +9,23 @@ const getProviderConfigMock = vi.hoisted(() =>
 
 vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
+  getUserModels: vi.fn(async () => []),
 }))
 
-vi.mock('@/lib/async-submit', () => ({
+vi.mock('@/lib/ai-providers/fal/queue', () => ({
   queryFalStatus: vi.fn(),
 }))
 
-vi.mock('@/lib/async-task-utils', () => ({
-  queryGeminiBatchStatus: vi.fn(),
-  queryGoogleVideoStatus: vi.fn(),
+vi.mock('@/lib/ai-providers/ark/poll', () => ({
   querySeedanceVideoStatus: vi.fn(),
 }))
 
-import { pollAsyncTask } from '@/lib/async-poll'
+vi.mock('@/lib/ai-providers/google/poll', () => ({
+  queryGeminiBatchStatus: vi.fn(),
+  queryGoogleVideoStatus: vi.fn(),
+}))
+
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 
 describe('async poll bailian task', () => {
   beforeEach(() => {

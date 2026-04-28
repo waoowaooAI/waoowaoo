@@ -1,16 +1,20 @@
+import OpenAI from 'openai'
 import { AiRegistry } from '@/lib/ai-registry/registry'
 import { resolveAiGatewayRoute } from '@/lib/ai-registry/gateway-route'
 import type { AiLlmProviderConfig } from '@/lib/ai-registry/types'
-import {
-  registerBuiltinCapabilityCatalogEntries,
-  registerBuiltinPricingCatalogEntries,
-} from '@/lib/ai-registry/catalog'
+import type {
+  AsyncExternalIdProvider,
+  AsyncTaskProviderRegistration,
+} from '@/lib/ai-providers/async-task-types'
+import { createAnthropicLanguageModel } from '@/lib/ai-providers/anthropic/language-model'
 import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
+import { arkAsyncTaskProvider } from '@/lib/ai-providers/ark/async-task'
 import { executeArkImageGeneration } from '@/lib/ai-providers/ark/image'
 import { runArkLlmCompletion, runArkLlmStream, runArkVisionCompletion } from '@/lib/ai-providers/ark/llm'
 import { executeArkVideoGeneration } from '@/lib/ai-providers/ark/video'
-import { ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES, ARK_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
+import { arkSeedance2VideoTokenPricingContract } from '@/lib/ai-providers/ark/video-token-pricing'
 import { bailianMediaAdapter } from '@/lib/ai-providers/bailian/adapter'
+import { bailianAsyncTaskProvider } from '@/lib/ai-providers/bailian/async-task'
 import {
   executeBailianAudioGeneration,
   executeBailianImageGeneration,
@@ -19,28 +23,46 @@ import {
   runBailianLlmStream,
   runBailianVisionCompletion,
 } from '@/lib/ai-providers/bailian'
-import { BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES, BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
+import { submitBailianLipSync } from '@/lib/ai-providers/bailian/lipsync'
+import {
+  createBailianVoiceLineMissingBindingError,
+  executeBailianVoiceLineGeneration,
+  normalizeBailianSpeakerVoiceEntry,
+  resolveBailianVoiceLineBinding,
+} from '@/lib/ai-providers/bailian/voice-line'
 import { falMediaAdapter } from '@/lib/ai-providers/fal/adapter'
+import { falAsyncTaskProvider } from '@/lib/ai-providers/fal/async-task'
 import { executeFalImageGeneration } from '@/lib/ai-providers/fal/image'
+import { submitFalLipSync } from '@/lib/ai-providers/fal/lipsync'
 import { executeFalVideoGeneration } from '@/lib/ai-providers/fal/video'
-import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES, FAL_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
+import {
+  createFalVoiceLineMissingBindingError,
+  executeFalVoiceLineGeneration,
+  normalizeFalSpeakerVoiceEntry,
+  resolveFalVoiceLineBinding,
+} from '@/lib/ai-providers/fal/voice-line'
 import { geminiCompatibleMediaAdapter, googleMediaAdapter } from '@/lib/ai-providers/google/adapter'
+import { geminiBatchAsyncTaskProvider, googleVideoAsyncTaskProvider } from '@/lib/ai-providers/google/async-task'
 import { executeGeminiCompatibleImageGeneration, executeGoogleImageGeneration } from '@/lib/ai-providers/google/image'
 import { runGoogleLlmCompletion, runGoogleLlmStream, runGoogleVisionCompletion } from '@/lib/ai-providers/google/llm'
+import { createGoogleSdkLanguageModel } from '@/lib/ai-providers/google/language-model'
 import { executeGoogleVideoGeneration } from '@/lib/ai-providers/google/video'
-import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
 import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
+import { minimaxAsyncTaskProvider } from '@/lib/ai-providers/minimax/async-task'
 import { executeMinimaxVideoGeneration } from '@/lib/ai-providers/minimax/video'
-import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES, MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
 import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
+import {
+  openAiCompatibleTemplateAsyncTaskProvider,
+  openAiVideoAsyncTaskProvider,
+} from '@/lib/ai-providers/openai-compatible/async-task'
 import { executeOpenAiCompatibleImageGeneration } from '@/lib/ai-providers/openai-compatible/image'
 import { runOpenAiCompatibleLlmCompletion, runOpenAiCompatibleLlmStream } from '@/lib/ai-providers/openai-compatible/llm'
 import { executeOpenAiCompatibleVideoGeneration } from '@/lib/ai-providers/openai-compatible/video'
-import { OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai-compatible/models'
+import { createOpenAiLanguageModel } from '@/lib/ai-providers/openai/language-model'
 import { openRouterMediaAdapter } from '@/lib/ai-providers/openrouter/adapter'
 import { runOpenRouterLlmCompletion, runOpenRouterLlmStream } from '@/lib/ai-providers/openrouter/llm'
-import { OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
 import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
+import { siliconFlowAsyncTaskProvider } from '@/lib/ai-providers/siliconflow/async-task'
 import {
   executeSiliconFlowAudioGeneration,
   executeSiliconFlowImageGeneration,
@@ -49,49 +71,55 @@ import {
   runSiliconFlowLlmStream,
   runSiliconFlowVisionCompletion,
 } from '@/lib/ai-providers/siliconflow'
-import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES, SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
+import { viduAsyncTaskProvider } from '@/lib/ai-providers/vidu/async-task'
+import { submitViduLipSync } from '@/lib/ai-providers/vidu/lipsync'
 import { executeViduVideoGeneration } from '@/lib/ai-providers/vidu/video'
-import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
-import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/shared/media-adapter'
-import type { RegisteredAiProvider } from '@/lib/ai-providers/runtime-types'
+import type { AiProviderLanguageModelContext, RegisteredAiProvider } from '@/lib/ai-providers/runtime-types'
+import {
+  readRawSpeakerVoiceEntry,
+  type CharacterVoiceFields,
+  type SpeakerVoiceEntry,
+  type SpeakerVoiceEntryNormalizer,
+  type SpeakerVoiceMap,
+} from '@/lib/ai-providers/shared/voice-line-binding'
+import type { VideoTokenPricingContract } from '@/lib/ai-providers/shared/video-token-pricing'
+import { createOpenAiSdkLanguageModel } from '@/lib/ai-providers/shared/language-model'
+export {
+  getSpeakerVoicePreviewUrl,
+  hasAnyVoiceBinding,
+} from '@/lib/ai-providers/shared/voice-line-binding'
+export type {
+  CharacterVoiceFields,
+  SpeakerVoiceEntry,
+  SpeakerVoiceMap,
+  SpeakerVoicePatch,
+} from '@/lib/ai-providers/shared/voice-line-binding'
 
-registerBuiltinCapabilityCatalogEntries([
-  ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-  ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
-])
+export type LlmConnectionTestProvider =
+  | 'openrouter'
+  | 'google'
+  | 'anthropic'
+  | 'openai'
+  | 'bailian'
+  | 'siliconflow'
+  | 'openai-compatible'
+  | 'gemini-compatible'
+  | 'custom'
 
-registerBuiltinPricingCatalogEntries([
-  ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES,
-  ...VIDU_BUILTIN_PRICING_CATALOG_ENTRIES,
-])
+export interface LlmConnectionTestPayload {
+  provider: LlmConnectionTestProvider
+  apiKey: string
+  baseUrl?: string
+  model?: string
+}
 
-const mediaAdapterRegistry = new AiRegistry<DescribeOnlyMediaAdapter>([
-  bailianMediaAdapter,
-  siliconFlowMediaAdapter,
-  openAiCompatibleMediaAdapter,
-  openRouterMediaAdapter,
-  googleMediaAdapter,
-  geminiCompatibleMediaAdapter,
-  arkMediaAdapter,
-  falMediaAdapter,
-  minimaxMediaAdapter,
-  viduMediaAdapter,
-])
+export interface LlmConnectionTestResult {
+  provider: LlmConnectionTestProvider
+  message: string
+  model?: string
+  answer?: string
+}
 
 function getProviderKey(providerId: string): string {
   const marker = providerId.indexOf(':')
@@ -99,6 +127,12 @@ function getProviderKey(providerId: string): string {
 }
 
 const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
+  {
+    providerKey: 'anthropic',
+    languageModel: {
+      create: createAnthropicLanguageModel,
+    },
+  },
   {
     providerKey: 'ark',
     image: {
@@ -115,6 +149,9 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       messages: input.messages,
       reasoning: input.reasoning,
     }),
+    languageModel: {
+      create: createOpenAiSdkLanguageModel,
+    },
     streamLlm: runArkLlmStream,
     completeVision: runArkVisionCompletion,
   },
@@ -132,6 +169,19 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       describe: (selection) => bailianMediaAdapter.describeVariant('audio', selection),
       execute: executeBailianAudioGeneration,
     },
+    lipsync: {
+      execute: (input) => submitBailianLipSync(input.params, {
+        userId: input.userId,
+        providerId: input.selection.provider,
+        modelId: input.selection.modelId,
+        modelKey: input.selection.modelKey,
+      }),
+    },
+    voiceLine: {
+      resolveBinding: resolveBailianVoiceLineBinding,
+      createMissingBindingError: createBailianVoiceLineMissingBindingError,
+      execute: executeBailianVoiceLineGeneration,
+    },
     completeLlm: (input) => runBailianLlmCompletion({
       modelId: input.selection.modelId,
       messages: input.messages,
@@ -139,6 +189,9 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       baseUrl: input.providerConfig.baseUrl,
       temperature: input.temperature,
     }),
+    languageModel: {
+      create: createOpenAiSdkLanguageModel,
+    },
     streamLlm: runBailianLlmStream,
     completeVision: runBailianVisionCompletion,
   },
@@ -151,6 +204,19 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     video: {
       describe: (selection) => falMediaAdapter.describeVariant('video', selection),
       execute: executeFalVideoGeneration,
+    },
+    lipsync: {
+      execute: (input) => submitFalLipSync(input.params, {
+        userId: input.userId,
+        providerId: input.selection.provider,
+        modelId: input.selection.modelId,
+        modelKey: input.selection.modelKey,
+      }),
+    },
+    voiceLine: {
+      resolveBinding: resolveFalVoiceLineBinding,
+      createMissingBindingError: createFalVoiceLineMissingBindingError,
+      execute: executeFalVoiceLineGeneration,
     },
   },
   {
@@ -173,6 +239,9 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       reasoningEffort: input.reasoningEffort,
       logProvider: 'google',
     }),
+    languageModel: {
+      create: createGoogleSdkLanguageModel,
+    },
     streamLlm: runGoogleLlmStream,
     completeVision: runGoogleVisionCompletion,
   },
@@ -196,6 +265,9 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       reasoningEffort: input.reasoningEffort,
       logProvider: 'gemini-compatible',
     }),
+    languageModel: {
+      create: createGoogleSdkLanguageModel,
+    },
     streamLlm: runGoogleLlmStream,
     completeVision: runGoogleVisionCompletion,
   },
@@ -229,10 +301,19 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       reasoningEffort: input.reasoningEffort,
       maxRetries: input.maxRetries,
     }),
+    languageModel: {
+      create: createOpenAiSdkLanguageModel,
+    },
     streamLlm: (input) => runOpenAiCompatibleLlmStream({
       ...input,
       gatewayRoute: input.providerConfig.gatewayRoute || 'openai-compat',
     }),
+  },
+  {
+    providerKey: 'openai',
+    languageModel: {
+      create: createOpenAiLanguageModel,
+    },
   },
   {
     providerKey: 'openrouter',
@@ -245,6 +326,9 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       reasoningEffort: input.reasoningEffort,
       maxRetries: input.maxRetries,
     }),
+    languageModel: {
+      create: createOpenAiSdkLanguageModel,
+    },
     streamLlm: runOpenRouterLlmStream,
   },
   {
@@ -268,6 +352,9 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       baseUrl: input.providerConfig.baseUrl,
       temperature: input.temperature,
     }),
+    languageModel: {
+      create: createOpenAiSdkLanguageModel,
+    },
     streamLlm: runSiliconFlowLlmStream,
     completeVision: runSiliconFlowVisionCompletion,
   },
@@ -277,15 +364,317 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
       describe: (selection) => viduMediaAdapter.describeVariant('video', selection),
       execute: executeViduVideoGeneration,
     },
+    lipsync: {
+      execute: (input) => submitViduLipSync(input.params, {
+        userId: input.userId,
+        providerId: input.selection.provider,
+        modelId: input.selection.modelId,
+        modelKey: input.selection.modelKey,
+      }),
+    },
   },
 ])
+
+const asyncTaskProviderRegistry: AsyncTaskProviderRegistration[] = [
+  falAsyncTaskProvider,
+  arkAsyncTaskProvider,
+  geminiBatchAsyncTaskProvider,
+  googleVideoAsyncTaskProvider,
+  minimaxAsyncTaskProvider,
+  viduAsyncTaskProvider,
+  openAiVideoAsyncTaskProvider,
+  openAiCompatibleTemplateAsyncTaskProvider,
+  bailianAsyncTaskProvider,
+  siliconFlowAsyncTaskProvider,
+]
+
+const videoTokenPricingContracts: VideoTokenPricingContract[] = [
+  arkSeedance2VideoTokenPricingContract,
+]
+
+const speakerVoiceEntryNormalizers: SpeakerVoiceEntryNormalizer[] = [
+  normalizeBailianSpeakerVoiceEntry,
+  normalizeFalSpeakerVoiceEntry,
+]
+
+function normalizeSpeakerVoiceEntry(raw: unknown, speaker: string): SpeakerVoiceEntry {
+  const entry = readRawSpeakerVoiceEntry(raw, speaker)
+  for (const normalize of speakerVoiceEntryNormalizers) {
+    const normalized = normalize(entry, speaker)
+    if (normalized) return normalized
+  }
+
+  if (entry.provider) {
+    throw new Error(`SPEAKER_VOICE_ENTRY_INVALID_PROVIDER: ${speaker}`)
+  }
+  throw new Error(`SPEAKER_VOICE_ENTRY_MISSING_BINDING: ${speaker}`)
+}
+
+export function parseSpeakerVoiceMap(raw: string | null | undefined): SpeakerVoiceMap {
+  if (!raw) return {}
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    throw new Error('SPEAKER_VOICES_INVALID_JSON')
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('SPEAKER_VOICES_INVALID_SHAPE')
+  }
+
+  const result: SpeakerVoiceMap = {}
+  for (const [speaker, value] of Object.entries(parsed as { [speaker: string]: unknown })) {
+    if (!speaker.trim()) {
+      throw new Error('SPEAKER_VOICES_INVALID_SPEAKER')
+    }
+    result[speaker] = normalizeSpeakerVoiceEntry(value, speaker)
+  }
+  return result
+}
+
+export function resolveAsyncTaskProviderByExternalId(externalId: string): AsyncTaskProviderRegistration {
+  const registration = asyncTaskProviderRegistry.find((candidate) => candidate.canParseExternalId(externalId))
+  if (!registration) {
+    throw new Error(
+      `无法识别的 externalId 格式: "${externalId}". ` +
+      `支持的格式: FAL:TYPE:endpoint:requestId, ARK:TYPE:requestId, GEMINI:BATCH:batchName, GOOGLE:VIDEO:operationName, MINIMAX:TYPE:taskId, VIDU:TYPE:taskId, OPENAI:VIDEO:providerToken:videoId, OCOMPAT:TYPE:providerToken:modelKeyToken:taskId, BAILIAN:TYPE:requestId, SILICONFLOW:TYPE:requestId`,
+    )
+  }
+  return registration
+}
+
+export function resolveAsyncTaskProviderByCode(providerCode: AsyncExternalIdProvider): AsyncTaskProviderRegistration {
+  const registration = asyncTaskProviderRegistry.find((candidate) => candidate.providerCode === providerCode)
+  if (!registration) {
+    throw new Error(`未知的 Provider: ${providerCode}`)
+  }
+  return registration
+}
+
+export function resolveVideoTokenPricingContract(model: string): VideoTokenPricingContract | null {
+  return videoTokenPricingContracts.find((contract) => contract.supportsModel(model)) ?? null
+}
+
+type LlmConnectionTestPartialResult = Pick<LlmConnectionTestResult, 'model' | 'answer'>
+
+interface LlmConnectionTester {
+  provider: LlmConnectionTestProvider
+  test: (payload: LlmConnectionTestPayload) => Promise<LlmConnectionTestPartialResult>
+}
+
+async function testGoogleAI(apiKey: string): Promise<LlmConnectionTestPartialResult> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+    { method: 'GET' },
+  )
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Google AI 认证失败: ${error}`)
+  }
+  return {}
+}
+
+async function testOpenAICompatibleConnection(params: {
+  apiKey: string
+  baseURL?: string
+  model?: string
+  defaultHeaders?: { [name: string]: string }
+}): Promise<LlmConnectionTestPartialResult> {
+  const client = new OpenAI({
+    apiKey: params.apiKey,
+    baseURL: params.baseURL,
+    timeout: 30000,
+    defaultHeaders: params.defaultHeaders,
+  })
+
+  if (params.model) {
+    const response = await client.chat.completions.create({
+      model: params.model,
+      messages: [{ role: 'user', content: '1+1等于几？只回答数字' }],
+      max_tokens: 10,
+      temperature: 0,
+    })
+    const answer = response.choices[0]?.message?.content?.trim() || ''
+    return {
+      model: response.model || params.model,
+      answer,
+    }
+  }
+
+  await client.models.list()
+  return {}
+}
+
+async function testBailianLlmConnection(apiKey: string): Promise<LlmConnectionTestPartialResult> {
+  const response = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/models', {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${apiKey}` },
+  })
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Bailian probe failed (${response.status}): ${error}`)
+  }
+  const data = await response.json() as { data?: Array<{ id?: string }> }
+  const firstModel = Array.isArray(data.data) ? data.data.find((item) => typeof item.id === 'string')?.id : undefined
+  return { model: firstModel }
+}
+
+async function testSiliconFlowLlmConnection(apiKey: string): Promise<LlmConnectionTestPartialResult> {
+  const modelsResponse = await fetch('https://api.siliconflow.cn/v1/models', {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${apiKey}` },
+  })
+  if (!modelsResponse.ok) {
+    const error = await modelsResponse.text()
+    throw new Error(`SiliconFlow models probe failed (${modelsResponse.status}): ${error}`)
+  }
+
+  const modelData = await modelsResponse.json() as { data?: Array<{ id?: string }> }
+  const firstModel = Array.isArray(modelData.data) ? modelData.data.find((item) => typeof item.id === 'string')?.id : undefined
+
+  const userInfoResponse = await fetch('https://api.siliconflow.cn/v1/user/info', {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${apiKey}` },
+  })
+  if (!userInfoResponse.ok) {
+    const error = await userInfoResponse.text()
+    throw new Error(`SiliconFlow user info probe failed (${userInfoResponse.status}): ${error}`)
+  }
+  const info = await userInfoResponse.json() as { balance?: unknown; data?: { balance?: unknown } }
+  const rawBalance = info.balance ?? info.data?.balance
+  const balance = typeof rawBalance === 'number'
+    ? String(rawBalance)
+    : typeof rawBalance === 'string' && rawBalance.trim()
+      ? rawBalance.trim()
+      : undefined
+
+  return {
+    model: firstModel,
+    answer: typeof balance === 'string' ? `balance=${balance}` : 'userinfo_ok',
+  }
+}
+
+function requireLlmConnectionBaseUrl(payload: LlmConnectionTestPayload): string {
+  const baseUrl = typeof payload.baseUrl === 'string' ? payload.baseUrl.trim() : ''
+  if (!baseUrl) {
+    throw new Error('自定义渠道需要提供 baseUrl')
+  }
+  return baseUrl
+}
+
+const llmConnectionTesters: LlmConnectionTester[] = [
+  {
+    provider: 'openrouter',
+    test: (payload) => testOpenAICompatibleConnection({
+      apiKey: payload.apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
+      model: payload.model || undefined,
+    }),
+  },
+  {
+    provider: 'google',
+    test: (payload) => testGoogleAI(payload.apiKey),
+  },
+  {
+    provider: 'anthropic',
+    test: (payload) => testOpenAICompatibleConnection({
+      apiKey: payload.apiKey,
+      baseURL: 'https://api.anthropic.com/v1',
+      model: payload.model || 'claude-3-haiku-20240307',
+      defaultHeaders: { 'anthropic-version': '2023-06-01' },
+    }),
+  },
+  {
+    provider: 'openai',
+    test: (payload) => testOpenAICompatibleConnection({
+      apiKey: payload.apiKey,
+      model: payload.model || undefined,
+    }),
+  },
+  {
+    provider: 'bailian',
+    test: (payload) => testBailianLlmConnection(payload.apiKey),
+  },
+  {
+    provider: 'siliconflow',
+    test: (payload) => testSiliconFlowLlmConnection(payload.apiKey),
+  },
+  {
+    provider: 'openai-compatible',
+    test: (payload) => testOpenAICompatibleConnection({
+      apiKey: payload.apiKey,
+      baseURL: requireLlmConnectionBaseUrl(payload),
+      model: payload.model || undefined,
+    }),
+  },
+  {
+    provider: 'gemini-compatible',
+    test: (payload) => testOpenAICompatibleConnection({
+      apiKey: payload.apiKey,
+      baseURL: requireLlmConnectionBaseUrl(payload),
+      model: payload.model || undefined,
+    }),
+  },
+  {
+    provider: 'custom',
+    test: (payload) => testOpenAICompatibleConnection({
+      apiKey: payload.apiKey,
+      baseURL: requireLlmConnectionBaseUrl(payload),
+      model: payload.model || undefined,
+    }),
+  },
+]
+
+export function isRegisteredLlmConnectionTestProvider(provider: string): provider is LlmConnectionTestProvider {
+  return llmConnectionTesters.some((tester) => tester.provider === provider)
+}
+
+export async function testRegisteredLlmConnection(payload: LlmConnectionTestPayload): Promise<LlmConnectionTestResult> {
+  const tester = llmConnectionTesters.find((candidate) => candidate.provider === payload.provider)
+  if (!tester) {
+    throw new Error(`不支持的渠道: ${payload.provider}`)
+  }
+  const tested = await tester.test(payload)
+  return {
+    provider: payload.provider,
+    message: `${payload.provider} 连接成功`,
+    ...tested,
+  }
+}
 
 export function resolveRegisteredAiProvider(providerId: string): RegisteredAiProvider {
   return runtimeProviderRegistry.getAdapterByProviderId(providerId)
 }
 
-export function resolveRegisteredMediaAdapter(providerId: string): DescribeOnlyMediaAdapter {
-  return mediaAdapterRegistry.getAdapterByProviderId(providerId)
+export function createRegisteredLanguageModel(input: AiProviderLanguageModelContext) {
+  const languageModelProvider = resolveRegisteredAiProvider(input.selection.provider).languageModel
+  if (!languageModelProvider) {
+    throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${input.selection.provider}:languageModel`)
+  }
+  return languageModelProvider.create(input)
+}
+
+export function resolveRegisteredVoiceLineBinding(params: {
+  providerId: string
+  character?: CharacterVoiceFields | null
+  speakerVoice?: SpeakerVoiceEntry | null
+}) {
+  const voiceLineProvider = resolveRegisteredAiProvider(params.providerId).voiceLine
+  if (!voiceLineProvider) return null
+  return voiceLineProvider.resolveBinding({
+    character: params.character,
+    speakerVoice: params.speakerVoice,
+  })
+}
+
+export function hasRegisteredVoiceLineBinding(params: {
+  providerId: string
+  character?: CharacterVoiceFields | null
+  speakerVoice?: SpeakerVoiceEntry | null
+}): boolean {
+  return !!resolveRegisteredVoiceLineBinding(params)
 }
 
 export function resolveRegisteredMediaGatewayRoute(input: {

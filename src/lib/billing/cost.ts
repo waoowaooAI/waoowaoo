@@ -11,13 +11,15 @@ import {
   type ModelCapabilities,
 } from '@/lib/ai-registry/types'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
-import {
-  findBuiltinCapabilities,
-  listBuiltinCapabilityCatalog,
-  validateCapabilitySelectionForModel,
-  resolveBuiltinPricing,
-  type PricingApiType,
-} from '@/lib/ai-registry/catalog'
+import { findBuiltinCapabilities, listBuiltinCapabilityCatalog, validateCapabilitySelectionForModel } from '@/lib/ai-registry/capabilities-catalog'
+import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
+import { type PricingApiType } from '@/lib/ai-registry/pricing-catalog'
+import { resolveVideoTokenPricingContract } from '@/lib/ai-providers'
+import type {
+  VideoTokenPricingContract,
+  VideoTokenPricingFailure,
+} from '@/lib/ai-providers/shared/video-token-pricing'
 
 export const USD_TO_CNY = 7.2
 
@@ -52,9 +54,7 @@ export interface ModelCustomPricing {
   video?: MediaCustomPricing
 }
 
-const DEFAULT_VOICE_MODEL_ID = 'fal::fal-ai/index-tts-2/text-to-speech'
-const DEFAULT_VOICE_DESIGN_MODEL_ID = 'bailian::qwen-voice-design'
-const DEFAULT_LIP_SYNC_MODEL_ID = 'fal::fal-ai/kling-video/lipsync/audio-to-video'
+type BillingMetadata = { [field: string]: unknown }
 
 function getMarkup(category: MarkupCategory): number {
   return MARKUP[category] ?? MARKUP.global
@@ -66,7 +66,7 @@ function parseModelId(model: string): string {
 }
 
 function normalizeCapabilitySelections(
-  metadata: Record<string, unknown> | undefined,
+  metadata: BillingMetadata | undefined,
 ): Record<string, CapabilityValue> {
   if (!metadata) return {}
 
@@ -273,146 +273,40 @@ function applyVideoDurationScaling(input: {
   return input.amount * (selectedDuration / baseDuration)
 }
 
-type Seedance2Resolution = '480p' | '720p'
-type Seedance2AspectRatio = '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9'
-
-const SEEDANCE_2_TOKEN_PRICED_MODEL_IDS = new Set([
-  'doubao-seedance-2-0-260128',
-  'doubao-seedance-2-0-fast-260128',
-])
-
-const SEEDANCE_2_OUTPUT_DIMENSIONS: Record<
-  Seedance2Resolution,
-  Record<Seedance2AspectRatio, { width: number; height: number }>
-> = {
-  '480p': {
-    '16:9': { width: 864, height: 496 },
-    '4:3': { width: 752, height: 560 },
-    '1:1': { width: 640, height: 640 },
-    '3:4': { width: 560, height: 752 },
-    '9:16': { width: 496, height: 864 },
-    '21:9': { width: 992, height: 432 },
-  },
-  '720p': {
-    '16:9': { width: 1280, height: 720 },
-    '4:3': { width: 1112, height: 834 },
-    '1:1': { width: 960, height: 960 },
-    '3:4': { width: 834, height: 1112 },
-    '9:16': { width: 720, height: 1280 },
-    '21:9': { width: 1470, height: 630 },
-  },
-}
-
-const SEEDANCE_2_VIDEO_INPUT_MIN_TOKEN_FLOOR: Record<number, Record<Seedance2Resolution, number>> = {
-  4: { '480p': 70308, '720p': 151200 },
-  5: { '480p': 90396, '720p': 194400 },
-  6: { '480p': 100440, '720p': 216000 },
-  7: { '480p': 120528, '720p': 259200 },
-  8: { '480p': 140616, '720p': 302400 },
-  9: { '480p': 150660, '720p': 324000 },
-  10: { '480p': 170748, '720p': 367200 },
-  11: { '480p': 190836, '720p': 410400 },
-  12: { '480p': 200880, '720p': 432000 },
-  13: { '480p': 220968, '720p': 475200 },
-  14: { '480p': 241056, '720p': 518400 },
-  15: { '480p': 251100, '720p': 540000 },
-}
-
-const SEEDANCE_2_DEFAULT_OUTPUT_DURATION_SECONDS = 5
-const SEEDANCE_2_MIN_INPUT_VIDEO_SECONDS = 2
-const SEEDANCE_2_DEFAULT_ASPECT_RATIO: Seedance2AspectRatio = '16:9'
-const SEEDANCE_2_FPS = 24
-
-function isSeedance2TokenPricedModel(model: string): boolean {
-  return SEEDANCE_2_TOKEN_PRICED_MODEL_IDS.has(parseModelId(model))
-}
-
-function readMetadataNumber(metadata: Record<string, unknown> | undefined, field: string): number | null {
-  if (!metadata) return null
-  const value = metadata[field]
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
-}
-
-function resolveSeedance2Resolution(value: CapabilityValue | undefined): Seedance2Resolution {
-  if (value === '480p' || value === '720p') return value
-  throw new BillingOperationError(
-    'BILLING_UNKNOWN_VIDEO_RESOLUTION',
-    `Unsupported video resolution pricing: ${String(value)}`,
-    {
-      apiType: 'video',
-      resolution: value,
-    },
-  )
-}
-
-function resolveSeedance2AspectRatio(value: CapabilityValue | undefined): Seedance2AspectRatio {
-  if (
-    value === '16:9'
-    || value === '4:3'
-    || value === '1:1'
-    || value === '3:4'
-    || value === '9:16'
-    || value === '21:9'
-  ) {
-    return value
+function throwVideoTokenPricingFailure(failure: VideoTokenPricingFailure): never {
+  if (failure.code === 'unsupported-resolution') {
+    throw new BillingOperationError(
+      'BILLING_UNKNOWN_VIDEO_RESOLUTION',
+      `Unsupported video resolution pricing: ${String(failure.value)}`,
+      {
+        apiType: 'video',
+        resolution: failure.value,
+      },
+    )
   }
-  if (value === undefined) return SEEDANCE_2_DEFAULT_ASPECT_RATIO
+
   throw new BillingOperationError(
     'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION',
-    `Unsupported video capability pricing: aspectRatio=${String(value)}`,
+    `Unsupported video capability pricing: ${failure.field}=${String(failure.value)}`,
     {
       apiType: 'video',
-      aspectRatio: value,
+      [failure.field]: failure.value,
     },
   )
 }
 
-function resolveSeedance2TokenUnitPrice(
+function calcVideoCostFromTokens(
   model: string,
-  containsVideoInput: boolean,
+  totalTokens: number,
+  tokenPricing: VideoTokenPricingContract,
+  metadata?: BillingMetadata,
 ): number {
-  return resolveModelPriceStrict({
+  const containsVideoInput = tokenPricing.resolveContainsVideoInput(metadata)
+  const unitPrice = resolveModelPriceStrict({
     apiType: 'video',
     model,
     selections: { containsVideoInput },
   })
-}
-
-function estimateSeedance2VideoTokens(
-  selections: Record<string, CapabilityValue>,
-  metadata?: Record<string, unknown>,
-): number {
-  const resolution = resolveSeedance2Resolution(selections.resolution)
-  const aspectRatio = resolveSeedance2AspectRatio(selections.aspectRatio)
-  const outputDurationSeconds = typeof selections.duration === 'number'
-    ? selections.duration
-    : SEEDANCE_2_DEFAULT_OUTPUT_DURATION_SECONDS
-  const containsVideoInput = selections.containsVideoInput === true
-  const inputVideoSeconds = containsVideoInput
-    ? (readMetadataNumber(metadata, 'inputVideoSeconds') ?? SEEDANCE_2_MIN_INPUT_VIDEO_SECONDS)
-    : 0
-  const outputSize = SEEDANCE_2_OUTPUT_DIMENSIONS[resolution][aspectRatio]
-  const estimatedTokens = Math.ceil(
-    ((inputVideoSeconds + outputDurationSeconds) * outputSize.width * outputSize.height * SEEDANCE_2_FPS) / 1024,
-  )
-
-  if (!containsVideoInput || aspectRatio !== '16:9') {
-    return estimatedTokens
-  }
-
-  const durationFloor = SEEDANCE_2_VIDEO_INPUT_MIN_TOKEN_FLOOR[outputDurationSeconds]?.[resolution]
-  return typeof durationFloor === 'number'
-    ? Math.max(estimatedTokens, durationFloor)
-    : estimatedTokens
-}
-
-function calcSeedance2VideoCostFromTokens(
-  model: string,
-  totalTokens: number,
-  metadata?: Record<string, unknown>,
-): number {
-  const containsVideoInput = metadata?.containsVideoInput === true
-  const unitPrice = resolveSeedance2TokenUnitPrice(model, containsVideoInput)
   const normalizedTokens = Math.max(0, Number(totalTokens) || 0)
   return (normalizedTokens / 1_000_000) * unitPrice * getMarkup('video')
 }
@@ -474,7 +368,7 @@ function resolveCustomMediaPrice(input: {
 export function calcImage(
   model: string,
   count = 1,
-  metadata?: Record<string, unknown>,
+  metadata?: BillingMetadata,
   customPricing?: ModelCustomPricing | null,
 ): number {
   const selections = normalizeCapabilitySelections(metadata)
@@ -549,13 +443,12 @@ export function calcVideo(
   model: string,
   resolution = '720p',
   count = 1,
-  metadata?: Record<string, unknown>,
+  metadata?: BillingMetadata,
   customPricing?: ModelCustomPricing | null,
 ): number {
   const selections = normalizeCapabilitySelections(metadata)
-  if (typeof selections.containsVideoInput !== 'boolean' && isSeedance2TokenPricedModel(model)) {
-    selections.containsVideoInput = false
-  }
+  const tokenPricing = resolveVideoTokenPricingContract(model)
+  tokenPricing?.applyDefaultSelections(selections)
   const capabilitySelections = { ...selections }
   delete capabilitySelections.aspectRatio
   delete capabilitySelections.containsVideoInput
@@ -595,9 +488,12 @@ export function calcVideo(
   }
   validateVideoSelectionsAgainstCapabilitiesOrThrow(model, capabilitySelections)
 
-  if (isSeedance2TokenPricedModel(model)) {
-    const estimatedTokens = estimateSeedance2VideoTokens(selections, metadata)
-    const unitCost = calcSeedance2VideoCostFromTokens(model, estimatedTokens, metadata)
+  if (tokenPricing) {
+    const estimateResult = tokenPricing.estimateTokens(selections, metadata)
+    if (estimateResult.status === 'invalid') {
+      throwVideoTokenPricingFailure(estimateResult.failure)
+    }
+    const unitCost = calcVideoCostFromTokens(model, estimateResult.tokens, tokenPricing, metadata)
     const quantity = Math.max(0, Number(count) || 0)
     return unitCost * quantity
   }
@@ -700,9 +596,10 @@ export function calcVideo(
 export function calcVideoByTokens(
   model: string,
   totalTokens: number,
-  metadata?: Record<string, unknown>,
+  metadata?: BillingMetadata,
 ): number {
-  if (!isSeedance2TokenPricedModel(model)) {
+  const tokenPricing = resolveVideoTokenPricingContract(model)
+  if (!tokenPricing) {
     throw new BillingOperationError(
       'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION',
       `Video token settlement is not supported for ${model}`,
@@ -712,14 +609,14 @@ export function calcVideoByTokens(
       },
     )
   }
-  return calcSeedance2VideoCostFromTokens(model, totalTokens, metadata)
+  return calcVideoCostFromTokens(model, totalTokens, tokenPricing, metadata)
 }
 
 export function calcVoice(durationSeconds: number): number {
   const seconds = Math.max(0, Number(durationSeconds) || 0)
   const unitPrice = resolveModelPriceStrict({
     apiType: 'voice',
-    model: DEFAULT_VOICE_MODEL_ID,
+    model: DEFAULT_VOICE_MODEL_KEY,
   })
   return unitPrice * seconds * getMarkup('voice')
 }
@@ -727,12 +624,12 @@ export function calcVoice(durationSeconds: number): number {
 export function calcVoiceDesign(): number {
   const unitPrice = resolveModelPriceStrict({
     apiType: 'voice-design',
-    model: DEFAULT_VOICE_DESIGN_MODEL_ID,
+    model: DEFAULT_VOICE_DESIGN_MODEL_KEY,
   })
   return unitPrice * getMarkup('voiceDesign')
 }
 
-export function calcLipSync(model = DEFAULT_LIP_SYNC_MODEL_ID): number {
+export function calcLipSync(model = DEFAULT_LIPSYNC_MODEL_KEY): number {
   const unitPrice = resolveModelPriceStrict({
     apiType: 'lip-sync',
     model,

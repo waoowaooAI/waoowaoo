@@ -11,7 +11,9 @@ import { createMutationBatch } from '@/lib/mutation-batch/service'
 import { hasPanelVideoOutput } from '@/lib/task/has-output'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { CapabilityValue } from '@/lib/ai-registry/types'
-import { resolveBuiltinCapabilitiesByModelKey, resolveBuiltinPricing } from '@/lib/ai-registry/catalog'
+import { resolveVideoTokenPricingContract } from '@/lib/ai-providers'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
+import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
 import type {
   TaskBatchSubmittedPartData,
@@ -27,6 +29,8 @@ import {
   taskSubmitOperationOutputSchemaBase,
 } from '@/lib/operations/output-schemas'
 
+type UnknownObject = { [key: string]: unknown }
+
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -36,7 +40,7 @@ function resolveLocaleFromContext(locale?: unknown): string {
   return normalized || 'zh'
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is UnknownObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
@@ -57,17 +61,11 @@ function resolveVideoGenerationMode(payload: unknown): 'normal' | 'firstlastfram
   return isRecord(payload.firstLastFrame) ? 'firstlastframe' : 'normal'
 }
 
-function isSeedance2Model(modelKey: string): boolean {
-  const parsed = parseModelKeyStrict(modelKey)
-  if (!parsed) return false
-  return parsed.provider === 'ark'
-    && (
-      parsed.modelId === 'doubao-seedance-2-0-260128'
-      || parsed.modelId === 'doubao-seedance-2-0-fast-260128'
-    )
+function usesVideoTokenPricing(modelKey: string): boolean {
+  return !!resolveVideoTokenPricingContract(modelKey)
 }
 
-function resolveVideoModelKeyFromPayload(payload: Record<string, unknown>): string | null {
+function resolveVideoModelKeyFromPayload(payload: UnknownObject): string | null {
   const firstLast = isRecord(payload.firstLastFrame) ? payload.firstLastFrame : null
   if (firstLast && typeof firstLast.flModel === 'string' && parseModelKeyStrict(firstLast.flModel)) {
     return firstLast.flModel
@@ -127,13 +125,13 @@ async function validateVideoCapabilityCombination(input: {
   })
 
   const resolution = resolveBuiltinPricing({
-    apiType: 'video',
-    model: modelKey,
-    selections: {
-      ...resolvedOptions,
-      ...(isSeedance2Model(modelKey) ? { containsVideoInput: false } : {}),
-    },
-  })
+      apiType: 'video',
+      model: modelKey,
+      selections: {
+        ...resolvedOptions,
+        ...(usesVideoTokenPricing(modelKey) ? { containsVideoInput: false } : {}),
+      },
+    })
   if (resolution.status === 'missing_capability_match') {
     throw new Error('PROJECT_AGENT_VIDEO_CAPABILITY_COMBINATION_UNSUPPORTED')
   }
@@ -161,11 +159,11 @@ function buildVideoPanelBillingInfoOrThrow(payload: unknown) {
 
 function buildVideoTaskPayload(params: {
   ctx: ProjectAgentOperationContext
-  input: Record<string, unknown>
+  input: UnknownObject
 }) {
   const locale = resolveLocaleFromContext(params.ctx.context.locale)
   const existingMeta = isRecord(params.input.meta) ? params.input.meta : {}
-  const payload: Record<string, unknown> = {
+  const payload: UnknownObject = {
     ...params.input,
     meta: {
       ...existingMeta,
@@ -181,7 +179,7 @@ function buildVideoTaskPayload(params: {
 }
 
 async function validateVideoTaskPayloadOrThrow(params: {
-  payload: Record<string, unknown>
+  payload: UnknownObject
   projectId: string
   userId: string
 }) {
@@ -196,7 +194,7 @@ async function validateVideoTaskPayloadOrThrow(params: {
 
 async function executeGenerateEpisodeVideosOperation(params: {
   ctx: ProjectAgentOperationContext
-  input: Record<string, unknown>
+  input: UnknownObject
   operationId: string
 }) {
   const { payload, localeForTask } = buildVideoTaskPayload({ ctx: params.ctx, input: params.input })
@@ -295,7 +293,7 @@ async function executeGenerateEpisodeVideosOperation(params: {
 
 async function executeGeneratePanelVideoOperation(params: {
   ctx: ProjectAgentOperationContext
-  input: Record<string, unknown>
+  input: UnknownObject
   operationId: string
 }) {
   const { payload, localeForTask } = buildVideoTaskPayload({ ctx: params.ctx, input: params.input })
@@ -448,7 +446,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
       outputSchema: generatePanelVideoOutputSchema,
       execute: async (ctx, input) => executeGeneratePanelVideoOperation({
         ctx,
-        input: input as Record<string, unknown>,
+        input: input as UnknownObject,
         operationId: 'generate_panel_video',
       }),
     }),
@@ -475,7 +473,7 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
       outputSchema: generateEpisodeVideosOutputSchema,
       execute: async (ctx, input) => executeGenerateEpisodeVideosOperation({
         ctx,
-        input: input as Record<string, unknown>,
+        input: input as UnknownObject,
         operationId: 'generate_episode_videos',
       }),
     }),

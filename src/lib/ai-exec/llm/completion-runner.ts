@@ -22,8 +22,12 @@ import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
 import { emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
 import type { AiLlmExecutionInput, AiLlmExecutionResult } from '@/lib/ai-registry/types'
 
-function toRecord(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+interface CompletionJsonObject {
+  [key: string]: unknown
+}
+
+function toRecord(value: unknown): CompletionJsonObject | null {
+  return value && typeof value === 'object' ? (value as CompletionJsonObject) : null
 }
 
 function errorMessage(error: unknown): string {

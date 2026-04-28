@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { generateVideoViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
-import { pollAsyncTask } from '@/lib/async-poll'
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 import { startScenarioServer } from '../../helpers/fakes/scenario-server'
 
 const getProviderConfigMock = vi.hoisted(() => vi.fn())

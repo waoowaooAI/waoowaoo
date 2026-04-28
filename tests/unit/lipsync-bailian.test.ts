@@ -15,12 +15,13 @@ const normalizeToOriginalMediaUrlMock = vi.hoisted(() => vi.fn(async (input: str
 }))
 
 vi.mock('@/lib/user-api/runtime-config', () => ({
+  resolveModelSelection: resolveModelSelectionOrSingleMock,
   resolveModelSelectionOrSingle: resolveModelSelectionOrSingleMock,
   getProviderConfig: getProviderConfigMock,
   getProviderKey: getProviderKeyMock,
 }))
 
-vi.mock('@/lib/async-submit', () => ({
+vi.mock('@/lib/ai-providers/fal/queue', () => ({
   submitFalTask: submitFalTaskMock,
 }))
 
@@ -40,7 +41,7 @@ vi.mock('@/lib/logging/core', () => ({
   })),
 }))
 
-import { generateLipSync } from '@/lib/lipsync'
+import { generateLipSync } from '@/lib/ai-exec/engine'
 
 const POLICY_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/uploads'
 const SUBMIT_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/image2video/video-synthesis'

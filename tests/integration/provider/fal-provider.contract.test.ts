@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { queryFalStatus, submitFalTask } from '@/lib/async-submit'
+import { queryFalStatus, submitFalTask } from '@/lib/ai-providers/fal/queue'
 import { startScenarioServer } from '../../helpers/fakes/scenario-server'
 
 describe('provider contract - fal queue', () => {
@@ -147,8 +147,8 @@ describe('provider contract - fal queue', () => {
     expect(result).toEqual({
       status: 'COMPLETED',
       completed: true,
-      failed: false,
-      resultUrl: undefined,
+      failed: true,
+      error: 'FAL任务完成但未返回媒体URL',
     })
   })
 })

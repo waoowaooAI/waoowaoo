@@ -18,13 +18,20 @@ vi.mock('@/lib/user-api/runtime-config', () => ({
   getUserModels: vi.fn(),
 }))
 
-vi.mock('@/lib/async-submit', () => ({
+vi.mock('@/lib/ai-providers/fal/queue', () => ({
   queryFalStatus: vi.fn(),
 }))
 
-vi.mock('@/lib/async-task-utils', () => asyncTaskUtilsMock)
+vi.mock('@/lib/ai-providers/ark/poll', () => ({
+  querySeedanceVideoStatus: asyncTaskUtilsMock.querySeedanceVideoStatus,
+}))
 
-import { pollAsyncTask } from '@/lib/async-poll'
+vi.mock('@/lib/ai-providers/google/poll', () => ({
+  queryGeminiBatchStatus: asyncTaskUtilsMock.queryGeminiBatchStatus,
+  queryGoogleVideoStatus: asyncTaskUtilsMock.queryGoogleVideoStatus,
+}))
+
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 
 describe('async poll ark task', () => {
   beforeEach(() => {

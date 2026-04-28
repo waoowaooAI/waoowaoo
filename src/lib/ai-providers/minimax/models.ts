@@ -9,6 +9,7 @@ import {
 } from '@/lib/ai-providers/shared/option-schema'
 
 export const MINIMAX_VIDEO_MODES = ['normal', 'firstlastframe'] as const
+export const MINIMAX_PROVIDER_TEST_LLM_MODEL_ID = 'MiniMax-M2.5'
 
 export const MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   {
@@ -81,6 +82,19 @@ export const MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
       },
     },
   },
+] as const
+
+export const MINIMAX_API_CONFIG_CATALOG_MODELS = [
+  { modelId: 'MiniMax-M2.5', name: 'MiniMax M2.5', type: 'llm', provider: 'minimax' },
+  { modelId: 'MiniMax-M2.5-highspeed', name: 'MiniMax M2.5 Highspeed', type: 'llm', provider: 'minimax' },
+  { modelId: 'MiniMax-M2.1', name: 'MiniMax M2.1', type: 'llm', provider: 'minimax' },
+  { modelId: 'MiniMax-M2.1-highspeed', name: 'MiniMax M2.1 Highspeed', type: 'llm', provider: 'minimax' },
+  { modelId: 'MiniMax-M2', name: 'MiniMax M2', type: 'llm', provider: 'minimax' },
+  { modelId: 'minimax-hailuo-2.3', name: 'Hailuo 2.3', type: 'video', provider: 'minimax' },
+  { modelId: 'minimax-hailuo-2.3-fast', name: 'Hailuo 2.3 Fast', type: 'video', provider: 'minimax' },
+  { modelId: 'minimax-hailuo-02', name: 'Hailuo 02', type: 'video', provider: 'minimax' },
+  { modelId: 't2v-01', name: 'T2V-01', type: 'video', provider: 'minimax' },
+  { modelId: 't2v-01-director', name: 'T2V-01 Director', type: 'video', provider: 'minimax' },
 ] as const
 
 export type ResolutionDurationRule = { resolution: string; durations: readonly number[] }

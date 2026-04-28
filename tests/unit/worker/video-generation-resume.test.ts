@@ -19,14 +19,14 @@ const asyncPollMock = vi.hoisted(() => ({
 
 const generatorApiMock = vi.hoisted(() => ({
   generateImage: vi.fn(),
+  generateLipSync: vi.fn(),
   generateVideo: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/task/service', () => taskServiceMock)
-vi.mock('@/lib/async-poll', () => asyncPollMock)
+vi.mock('@/lib/ai-exec/async-poll', () => asyncPollMock)
 vi.mock('@/lib/ai-exec/engine', () => generatorApiMock)
-vi.mock('@/lib/lipsync', () => ({ generateLipSync: vi.fn() }))
 vi.mock('@/lib/storage', () => ({
   getSignedUrl: vi.fn((value: string) => value),
   toFetchableUrl: vi.fn((value: string) => value),

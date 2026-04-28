@@ -3,6 +3,8 @@ import path from 'node:path'
 import type { UIMessage } from 'ai'
 import type { ProjectAssistantThreadSnapshot } from './types'
 
+type UnknownObject = { [key: string]: unknown }
+
 interface SerializeWorkspaceAssistantThreadLogInput {
   thread: ProjectAssistantThreadSnapshot
 }
@@ -11,7 +13,7 @@ function sanitizeFileNameSegment(value: string): string {
   return value.replace(/[^a-zA-Z0-9._-]/g, '_') || 'unknown'
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is UnknownObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 

@@ -12,6 +12,12 @@ import { resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
+import {
+  hasRegisteredVoiceLineBinding,
+  parseSpeakerVoiceMap,
+  type CharacterVoiceFields,
+  type SpeakerVoiceMap,
+} from '@/lib/ai-providers'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
 import type {
   TaskBatchSubmittedPartData,
@@ -27,12 +33,6 @@ import {
   taskSubmitOperationOutputSchema,
   taskSubmitOperationOutputSchemaBase,
 } from '@/lib/operations/output-schemas'
-import {
-  hasVoiceBindingForProvider,
-  parseSpeakerVoiceMap,
-  type CharacterVoiceFields,
-  type SpeakerVoiceMap,
-} from '@/lib/voice/provider-voice-binding'
 import { hasVoiceLineAudioOutput } from '@/lib/task/has-output'
 
 function normalizeString(value: unknown): string {
@@ -68,8 +68,8 @@ function hasSpeakerVoiceForProvider(
 ): boolean {
   const character = matchCharacterBySpeaker(speaker, characters)
   const speakerVoice = speakerVoices[speaker]
-  return hasVoiceBindingForProvider({
-    providerKey,
+  return hasRegisteredVoiceLineBinding({
+    providerId: providerKey,
     character,
     speakerVoice,
   })
@@ -83,7 +83,7 @@ function hasUploadedReferenceAudioForSpeaker(params: {
   const character = matchCharacterBySpeaker(params.speaker, params.characters)
   if (normalizeString(character?.customVoiceUrl)) return true
   const entry = params.speakerVoices[params.speaker]
-  if (entry?.provider === 'fal' && normalizeString(entry.audioUrl)) return true
+  if (entry && 'audioUrl' in entry && normalizeString(entry.audioUrl)) return true
   return false
 }
 

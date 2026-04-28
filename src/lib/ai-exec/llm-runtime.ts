@@ -145,7 +145,7 @@ export interface ResolvedLlmRuntimeModel {
   modelId: string
   modelKey: string
   variantSubKind: 'official' | 'user-template'
-  variantData?: Record<string, unknown>
+  variantData?: { [key: string]: unknown }
   llmProtocol?: 'responses' | 'chat-completions'
 }
 

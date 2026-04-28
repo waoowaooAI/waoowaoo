@@ -40,9 +40,17 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/api-auth', () => authMock)
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/ai-registry/catalog', () => ({
+vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
   findBuiltinCapabilities: vi.fn(() => undefined),
+  resolveBuiltinCapabilitiesByModelKey: vi.fn(() => undefined),
+}))
+
+vi.mock('@/lib/ai-registry/pricing-catalog', () => ({
   findBuiltinPricingCatalogEntry: vi.fn(() => undefined),
+}))
+
+vi.mock('@/lib/ai-registry/api-config-catalog', () => ({
+  DEFAULT_VOICE_DESIGN_MODEL_KEY: 'bailian::qwen-voice-design',
 }))
 
 describe('api specific - user models audio filter', () => {

@@ -74,7 +74,7 @@ function collectTextValue(value: unknown): string {
   if (typeof value === 'string') return value
   if (Array.isArray(value)) return value.map((item) => collectTextValue(item)).join('')
   if (typeof value === 'object') {
-    const obj = value as Record<string, unknown>
+    const obj = value as { [key: string]: unknown }
     if (typeof obj.text === 'string') return obj.text
     if (typeof obj.content === 'string') return obj.content
     if (typeof obj.delta === 'string') return obj.delta
@@ -87,7 +87,7 @@ export function extractStreamDeltaParts(part: unknown): { textDelta: string; rea
   const partObject =
     typeof part === 'object' && part !== null
       ? (part as {
-        choices?: Array<{ delta?: Record<string, unknown> }>
+        choices?: Array<{ delta?: { [key: string]: unknown } }>
         response?: {
           output_text?: { delta?: unknown }
           reasoning?: { delta?: unknown }
@@ -127,7 +127,7 @@ function extractCompletionPartsFromContent(content: unknown): { text: string; re
       continue
     }
     if (!part || typeof part !== 'object') continue
-    const obj = part as Record<string, unknown>
+    const obj = part as { [key: string]: unknown }
     const kind = typeof obj.type === 'string' ? obj.type.toLowerCase() : ''
     const value =
       (typeof obj.text === 'string' && obj.text) ||

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { API_CONFIG_CATALOG_MODELS, API_CONFIG_CATALOG_PROVIDERS } from '@/lib/user-api/api-config-catalog'
+import { API_CONFIG_CATALOG_MODELS, API_CONFIG_CATALOG_PROVIDERS } from '@/lib/ai-registry/api-config-catalog'
 
 describe('api-config minimax preset', () => {
   it('uses official minimax baseUrl in preset provider', () => {

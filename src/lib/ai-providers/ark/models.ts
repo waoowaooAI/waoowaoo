@@ -12,6 +12,11 @@ export const ARK_IMAGE_RATIOS = ['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:
 export const ARK_VIDEO_RATIOS = ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', 'adaptive'] as const
 export const ARK_IMAGE_RESOLUTIONS = ['4K', '3K'] as const
 export const ARK_VIDEO_SERVICE_TIERS = ['default', 'flex'] as const
+export const ARK_PROVIDER_TEST_LLM_MODEL_ID = 'doubao-seed-2-0-lite-260215'
+export const ARK_TOKEN_PRICED_VIDEO_MODEL_IDS = [
+  'doubao-seedance-2-0-260128',
+  'doubao-seedance-2-0-fast-260128',
+] as const
 
 export const ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   {
@@ -182,6 +187,24 @@ export const ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
     modelId: 'doubao-seed-2-0-mini-260215',
     capabilities: { llm: { reasoningEffortOptions: ['minimal', 'low', 'medium', 'high'] } },
   },
+] as const
+
+export const ARK_API_CONFIG_CATALOG_MODELS = [
+  { modelId: 'doubao-seed-1-8-251228', name: 'Doubao Seed 1.8', type: 'llm', provider: 'ark' },
+  { modelId: 'doubao-seed-2-0-pro-260215', name: 'Doubao Seed 2.0 Pro', type: 'llm', provider: 'ark' },
+  { modelId: 'doubao-seed-2-0-lite-260215', name: 'Doubao Seed 2.0 Lite', type: 'llm', provider: 'ark' },
+  { modelId: 'doubao-seed-2-0-mini-260215', name: 'Doubao Seed 2.0 Mini', type: 'llm', provider: 'ark' },
+  { modelId: 'doubao-seed-1-6-251015', name: 'Doubao Seed 1.6', type: 'llm', provider: 'ark' },
+  { modelId: 'doubao-seed-1-6-lite-251015', name: 'Doubao Seed 1.6 Lite', type: 'llm', provider: 'ark' },
+  { modelId: 'doubao-seedream-4-5-251128', name: 'Seedream 4.5', type: 'image', provider: 'ark' },
+  { modelId: 'doubao-seedream-4-0-250828', name: 'Seedream 4.0', type: 'image', provider: 'ark' },
+  { modelId: 'doubao-seedream-5-0-260128', name: 'Seedream 5.0 Lite', type: 'image', provider: 'ark' },
+  { modelId: 'doubao-seedance-1-0-pro-fast-251015', name: 'Seedance 1.0 Pro Fast', type: 'video', provider: 'ark' },
+  { modelId: 'doubao-seedance-1-0-lite-i2v-250428', name: 'Seedance 1.0 Lite', type: 'video', provider: 'ark' },
+  { modelId: 'doubao-seedance-1-5-pro-251215', name: 'Seedance 1.5 Pro', type: 'video', provider: 'ark' },
+  { modelId: 'doubao-seedance-2-0-260128', name: 'Seedance 2.0', type: 'video', provider: 'ark' },
+  { modelId: 'doubao-seedance-2-0-fast-260128', name: 'Seedance 2.0 Fast', type: 'video', provider: 'ark' },
+  { modelId: 'doubao-seedance-1-0-pro-250528', name: 'Seedance 1.0 Pro', type: 'video', provider: 'ark' },
 ] as const
 
 export const ARK_VIDEO_SPECS: Record<string, { durationMin: number; durationMax: number; resolutions: readonly string[] }> = {

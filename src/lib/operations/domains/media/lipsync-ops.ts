@@ -8,7 +8,8 @@ import { buildDefaultTaskBillingInfo } from '@/lib/billing'
 import { withTaskUiPayload } from '@/lib/task/ui-payload'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
 import { hasPanelLipSyncOutput } from '@/lib/task/has-output'
-import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { DEFAULT_LIPSYNC_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { TaskSubmittedPartData } from '@/lib/project-agent/types'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { writeOperationDataPart } from '@/lib/operations/types'
@@ -30,8 +31,6 @@ function resolveLocaleFromContext(locale?: unknown): string {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
-
-const DEFAULT_LIPSYNC_MODEL_KEY = composeModelKey('fal', 'fal-ai/kling-video/lipsync/audio-to-video')
 
 export function createLipSyncOperations(): ProjectAgentOperationRegistryDraft {
   const withMutationBatchBase = taskSubmitOperationOutputSchemaBase.extend({

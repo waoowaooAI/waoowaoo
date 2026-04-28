@@ -128,6 +128,17 @@ export const VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   },
 ] as const
 
+export const VIDU_API_CONFIG_CATALOG_MODELS = [
+  { modelId: 'viduq3-pro', name: 'Vidu Q3 Pro', type: 'video', provider: 'vidu' },
+  { modelId: 'viduq2-pro-fast', name: 'Vidu Q2 Pro Fast', type: 'video', provider: 'vidu' },
+  { modelId: 'viduq2-pro', name: 'Vidu Q2 Pro', type: 'video', provider: 'vidu' },
+  { modelId: 'viduq2-turbo', name: 'Vidu Q2 Turbo', type: 'video', provider: 'vidu' },
+  { modelId: 'viduq1', name: 'Vidu Q1', type: 'video', provider: 'vidu' },
+  { modelId: 'viduq1-classic', name: 'Vidu Q1 Classic', type: 'video', provider: 'vidu' },
+  { modelId: 'vidu2.0', name: 'Vidu 2.0', type: 'video', provider: 'vidu' },
+  { modelId: 'vidu-lipsync', name: 'Vidu Lip Sync', type: 'lipsync', provider: 'vidu' },
+] as const
+
 function range(start: number, end: number): readonly number[] {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index)
 }

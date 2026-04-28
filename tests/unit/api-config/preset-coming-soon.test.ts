@@ -4,7 +4,7 @@ import {
   isPresetComingSoonModel,
   isPresetComingSoonModelKey,
 } from '@/app/[locale]/profile/components/api-config/types'
-import { API_CONFIG_CATALOG_MODELS } from '@/lib/user-api/api-config-catalog'
+import { API_CONFIG_CATALOG_MODELS } from '@/lib/ai-registry/api-config-catalog'
 
 describe('api-config preset coming soon', () => {
   it('registers Nano Banana 2 under Google AI Studio presets', () => {

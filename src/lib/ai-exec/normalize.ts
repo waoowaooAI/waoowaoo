@@ -1,6 +1,10 @@
 import type { AiOptionSchema } from '@/lib/ai-registry/types'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+interface NormalizedOptionObject {
+  [key: string]: unknown
+}
+
+function isRecord(value: unknown): value is NormalizedOptionObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 

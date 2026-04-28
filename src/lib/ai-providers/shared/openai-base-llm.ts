@@ -94,7 +94,7 @@ export async function runOpenAIBaseUrlLlmCompletion(input: {
     baseURL: input.baseUrl,
     apiKey: input.apiKey,
   })
-  const extraParams: Record<string, unknown> = {}
+  const extraParams: { [key: string]: unknown } = {}
   if (input.reasoning) {
     extraParams.reasoning = { effort: input.reasoningEffort }
   }
@@ -210,7 +210,7 @@ export async function runOpenAIBaseUrlLlmStream(input: AiProviderLlmStreamContex
     baseURL: input.providerConfig.baseUrl,
     apiKey: input.providerConfig.apiKey,
   })
-  const extraParams: Record<string, unknown> = {}
+  const extraParams: { [key: string]: unknown } = {}
   if (input.options.reasoning ?? true) {
     extraParams.reasoning = { effort: input.options.reasoningEffort || 'high' }
   }

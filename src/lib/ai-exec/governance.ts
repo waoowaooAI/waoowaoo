@@ -220,7 +220,7 @@ function hasNestedEmptyResponseSignal(input: unknown): boolean {
 
     if (current instanceof Error) {
       if (inferEmptyResponseSignal(current.message || '')) return true
-      const errorWithCause = current as Error & { cause?: unknown } & Record<string, unknown>
+      const errorWithCause = current as Error & { cause?: unknown } & { [key: string]: unknown }
       queue.push(errorWithCause.cause)
       queue.push(errorWithCause.error)
       queue.push(errorWithCause.details)
@@ -244,7 +244,7 @@ function hasNestedEmptyResponseSignal(input: unknown): boolean {
     }
     visited.add(current)
 
-    const record = current as Record<string, unknown>
+    const record = current as { [key: string]: unknown }
     for (const value of Object.values(record)) {
       queue.push(value)
     }

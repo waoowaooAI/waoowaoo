@@ -111,7 +111,7 @@ vi.mock('sharp', () => ({
 }))
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/ai-exec/engine', () => generatorApiMock)
-vi.mock('@/lib/async-submit', () => asyncSubmitMock)
+vi.mock('@/lib/ai-providers/fal/queue', () => asyncSubmitMock)
 vi.mock('@/lib/ai-providers/ark/image', () => arkApiMock)
 vi.mock('@/lib/user-api/runtime-config', () => apiConfigMock)
 vi.mock('@/lib/config-service', () => configServiceMock)

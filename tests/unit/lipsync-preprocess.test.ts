@@ -29,7 +29,7 @@ vi.mock('@/lib/logging/core', () => ({
 import {
   LIPSYNC_PREPROCESS_AUDIO_MIN_MS,
   preprocessLipSyncParams,
-} from '@/lib/lipsync/preprocess'
+} from '@/lib/ai-exec/lipsync-preprocess'
 
 function buildWav(durationMs: number, sampleRate = 16000): Buffer {
   const numChannels = 1

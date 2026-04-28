@@ -87,7 +87,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/media/outbound-image', () => ({
   normalizeToBase64ForGeneration: vi.fn(async (input: string) => input),
 }))
-vi.mock('@/lib/ai-registry/catalog', () => ({
+vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
 }))
 vi.mock('@/lib/ai-registry/selection', () => ({

@@ -1,4 +1,5 @@
-import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/catalog'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
+import type { AiUnknownObject } from '@/lib/ai-registry/types'
 import type { AiModality, AiResolvedLlmSelection, AiResolvedSelection } from '@/lib/ai-registry/types'
 
 function resolveCapabilityModelType(modality: AiModality): 'llm' | 'image' | 'video' | 'audio' | 'lipsync' {
@@ -12,11 +13,11 @@ export function resolveAiContractsForDescriptor(input: {
   providerId: string
   modelId: string
   selection?: AiResolvedSelection | AiResolvedLlmSelection | null
-}): { capabilities: Record<string, unknown>; inputContracts?: Record<string, unknown> } {
+}): { capabilities: AiUnknownObject; inputContracts?: AiUnknownObject } {
   const capabilityModelType = resolveCapabilityModelType(input.modality)
   const capabilities = resolveBuiltinCapabilitiesByModelKey(capabilityModelType, input.modelKey)
 
-  const contracts: Record<string, unknown> = {}
+  const contracts: AiUnknownObject = {}
   const selection = input.selection
 
   if (input.modality === 'llm' || input.modality === 'vision') {
@@ -39,7 +40,7 @@ export function resolveAiContractsForDescriptor(input: {
   }
 
   return {
-    capabilities: (capabilities || {}) as Record<string, unknown>,
+    capabilities: (capabilities || {}) as AiUnknownObject,
     ...(Object.keys(contracts).length > 0 ? { inputContracts: contracts } : {}),
   }
 }

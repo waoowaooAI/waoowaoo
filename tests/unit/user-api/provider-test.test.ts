@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { testProviderConnection } from '@/lib/user-api/provider-test'
+import { testProviderConnection } from '@/lib/ai-exec/provider-test'
 
 const fetchMock = vi.hoisted(() =>
   vi.fn(async (input: unknown) => {

@@ -20,7 +20,7 @@ vi.mock('openai', () => ({
   },
 }))
 
-import { testProviderConnection } from '@/lib/user-api/provider-test'
+import { testProviderConnection } from '@/lib/ai-exec/provider-test'
 
 describe('provider test connection compatible probes', () => {
   beforeEach(() => {

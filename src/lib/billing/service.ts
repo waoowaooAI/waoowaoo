@@ -4,6 +4,7 @@ import { logError as _ulogError } from '@/lib/logging/core'
 import { getLogContext } from '@/lib/logging/context'
 import { prisma } from '@/lib/prisma'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
 import {
   calcImage,
   calcLipSync,
@@ -32,7 +33,7 @@ import type {
   BillingRecordParams,
   TaskBillingInfo,
 } from './types'
-import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/catalog'
+import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/pricing-resolution'
 
 type CostInput = {
   apiType: ApiType
@@ -716,7 +717,7 @@ export async function withVoiceBilling<T>(
       projectId: recordParams.projectId,
       action: recordParams.action,
       apiType: 'voice',
-      model: 'fal::fal-ai/index-tts-2/text-to-speech',
+      model: DEFAULT_VOICE_MODEL_KEY,
       quantity: maxFreezeSeconds,
       unit: 'second',
       metadata: recordParams.metadata,
@@ -745,7 +746,7 @@ export async function withVoiceDesignBilling<T>(
       projectId: recordParams.projectId,
       action: recordParams.action,
       apiType: 'voice-design',
-      model: 'bailian::qwen-voice-design',
+      model: DEFAULT_VOICE_DESIGN_MODEL_KEY,
       quantity: 1,
       unit: 'call',
       metadata: recordParams.metadata,
@@ -758,7 +759,7 @@ export async function withVoiceDesignBilling<T>(
 export async function withLipSyncBilling<T>(
   userId: string,
   recordParams: BillingRecordParams,
-  model = 'fal::fal-ai/kling-video/lipsync/audio-to-video',
+  model = DEFAULT_LIPSYNC_MODEL_KEY,
   generateFn: () => Promise<T>,
 ): Promise<T> {
   return await withSyncBillingCore(

@@ -19,11 +19,11 @@ vi.mock('@/lib/user-api/model-llm-protocol-probe', () => ({
   probeModelLlmProtocol: probeModelLlmProtocolMock,
 }))
 
-vi.mock('@/lib/user-api/llm-test-connection', () => ({
+vi.mock('@/lib/ai-exec/llm-test-connection', () => ({
   testLlmConnection: vi.fn(),
 }))
 
-vi.mock('@/lib/user-api/provider-test', () => ({
+vi.mock('@/lib/ai-exec/provider-test', () => ({
   testProviderConnection: vi.fn(),
 }))
 

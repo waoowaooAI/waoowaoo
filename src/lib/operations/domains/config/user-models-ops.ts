@@ -7,11 +7,10 @@ import {
   type UnifiedModelType,
 } from '@/lib/ai-registry/types'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
-import {
-  findBuiltinCapabilities,
-  findBuiltinPricingCatalogEntry,
-  type VideoPricingTier,
-} from '@/lib/ai-registry/catalog'
+import { DEFAULT_VOICE_DESIGN_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { findBuiltinCapabilities } from '@/lib/ai-registry/capabilities-catalog'
+import { findBuiltinPricingCatalogEntry } from '@/lib/ai-registry/pricing-catalog'
+import { type VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 
 type StoredModelType = UnifiedModelType | string
@@ -47,8 +46,13 @@ interface UserModelsPayload {
   lipsync: UserModelOption[]
 }
 
+const DEFAULT_VOICE_DESIGN_MODEL_ID = parseModelKeyStrict(DEFAULT_VOICE_DESIGN_MODEL_KEY)?.modelId
+if (!DEFAULT_VOICE_DESIGN_MODEL_ID) {
+  throw new Error('DEFAULT_VOICE_DESIGN_MODEL_KEY_INVALID')
+}
+
 const AUDIO_MODEL_EXCLUDED_IDS = new Set([
-  'qwen-voice-design',
+  DEFAULT_VOICE_DESIGN_MODEL_ID,
 ])
 
 function isUnifiedModelType(type: unknown): type is UnifiedModelType {

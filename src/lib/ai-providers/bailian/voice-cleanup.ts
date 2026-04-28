@@ -69,7 +69,7 @@ function parseSpeakerVoiceBindings(raw: string | null | undefined): BailianVoice
   const bindings: BailianVoiceBinding[] = []
   for (const value of Object.values(parsed)) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) continue
-    const node = value as Record<string, unknown>
+    const node = value as { [key: string]: unknown }
     bindings.push({
       voiceId: readTrimmedString(node.voiceId) || null,
       voiceType: readTrimmedString(node.voiceType) || null,

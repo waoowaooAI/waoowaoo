@@ -37,7 +37,7 @@ vi.mock('openai', () => ({
   },
 }))
 
-import { testLlmConnection } from '@/lib/user-api/llm-test-connection'
+import { testLlmConnection } from '@/lib/ai-exec/llm-test-connection'
 
 describe('llm test connection', () => {
   beforeEach(() => {

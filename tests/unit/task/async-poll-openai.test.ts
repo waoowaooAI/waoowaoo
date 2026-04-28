@@ -8,9 +8,10 @@ const getProviderConfigMock = vi.hoisted(() => vi.fn(async () => ({
 
 vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
+  getUserModels: vi.fn(async () => []),
 }))
 
-import { pollAsyncTask } from '@/lib/async-poll'
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 
 const PROVIDER_TOKEN = Buffer.from('openai-compatible:oa-1', 'utf8').toString('base64url')
 

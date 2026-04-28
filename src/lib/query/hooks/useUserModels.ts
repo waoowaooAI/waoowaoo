@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import type { ModelCapabilities } from '@/lib/ai-registry/types'
-import type { VideoPricingTier } from '@/lib/ai-registry/catalog'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 import { queryKeys } from '../keys'
 import { apiFetch } from '@/lib/api-fetch'
 

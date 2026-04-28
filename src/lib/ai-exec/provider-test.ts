@@ -1,5 +1,7 @@
 import OpenAI from 'openai'
 import { setProxy } from '../../../lib/prompts/proxy'
+import { ARK_PROVIDER_TEST_LLM_MODEL_ID } from '@/lib/ai-providers/ark/models'
+import { MINIMAX_PROVIDER_TEST_LLM_MODEL_ID } from '@/lib/ai-providers/minimax/models'
 
 export type TestStepName = 'models' | 'textGen' | 'imageGen' | 'credits' | 'audioGen'
 export type TestStepStatus = 'pass' | 'fail' | 'skip'
@@ -61,7 +63,11 @@ interface ProbeAttempt {
   note: string
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+interface ProviderTestJsonObject {
+  [key: string]: unknown
+}
+
+function isRecord(value: unknown): value is ProviderTestJsonObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
@@ -367,7 +373,7 @@ interface GeminiGenerateContentResponse {
 async function testArkProvider(apiKey: string): Promise<TestProviderResult> {
   const steps: TestStep[] = []
   // 和 src/lib/ai-providers/ark/llm.ts 的 arkResponsesCompletion 保持一致，使用字节原生 Responses API
-  const model = 'doubao-seed-2-0-lite-260215'
+  const model = ARK_PROVIDER_TEST_LLM_MODEL_ID
 
   try {
     const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/responses', {
@@ -400,7 +406,7 @@ async function testArkProvider(apiKey: string): Promise<TestProviderResult> {
       return { success: false, steps }
     }
 
-    const data = await response.json() as Record<string, unknown>
+    const data = await response.json() as ProviderTestJsonObject
     // 和 src/lib/ai-providers/ark/llm.ts 一样提取 output_text
     const outputText = typeof data.output_text === 'string'
       ? data.output_text
@@ -545,7 +551,7 @@ async function testOpenRouterProvider(apiKey: string): Promise<TestProviderResul
 
 async function testMiniMaxProvider(apiKey: string): Promise<TestProviderResult> {
   const steps: TestStep[] = []
-  const model = 'MiniMax-M2.5'
+  const model = MINIMAX_PROVIDER_TEST_LLM_MODEL_ID
 
   try {
     const client = new OpenAI({

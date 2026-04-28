@@ -72,6 +72,16 @@ export const OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   { modelType: 'llm', provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
 ] as const
 
+export const OPENROUTER_API_CONFIG_CATALOG_MODELS = [
+  { modelId: 'google/gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', type: 'llm', provider: 'openrouter' },
+  { modelId: 'google/gemini-3-pro-preview', name: 'Gemini 3 Pro', type: 'llm', provider: 'openrouter' },
+  { modelId: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', type: 'llm', provider: 'openrouter' },
+  { modelId: 'google/gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash Lite', type: 'llm', provider: 'openrouter' },
+  { modelId: 'anthropic/claude-sonnet-4.5', name: 'Claude Sonnet 4.5', type: 'llm', provider: 'openrouter' },
+  { modelId: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4', type: 'llm', provider: 'openrouter' },
+  { modelId: 'openai/gpt-5.4', name: 'GPT-5.4', type: 'llm', provider: 'openrouter' },
+] as const
+
 export function resolveOpenRouterOptionSchema(modality: MediaModality): AiOptionSchema {
   return buildMediaOptionSchema(modality)
 }

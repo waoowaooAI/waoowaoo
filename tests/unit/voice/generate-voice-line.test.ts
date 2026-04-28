@@ -14,54 +14,25 @@ const prismaMock = vi.hoisted(() => ({
 }))
 
 const resolveModelSelectionOrSingleMock = vi.hoisted(() => vi.fn())
-const getProviderKeyMock = vi.hoisted(() => vi.fn((providerId: string) => providerId))
-const getAudioApiKeyMock = vi.hoisted(() => vi.fn())
-
-const normalizeToBase64ForGenerationMock = vi.hoisted(() => vi.fn())
-const extractStorageKeyMock = vi.hoisted(() => vi.fn())
+const executeVoiceLineGenerationMock = vi.hoisted(() => vi.fn())
 const getSignedUrlMock = vi.hoisted(() => vi.fn((storageKey: string) => `signed://${storageKey}`))
-const toFetchableUrlMock = vi.hoisted(() => vi.fn((url: string) => url))
 const uploadObjectMock = vi.hoisted(() => vi.fn(async () => 'voice/storage/line-1.wav'))
-const resolveStorageKeyFromMediaValueMock = vi.hoisted(() => vi.fn())
-const synthesizeWithBailianTTSMock = vi.hoisted(() => vi.fn())
-const falSubscribeMock = vi.hoisted(() => vi.fn())
-const getProviderConfigMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/prisma', () => ({
   prisma: prismaMock,
 }))
 
 vi.mock('@/lib/user-api/runtime-config', () => ({
-  getAudioApiKey: getAudioApiKeyMock,
-  getProviderConfig: getProviderConfigMock,
-  getProviderKey: getProviderKeyMock,
   resolveModelSelectionOrSingle: resolveModelSelectionOrSingleMock,
 }))
 
-vi.mock('@/lib/media/outbound-image', () => ({
-  normalizeToBase64ForGeneration: normalizeToBase64ForGenerationMock,
+vi.mock('@/lib/ai-exec/engine', () => ({
+  executeVoiceLineGeneration: executeVoiceLineGenerationMock,
 }))
 
 vi.mock('@/lib/storage', () => ({
-  extractStorageKey: extractStorageKeyMock,
   getSignedUrl: getSignedUrlMock,
-  toFetchableUrl: toFetchableUrlMock,
   uploadObject: uploadObjectMock,
-}))
-
-vi.mock('@/lib/media/service', () => ({
-  resolveStorageKeyFromMediaValue: resolveStorageKeyFromMediaValueMock,
-}))
-
-vi.mock('@/lib/ai-providers/bailian', () => ({
-  synthesizeWithBailianTTS: synthesizeWithBailianTTSMock,
-}))
-
-vi.mock('@fal-ai/client', () => ({
-  fal: {
-    config: vi.fn(),
-    subscribe: falSubscribeMock,
-  },
 }))
 
 import { generateVoiceLine } from '@/lib/voice/generate-voice-line'
@@ -99,13 +70,7 @@ describe('generate voice line with bailian provider', () => {
       mediaType: 'audio',
     })
 
-    getProviderConfigMock.mockResolvedValue({
-      id: 'bailian',
-      name: 'Alibaba Bailian',
-      apiKey: 'bl-key',
-    })
-    synthesizeWithBailianTTSMock.mockResolvedValue({
-      success: true,
+    executeVoiceLineGenerationMock.mockResolvedValue({
       audioData: Buffer.from(audioBytes),
       audioDuration: 1,
     })
@@ -120,13 +85,23 @@ describe('generate voice line with bailian provider', () => {
       audioModel: 'bailian::qwen3-tts-vd-2026-01-26',
     })
 
-    expect(getProviderConfigMock).toHaveBeenCalledWith('user-1', 'bailian')
-    expect(synthesizeWithBailianTTSMock).toHaveBeenCalledWith({
+    expect(executeVoiceLineGenerationMock).toHaveBeenCalledWith({
+      userId: 'user-1',
+      selection: {
+        provider: 'bailian',
+        modelId: 'qwen3-tts-vd-2026-01-26',
+        modelKey: 'bailian::qwen3-tts-vd-2026-01-26',
+        mediaType: 'audio',
+      },
       text: '你好，世界',
-      voiceId: 'voice_abc123',
-      modelId: 'qwen3-tts-vd-2026-01-26',
-      languageType: 'Chinese',
-    }, 'bl-key')
+      emotionPrompt: null,
+      emotionStrength: null,
+      binding: {
+        provider: 'bailian',
+        source: 'speaker',
+        voiceId: 'voice_abc123',
+      },
+    })
     expect(uploadObjectMock).toHaveBeenCalledTimes(1)
     expect(prismaMock.projectVoiceLine.update).toHaveBeenCalledWith({
       where: { id: 'line-1' },
@@ -162,15 +137,12 @@ describe('generate voice line with bailian provider', () => {
       }),
     ).rejects.toThrow('无音色ID，QwenTTS 必须使用 AI 设计音色')
 
-    expect(synthesizeWithBailianTTSMock).not.toHaveBeenCalled()
+    expect(executeVoiceLineGenerationMock).not.toHaveBeenCalled()
     expect(uploadObjectMock).not.toHaveBeenCalled()
   })
 
-  it('maps bailian invalid parameter to a qwen voice guidance error', async () => {
-    synthesizeWithBailianTTSMock.mockResolvedValueOnce({
-      success: false,
-      error: 'BAILIAN_TTS_FAILED(400): InvalidParameter',
-    })
+  it('propagates provider execution errors and does not upload partial audio', async () => {
+    executeVoiceLineGenerationMock.mockRejectedValueOnce(new Error('PROVIDER_EXECUTION_FAILED'))
 
     await expect(
       generateVoiceLine({
@@ -180,7 +152,7 @@ describe('generate voice line with bailian provider', () => {
         userId: 'user-1',
         audioModel: 'bailian::qwen3-tts-vd-2026-01-26',
       }),
-    ).rejects.toThrow('无效音色ID，QwenTTS 必须使用 AI 设计音色')
+    ).rejects.toThrow('PROVIDER_EXECUTION_FAILED')
 
     expect(uploadObjectMock).not.toHaveBeenCalled()
   })

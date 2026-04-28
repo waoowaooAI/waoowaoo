@@ -7,11 +7,20 @@ const lookupMock = vi.hoisted(() => ({
   validateCapabilitySelectionForModel: vi.fn(() => []),
 }))
 
-vi.mock('@/lib/ai-registry/catalog', () => ({
-  resolveBuiltinPricing: lookupMock.resolveBuiltinPricing,
+vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
   listBuiltinCapabilityCatalog: lookupMock.listBuiltinCapabilityCatalog,
   findBuiltinCapabilities: lookupMock.findBuiltinCapabilities,
   validateCapabilitySelectionForModel: lookupMock.validateCapabilitySelectionForModel,
+}))
+
+vi.mock('@/lib/ai-registry/api-config-catalog', () => ({
+  DEFAULT_LIPSYNC_MODEL_KEY: 'test::lipsync',
+  DEFAULT_VOICE_DESIGN_MODEL_KEY: 'test::voice-design',
+  DEFAULT_VOICE_MODEL_KEY: 'test::voice',
+}))
+
+vi.mock('@/lib/ai-registry/pricing-resolution', () => ({
+  resolveBuiltinPricing: lookupMock.resolveBuiltinPricing,
 }))
 
 

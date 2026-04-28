@@ -31,12 +31,13 @@ import {
   parseSpeakerVoiceMap,
   type SpeakerVoiceEntry,
   type SpeakerVoiceMap,
-} from '@/lib/voice/provider-voice-binding'
+} from '@/lib/ai-providers'
 import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
-import { resolveBuiltinPricing, resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/catalog'
+import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
-import { resolveBuiltinCapabilitiesByModelKey as _resolveCaps } from '@/lib/ai-registry/catalog'
+import { resolveBuiltinCapabilitiesByModelKey as _resolveCaps } from '@/lib/ai-registry/capabilities-catalog'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 

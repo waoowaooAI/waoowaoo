@@ -29,8 +29,8 @@ vi.mock('@/lib/ai-exec/engine', async () => {
   }
 })
 
-vi.mock('@/lib/async-poll', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/async-poll')>('@/lib/async-poll')
+vi.mock('@/lib/ai-exec/async-poll', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/ai-exec/async-poll')>('@/lib/ai-exec/async-poll')
   return {
     ...actual,
     pollAsyncTask: vi.fn(async (externalId: string) => {

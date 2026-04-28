@@ -1,5 +1,5 @@
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
-import type { LipSyncParams, LipSyncResult, LipSyncSubmitContext } from '@/lib/lipsync/types'
+import type { AiLipSyncParams, AiLipSyncResult, AiLipSyncSubmitContext } from '@/lib/ai-registry/types'
 
 interface ViduLipSyncSubmitResponse {
   task_id?: string
@@ -71,9 +71,9 @@ function normalizeProviderPullUrl(inputUrl: string, field: 'video_url' | 'audio_
 }
 
 export async function submitViduLipSync(
-  params: LipSyncParams,
-  context: LipSyncSubmitContext,
-): Promise<LipSyncResult> {
+  params: AiLipSyncParams,
+  context: AiLipSyncSubmitContext,
+): Promise<AiLipSyncResult> {
   const videoUrl = normalizeProviderPullUrl(params.videoUrl, 'video_url')
   const audioUrl = normalizeProviderPullUrl(params.audioUrl, 'audio_url')
   const { apiKey } = await getProviderConfig(context.userId, context.providerId)

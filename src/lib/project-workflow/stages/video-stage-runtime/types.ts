@@ -8,7 +8,7 @@ import type {
   Storyboard,
 } from '@/features/project-workspace/components/video'
 import type { CapabilitySelections, ModelCapabilities } from '@/lib/ai-registry/types'
-import type { VideoPricingTier } from '@/lib/ai-registry/catalog'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 
 export interface VoiceLine {
   id: string

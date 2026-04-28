@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  parseSpeakerVoiceMap,
+  resolveRegisteredVoiceLineBinding,
+} from '@/lib/ai-providers'
+import {
   getSpeakerVoicePreviewUrl,
   hasAnyVoiceBinding,
-  parseSpeakerVoiceMap,
-  resolveVoiceBindingForProvider,
-} from '@/lib/voice/provider-voice-binding'
+} from '@/lib/ai-providers/shared/voice-line-binding'
 
 describe('provider voice binding', () => {
   it('parses legacy fal speaker voice entry to explicit fal provider', () => {
@@ -48,8 +50,8 @@ describe('provider voice binding', () => {
       },
     }))
 
-    const binding = resolveVoiceBindingForProvider({
-      providerKey: 'bailian',
+    const binding = resolveRegisteredVoiceLineBinding({
+      providerId: 'bailian',
       character: { customVoiceUrl: null, voiceId: null },
       speakerVoice: map.Narrator,
     })
@@ -71,8 +73,8 @@ describe('provider voice binding', () => {
       },
     }))
 
-    const binding = resolveVoiceBindingForProvider({
-      providerKey: 'fal',
+    const binding = resolveRegisteredVoiceLineBinding({
+      providerId: 'fal',
       character: { customVoiceUrl: null, voiceId: null },
       speakerVoice: map.Narrator,
     })

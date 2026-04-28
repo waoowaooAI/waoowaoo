@@ -61,6 +61,22 @@ export const FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   },
 ] as const
 
+export const FAL_DEFAULT_VOICE_MODEL_KEY = 'fal::fal-ai/index-tts-2/text-to-speech'
+export const FAL_DEFAULT_LIPSYNC_MODEL_KEY = 'fal::fal-ai/kling-video/lipsync/audio-to-video'
+
+export const FAL_API_CONFIG_CATALOG_MODELS = [
+  { modelId: 'banana', name: 'Banana Pro', type: 'image', provider: 'fal' },
+  { modelId: 'banana-2', name: 'Banana 2', type: 'image', provider: 'fal' },
+  { modelId: 'fal-wan25', name: 'Wan 2.6', type: 'video', provider: 'fal' },
+  { modelId: 'fal-veo31', name: 'Veo 3.1', type: 'video', provider: 'fal' },
+  { modelId: 'fal-sora2', name: 'Sora 2', type: 'video', provider: 'fal' },
+  { modelId: 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video', name: 'Kling 2.5 Turbo Pro', type: 'video', provider: 'fal' },
+  { modelId: 'fal-ai/kling-video/v3/standard/image-to-video', name: 'Kling 3 Standard', type: 'video', provider: 'fal' },
+  { modelId: 'fal-ai/kling-video/v3/pro/image-to-video', name: 'Kling 3 Pro', type: 'video', provider: 'fal' },
+  { modelId: 'fal-ai/index-tts-2/text-to-speech', name: 'IndexTTS 2', type: 'audio', provider: 'fal' },
+  { modelId: 'fal-ai/kling-video/lipsync/audio-to-video', name: 'Kling Lip Sync', type: 'lipsync', provider: 'fal' },
+] as const
+
 function falFlatPricing(flatAmount: number) {
   return { mode: 'flat' as const, flatAmount }
 }
