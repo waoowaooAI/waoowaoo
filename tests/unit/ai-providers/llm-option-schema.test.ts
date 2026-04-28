@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
-import { buildLlmOptionSchema } from '@/lib/ai-providers/adapters/llm/option-schema'
+import { buildLlmOptionSchema } from '@/lib/ai-exec/llm-option-schema'
 
 describe('llm option schema', () => {
   it('rejects unknown option keys', () => {
@@ -19,4 +19,3 @@ describe('llm option schema', () => {
     })).toThrow('AI_OPTION_INVALID:llm:test:reasoningEffort:unsupported_value=extreme')
   })
 })
-

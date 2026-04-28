@@ -18,7 +18,7 @@ import {
   resolveLlmRuntimeModel,
 } from '@/lib/ai-exec/llm-runtime'
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
-import { describeLlmVariantBase } from '@/lib/ai-providers/adapters/llm/descriptor'
+import { describeLlmVariantBase } from '@/lib/ai-exec/llm-descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
 import { emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
