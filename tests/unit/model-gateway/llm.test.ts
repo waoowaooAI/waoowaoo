@@ -11,17 +11,22 @@ const visionCompletion = {
   usage: { prompt_tokens: 4, completion_tokens: 5, total_tokens: 9 },
 }
 
-const chatCompletionMock = vi.hoisted(() => vi.fn(async () => textCompletion))
-const chatCompletionWithVisionMock = vi.hoisted(() => vi.fn(async () => visionCompletion))
+const runChatCompletionMock = vi.hoisted(() => vi.fn(async () => textCompletion))
+const runChatCompletionWithVisionMock = vi.hoisted(() => vi.fn(async () => visionCompletion))
 
-vi.mock('@/lib/ai-exec/engine', () => ({
-  chatCompletion: chatCompletionMock,
-  chatCompletionWithVision: chatCompletionWithVisionMock,
+vi.mock('@/lib/ai-exec/llm/completion-runner', () => ({
+  runChatCompletion: runChatCompletionMock,
+  chatCompletionStream: vi.fn(),
 }))
 
-import { executeAiTextStep, executeAiVisionStep } from '@/lib/ai-runtime/client'
+vi.mock('@/lib/ai-exec/llm/vision-runner', () => ({
+  runChatCompletionWithVision: runChatCompletionWithVisionMock,
+  runChatCompletionWithVisionStream: vi.fn(),
+}))
 
-describe('ai-runtime llm wrappers', () => {
+import { executeAiTextStep, executeAiVisionStep } from '@/lib/ai-exec/engine'
+
+describe('ai-exec engine llm wrappers', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -41,8 +46,8 @@ describe('ai-runtime llm wrappers', () => {
       temperature: 0.2,
     })
 
-    expect(chatCompletionMock).toHaveBeenCalledTimes(1)
-    expect(chatCompletionMock).toHaveBeenCalledWith(
+    expect(runChatCompletionMock).toHaveBeenCalledTimes(1)
+    expect(runChatCompletionMock).toHaveBeenCalledWith(
       'user-1',
       'openai-compatible::gpt-image-1',
       [{ role: 'user', content: 'hello' }],
@@ -62,8 +67,8 @@ describe('ai-runtime llm wrappers', () => {
       temperature: 0.4,
     })
 
-    expect(chatCompletionWithVisionMock).toHaveBeenCalledTimes(1)
-    expect(chatCompletionWithVisionMock).toHaveBeenCalledWith(
+    expect(runChatCompletionWithVisionMock).toHaveBeenCalledTimes(1)
+    expect(runChatCompletionWithVisionMock).toHaveBeenCalledWith(
       'user-1',
       'google::gemini-3-pro',
       'analyze image',

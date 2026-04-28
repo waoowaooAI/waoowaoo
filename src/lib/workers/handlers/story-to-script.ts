@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import {
   getUserWorkflowConcurrencyConfig,
   resolveProjectModelCapabilityGenerationOptions,

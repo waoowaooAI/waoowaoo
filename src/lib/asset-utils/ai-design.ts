@@ -4,7 +4,7 @@ import { logError as _ulogError } from '@/lib/logging/core'
  * 统一处理 Asset Hub 和 Novel Promotion 的 AI 设计逻辑
  */
 
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import { withTextBilling } from '@/lib/billing'
 import { safeParseJsonObject } from '@/lib/json-repair'
 import {

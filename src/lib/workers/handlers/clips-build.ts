@@ -1,7 +1,7 @@
 import type { Job } from 'bullmq'
 import { safeParseJsonArray } from '@/lib/json-repair'
 import { prisma } from '@/lib/prisma'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { buildCharactersIntroduction } from '@/lib/constants'
 import { createClipContentMatcher } from '@/lib/project-workflow/story-to-script/clip-matching'

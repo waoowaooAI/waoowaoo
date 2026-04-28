@@ -1,7 +1,7 @@
 import { Worker, type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { queueRedis } from '@/lib/redis'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import { withInternalLLMStreamCallbacks, type InternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import type { LLMStreamKind } from '@/lib/llm-observe/types'
 import { QUEUE_NAME } from '@/lib/task/queues'

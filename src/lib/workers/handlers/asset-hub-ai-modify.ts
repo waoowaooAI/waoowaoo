@@ -1,5 +1,5 @@
 import type { Job } from 'bullmq'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import { getUserModelConfig } from '@/lib/config-service'
 import { removeCharacterPromptSuffix, removeLocationPromptSuffix, removePropPromptSuffix } from '@/lib/constants'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'

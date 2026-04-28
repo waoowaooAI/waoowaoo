@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toAiRuntimeError } from '@/lib/ai-runtime/errors'
+import { toAiRuntimeError } from '@/lib/ai-exec/governance'
 
 describe('toAiRuntimeError empty response mapping', () => {
   it('maps nested Gemini empty response signal to EMPTY_RESPONSE even when status is 429', () => {

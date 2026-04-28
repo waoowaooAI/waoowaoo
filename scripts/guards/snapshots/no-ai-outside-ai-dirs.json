@@ -1,10 +1,8 @@
 {
   "note": "由 no-ai-outside-ai-dirs.mjs --update-snapshot 生成；只可缩短。",
-  "generatedAt": "2026-04-28T06:34:34.099Z",
+  "generatedAt": "2026-04-28T07:46:59.592Z",
   "files": [
     "src/components/ui/config-modals/ModelCapabilityDropdown.tsx",
-    "src/lib/ai-runtime/client.ts",
-    "src/lib/ai-runtime/types.ts",
     "src/lib/billing/cost.ts",
     "src/lib/constants.ts",
     "src/lib/llm/completion-parts.ts",

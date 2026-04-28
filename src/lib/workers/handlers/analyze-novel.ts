@@ -1,7 +1,7 @@
 import type { Job } from 'bullmq'
 import { safeParseJsonObject } from '@/lib/json-repair'
 import { prisma } from '@/lib/prisma'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { getArtStylePrompt, removeLocationPromptSuffix } from '@/lib/constants'
 import { reportTaskProgress } from '@/lib/workers/shared'

@@ -45,7 +45,7 @@ const persistMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
-vi.mock('@/lib/ai-runtime', () => ({
+vi.mock('@/lib/ai-exec/engine', () => ({
   executeAiTextStep: vi.fn(async () => ({
     text: llmMock.getCompletionContent(),
     reasoning: '',

@@ -27,6 +27,12 @@ const generatorApiMock = vi.hoisted(() => ({
     async: false,
   })),
   chatCompletionWithVision: vi.fn(async () => ({ output_text: 'AI_EXTRACTED_DESCRIPTION' })),
+  executeAiVisionStep: vi.fn(async () => ({
+    text: 'AI_EXTRACTED_DESCRIPTION',
+    reasoning: '',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    completion: { usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } },
+  })),
 }))
 
 const asyncSubmitMock = vi.hoisted(() => ({
