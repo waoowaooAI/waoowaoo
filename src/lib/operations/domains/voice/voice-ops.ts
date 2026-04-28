@@ -9,7 +9,7 @@ import { buildDefaultTaskBillingInfo } from '@/lib/billing'
 import { withTaskUiPayload } from '@/lib/task/ui-payload'
 import { estimateVoiceLineMaxSeconds } from '@/lib/voice/generate-voice-line'
 import { getProviderKey, resolveModelSelectionOrSingle } from '@/lib/api-config'
-import { parseModelKeyStrict } from '@/lib/model-config-contract'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
 import type {

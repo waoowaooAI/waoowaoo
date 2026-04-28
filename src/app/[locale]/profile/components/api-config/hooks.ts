@@ -11,7 +11,7 @@ import {
     isPresetComingSoonModelKey,
     resolvePresetProviderName,
 } from './types'
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import { normalizeWorkflowConcurrencyValue } from '@/lib/workflow-concurrency'
 import { useApiConfigSaver } from './editor'
 import { useUserApiConfigQuery } from './query'

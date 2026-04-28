@@ -1,4 +1,4 @@
-import type { ModelCapabilities } from '@/lib/model-config-contract'
+import type { ModelCapabilities } from '@/lib/ai-registry/types'
 
 interface VideoModelCapabilityCarrier {
   capabilities?: ModelCapabilities

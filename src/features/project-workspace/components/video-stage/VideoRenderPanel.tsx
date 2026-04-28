@@ -1,6 +1,6 @@
 import { getAspectRatioConfig } from '@/lib/constants'
 import type { MutableRefObject } from 'react'
-import type { CapabilitySelections, CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilitySelections, CapabilityValue } from '@/lib/ai-registry/types'
 import { VideoPanelCard, type VideoPanel, type VideoModelOption, type MatchedVoiceLine, type FirstLastFrameParams, type VideoGenerationOptions } from '../video'
 import type { PromptField } from '@/lib/project-workflow/stages/video-stage-runtime/useVideoPromptState'
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { VideoModelOption, VideoGenerationOptionValue, VideoGenerationOptions } from '../../../types'
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import {
   normalizeVideoGenerationSelections,
   resolveEffectiveVideoCapabilityDefinitions,

@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react'
 import { AppIcon } from '@/components/ui/icons'
 import type { AppIconName } from '@/components/ui/icons'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
-import type { CapabilityValue, ModelCapabilities } from '@/lib/model-config-contract'
+import type { CapabilityValue, ModelCapabilities } from '@/lib/ai-registry/types'
 import {
     getDefaultModelEmptyStateText,
     type DefaultModelEmptyStateType,

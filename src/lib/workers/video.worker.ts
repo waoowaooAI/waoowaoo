@@ -16,7 +16,7 @@ import {
 } from './utils'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
-import { parseModelKeyStrict } from '@/lib/model-config-contract'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { getProviderConfig } from '@/lib/api-config'
 
 type AnyObj = Record<string, unknown>

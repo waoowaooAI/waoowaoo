@@ -7,10 +7,10 @@
 
 import { BillingOperationError } from './errors'
 import {
-  parseModelKeyStrict,
   type CapabilityValue,
   type ModelCapabilities,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import {
   findBuiltinCapabilities,
   listBuiltinCapabilityCatalog,

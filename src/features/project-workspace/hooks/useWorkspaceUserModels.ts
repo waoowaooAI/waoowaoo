@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from 'react'
 import { logError as _ulogError } from '@/lib/logging/core'
 import { useUserModels } from '@/lib/query/hooks'
-import type { ModelCapabilities } from '@/lib/model-config-contract'
+import type { ModelCapabilities } from '@/lib/ai-registry/types'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 
 export interface UserModelOption {

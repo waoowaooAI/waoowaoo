@@ -1,11 +1,11 @@
 import {
-  parseModelKeyStrict,
   type CapabilitySelections,
   type CapabilityValue,
   type CapabilityOptionValue,
   type ModelCapabilities,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { findBuiltinCapabilities, findBuiltinCapabilityCatalogEntry } from '@/lib/model-capabilities/catalog'
 
 export type CapabilitySelectionValidationCode =

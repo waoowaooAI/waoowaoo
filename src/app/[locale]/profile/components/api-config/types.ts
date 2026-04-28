@@ -2,12 +2,11 @@
  * API 配置类型定义和预设常量
  */
 import {
-    composeModelKey,
-    parseModelKeyStrict,
     type CapabilitySelections,
     type ModelCapabilities,
     type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type {
     OpenAICompatMediaTemplate,
     OpenAICompatMediaTemplateSource,

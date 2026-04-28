@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { composeModelKey } from '@/lib/model-config-contract'
+import { composeModelKey } from '@/lib/ai-registry/selection'
 import { getProviderKey } from '@/lib/api-config'
 import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 

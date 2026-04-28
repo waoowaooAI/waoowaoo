@@ -7,7 +7,7 @@ import type {
   VideoGenerationOptions,
   Storyboard,
 } from '@/features/project-workspace/components/video'
-import type { CapabilitySelections, ModelCapabilities } from '@/lib/model-config-contract'
+import type { CapabilitySelections, ModelCapabilities } from '@/lib/ai-registry/types'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 
 export interface VoiceLine {

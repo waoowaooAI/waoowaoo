@@ -90,7 +90,7 @@ vi.mock('@/lib/media/outbound-image', () => ({
 vi.mock('@/lib/model-capabilities/lookup', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
 }))
-vi.mock('@/lib/model-config-contract', () => ({
+vi.mock('@/lib/ai-registry/selection', () => ({
   composeModelKey: vi.fn((provider: string, modelId: string) => `${provider}::${modelId}`),
   parseModelKeyStrict: vi.fn(() => ({ provider: 'fal' })),
 }))

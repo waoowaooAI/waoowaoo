@@ -1,4 +1,5 @@
-import { composeModelKey, parseModelKeyStrict, type ModelCapabilities, type UnifiedModelType } from '@/lib/model-config-contract'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import type { ModelCapabilities, UnifiedModelType } from '@/lib/ai-registry/types'
 
 export interface ApiConfigCatalogProvider {
   id: string

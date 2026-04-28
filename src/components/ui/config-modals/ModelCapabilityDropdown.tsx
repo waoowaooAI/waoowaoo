@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
-import type { CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilityValue } from '@/lib/ai-registry/types'
 import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
 
 // ─── Types ────────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import type { WorkspaceStageRuntimeValue } from '../WorkspaceStageRuntimeContext'
-import type { CapabilitySelections, ModelCapabilities } from '@/lib/model-config-contract'
+import type { CapabilitySelections, ModelCapabilities } from '@/lib/ai-registry/types'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 import type { BatchVideoGenerationParams, VideoGenerationOptions } from '../components/video'
 

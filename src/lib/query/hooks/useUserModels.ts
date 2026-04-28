@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import type { ModelCapabilities } from '@/lib/model-config-contract'
+import type { ModelCapabilities } from '@/lib/ai-registry/types'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 import { queryKeys } from '../keys'
 import { apiFetch } from '@/lib/api-fetch'

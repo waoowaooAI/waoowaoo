@@ -2,12 +2,11 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { ApiError } from '@/lib/api-errors'
 import {
-  composeModelKey,
-  parseModelKeyStrict,
   type CapabilityValue,
   type ModelCapabilities,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
 import { findBuiltinPricingCatalogEntry } from '@/lib/model-pricing/catalog'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'

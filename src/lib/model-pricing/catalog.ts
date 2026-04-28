@@ -1,4 +1,4 @@
-import { type CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilityValue } from '@/lib/ai-registry/types'
 import { ARK_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
 import { BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
 import { FAL_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'

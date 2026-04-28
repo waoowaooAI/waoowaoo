@@ -9,12 +9,11 @@ import { prisma } from '@/lib/prisma'
 import { encryptApiKey, decryptApiKey } from '@/lib/crypto-utils'
 import { ApiError } from '@/lib/api-errors'
 import {
-  composeModelKey,
-  parseModelKeyStrict,
   type CapabilitySelections,
   type ModelCapabilities,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import {
   getCapabilityOptionFields,
   resolveBuiltinCapabilitiesByModelKey,

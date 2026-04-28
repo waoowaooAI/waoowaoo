@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import type { ProjectWorkspaceProps } from '../types'
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 
 function parseCapabilitySelections(raw: unknown): CapabilitySelections {
   if (!raw) return {}

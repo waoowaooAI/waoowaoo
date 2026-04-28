@@ -7,7 +7,7 @@ import {
   normalizeResponseJson,
   readJsonPath,
 } from '@/lib/ai-providers/openai-compatible/user-template'
-import { parseModelKeyStrict } from '@/lib/model-config-contract'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { resolveOpenAICompatClientConfig } from './common'
 
 const OPENAI_COMPAT_PROVIDER_PREFIX = 'openai-compatible:'

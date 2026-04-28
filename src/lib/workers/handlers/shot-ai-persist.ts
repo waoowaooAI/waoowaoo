@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { composeModelKey, parseModelKeyStrict } from '@/lib/model-config-contract'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { type LocationAvailableSlot, stringifyLocationAvailableSlots } from '@/lib/location-available-slots'
 
 function normalizeModelKey(value: unknown): string | null {

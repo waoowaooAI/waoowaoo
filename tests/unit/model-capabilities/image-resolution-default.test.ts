@@ -3,7 +3,7 @@ import {
   type CapabilitySelections,
   type ModelCapabilities,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
 import { resolveGenerationOptionsForModel } from '@/lib/model-capabilities/lookup'
 
 describe('model-capabilities/lookup - image resolution strict selection', () => {

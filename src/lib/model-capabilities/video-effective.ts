@@ -2,7 +2,7 @@ import type {
   CapabilityFieldI18n,
   CapabilityValue,
   VideoCapabilities,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
 import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
 
 export interface EffectiveVideoCapabilityDefinition {

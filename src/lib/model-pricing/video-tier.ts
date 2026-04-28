@@ -1,4 +1,4 @@
-import type { CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilityValue } from '@/lib/ai-registry/types'
 
 export interface VideoPricingTier {
   when: Record<string, CapabilityValue>

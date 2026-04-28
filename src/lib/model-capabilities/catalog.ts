@@ -1,9 +1,6 @@
-import {
-  composeModelKey,
-  validateModelCapabilities,
-  type ModelCapabilities,
-  type UnifiedModelType,
-} from '@/lib/model-config-contract'
+import type { ModelCapabilities, UnifiedModelType } from '@/lib/ai-registry/types'
+import { validateModelCapabilities } from '@/lib/ai-registry/types'
+import { composeModelKey } from '@/lib/ai-registry/selection'
 import { ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
 import { BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
 import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'

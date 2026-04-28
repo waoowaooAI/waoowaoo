@@ -2,7 +2,7 @@
 import { useTranslations } from 'next-intl'
 
 import type { VideoGenerationOptions, VideoModelOption, VideoPanel } from './types'
-import type { CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilityValue } from '@/lib/ai-registry/types'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'

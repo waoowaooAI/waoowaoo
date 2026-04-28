@@ -1,7 +1,5 @@
-import {
-  parseModelKeyStrict,
-  type CapabilityValue,
-} from '@/lib/model-config-contract'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import type { CapabilityValue } from '@/lib/ai-registry/types'
 import {
   findBuiltinPricingCatalogEntriesByModelId,
   findBuiltinPricingCatalogEntry,

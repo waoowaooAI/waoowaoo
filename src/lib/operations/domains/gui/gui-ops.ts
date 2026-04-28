@@ -34,7 +34,7 @@ import {
 import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
 import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
-import { composeModelKey, parseModelKeyStrict } from '@/lib/model-config-contract'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
 import { resolveBuiltinCapabilitiesByModelKey as _resolveCaps } from '@/lib/model-capabilities/lookup'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'

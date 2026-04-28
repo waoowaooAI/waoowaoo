@@ -9,11 +9,8 @@
 
 import { prisma } from './prisma'
 import { decryptApiKey } from './crypto-utils'
-import {
-  composeModelKey,
-  parseModelKeyStrict,
-  type UnifiedModelType,
-} from './model-config-contract'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import type { UnifiedModelType } from '@/lib/ai-registry/types'
 import type {
   OpenAICompatMediaTemplate,
   OpenAICompatMediaTemplateSource,

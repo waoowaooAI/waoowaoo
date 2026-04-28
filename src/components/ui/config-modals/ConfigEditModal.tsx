@@ -10,7 +10,7 @@ import type {
     CapabilitySelections,
     CapabilityValue,
     ModelCapabilities,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
 import { filterNormalVideoModelOptions } from '@/lib/model-capabilities/video-model-options'
 import { RatioSelector, StyleSelector } from './config-modal-selectors'
 import { ModelCapabilityDropdown } from './ModelCapabilityDropdown'

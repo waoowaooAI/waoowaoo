@@ -1,4 +1,4 @@
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import type { LocationAvailableSlot } from '@/lib/location-available-slots'
 import type { DirectorStyleDoc } from '@/lib/director-style'
 

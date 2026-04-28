@@ -1,7 +1,7 @@
 'use client'
 
 import { apiFetch } from '@/lib/api-fetch'
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import type { CustomModel, Provider } from './types'
 import type { DefaultModels, WorkflowConcurrency } from './selectors'
 import type { MutableRefObject } from 'react'

@@ -7,10 +7,10 @@ import { resolveDirectorStyleFieldsFromPreset } from '@/lib/director-style'
 import { attachMediaFieldsToProject } from '@/lib/media/attach'
 import { buildProjectReadModel } from '@/lib/projects/build-project-read-model'
 import {
-  parseModelKeyStrict,
   type CapabilitySelections,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import {
   resolveBuiltinModelContext,
   getCapabilityOptionFields,
