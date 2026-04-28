@@ -9,14 +9,6 @@ import type {
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
 import type { MediaModality } from '@/lib/ai-providers/shared/option-schema'
 
-export type DescribeOnlyMediaAdapter = {
-  readonly providerKey: string
-  describeVariant(
-    modality: Extract<AiModality, 'image' | 'video' | 'audio'>,
-    selection: AiResolvedSelection,
-  ): AiVariantDescriptor
-}
-
 export function describeMediaVariantBase(input: {
   modality: MediaModality
   selection: AiResolvedSelection

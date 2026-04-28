@@ -1,14 +1,20 @@
-import { describeMediaVariantBase, type DescribeOnlyMediaAdapter } from '@/lib/ai-providers/shared/media-adapter'
-import { resolveOpenRouterOptionSchema } from './models'
+import type { AiProviderAdapter } from '@/lib/ai-providers/runtime-types'
+import { createOpenAiSdkLanguageModel } from '@/lib/ai-providers/shared/language-model'
+import { runOpenRouterLlmCompletion, runOpenRouterLlmStream } from './llm'
 
-export const openRouterMediaAdapter: DescribeOnlyMediaAdapter = {
+export const openRouterAdapter: AiProviderAdapter = {
   providerKey: 'openrouter',
-  describeVariant(modality, selection) {
-    return describeMediaVariantBase({
-      modality,
-      selection,
-      executionMode: modality === 'video' ? 'async' : 'sync',
-      optionSchema: resolveOpenRouterOptionSchema(modality),
-    })
+  completeLlm: (input) => runOpenRouterLlmCompletion({
+    modelId: input.selection.modelId,
+    providerConfig: input.providerConfig,
+    messages: input.messages,
+    temperature: input.temperature,
+    reasoning: input.reasoning,
+    reasoningEffort: input.reasoningEffort,
+    maxRetries: input.maxRetries,
+  }),
+  languageModel: {
+    create: createOpenAiSdkLanguageModel,
   },
+  streamLlm: runOpenRouterLlmStream,
 }

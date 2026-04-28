@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { executeVoiceLineGeneration } from '@/lib/ai-exec/engine'
-import { parseSpeakerVoiceMap, resolveRegisteredAiProvider } from '@/lib/ai-providers'
+import { parseSpeakerVoiceMap, resolveAiProviderAdapter } from '@/lib/ai-providers'
 import { getSignedUrl, uploadObject } from '@/lib/storage'
 import type { CharacterVoiceFields, SpeakerVoiceMap } from '@/lib/ai-providers/shared/voice-line-binding'
 
@@ -73,7 +73,7 @@ export async function generateVoiceLine(params: {
   }
 
   const audioSelection = await resolveModelSelectionOrSingle(params.userId, params.audioModel, 'audio')
-  const voiceLineProvider = resolveRegisteredAiProvider(audioSelection.provider).voiceLine
+  const voiceLineProvider = resolveAiProviderAdapter(audioSelection.provider).voiceLine
   if (!voiceLineProvider) {
     throw new Error(`AUDIO_PROVIDER_UNSUPPORTED: ${audioSelection.provider}`)
   }

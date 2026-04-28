@@ -22,7 +22,7 @@ import type {
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { resolveModelSelection, resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
-import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
+import { resolveAiProviderAdapter } from '@/lib/ai-providers'
 import { runChatCompletion } from '@/lib/ai-exec/llm/completion-runner'
 import { chatCompletionStream as runChatCompletionStream } from '@/lib/ai-exec/llm/completion-runner'
 import {
@@ -142,7 +142,7 @@ function requireLipSyncProviderKey(providerId: string): AiLipSyncProviderKey {
 export async function executeMediaGeneration(input: AiMediaExecutionInput): Promise<GenerateResult> {
   const selection = await resolveModelSelection(input.userId, input.modelKey, input.modality)
   _ulogInfo(`[ai-exec:${input.modality}] resolved model selection: ${selection.modelKey}`)
-  const adapter = resolveRegisteredAiProvider(selection.provider)
+  const adapter = resolveAiProviderAdapter(selection.provider)
   switch (input.modality) {
     case 'image': {
       const modalityAdapter = adapter[input.modality]
@@ -204,7 +204,7 @@ export async function executeMediaGeneration(input: AiMediaExecutionInput): Prom
 export async function executeLipSyncGeneration(input: AiLipSyncExecutionInput): Promise<AiLipSyncResult> {
   const selection = await resolveModelSelectionOrSingle(input.userId, input.modelKey, 'lipsync')
   const providerKey = requireLipSyncProviderKey(selection.provider)
-  const adapter = resolveRegisteredAiProvider(selection.provider)
+  const adapter = resolveAiProviderAdapter(selection.provider)
   if (!adapter.lipsync) {
     throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:lipsync`)
   }
@@ -218,7 +218,7 @@ export async function executeLipSyncGeneration(input: AiLipSyncExecutionInput): 
 }
 
 export async function executeVoiceLineGeneration(input: AiVoiceLineExecutionInput): Promise<AiProviderVoiceLineResult> {
-  const adapter = resolveRegisteredAiProvider(input.selection.provider)
+  const adapter = resolveAiProviderAdapter(input.selection.provider)
   if (!adapter.voiceLine) {
     throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${input.selection.provider}:voiceLine`)
   }

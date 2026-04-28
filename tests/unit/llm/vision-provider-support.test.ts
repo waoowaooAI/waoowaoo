@@ -15,7 +15,7 @@ const getProviderConfigMock = vi.hoisted(() => vi.fn(async () => ({
   baseUrl: 'https://openrouter.example/v1',
 })))
 
-const resolveRegisteredAiProviderMock = vi.hoisted(() => vi.fn(() => ({
+const resolveAiProviderAdapterMock = vi.hoisted(() => vi.fn(() => ({
   providerKey: 'openrouter',
 })))
 
@@ -25,7 +25,7 @@ vi.mock('@/lib/user-api/runtime-config', () => ({
 }))
 
 vi.mock('@/lib/ai-providers', () => ({
-  resolveRegisteredAiProvider: resolveRegisteredAiProviderMock,
+  resolveAiProviderAdapter: resolveAiProviderAdapterMock,
 }))
 
 import { runChatCompletionWithVision } from '@/lib/ai-exec/llm/vision-runner'
@@ -43,7 +43,7 @@ describe('vision provider support', () => {
       ['https://example.com/image.png'],
     )).rejects.toThrow('AI_PROVIDER_MODALITY_UNSUPPORTED:openrouter:vision')
 
-    expect(resolveRegisteredAiProviderMock).toHaveBeenCalledWith('openrouter')
+    expect(resolveAiProviderAdapterMock).toHaveBeenCalledWith('openrouter')
     expect(getProviderConfigMock).toHaveBeenCalledWith('user-1', 'openrouter')
   })
 })

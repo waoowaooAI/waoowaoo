@@ -173,7 +173,7 @@ export type AiProviderVoiceLineResult = {
   audioDuration: number
 }
 
-export type RegisteredMediaProviderModalityAdapter<M extends 'image' | 'video' | 'audio'> = {
+export type AiProviderMediaModalityAdapter<M extends 'image' | 'video' | 'audio'> = {
   describe: (selection: AiResolvedSelection) => AiVariantDescriptor
   execute: (
     input: M extends 'image'
@@ -184,28 +184,28 @@ export type RegisteredMediaProviderModalityAdapter<M extends 'image' | 'video' |
   ) => Promise<GenerateResult>
 }
 
-export type RegisteredLipSyncProviderModalityAdapter = {
+export type AiProviderLipSyncModalityAdapter = {
   execute: (input: AiProviderLipSyncExecutionContext) => Promise<AiLipSyncResult>
 }
 
-export type RegisteredVoiceLineProviderModalityAdapter = {
+export type AiProviderVoiceLineModalityAdapter = {
   resolveBinding: (input: AiProviderVoiceLineBindingInput) => AiProviderVoiceLineBinding | null
   createMissingBindingError: (input: AiProviderVoiceLineBindingInput) => Error
   execute: (input: AiProviderVoiceLineExecutionContext) => Promise<AiProviderVoiceLineResult>
 }
 
-export type RegisteredLanguageModelProviderAdapter = {
+export type AiProviderLanguageModelAdapter = {
   create: (input: AiProviderLanguageModelContext) => LanguageModel
 }
 
-export interface RegisteredAiProvider {
+export interface AiProviderAdapter {
   readonly providerKey: string
-  image?: RegisteredMediaProviderModalityAdapter<'image'>
-  video?: RegisteredMediaProviderModalityAdapter<'video'>
-  audio?: RegisteredMediaProviderModalityAdapter<'audio'>
-  lipsync?: RegisteredLipSyncProviderModalityAdapter
-  voiceLine?: RegisteredVoiceLineProviderModalityAdapter
-  languageModel?: RegisteredLanguageModelProviderAdapter
+  image?: AiProviderMediaModalityAdapter<'image'>
+  video?: AiProviderMediaModalityAdapter<'video'>
+  audio?: AiProviderMediaModalityAdapter<'audio'>
+  lipsync?: AiProviderLipSyncModalityAdapter
+  voiceLine?: AiProviderVoiceLineModalityAdapter
+  languageModel?: AiProviderLanguageModelAdapter
   completeLlm?: (input: AiLlmExecutionInput) => Promise<AiProviderLlmResult>
   streamLlm?: (input: AiProviderLlmStreamContext) => Promise<AiProviderLlmResult>
   completeVision?: (input: AiProviderVisionExecutionContext) => Promise<AiProviderLlmResult>

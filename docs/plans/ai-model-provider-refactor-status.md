@@ -96,7 +96,7 @@
 - [x] `api-config-service.ts` 只保留用户配置 CRUD 编排；严格校验拆入 `api-config-{provider,model,custom-pricing,defaults,capability}-*.ts`
 - [x] billing 中 Ark Seedance 2 token 定价专用逻辑下沉到 `ai-providers/ark/video-token-pricing.ts`
 - [x] `ai-registry/builtin-catalog.ts` 已删除，provider catalog 聚合迁入 `ai-providers/builtin-catalog.ts`
-- [~] `mediaAdapterRegistry` 已删除，`image/video/audio` descriptor 与 execute 已在 runtime registry 汇合；仍需合并 `DescribeOnlyMediaAdapter` 与 `RegisteredAiProvider`，让每个 provider 只导出一个最终 adapter。
+- [x] `mediaAdapterRegistry` 已删除，`image/video/audio` descriptor 与 execute 已在 runtime registry 汇合；`DescribeOnlyMediaAdapter` 与 `RegisteredAiProvider` 已合并为 provider-local `AiProviderAdapter`。
 - [x] assistant/project-agent AI SDK LanguageModel 创建迁入 provider adapter，业务层不再按 Google/OpenAI 分流
 - [x] guard snapshot 已清空：`no-cross-provider-model-data=0`、`no-cross-provider-switch=0`、`no-ai-outside-ai-dirs=0`
 
@@ -106,4 +106,4 @@
 - [x] `src/lib/user-api/runtime-config.ts` 仅保留用户配置读取/解密；runtime selection 与 provider baseUrl 策略迁入 `ai-registry/runtime-selection.ts`。
 - [x] LLM vision 与 OpenAI-compatible 模板链路移除隐式 fallback，未声明能力或缺少模板时显式失败。
 - [x] guard 扫描覆盖 `user-api/**` 中的 provider probe / providerKey 字面量分支，防止非 `ai-*` 目录重新长出模型调用逻辑。
-- [ ] 每个 provider 最终只导出一个完整 adapter，`ai-providers/index.ts` 只做注册。
+- [x] 每个 provider 最终只导出一个完整 adapter，`ai-providers/index.ts` 只做注册。

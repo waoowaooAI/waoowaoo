@@ -18,7 +18,7 @@ import {
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
 import { describeLlmVariantBase } from '@/lib/ai-exec/llm-descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
-import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
+import { resolveAiProviderAdapter } from '@/lib/ai-providers'
 import type { AiProviderVisionExecutionContext } from '@/lib/ai-providers/runtime-types'
 
 function getErrorMessage(error: unknown): string {
@@ -42,7 +42,7 @@ function getErrorBody(error: unknown): { message?: unknown; code?: unknown } {
 async function executeVisionCompletionViaAdapter(
   input: AiProviderVisionExecutionContext,
 ): Promise<{ completion: OpenAI.Chat.Completions.ChatCompletion; logProvider: string }> {
-  const provider = resolveRegisteredAiProvider(input.selection.provider)
+  const provider = resolveAiProviderAdapter(input.selection.provider)
   if (provider.completeVision) {
     const result = await provider.completeVision(input)
     return result

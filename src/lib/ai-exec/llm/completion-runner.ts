@@ -18,7 +18,7 @@ import {
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
 import { describeLlmVariantBase } from '@/lib/ai-exec/llm-descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
-import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
+import { resolveAiProviderAdapter } from '@/lib/ai-providers'
 import { emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
 import type { AiLlmExecutionInput, AiLlmExecutionResult } from '@/lib/ai-registry/types'
 
@@ -40,7 +40,7 @@ function errorMessage(error: unknown): string {
 async function executeLlmCompletionViaAdapter(
   input: AiLlmExecutionInput,
 ): Promise<AiLlmExecutionResult> {
-  const provider = resolveRegisteredAiProvider(input.selection.provider)
+  const provider = resolveAiProviderAdapter(input.selection.provider)
   if (!provider.completeLlm) {
     throw new Error(`UNSUPPORTED_LLM_PROVIDER: ${input.providerKey}`)
   }
@@ -99,7 +99,7 @@ export async function chatCompletionStream(
     messages,
   })
 
-  const providerRuntime = resolveRegisteredAiProvider(provider)
+  const providerRuntime = resolveAiProviderAdapter(provider)
   if (!providerRuntime.streamLlm) {
     const error = new Error(`UNSUPPORTED_STREAM_PROVIDER: ${providerKey}`)
     callbacks?.onError?.(error, streamStep)

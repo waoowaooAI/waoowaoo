@@ -6,76 +6,32 @@ import type {
   AsyncExternalIdProvider,
   AsyncTaskProviderRegistration,
 } from '@/lib/ai-providers/async-task-types'
-import { createAnthropicLanguageModel } from '@/lib/ai-providers/anthropic/language-model'
-import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
+import { anthropicAdapter } from '@/lib/ai-providers/anthropic/adapter'
+import { arkAdapter } from '@/lib/ai-providers/ark/adapter'
 import { arkAsyncTaskProvider } from '@/lib/ai-providers/ark/async-task'
-import { executeArkImageGeneration } from '@/lib/ai-providers/ark/image'
-import { runArkLlmCompletion, runArkLlmStream, runArkVisionCompletion } from '@/lib/ai-providers/ark/llm'
-import { executeArkVideoGeneration } from '@/lib/ai-providers/ark/video'
 import { arkSeedance2VideoTokenPricingContract } from '@/lib/ai-providers/ark/video-token-pricing'
-import { bailianMediaAdapter } from '@/lib/ai-providers/bailian/adapter'
+import { bailianAdapter } from '@/lib/ai-providers/bailian/adapter'
 import { bailianAsyncTaskProvider } from '@/lib/ai-providers/bailian/async-task'
-import {
-  executeBailianAudioGeneration,
-  executeBailianImageGeneration,
-  executeBailianVideoGeneration,
-  runBailianLlmCompletion,
-  runBailianLlmStream,
-  runBailianVisionCompletion,
-} from '@/lib/ai-providers/bailian'
-import { submitBailianLipSync } from '@/lib/ai-providers/bailian/lipsync'
-import {
-  createBailianVoiceLineMissingBindingError,
-  executeBailianVoiceLineGeneration,
-  normalizeBailianSpeakerVoiceEntry,
-  resolveBailianVoiceLineBinding,
-} from '@/lib/ai-providers/bailian/voice-line'
-import { falMediaAdapter } from '@/lib/ai-providers/fal/adapter'
+import { normalizeBailianSpeakerVoiceEntry } from '@/lib/ai-providers/bailian/voice-line'
+import { falAdapter } from '@/lib/ai-providers/fal/adapter'
 import { falAsyncTaskProvider } from '@/lib/ai-providers/fal/async-task'
-import { executeFalImageGeneration } from '@/lib/ai-providers/fal/image'
-import { submitFalLipSync } from '@/lib/ai-providers/fal/lipsync'
-import { executeFalVideoGeneration } from '@/lib/ai-providers/fal/video'
-import {
-  createFalVoiceLineMissingBindingError,
-  executeFalVoiceLineGeneration,
-  normalizeFalSpeakerVoiceEntry,
-  resolveFalVoiceLineBinding,
-} from '@/lib/ai-providers/fal/voice-line'
-import { geminiCompatibleMediaAdapter, googleMediaAdapter } from '@/lib/ai-providers/google/adapter'
+import { normalizeFalSpeakerVoiceEntry } from '@/lib/ai-providers/fal/voice-line'
+import { geminiCompatibleAdapter, googleAdapter } from '@/lib/ai-providers/google/adapter'
 import { geminiBatchAsyncTaskProvider, googleVideoAsyncTaskProvider } from '@/lib/ai-providers/google/async-task'
-import { executeGeminiCompatibleImageGeneration, executeGoogleImageGeneration } from '@/lib/ai-providers/google/image'
-import { runGoogleLlmCompletion, runGoogleLlmStream, runGoogleVisionCompletion } from '@/lib/ai-providers/google/llm'
-import { createGoogleSdkLanguageModel } from '@/lib/ai-providers/google/language-model'
-import { executeGoogleVideoGeneration } from '@/lib/ai-providers/google/video'
-import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
+import { minimaxAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { minimaxAsyncTaskProvider } from '@/lib/ai-providers/minimax/async-task'
-import { executeMinimaxVideoGeneration } from '@/lib/ai-providers/minimax/video'
-import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
+import { openAiCompatibleAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import {
   openAiCompatibleTemplateAsyncTaskProvider,
   openAiVideoAsyncTaskProvider,
 } from '@/lib/ai-providers/openai-compatible/async-task'
-import { executeOpenAiCompatibleImageGeneration } from '@/lib/ai-providers/openai-compatible/image'
-import { runOpenAiCompatibleLlmCompletion, runOpenAiCompatibleLlmStream } from '@/lib/ai-providers/openai-compatible/llm'
-import { executeOpenAiCompatibleVideoGeneration } from '@/lib/ai-providers/openai-compatible/video'
-import { createOpenAiLanguageModel } from '@/lib/ai-providers/openai/language-model'
-import { openRouterMediaAdapter } from '@/lib/ai-providers/openrouter/adapter'
-import { runOpenRouterLlmCompletion, runOpenRouterLlmStream } from '@/lib/ai-providers/openrouter/llm'
-import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
+import { openAiAdapter } from '@/lib/ai-providers/openai/adapter'
+import { openRouterAdapter } from '@/lib/ai-providers/openrouter/adapter'
+import { siliconFlowAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import { siliconFlowAsyncTaskProvider } from '@/lib/ai-providers/siliconflow/async-task'
-import {
-  executeSiliconFlowAudioGeneration,
-  executeSiliconFlowImageGeneration,
-  executeSiliconFlowVideoGeneration,
-  runSiliconFlowLlmCompletion,
-  runSiliconFlowLlmStream,
-  runSiliconFlowVisionCompletion,
-} from '@/lib/ai-providers/siliconflow'
-import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
+import { viduAdapter } from '@/lib/ai-providers/vidu/adapter'
 import { viduAsyncTaskProvider } from '@/lib/ai-providers/vidu/async-task'
-import { submitViduLipSync } from '@/lib/ai-providers/vidu/lipsync'
-import { executeViduVideoGeneration } from '@/lib/ai-providers/vidu/video'
-import type { AiProviderLanguageModelContext, RegisteredAiProvider } from '@/lib/ai-providers/runtime-types'
+import type { AiProviderAdapter, AiProviderLanguageModelContext } from '@/lib/ai-providers/runtime-types'
 import {
   readRawSpeakerVoiceEntry,
   type CharacterVoiceFields,
@@ -84,7 +40,6 @@ import {
   type SpeakerVoiceMap,
 } from '@/lib/ai-providers/shared/voice-line-binding'
 import type { VideoTokenPricingContract } from '@/lib/ai-providers/shared/video-token-pricing'
-import { createOpenAiSdkLanguageModel } from '@/lib/ai-providers/shared/language-model'
 export {
   getSpeakerVoicePreviewUrl,
   hasAnyVoiceBinding,
@@ -126,253 +81,19 @@ function getProviderKey(providerId: string): string {
   return (marker === -1 ? providerId : providerId.slice(0, marker)).toLowerCase()
 }
 
-const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
-  {
-    providerKey: 'anthropic',
-    languageModel: {
-      create: createAnthropicLanguageModel,
-    },
-  },
-  {
-    providerKey: 'ark',
-    image: {
-      describe: (selection) => arkMediaAdapter.describeVariant('image', selection),
-      execute: executeArkImageGeneration,
-    },
-    video: {
-      describe: (selection) => arkMediaAdapter.describeVariant('video', selection),
-      execute: executeArkVideoGeneration,
-    },
-    completeLlm: (input) => runArkLlmCompletion({
-      apiKey: input.providerConfig.apiKey,
-      modelId: input.selection.modelId,
-      messages: input.messages,
-      reasoning: input.reasoning,
-    }),
-    languageModel: {
-      create: createOpenAiSdkLanguageModel,
-    },
-    streamLlm: runArkLlmStream,
-    completeVision: runArkVisionCompletion,
-  },
-  {
-    providerKey: 'bailian',
-    image: {
-      describe: (selection) => bailianMediaAdapter.describeVariant('image', selection),
-      execute: executeBailianImageGeneration,
-    },
-    video: {
-      describe: (selection) => bailianMediaAdapter.describeVariant('video', selection),
-      execute: executeBailianVideoGeneration,
-    },
-    audio: {
-      describe: (selection) => bailianMediaAdapter.describeVariant('audio', selection),
-      execute: executeBailianAudioGeneration,
-    },
-    lipsync: {
-      execute: (input) => submitBailianLipSync(input.params, {
-        userId: input.userId,
-        providerId: input.selection.provider,
-        modelId: input.selection.modelId,
-        modelKey: input.selection.modelKey,
-      }),
-    },
-    voiceLine: {
-      resolveBinding: resolveBailianVoiceLineBinding,
-      createMissingBindingError: createBailianVoiceLineMissingBindingError,
-      execute: executeBailianVoiceLineGeneration,
-    },
-    completeLlm: (input) => runBailianLlmCompletion({
-      modelId: input.selection.modelId,
-      messages: input.messages,
-      apiKey: input.providerConfig.apiKey,
-      baseUrl: input.providerConfig.baseUrl,
-      temperature: input.temperature,
-    }),
-    languageModel: {
-      create: createOpenAiSdkLanguageModel,
-    },
-    streamLlm: runBailianLlmStream,
-    completeVision: runBailianVisionCompletion,
-  },
-  {
-    providerKey: 'fal',
-    image: {
-      describe: (selection) => falMediaAdapter.describeVariant('image', selection),
-      execute: executeFalImageGeneration,
-    },
-    video: {
-      describe: (selection) => falMediaAdapter.describeVariant('video', selection),
-      execute: executeFalVideoGeneration,
-    },
-    lipsync: {
-      execute: (input) => submitFalLipSync(input.params, {
-        userId: input.userId,
-        providerId: input.selection.provider,
-        modelId: input.selection.modelId,
-        modelKey: input.selection.modelKey,
-      }),
-    },
-    voiceLine: {
-      resolveBinding: resolveFalVoiceLineBinding,
-      createMissingBindingError: createFalVoiceLineMissingBindingError,
-      execute: executeFalVoiceLineGeneration,
-    },
-  },
-  {
-    providerKey: 'google',
-    image: {
-      describe: (selection) => googleMediaAdapter.describeVariant('image', selection),
-      execute: executeGoogleImageGeneration,
-    },
-    video: {
-      describe: (selection) => googleMediaAdapter.describeVariant('video', selection),
-      execute: executeGoogleVideoGeneration,
-    },
-    completeLlm: (input) => runGoogleLlmCompletion({
-      apiKey: input.providerConfig.apiKey,
-      baseUrl: input.providerConfig.baseUrl,
-      modelId: input.selection.modelId,
-      messages: input.messages,
-      temperature: input.temperature,
-      reasoning: input.reasoning,
-      reasoningEffort: input.reasoningEffort,
-      logProvider: 'google',
-    }),
-    languageModel: {
-      create: createGoogleSdkLanguageModel,
-    },
-    streamLlm: runGoogleLlmStream,
-    completeVision: runGoogleVisionCompletion,
-  },
-  {
-    providerKey: 'gemini-compatible',
-    image: {
-      describe: (selection) => geminiCompatibleMediaAdapter.describeVariant('image', selection),
-      execute: executeGeminiCompatibleImageGeneration,
-    },
-    video: {
-      describe: (selection) => geminiCompatibleMediaAdapter.describeVariant('video', selection),
-      execute: executeGoogleVideoGeneration,
-    },
-    completeLlm: (input) => runGoogleLlmCompletion({
-      apiKey: input.providerConfig.apiKey,
-      baseUrl: input.providerConfig.baseUrl,
-      modelId: input.selection.modelId,
-      messages: input.messages,
-      temperature: input.temperature,
-      reasoning: input.reasoning,
-      reasoningEffort: input.reasoningEffort,
-      logProvider: 'gemini-compatible',
-    }),
-    languageModel: {
-      create: createGoogleSdkLanguageModel,
-    },
-    streamLlm: runGoogleLlmStream,
-    completeVision: runGoogleVisionCompletion,
-  },
-  {
-    providerKey: 'minimax',
-    video: {
-      describe: (selection) => minimaxMediaAdapter.describeVariant('video', selection),
-      execute: executeMinimaxVideoGeneration,
-    },
-  },
-  {
-    providerKey: 'openai-compatible',
-    image: {
-      describe: (selection) => openAiCompatibleMediaAdapter.describeVariant('image', selection),
-      execute: executeOpenAiCompatibleImageGeneration,
-    },
-    video: {
-      describe: (selection) => openAiCompatibleMediaAdapter.describeVariant('video', selection),
-      execute: executeOpenAiCompatibleVideoGeneration,
-    },
-    completeLlm: (input) => runOpenAiCompatibleLlmCompletion({
-      gatewayRoute: input.providerConfig.gatewayRoute || 'openai-compat',
-      userId: input.userId,
-      providerId: input.selection.provider,
-      modelId: input.selection.modelId,
-      llmProtocol: input.selection.llmProtocol,
-      providerConfig: input.providerConfig,
-      messages: input.messages,
-      temperature: input.temperature,
-      reasoning: input.reasoning,
-      reasoningEffort: input.reasoningEffort,
-      maxRetries: input.maxRetries,
-    }),
-    languageModel: {
-      create: createOpenAiSdkLanguageModel,
-    },
-    streamLlm: (input) => runOpenAiCompatibleLlmStream({
-      ...input,
-      gatewayRoute: input.providerConfig.gatewayRoute || 'openai-compat',
-    }),
-  },
-  {
-    providerKey: 'openai',
-    languageModel: {
-      create: createOpenAiLanguageModel,
-    },
-  },
-  {
-    providerKey: 'openrouter',
-    completeLlm: (input) => runOpenRouterLlmCompletion({
-      modelId: input.selection.modelId,
-      providerConfig: input.providerConfig,
-      messages: input.messages,
-      temperature: input.temperature,
-      reasoning: input.reasoning,
-      reasoningEffort: input.reasoningEffort,
-      maxRetries: input.maxRetries,
-    }),
-    languageModel: {
-      create: createOpenAiSdkLanguageModel,
-    },
-    streamLlm: runOpenRouterLlmStream,
-  },
-  {
-    providerKey: 'siliconflow',
-    image: {
-      describe: (selection) => siliconFlowMediaAdapter.describeVariant('image', selection),
-      execute: executeSiliconFlowImageGeneration,
-    },
-    video: {
-      describe: (selection) => siliconFlowMediaAdapter.describeVariant('video', selection),
-      execute: executeSiliconFlowVideoGeneration,
-    },
-    audio: {
-      describe: (selection) => siliconFlowMediaAdapter.describeVariant('audio', selection),
-      execute: executeSiliconFlowAudioGeneration,
-    },
-    completeLlm: (input) => runSiliconFlowLlmCompletion({
-      modelId: input.selection.modelId,
-      messages: input.messages,
-      apiKey: input.providerConfig.apiKey,
-      baseUrl: input.providerConfig.baseUrl,
-      temperature: input.temperature,
-    }),
-    languageModel: {
-      create: createOpenAiSdkLanguageModel,
-    },
-    streamLlm: runSiliconFlowLlmStream,
-    completeVision: runSiliconFlowVisionCompletion,
-  },
-  {
-    providerKey: 'vidu',
-    video: {
-      describe: (selection) => viduMediaAdapter.describeVariant('video', selection),
-      execute: executeViduVideoGeneration,
-    },
-    lipsync: {
-      execute: (input) => submitViduLipSync(input.params, {
-        userId: input.userId,
-        providerId: input.selection.provider,
-        modelId: input.selection.modelId,
-        modelKey: input.selection.modelKey,
-      }),
-    },
-  },
+const runtimeProviderRegistry = new AiRegistry<AiProviderAdapter>([
+  anthropicAdapter,
+  arkAdapter,
+  bailianAdapter,
+  falAdapter,
+  googleAdapter,
+  geminiCompatibleAdapter,
+  minimaxAdapter,
+  openAiCompatibleAdapter,
+  openAiAdapter,
+  openRouterAdapter,
+  siliconFlowAdapter,
+  viduAdapter,
 ])
 
 const asyncTaskProviderRegistry: AsyncTaskProviderRegistration[] = [
@@ -644,12 +365,12 @@ export async function testRegisteredLlmConnection(payload: LlmConnectionTestPayl
   }
 }
 
-export function resolveRegisteredAiProvider(providerId: string): RegisteredAiProvider {
+export function resolveAiProviderAdapter(providerId: string): AiProviderAdapter {
   return runtimeProviderRegistry.getAdapterByProviderId(providerId)
 }
 
 export function createRegisteredLanguageModel(input: AiProviderLanguageModelContext) {
-  const languageModelProvider = resolveRegisteredAiProvider(input.selection.provider).languageModel
+  const languageModelProvider = resolveAiProviderAdapter(input.selection.provider).languageModel
   if (!languageModelProvider) {
     throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${input.selection.provider}:languageModel`)
   }
@@ -661,7 +382,7 @@ export function resolveRegisteredVoiceLineBinding(params: {
   character?: CharacterVoiceFields | null
   speakerVoice?: SpeakerVoiceEntry | null
 }) {
-  const voiceLineProvider = resolveRegisteredAiProvider(params.providerId).voiceLine
+  const voiceLineProvider = resolveAiProviderAdapter(params.providerId).voiceLine
   if (!voiceLineProvider) return null
   return voiceLineProvider.resolveBinding({
     character: params.character,

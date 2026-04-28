@@ -1,14 +1,17 @@
-import { describeMediaVariantBase, type DescribeOnlyMediaAdapter } from '@/lib/ai-providers/shared/media-adapter'
+import type { AiProviderAdapter } from '@/lib/ai-providers/runtime-types'
+import { describeMediaVariantBase } from '@/lib/ai-providers/shared/media-adapter'
 import { resolveMinimaxOptionSchema } from './models'
+import { executeMinimaxVideoGeneration } from './video'
 
-export const minimaxMediaAdapter: DescribeOnlyMediaAdapter = {
+export const minimaxAdapter: AiProviderAdapter = {
   providerKey: 'minimax',
-  describeVariant(modality, selection) {
-    return describeMediaVariantBase({
-      modality,
+  video: {
+    describe: (selection) => describeMediaVariantBase({
+      modality: 'video',
       selection,
-      executionMode: modality === 'video' ? 'async' : 'sync',
-      optionSchema: resolveMinimaxOptionSchema(modality, selection.modelId),
-    })
+      executionMode: 'async',
+      optionSchema: resolveMinimaxOptionSchema('video', selection.modelId),
+    }),
+    execute: executeMinimaxVideoGeneration,
   },
 }
