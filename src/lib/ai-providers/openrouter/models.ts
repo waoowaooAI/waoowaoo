@@ -1,3 +1,6 @@
+import type { AiOptionSchema } from '@/lib/ai-registry/types'
+import { buildMediaOptionSchema, type MediaModality } from '@/lib/ai-providers/shared/option-schema'
+
 export const OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES = [
   {
     apiType: 'text',
@@ -68,3 +71,7 @@ export const OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   { modelType: 'llm', provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4.5', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
   { modelType: 'llm', provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
 ] as const
+
+export function resolveOpenRouterOptionSchema(modality: MediaModality): AiOptionSchema {
+  return buildMediaOptionSchema(modality)
+}

@@ -19,6 +19,7 @@ import { OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENROUTER_BUILTIN_PRICI
 import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES, SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
+import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
 
 function mediaSelection(input: {
   provider: string
@@ -45,9 +46,13 @@ function expectValidOptions(
   expect(() => validateAiOptions({ schema, options, context })).not.toThrow()
 }
 
+function isRecord(value: unknown): value is { [key: string]: unknown } {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
 describe('provider models truth', () => {
   it('ensures capability/pricing catalog entries are well-formed', () => {
-    const capabilityEntries = [
+    const capabilityEntries: unknown[] = [
       ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
@@ -55,60 +60,86 @@ describe('provider models truth', () => {
       ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
     ]
 
     const modelTypes = new Set(['llm', 'image', 'video', 'audio', 'lipsync'])
 
     for (const entry of capabilityEntries) {
-      expect(modelTypes.has(entry.modelType)).toBe(true)
+      if (!isRecord(entry)) {
+        throw new Error('provider-models-truth: capability entry must be an object')
+      }
+
+      expect(modelTypes.has(entry.modelType as string)).toBe(true)
       expect(typeof entry.provider).toBe('string')
-      expect(entry.provider.trim().length).toBeGreaterThan(0)
+      expect((entry.provider as string).trim().length).toBeGreaterThan(0)
       expect(typeof entry.modelId).toBe('string')
-      expect(entry.modelId.trim().length).toBeGreaterThan(0)
+      expect((entry.modelId as string).trim().length).toBeGreaterThan(0)
 
       if (entry.capabilities === undefined) continue
       expect(typeof entry.capabilities).toBe('object')
       expect(Array.isArray(entry.capabilities)).toBe(false)
     }
 
-    const pricingEntries = [
+    const pricingEntries: unknown[] = [
       ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...VIDU_BUILTIN_PRICING_CATALOG_ENTRIES,
     ]
 
     const apiTypes = new Set(['text', 'image', 'video', 'voice', 'voice-design', 'lip-sync'])
 
     for (const entry of pricingEntries) {
-      expect(apiTypes.has(entry.apiType)).toBe(true)
+      if (!isRecord(entry)) {
+        throw new Error('provider-models-truth: pricing entry must be an object')
+      }
+
+      expect(apiTypes.has(entry.apiType as string)).toBe(true)
       expect(typeof entry.provider).toBe('string')
-      expect(entry.provider.trim().length).toBeGreaterThan(0)
+      expect((entry.provider as string).trim().length).toBeGreaterThan(0)
       expect(typeof entry.modelId).toBe('string')
-      expect(entry.modelId.trim().length).toBeGreaterThan(0)
+      expect((entry.modelId as string).trim().length).toBeGreaterThan(0)
 
-      expect(entry.pricing).toBeTruthy()
-      expect(typeof entry.pricing).toBe('object')
-      expect(Array.isArray(entry.pricing)).toBe(false)
+      const pricing = entry.pricing
+      expect(pricing).toBeTruthy()
+      expect(typeof pricing).toBe('object')
+      expect(Array.isArray(pricing)).toBe(false)
 
-      if (entry.pricing.mode === 'flat') {
-        expect(typeof entry.pricing.flatAmount).toBe('number')
-        expect(Number.isFinite(entry.pricing.flatAmount)).toBe(true)
-        expect(entry.pricing.flatAmount).toBeGreaterThanOrEqual(0)
+      if (isRecord(pricing) && pricing.mode === 'flat') {
+        expect(typeof pricing.flatAmount).toBe('number')
+        expect(Number.isFinite(pricing.flatAmount)).toBe(true)
+        expect(pricing.flatAmount).toBeGreaterThanOrEqual(0)
         continue
       }
 
-      expect(entry.pricing.mode).toBe('capability')
-      expect(Array.isArray(entry.pricing.tiers)).toBe(true)
-      expect(entry.pricing.tiers.length).toBeGreaterThan(0)
-      for (const tier of entry.pricing.tiers) {
+      if (!isRecord(pricing)) {
+        throw new Error('provider-models-truth: pricing.pricing must be an object')
+      }
+
+      expect(pricing.mode).toBe('capability')
+      const tiers = pricing.tiers
+      expect(Array.isArray(tiers)).toBe(true)
+      if (!Array.isArray(tiers)) {
+        throw new Error('provider-models-truth: pricing tiers must be an array')
+      }
+      expect(tiers.length).toBeGreaterThan(0)
+      for (const tier of tiers) {
+        if (!isRecord(tier)) {
+          throw new Error('provider-models-truth: pricing tier must be an object')
+        }
         expect(tier.when).toBeTruthy()
         expect(typeof tier.when).toBe('object')
         expect(Array.isArray(tier.when)).toBe(false)
+        if (!isRecord(tier.when)) {
+          throw new Error('provider-models-truth: pricing tier.when must be an object')
+        }
         expect(Object.keys(tier.when).length).toBeGreaterThan(0)
         expect(typeof tier.amount).toBe('number')
         expect(Number.isFinite(tier.amount)).toBe(true)
@@ -139,6 +170,37 @@ describe('provider models truth', () => {
     expect(OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.pricing.tiers?.[1]?.amount).toBe(72)
     expect(SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(VIDU_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'vidu-lipsync')?.pricing.flatAmount).toBe(0.5)
+  })
+
+  it('wires capability contracts into ai-registry descriptors', () => {
+    const openAiImageContracts = resolveAiContractsForDescriptor({
+      modality: 'image',
+      modelKey: 'openai-compatible:oa-1::gpt-image-1',
+      providerId: 'openai-compatible:oa-1',
+      modelId: 'gpt-image-1',
+    })
+    const openAiCaps = openAiImageContracts.capabilities
+    if (!isRecord(openAiCaps.image)) {
+      throw new Error('provider-models-truth: openai-compatible image capabilities missing')
+    }
+    const openAiImageCaps = openAiCaps.image
+    const resolutionOptions = openAiImageCaps.resolutionOptions
+    if (!Array.isArray(resolutionOptions)) {
+      throw new Error('provider-models-truth: openai-compatible image resolutionOptions missing')
+    }
+    expect(resolutionOptions).toContain('1024x1024')
+
+    const openRouterLlmContracts = resolveAiContractsForDescriptor({
+      modality: 'llm',
+      modelKey: 'openrouter::google/gemini-3.1-pro-preview',
+      providerId: 'openrouter',
+      modelId: 'google/gemini-3.1-pro-preview',
+    })
+    const openRouterCaps = openRouterLlmContracts.capabilities
+    if (!isRecord(openRouterCaps.llm)) {
+      throw new Error('provider-models-truth: openrouter llm capabilities missing')
+    }
+    expect(openRouterCaps.llm.reasoningEffortOptions).toEqual(['low', 'medium', 'high'])
   })
 
   it('builds option schemas from provider models data', () => {

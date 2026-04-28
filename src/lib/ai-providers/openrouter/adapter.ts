@@ -1,6 +1,6 @@
 import { describeMediaVariantBase } from '@/lib/ai-providers/adapters/shared'
 import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/adapters/types'
-import { buildMediaOptionSchema } from '@/lib/ai-providers/shared/option-schema'
+import { resolveOpenRouterOptionSchema } from './models'
 
 export const openRouterMediaAdapter: DescribeOnlyMediaAdapter = {
   providerKey: 'openrouter',
@@ -9,7 +9,7 @@ export const openRouterMediaAdapter: DescribeOnlyMediaAdapter = {
       modality,
       selection,
       executionMode: modality === 'video' ? 'async' : 'sync',
-      optionSchema: buildMediaOptionSchema(modality),
+      optionSchema: resolveOpenRouterOptionSchema(modality),
     })
   },
 }

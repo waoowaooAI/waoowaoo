@@ -1,6 +1,6 @@
 import { describeMediaVariantBase } from '@/lib/ai-providers/adapters/shared'
 import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/adapters/types'
-import { buildMediaOptionSchema } from '@/lib/ai-providers/shared/option-schema'
+import { resolveSiliconFlowOptionSchema } from './models'
 
 export const siliconFlowMediaAdapter: DescribeOnlyMediaAdapter = {
   providerKey: 'siliconflow',
@@ -9,7 +9,7 @@ export const siliconFlowMediaAdapter: DescribeOnlyMediaAdapter = {
       modality,
       selection,
       executionMode: modality === 'video' ? 'async' : 'sync',
-      optionSchema: buildMediaOptionSchema(modality),
+      optionSchema: resolveSiliconFlowOptionSchema(modality),
     })
   },
 }

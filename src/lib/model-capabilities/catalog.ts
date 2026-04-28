@@ -9,6 +9,9 @@ import { BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/b
 import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
 import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
 import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
+import { OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/openai-compatible/models'
+import { OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
+import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 
 export interface BuiltinCapabilityCatalogEntry {
@@ -118,6 +121,9 @@ const BUILTIN_CATALOG_ENTRIES: readonly unknown[] = [
   ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
 ]
 
