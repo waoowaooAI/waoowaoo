@@ -20,7 +20,11 @@ import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES, SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
-import { registerBuiltinCapabilityCatalogEntries, registerBuiltinPricingCatalogEntries } from '@/lib/ai-registry/catalog'
+import {
+  registerBuiltinCapabilityCatalogEntries,
+  registerBuiltinPricingCatalogEntries,
+  resolveBuiltinPricing,
+} from '@/lib/ai-registry/catalog'
 
 registerBuiltinCapabilityCatalogEntries([
   ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
@@ -195,6 +199,23 @@ describe('provider models truth', () => {
     expect(OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.pricing.tiers?.[1]?.amount).toBe(72)
     expect(SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(VIDU_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'vidu-lipsync')?.pricing.flatAmount).toBe(0.5)
+  })
+
+  it('covers openai-compatible and siliconflow model catalogs explicitly', () => {
+    expect(OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gpt-image-1')?.provider).toBe('openai-compatible')
+    expect(SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES).toHaveLength(0)
+
+    const openAiImagePricing = resolveBuiltinPricing({
+      apiType: 'image',
+      model: 'openai-compatible:oa-1::gpt-image-1',
+    })
+    expect(openAiImagePricing.status).toBe('not_configured')
+
+    const siliconflowImagePricing = resolveBuiltinPricing({
+      apiType: 'image',
+      model: 'siliconflow::any',
+    })
+    expect(siliconflowImagePricing.status).toBe('not_configured')
   })
 
   it('wires capability contracts into ai-registry descriptors', () => {

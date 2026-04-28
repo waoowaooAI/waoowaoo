@@ -19,7 +19,7 @@
 - [x] `ai-providers/adapters/models/*.ts` 数据合并
 - [x] `ai-providers/adapters/media-option-schema.ts` 各 provider override 合并
 - [x] guard：`no-cross-provider-model-data.mjs`
-- [x] 单测：每 provider `models.ts` 三件套覆盖
+- [x] 单测：每 provider `models.ts` 三件套覆盖（含 `openai-compatible` / `siliconflow`）
 
 ### Step 2 — `AiProviderAdapter` 抽象升级 + 拆 switch
 
