@@ -12,9 +12,9 @@ vi.mock('@/lib/ai-providers/openai-compatible/errors', () => ({
   resolveOpenAICompatClientConfig: resolveOpenAICompatClientConfigMock,
 }))
 
-import { probeModelLlmProtocol } from '@/lib/user-api/model-llm-protocol-probe'
+import { probeModelLlmProtocol } from '@/lib/ai-exec/llm-protocol-probe'
 
-describe('user-api model llm protocol probe', () => {
+describe('ai-exec model llm protocol probe', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })

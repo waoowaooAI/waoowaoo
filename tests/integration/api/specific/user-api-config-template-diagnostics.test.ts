@@ -14,11 +14,11 @@ vi.mock('@/lib/user-api/model-template', () => ({
   validateOpenAICompatMediaTemplate: validateTemplateMock,
 }))
 
-vi.mock('@/lib/user-api/model-template/probe', () => ({
+vi.mock('@/lib/ai-exec/media-template-probe', () => ({
   probeMediaTemplate: probeMediaTemplateMock,
 }))
 
-vi.mock('@/lib/user-api/model-llm-protocol-probe', () => ({
+vi.mock('@/lib/ai-exec/llm-protocol-probe', () => ({
   probeModelLlmProtocol: vi.fn(),
 }))
 
