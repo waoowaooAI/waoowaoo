@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { createHash } from 'crypto'
 import { ApiError } from '@/lib/api-errors'
 import { TASK_TYPE } from '@/lib/task/types'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-exec/voice-design'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { submitOperationTask } from '@/lib/operations/submit-operation-task'
 

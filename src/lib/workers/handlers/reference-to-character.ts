@@ -2,8 +2,7 @@ import sharp from 'sharp'
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { generateImage } from '@/lib/ai-exec/engine'
-import { queryFalStatus } from '@/lib/ai-providers/fal/queue'
-import { fetchWithTimeoutAndRetry } from '@/lib/ai-providers/ark/image'
+import { fetchGeneratedMediaWithRetry, queryFalGeneratedMediaStatus } from '@/lib/ai-exec/media-result'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { executeAiVisionStep } from '@/lib/ai-exec/engine'
 import { getUserModelConfig } from '@/lib/config-service'
@@ -79,7 +78,7 @@ async function generateReferenceImage(params: {
       for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt += 1) {
         await assertTaskActive(job, `reference_to_character_poll_${imageIndex + 1}_${attempt + 1}`)
         await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
-        const status = await queryFalStatus(endpoint, requestId, falApiKey)
+        const status = await queryFalGeneratedMediaStatus({ endpoint, requestId, apiKey: falApiKey })
         if (status.completed && status.resultUrl) {
           finalImageUrl = status.resultUrl
           break
@@ -94,7 +93,7 @@ async function generateReferenceImage(params: {
       return null
     }
 
-    const imgRes = await fetchWithTimeoutAndRetry(finalImageUrl, {
+    const imgRes = await fetchGeneratedMediaWithRetry(finalImageUrl, {
       logPrefix: `[reference-to-character:${imageIndex + 1}]`,
     })
     const buffer = Buffer.from(await imgRes.arrayBuffer())

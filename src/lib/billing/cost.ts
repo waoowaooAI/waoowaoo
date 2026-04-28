@@ -15,11 +15,14 @@ import { findBuiltinCapabilities, listBuiltinCapabilityCatalog, validateCapabili
 import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
 import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
 import { type PricingApiType } from '@/lib/ai-registry/pricing-catalog'
-import { resolveVideoTokenPricingContract } from '@/lib/ai-providers'
-import type {
-  VideoTokenPricingContract,
-  VideoTokenPricingFailure,
-} from '@/lib/ai-providers/shared/video-token-pricing'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import {
+  resolveAiVideoTokenPricingContract,
+  type VideoTokenPricingContract,
+  type VideoTokenPricingFailure,
+} from '@/lib/ai-exec/video-token-pricing'
+
+ensureAiCatalogsRegistered()
 
 export const USD_TO_CNY = 7.2
 
@@ -447,7 +450,7 @@ export function calcVideo(
   customPricing?: ModelCustomPricing | null,
 ): number {
   const selections = normalizeCapabilitySelections(metadata)
-  const tokenPricing = resolveVideoTokenPricingContract(model)
+  const tokenPricing = resolveAiVideoTokenPricingContract(model)
   tokenPricing?.applyDefaultSelections(selections)
   const capabilitySelections = { ...selections }
   delete capabilitySelections.aspectRatio
@@ -598,7 +601,7 @@ export function calcVideoByTokens(
   totalTokens: number,
   metadata?: BillingMetadata,
 ): number {
-  const tokenPricing = resolveVideoTokenPricingContract(model)
+  const tokenPricing = resolveAiVideoTokenPricingContract(model)
   if (!tokenPricing) {
     throw new BillingOperationError(
       'BILLING_UNKNOWN_VIDEO_CAPABILITY_COMBINATION',

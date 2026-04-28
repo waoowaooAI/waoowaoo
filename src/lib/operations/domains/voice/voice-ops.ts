@@ -11,13 +11,13 @@ import { estimateVoiceLineMaxSeconds } from '@/lib/voice/generate-voice-line'
 import { resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-exec/voice-design'
 import {
-  hasRegisteredVoiceLineBinding,
+  hasAiVoiceLineBinding,
   parseSpeakerVoiceMap,
   type CharacterVoiceFields,
   type SpeakerVoiceMap,
-} from '@/lib/ai-providers'
+} from '@/lib/ai-exec/voice-line'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
 import type {
   TaskBatchSubmittedPartData,
@@ -68,7 +68,7 @@ function hasSpeakerVoiceForProvider(
 ): boolean {
   const character = matchCharacterBySpeaker(speaker, characters)
   const speakerVoice = speakerVoices[speaker]
-  return hasRegisteredVoiceLineBinding({
+  return hasAiVoiceLineBinding({
     providerId: providerKey,
     character,
     speakerVoice,

@@ -3,7 +3,7 @@ import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { getUserModelConfig } from '@/lib/config-service'
 import { resolveLlmRuntimeModel } from '@/lib/ai-exec/llm-runtime'
-import { createRegisteredLanguageModel } from '@/lib/ai-providers'
+import { createAiLanguageModel } from '@/lib/ai-exec/language-model'
 import { AssistantPlatformError } from './errors'
 import { getAssistantSkill } from './registry'
 import type {
@@ -56,7 +56,7 @@ async function resolveAssistantLanguageModel(input: {
       providerKey,
       modelId: selection.modelId,
     },
-    languageModel: createRegisteredLanguageModel({
+    languageModel: createAiLanguageModel({
       providerKey,
       selection,
       providerConfig,

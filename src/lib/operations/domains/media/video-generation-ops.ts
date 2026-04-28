@@ -11,7 +11,8 @@ import { createMutationBatch } from '@/lib/mutation-batch/service'
 import { hasPanelVideoOutput } from '@/lib/task/has-output'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { CapabilityValue } from '@/lib/ai-registry/types'
-import { resolveVideoTokenPricingContract } from '@/lib/ai-providers'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import { resolveAiVideoTokenPricingContract } from '@/lib/ai-exec/video-token-pricing'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
 import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
@@ -62,7 +63,7 @@ function resolveVideoGenerationMode(payload: unknown): 'normal' | 'firstlastfram
 }
 
 function usesVideoTokenPricing(modelKey: string): boolean {
-  return !!resolveVideoTokenPricingContract(modelKey)
+  return !!resolveAiVideoTokenPricingContract(modelKey)
 }
 
 function resolveVideoModelKeyFromPayload(payload: UnknownObject): string | null {
@@ -479,3 +480,4 @@ export function createVideoGenerationOperations(): ProjectAgentOperationRegistry
     }),
   }
 }
+ensureAiCatalogsRegistered()

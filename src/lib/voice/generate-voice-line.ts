@@ -1,9 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { executeVoiceLineGeneration } from '@/lib/ai-exec/engine'
-import { parseSpeakerVoiceMap, resolveAiProviderAdapter } from '@/lib/ai-providers'
+import { parseSpeakerVoiceMap, resolveAiVoiceLineBindingOrThrow } from '@/lib/ai-exec/voice-line'
 import { getSignedUrl, uploadObject } from '@/lib/storage'
-import type { CharacterVoiceFields, SpeakerVoiceMap } from '@/lib/ai-providers/shared/voice-line-binding'
+import type { CharacterVoiceFields, SpeakerVoiceMap } from '@/lib/ai-registry/voice-line'
 
 type CheckCancelled = () => Promise<void>
 type CharacterVoiceProfile = CharacterVoiceFields & { name: string }
@@ -73,17 +73,11 @@ export async function generateVoiceLine(params: {
   }
 
   const audioSelection = await resolveModelSelectionOrSingle(params.userId, params.audioModel, 'audio')
-  const voiceLineProvider = resolveAiProviderAdapter(audioSelection.provider).voiceLine
-  if (!voiceLineProvider) {
-    throw new Error(`AUDIO_PROVIDER_UNSUPPORTED: ${audioSelection.provider}`)
-  }
-  const voiceBinding = voiceLineProvider.resolveBinding({
+  const voiceBinding = resolveAiVoiceLineBindingOrThrow({
+    providerId: audioSelection.provider,
     character,
     speakerVoice,
   })
-  if (!voiceBinding) {
-    throw voiceLineProvider.createMissingBindingError({ character, speakerVoice })
-  }
 
   const generated = await executeVoiceLineGeneration({
     userId: params.userId,

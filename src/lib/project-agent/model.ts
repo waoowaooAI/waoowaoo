@@ -2,7 +2,7 @@ import type { LanguageModel } from 'ai'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { resolveLlmRuntimeModel } from '@/lib/ai-exec/llm-runtime'
-import { createRegisteredLanguageModel } from '@/lib/ai-providers'
+import { createAiLanguageModel } from '@/lib/ai-exec/language-model'
 
 export async function resolveProjectAgentLanguageModel(input: {
   userId: string
@@ -14,7 +14,7 @@ export async function resolveProjectAgentLanguageModel(input: {
   const providerConfig = await getProviderConfig(input.userId, selection.provider)
   const providerKey = getProviderKey(selection.provider)
   return {
-    languageModel: createRegisteredLanguageModel({
+    languageModel: createAiLanguageModel({
       providerKey,
       selection,
       providerConfig,

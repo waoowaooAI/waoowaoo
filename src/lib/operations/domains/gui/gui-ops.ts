@@ -26,13 +26,13 @@ import { revertAssetRender } from '@/lib/assets/services/asset-actions'
 import {
   collectBailianManagedVoiceIds,
   cleanupUnreferencedBailianVoices,
-} from '@/lib/ai-providers/bailian'
+} from '@/lib/ai-exec/voice-cleanup'
 import {
   parseSpeakerVoiceMap,
   type SpeakerVoiceEntry,
   type SpeakerVoiceMap,
-} from '@/lib/ai-providers'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
+} from '@/lib/ai-exec/voice-line'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-exec/voice-design'
 import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
