@@ -40,7 +40,7 @@ import {
 } from '@/lib/ai-providers/siliconflow'
 import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
 import { executeViduVideoGeneration } from '@/lib/ai-providers/vidu/video'
-import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/adapters/types'
+import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/shared/media-adapter'
 import type { RegisteredAiProvider } from '@/lib/ai-providers/runtime-types'
 
 const mediaAdapterRegistry = new AiRegistry<DescribeOnlyMediaAdapter>([
