@@ -98,7 +98,7 @@ vi.mock('@/lib/ai-providers/siliconflow', async (importOriginal) => {
   }
 })
 
-vi.mock('@/lib/llm/runtime-shared', () => ({
+vi.mock('@/lib/ai-exec/llm-runtime', () => ({
   completionUsageSummary: vi.fn(() => ({ promptTokens: 2, completionTokens: 2 })),
   llmLogger: {
     info: vi.fn(),

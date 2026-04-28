@@ -7,8 +7,10 @@ import type {
   AiStepExecutionResult,
   AiVisionStepExecutionInput,
   AiVisionStepExecutionResult,
+  ChatCompletionOptions,
+  ChatCompletionStreamCallbacks,
+  ChatMessage,
 } from '@/lib/ai-registry/types'
-import type { ChatCompletionOptions, ChatCompletionStreamCallbacks, ChatMessage } from '@/lib/llm/types'
 import { resolveModelSelection } from '@/lib/api-config'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveRegisteredAiProvider } from '@/lib/ai-providers'

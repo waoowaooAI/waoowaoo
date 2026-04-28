@@ -41,7 +41,7 @@
 - [x] `model-config-contract.ts` 拆分到 `ai-registry/{types,selection}.ts` + 各 `models.ts`
 - [x] `api-config.ts` 选择/解析部分 → `ai-registry/selection.ts`
 - [x] `ai-runtime/**` 折叠进 `ai-exec/engine.ts`，目录删除
-- [ ] `src/lib/llm/**` 合并到 `ai-exec/llm-helpers.ts`，目录删除
+- [x] `src/lib/llm/**` 合并到 `ai-exec/llm-helpers.ts`，目录删除
 - [ ] `ai-providers/adapters/**` 中间层物理删除
 - [ ] `ai-providers/llm/**` 删除（数据进各 `<x>/llm.ts`）
 - [ ] `ai-providers/official/model-registry.ts` 删除

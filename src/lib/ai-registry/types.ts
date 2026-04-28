@@ -1,4 +1,6 @@
 import type OpenAI from 'openai'
+import type { InternalLLMStreamStepMeta } from '@/lib/llm-observe/internal-stream-context'
+import type { LLMStreamKind } from '@/lib/llm-observe/types'
 
 export type AiModality = 'llm' | 'vision' | 'image' | 'video' | 'audio' | 'lipsync'
 export type AiExecutionMode = 'sync' | 'async' | 'stream' | 'batch'
@@ -61,6 +63,40 @@ export type AiLlmMessage = {
   role: 'user' | 'assistant' | 'system'
   content: string
 }
+
+export interface ChatCompletionOptions {
+  temperature?: number
+  reasoning?: boolean
+  reasoningEffort?: 'minimal' | 'low' | 'medium' | 'high'
+  maxRetries?: number
+  projectId?: string
+  action?: string
+  streamStepId?: string
+  streamStepAttempt?: number
+  streamStepTitle?: string
+  streamStepIndex?: number
+  streamStepTotal?: number
+  __skipAutoStream?: boolean
+}
+
+export interface ChatCompletionStreamCallbacks {
+  onStage?: (stage: {
+    stage: 'submit' | 'streaming' | 'fallback' | 'completed'
+    provider?: string | null
+    step?: InternalLLMStreamStepMeta
+  }) => void
+  onChunk?: (chunk: {
+    kind: LLMStreamKind
+    delta: string
+    seq: number
+    lane?: string | null
+    step?: InternalLLMStreamStepMeta
+  }) => void
+  onComplete?: (text: string, step?: InternalLLMStreamStepMeta) => void
+  onError?: (error: unknown, step?: InternalLLMStreamStepMeta) => void
+}
+
+export type ChatMessage = { role: 'user' | 'assistant' | 'system'; content: string }
 
 export type AiRuntimeErrorCode =
   | 'NETWORK_ERROR'

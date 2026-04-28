@@ -3,11 +3,11 @@ import {
   getProviderConfig,
 } from '@/lib/api-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
+import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
-import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/llm/types'
-import { emitChunkedText } from '@/lib/llm/stream-helpers'
-import { getCompletionParts } from '@/lib/llm/completion-parts'
+import { emitChunkedText } from '@/lib/ai-providers/shared/llm-support'
 import { getInternalBaseUrl } from '@/lib/env'
+import { getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 import {
   _ulogError,
   _ulogInfo,
@@ -17,7 +17,7 @@ import {
   recordCompletionUsage,
   resolveLlmRuntimeModel,
   completionUsageSummary,
-} from '@/lib/llm/runtime-shared'
+} from '@/lib/ai-exec/llm-runtime'
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
 import { describeLlmVariantBase } from '@/lib/ai-providers/adapters/llm/descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'

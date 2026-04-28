@@ -4,7 +4,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { getProviderConfig } from '@/lib/api-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { getUserModelConfig } from '@/lib/config-service'
-import { resolveLlmRuntimeModel } from '@/lib/llm/runtime-shared'
+import { resolveLlmRuntimeModel } from '@/lib/ai-exec/llm-runtime'
 import { AssistantPlatformError } from './errors'
 import { getAssistantSkill } from './registry'
 import type {

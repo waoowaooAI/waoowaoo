@@ -1,7 +1,8 @@
 import OpenAI from 'openai'
-import { createScopedLogger } from '@/lib/logging/core'
-import { resolveModelSelection } from '../api-config'
+
 import { recordTextUsage as recordBillingTextUsage } from '@/lib/billing/runtime-usage'
+import { resolveModelSelection } from '@/lib/api-config'
+import { createScopedLogger } from '@/lib/logging/core'
 
 export const llmLogger = createScopedLogger({
   module: 'llm.client',
@@ -103,7 +104,6 @@ export function logLlmRawOutput(params: {
       output: {
         reasoning: params.reasoning,
         text: params.text,
-        // 空响应时显式标记，方便 grep
         empty: isEmpty || undefined,
       },
       usage: params.usage || null,
@@ -120,7 +120,10 @@ export function isRetryableError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
   const errorRecord = error as { code?: unknown; status?: unknown }
   if (errorRecord.code === 'ECONNRESET' || errorRecord.code === 'ETIMEDOUT') return true
-  if (typeof errorRecord.status === 'number' && (errorRecord.status === 429 || (errorRecord.status >= 500 && errorRecord.status < 600))) {
+  if (
+    typeof errorRecord.status === 'number'
+    && (errorRecord.status === 429 || (errorRecord.status >= 500 && errorRecord.status < 600))
+  ) {
     return true
   }
   return false

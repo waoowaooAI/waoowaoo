@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isLikelyOpenAIReasoningModel,
   shouldUseOpenAIReasoningProviderOptions,
-} from '@/lib/llm/reasoning-capability'
+} from '@/lib/ai-providers/shared/llm-support'
 
 describe('llm/reasoning-capability', () => {
   it('identifies likely OpenAI reasoning model ids', () => {

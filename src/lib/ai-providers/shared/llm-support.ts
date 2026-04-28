@@ -216,6 +216,28 @@ export function emitStreamChunk(
   callbacks?.onChunk?.({ ...chunk, ...(step ? { step } : {}) })
 }
 
+export function emitChunkedText(
+  text: string,
+  callbacks?: ProviderChatCompletionStreamCallbacks,
+  kind: LLMStreamKind = 'text',
+  seqStart = 1,
+  step?: InternalLLMStreamStepMeta,
+) {
+  if (!text) return seqStart
+  let seq = seqStart
+  const chunkSize = 320
+  for (let i = 0; i < text.length; i += chunkSize) {
+    emitStreamChunk(callbacks, step, {
+      kind,
+      delta: text.slice(i, i + chunkSize),
+      seq,
+      lane: 'main',
+    })
+    seq += 1
+  }
+  return seq
+}
+
 export class StreamChunkTimeoutError extends Error {
   constructor(timeoutMs: number) {
     super(`LLM_STREAM_TIMEOUT: No stream chunk received within ${Math.round(timeoutMs / 1000)}s`)
@@ -247,15 +269,21 @@ function normalizeModelId(modelId: string): string {
   return modelId.trim().toLowerCase()
 }
 
+export function isLikelyOpenAIReasoningModel(modelId: string): boolean {
+  const normalized = normalizeModelId(modelId)
+  if (!normalized) return false
+  return normalized.startsWith('o1')
+    || normalized.startsWith('o3')
+    || normalized.startsWith('o4')
+    || normalized.startsWith('gpt-5')
+}
+
 export function shouldUseOpenAIReasoningProviderOptions(input: {
   providerKey: string
   providerApiMode?: 'gemini-sdk' | 'openai-official'
   modelId: string
 }): boolean {
-  const normalized = normalizeModelId(input.modelId)
-  if (!(normalized.startsWith('o1') || normalized.startsWith('o3') || normalized.startsWith('o4') || normalized.startsWith('gpt-5'))) {
-    return false
-  }
+  if (!isLikelyOpenAIReasoningModel(input.modelId)) return false
   const normalizedProviderKey = input.providerKey.trim().toLowerCase()
   if (normalizedProviderKey === 'openai') return true
   if (normalizedProviderKey === 'openai-compatible' && input.providerApiMode === 'openai-official') {

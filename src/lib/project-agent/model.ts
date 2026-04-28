@@ -3,7 +3,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { getProviderConfig } from '@/lib/api-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
-import { resolveLlmRuntimeModel } from '@/lib/llm/runtime-shared'
+import { resolveLlmRuntimeModel } from '@/lib/ai-exec/llm-runtime'
 
 export async function resolveProjectAgentLanguageModel(input: {
   userId: string

@@ -88,7 +88,7 @@ vi.mock('@/lib/ai-providers/siliconflow', async (importOriginal) => {
   }
 })
 
-vi.mock('@/lib/llm/runtime-shared', () => ({
+vi.mock('@/lib/ai-exec/llm-runtime', () => ({
   _ulogError: vi.fn(),
   _ulogWarn: vi.fn(),
   completionUsageSummary: vi.fn(() => ({ promptTokens: 1, completionTokens: 1 })),

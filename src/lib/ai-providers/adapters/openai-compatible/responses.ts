@@ -1,5 +1,5 @@
 import { buildOpenAIChatCompletion } from '@/lib/ai-providers/llm/openai-compat'
-import { buildReasoningAwareContent } from '@/lib/llm/utils'
+import { buildReasoningAwareContent } from '@/lib/ai-providers/shared/llm-support'
 import type { OpenAICompatChatRequest } from './types'
 import { resolveOpenAICompatClientConfig } from './common'
 

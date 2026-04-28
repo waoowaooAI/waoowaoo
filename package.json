@@ -113,8 +113,7 @@
     "backup:archive-legacy-media": "tsx scripts/media-archive-legacy-refs.ts",
     "backup:unreferenced-media-index": "tsx scripts/media-build-unreferenced-index.ts",
     "lint": "eslint",
-    "clean": "rimraf .next",
-    "check:no-legacy-ai-entry-imports": "node scripts/guards/no-legacy-ai-entry-imports.mjs"
+    "clean": "rimraf .next"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.22",

@@ -1,6 +1,6 @@
 {
   "note": "由 no-legacy-ai-entry-imports.mjs --update-snapshot 生成；只可缩短。",
-  "generatedAt": "2026-04-28T07:46:32.558Z",
+  "generatedAt": "2026-04-28T08:31:57.880Z",
   "files": [
     "src/app/[locale]/profile/components/api-config/types.ts",
     "src/components/ui/config-modals/ConfigEditModal.tsx",
@@ -21,9 +21,7 @@
     "src/lib/ai-providers/adapters/media/generators/minimax.ts",
     "src/lib/ai-providers/adapters/media/generators/video/google.ts",
     "src/lib/ai-providers/adapters/media/generators/vidu.ts",
-    "src/lib/ai-providers/adapters/openai-compatible/chat.ts",
     "src/lib/ai-providers/adapters/openai-compatible/common.ts",
-    "src/lib/ai-providers/adapters/openai-compatible/responses.ts",
     "src/lib/ai-providers/bailian/audio.ts",
     "src/lib/ai-providers/bailian/video.ts",
     "src/lib/ai-providers/bailian/voice-cleanup.ts",
@@ -81,8 +79,6 @@
     "tests/unit/llm/chat-completion-openai-compatible-protocol.test.ts",
     "tests/unit/llm/chat-stream-official-provider.test.ts",
     "tests/unit/llm/chat-stream-openai-compatible-protocol.test.ts",
-    "tests/unit/llm/completion-parts-think-tag.test.ts",
-    "tests/unit/llm/reasoning-capability.test.ts",
     "tests/unit/model-capabilities/bailian-video-capabilities.test.ts",
     "tests/unit/model-capabilities/image-resolution-default.test.ts",
     "tests/unit/model-capabilities/video-effective.test.ts",

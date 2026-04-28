@@ -3,8 +3,8 @@ import {
   getProviderConfig,
 } from '@/lib/api-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
+import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
-import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/llm/types'
 import { GoogleEmptyResponseError } from '@/lib/ai-providers/llm/google'
 import {
   _ulogError,
@@ -16,12 +16,12 @@ import {
   recordCompletionUsage,
   completionUsageSummary,
   resolveLlmRuntimeModel,
-} from '@/lib/llm/runtime-shared'
+} from '@/lib/ai-exec/llm-runtime'
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
 import { describeLlmVariantBase } from '@/lib/ai-providers/adapters/llm/descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
-import { emitStreamStage, resolveStreamStepMeta } from '@/lib/llm/stream-helpers'
+import { emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
 import type { AiLlmExecutionInput, AiLlmExecutionResult } from '@/lib/ai-registry/types'
 
 function toRecord(value: unknown): Record<string, unknown> | null {
