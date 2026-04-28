@@ -1,7 +1,8 @@
 import { getInternalBaseUrl } from '@/lib/env'
 import { logError as _ulogError, logInfo as _ulogInfo } from '@/lib/logging/core'
-import { createImageGenerator } from '@/lib/ai-providers/adapters/media/generators/factory'
 import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
+import { getProviderConfig } from '@/lib/api-config'
+import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'
 
@@ -166,17 +167,124 @@ export async function arkImageGeneration(
 export const ARK_API_TIMEOUT_MS = DEFAULT_TIMEOUT_MS
 export const ARK_API_MAX_RETRIES = MAX_RETRIES
 
+type ArkImageOptions = NonNullable<AiProviderImageExecutionContext['options']>
+
+// 4K 分辨率映射表（Seedream 4.x，上限 4096x4096 ≈ 16.7M 像素）
+const SIZE_MAP_4K: Record<string, string> = {
+  '1:1': '4096x4096',
+  '16:9': '5456x3072',
+  '9:16': '3072x5456',
+  '4:3': '4728x3544',
+  '3:4': '3544x4728',
+  '3:2': '5016x3344',
+  '2:3': '3344x5016',
+  '21:9': '6256x2680',
+  '9:21': '2680x6256',
+}
+
+// 3K 分辨率映射表（Seedream 5.0，上限 ≈ 10,404,496 像素）
+const SIZE_MAP_3K: Record<string, string> = {
+  '1:1': '3072x3072',
+  '16:9': '4096x2304',
+  '9:16': '2304x4096',
+  '4:3': '3648x2736',
+  '3:4': '2736x3648',
+  '3:2': '3888x2592',
+  '2:3': '2592x3888',
+  '21:9': '4704x2016',
+  '9:21': '2016x4704',
+}
+
+function isSeedream5Model(modelId: string): boolean {
+  return modelId.includes('seedream-5')
+}
+
+function getSizeMapForModel(modelId: string): Record<string, string> {
+  return isSeedream5Model(modelId) ? SIZE_MAP_3K : SIZE_MAP_4K
+}
+
+function assertAllowedArkImageOptions(options: ArkImageOptions) {
+  const allowedOptionKeys = new Set([
+    'provider',
+    'modelId',
+    'modelKey',
+    'aspectRatio',
+    'size',
+    'resolution',
+    'referenceImages',
+  ])
+  for (const [key, value] of Object.entries(options)) {
+    if (value === undefined) continue
+    if (!allowedOptionKeys.has(key)) {
+      throw new Error(`ARK_IMAGE_OPTION_UNSUPPORTED: ${key}`)
+    }
+  }
+}
+
 export async function executeArkImageGeneration(input: AiProviderImageExecutionContext) {
-  const generator = createImageGenerator(input.selection.provider, input.selection.modelId)
-  return await generator.generate({
-    userId: input.userId,
+  const options: ArkImageOptions = input.options ?? {}
+  assertAllowedArkImageOptions(options)
+
+  const { apiKey } = await getProviderConfig(input.userId, input.selection.provider)
+  const modelId = input.selection.modelId || 'doubao-seedream-4-5-251128'
+
+  const resolution = options.resolution
+  if (resolution !== undefined && resolution !== '4K' && resolution !== '3K') {
+    throw new Error(`ARK_IMAGE_OPTION_VALUE_UNSUPPORTED: resolution=${resolution}`)
+  }
+
+  const directSize = options.size
+  const sizeMap = getSizeMapForModel(modelId)
+  const aspectRatio = options.aspectRatio
+
+  const size = directSize
+    ? directSize
+    : (() => {
+      if (!aspectRatio) {
+        throw new Error('ARK_IMAGE_OPTION_REQUIRED: aspectRatio or size must be provided')
+      }
+      const mapped = sizeMap[aspectRatio]
+      if (!mapped) {
+        throw new Error(`ARK_IMAGE_OPTION_VALUE_UNSUPPORTED: aspectRatio=${aspectRatio}`)
+      }
+      return mapped
+    })()
+
+  const referenceImages = options.referenceImages ?? []
+  const base64Images: string[] = []
+  for (const imageUrl of referenceImages) {
+    try {
+      base64Images.push(await normalizeToBase64ForGeneration(imageUrl))
+    } catch {
+      _ulogInfo(`[ARK Image] 参考图片转换失败: ${imageUrl}`)
+    }
+  }
+
+  const arkData = await arkImageGeneration({
+    model: modelId,
     prompt: input.prompt,
-    referenceImages: input.options?.referenceImages,
-    options: {
-      ...(input.options || {}),
-      provider: input.selection.provider,
-      modelId: input.selection.modelId,
-      modelKey: input.selection.modelKey,
-    },
-  })
+    sequential_image_generation: 'disabled',
+    response_format: 'url',
+    stream: false,
+    watermark: false,
+    ...(size ? { size } : {}),
+    ...(base64Images.length > 0 ? { image: base64Images } : {}),
+  }, { apiKey, logPrefix: '[ARK Image]' })
+
+  const imageUrls = Array.isArray(arkData.data)
+    ? arkData.data
+      .map((item) => (typeof item?.url === 'string' ? item.url.trim() : ''))
+      .filter((item) => item.length > 0)
+    : []
+  const imageUrl = imageUrls[0]
+
+  if (!imageUrl) {
+    throw new Error('ARK_IMAGE_EMPTY_RESPONSE: no image url returned')
+  }
+
+  return {
+    success: true,
+    imageUrl,
+    ...(imageUrls.length > 1 ? { imageUrls } : {}),
+  }
 }
