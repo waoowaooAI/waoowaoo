@@ -2,10 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const lookupMock = vi.hoisted(() => ({
   resolveBuiltinPricing: vi.fn(),
+  listBuiltinCapabilityCatalog: vi.fn(() => []),
+  findBuiltinCapabilities: vi.fn(() => undefined),
+  validateCapabilitySelectionForModel: vi.fn(() => []),
 }))
 
 vi.mock('@/lib/ai-registry/catalog', () => ({
   resolveBuiltinPricing: lookupMock.resolveBuiltinPricing,
+  listBuiltinCapabilityCatalog: lookupMock.listBuiltinCapabilityCatalog,
+  findBuiltinCapabilities: lookupMock.findBuiltinCapabilities,
+  validateCapabilitySelectionForModel: lookupMock.validateCapabilitySelectionForModel,
 }))
 
 

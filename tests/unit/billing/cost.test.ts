@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import '@/lib/ai-providers'
 import {
   USD_TO_CNY,
   calcImage,

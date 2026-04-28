@@ -20,14 +20,6 @@ type FalVeo31VideoPayload = {
   generate_audio: false
 }
 
-type FalSora2VideoPayload = {
-  image_url: string
-  prompt: string
-  aspect_ratio?: string
-  duration?: number
-  delete_video: false
-}
-
 type FalKlingV25VideoPayload = {
   image_url: string
   prompt: string
@@ -47,14 +39,12 @@ type FalKlingV3VideoPayload = {
 type FalVideoPayload =
   | FalWanVideoPayload
   | FalVeo31VideoPayload
-  | FalSora2VideoPayload
   | FalKlingV25VideoPayload
   | FalKlingV3VideoPayload
 
 const FAL_VIDEO_ENDPOINTS: Record<string, string> = {
   'fal-wan25': 'wan/v2.6/image-to-video',
   'fal-veo31': 'fal-ai/veo3.1/fast/image-to-video',
-  'fal-sora2': 'fal-ai/sora-2/image-to-video',
   'fal-ai/kling-video/v2.5-turbo/pro/image-to-video': 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video',
   'fal-ai/kling-video/v3/standard/image-to-video': 'fal-ai/kling-video/v3/standard/image-to-video',
   'fal-ai/kling-video/v3/pro/image-to-video': 'fal-ai/kling-video/v3/pro/image-to-video',
@@ -117,15 +107,6 @@ export async function executeFalVideoGeneration(input: AiProviderVideoExecutionC
         ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
         ...(typeof duration === 'number' ? { duration: `${duration}s` } : {}),
         generate_audio: false,
-      }
-      break
-    case 'fal-sora2':
-      payload = {
-        image_url: input.imageUrl,
-        prompt: input.options?.prompt || '',
-        ...(aspectRatio ? { aspect_ratio: aspectRatio } : {}),
-        ...(typeof duration === 'number' ? { duration } : {}),
-        delete_video: false,
       }
       break
     case 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video':

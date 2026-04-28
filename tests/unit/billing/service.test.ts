@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import '@/lib/ai-providers'
 import { calcText, calcVideo, calcVoice } from '@/lib/billing/cost'
 import type { TaskBillingInfo } from '@/lib/task/types'
 

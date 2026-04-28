@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import '@/lib/ai-providers'
 import { TASK_TYPE } from '@/lib/task/types'
 import { buildDefaultTaskBillingInfo, isBillableTaskType } from '@/lib/billing/task-policy'
 import type { TaskBillingInfo } from '@/lib/task/types'
