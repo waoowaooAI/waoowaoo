@@ -64,6 +64,11 @@ const FORBIDDEN_LEGACY_USER_API_PROBE_IMPORTS = [
   /['"]@\/lib\/user-api\/model-template\/probe['"]/,
 ]
 
+const FORBIDDEN_AI_PROVIDER_IMPORTS = [
+  /from\s+['"]@\/lib\/ai-providers(?:\/[^'"]*)?['"]/,
+  /import\s*\(\s*['"]@\/lib\/ai-providers(?:\/[^'"]*)?['"]\s*\)/,
+]
+
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -91,6 +96,10 @@ function findHits(content, rel) {
   for (const re of FORBIDDEN_LEGACY_USER_API_PROBE_IMPORTS) {
     const m = content.match(re)
     if (m) hits.push(`legacy user-api probe import: ${m[0]}`)
+  }
+  for (const re of FORBIDDEN_AI_PROVIDER_IMPORTS) {
+    const m = content.match(re)
+    if (m) hits.push(`provider-layer import outside ai dirs: ${m[0]}`)
   }
   for (const re of FORBIDDEN_SDK_IMPORTS) {
     const m = content.match(re)

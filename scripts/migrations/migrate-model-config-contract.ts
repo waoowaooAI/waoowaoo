@@ -1,13 +1,12 @@
 import fs from 'fs'
 import path from 'path'
 import { prisma } from '@/lib/prisma'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import {
-  composeModelKey,
-  parseModelKeyStrict,
   validateModelCapabilities,
   type ModelCapabilities,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
 
 type ModelField =
   | 'analysisModel'

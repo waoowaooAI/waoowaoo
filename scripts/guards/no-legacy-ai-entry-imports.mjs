@@ -59,7 +59,7 @@ function listTrackedFiles() {
   })
   return output.split('\n')
     .map((line) => line.trim())
-    .filter((file) => /^(src|tests)\/.*\.(?:ts|tsx)$/.test(file))
+    .filter((file) => /^(src|tests)\/.*\.(?:ts|tsx)$/.test(file) || /^scripts\/migrations\/.*\.(?:ts|tsx|mjs|js)$/.test(file))
 }
 
 function fileViolates(file) {
