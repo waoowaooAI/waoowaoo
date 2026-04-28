@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { ApiError } from '@/lib/api-errors'
-import { getProviderKey } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import { probeModelLlmProtocol } from '@/lib/user-api/model-llm-protocol-probe'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template'
 import { probeMediaTemplate } from '@/lib/user-api/model-template/probe'

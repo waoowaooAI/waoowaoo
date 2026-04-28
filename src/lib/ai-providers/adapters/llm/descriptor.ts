@@ -1,4 +1,4 @@
-import { getProviderKey } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import type { AiExecutionMode, AiResolvedLlmSelection, AiVariantDescriptor } from '@/lib/ai-registry/types'
 import { resolveAiContractsForDescriptor } from '@/lib/ai-registry/model-contracts'
 import { buildLlmOptionSchema } from './option-schema'

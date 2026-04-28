@@ -1,5 +1,6 @@
 import { logError as _ulogError, logInfo as _ulogInfo } from '@/lib/logging/core'
-import { getProviderKey, resolveModelSelectionOrSingle } from '@/lib/api-config'
+import { resolveModelSelectionOrSingle } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import { preprocessLipSyncParams, type LipSyncProviderKey } from '@/lib/lipsync/preprocess'
 import { submitBailianLipSync } from '@/lib/lipsync/providers/bailian'
 import { submitFalLipSync } from '@/lib/lipsync/providers/fal'

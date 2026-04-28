@@ -1,8 +1,8 @@
 import OpenAI from 'openai'
 import {
   getProviderConfig,
-  getProviderKey,
 } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/llm/types'
 import { emitChunkedText } from '@/lib/llm/stream-helpers'

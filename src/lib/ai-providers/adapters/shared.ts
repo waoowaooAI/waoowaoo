@@ -1,4 +1,4 @@
-import { getProviderKey } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import type {
   AiExecutionMode,
   AiOptionSchema,

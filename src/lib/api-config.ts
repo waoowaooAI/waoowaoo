@@ -9,7 +9,7 @@
 
 import { prisma } from './prisma'
 import { decryptApiKey } from './crypto-utils'
-import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { composeModelKey, getProviderKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { UnifiedModelType } from '@/lib/ai-registry/types'
 import type {
   OpenAICompatMediaTemplate,
@@ -305,15 +305,6 @@ async function readUserConfig(userId: string): Promise<{ models: CustomModel[]; 
 function findModelByKey(models: CustomModel[], modelKey: string): CustomModel | null {
   const parsed = assertModelKey(modelKey, 'model')
   return models.find((model) => model.modelId === parsed.modelId && model.provider === parsed.provider) || null
-}
-
-/**
- * 提取提供商主键（用于多实例场景，如 gemini-compatible:uuid）
- */
-export function getProviderKey(providerId?: string): string {
-  if (!providerId) return ''
-  const colonIndex = providerId.indexOf(':')
-  return colonIndex === -1 ? providerId : providerId.slice(0, colonIndex)
 }
 
 /**

@@ -39,7 +39,7 @@
 - [x] `gemini-batch-utils.ts` → `ai-providers/google/llm.ts` + `ai-providers/shared/helpers.ts`
 - [x] `llm-client.ts` → `ai-exec/llm-helpers.ts`
 - [x] `model-config-contract.ts` 拆分到 `ai-registry/{types,selection}.ts` + 各 `models.ts`
-- [ ] `api-config.ts` 选择/解析部分 → `ai-registry/selection.ts`
+- [x] `api-config.ts` 选择/解析部分 → `ai-registry/selection.ts`
 - [ ] `ai-runtime/**` 折叠进 `ai-exec/engine.ts`，目录删除
 - [ ] `src/lib/llm/**` 合并到 `ai-exec/llm-helpers.ts`，目录删除
 - [ ] `ai-providers/adapters/**` 中间层物理删除

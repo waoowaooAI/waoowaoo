@@ -20,7 +20,7 @@ import { GoogleVeoVideoGenerator } from './video/google'
 import { OpenAICompatibleVideoGenerator } from './video'
 import { MinimaxVideoGenerator } from './minimax'
 import { ViduVideoGenerator } from './vidu'
-import { getProviderKey } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import {
     BailianAudioGenerator,
     BailianImageGenerator,

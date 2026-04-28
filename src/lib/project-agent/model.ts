@@ -1,7 +1,8 @@
 import type { LanguageModel } from 'ai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
-import { getProviderConfig, getProviderKey } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import { resolveLlmRuntimeModel } from '@/lib/llm/runtime-shared'
 
 export async function resolveProjectAgentLanguageModel(input: {

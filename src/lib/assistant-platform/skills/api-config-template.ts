@@ -1,6 +1,6 @@
 import { jsonSchema, tool, type ToolSet } from 'ai'
 import type { JSONSchema7 } from 'json-schema'
-import { getProviderKey } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { saveModelTemplateConfiguration } from '@/lib/user-api/model-template/save'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template/validator'

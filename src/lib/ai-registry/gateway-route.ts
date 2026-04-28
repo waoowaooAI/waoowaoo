@@ -1,4 +1,4 @@
-import { getProviderKey } from '@/lib/api-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 
 export type AiGatewayRoute = 'official' | 'openai-compat'
 export type AiCompatibleProviderKey = 'openai-compatible'
