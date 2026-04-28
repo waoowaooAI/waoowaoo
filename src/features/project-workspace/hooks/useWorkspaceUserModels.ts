@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { logError as _ulogError } from '@/lib/logging/core'
 import { useUserModels } from '@/lib/query/hooks'
 import type { ModelCapabilities } from '@/lib/ai-registry/types'
-import type { VideoPricingTier } from '@/lib/ai-registry/catalog'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 
 export interface UserModelOption {
   value: string

@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { VideoModelOption, VideoGenerationOptionValue, VideoGenerationOptions } from '../../../types'
 import type { CapabilitySelections } from '@/lib/ai-registry/types'
-import {
-  normalizeVideoGenerationSelections,
-  resolveEffectiveVideoCapabilityDefinitions,
-  resolveEffectiveVideoCapabilityFields,
-  projectVideoPricingTiersByFixedSelections,
-} from '@/lib/ai-registry/catalog'
+import { normalizeVideoGenerationSelections, resolveEffectiveVideoCapabilityDefinitions, resolveEffectiveVideoCapabilityFields, projectVideoPricingTiersByFixedSelections } from '@/lib/ai-registry/video-capabilities'
 
 interface UsePanelVideoModelParams {
   defaultVideoModel: string

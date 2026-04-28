@@ -11,7 +11,7 @@ import type {
     CapabilityValue,
     ModelCapabilities,
 } from '@/lib/ai-registry/types'
-import { filterNormalVideoModelOptions } from '@/lib/ai-registry/catalog'
+import { filterNormalVideoModelOptions } from '@/lib/ai-registry/video-capabilities'
 import { RatioSelector, StyleSelector } from './config-modal-selectors'
 import { ModelCapabilityDropdown } from './ModelCapabilityDropdown'
 import { AppIcon } from '@/components/ui/icons'

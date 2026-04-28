@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react'
 import type { CapabilitySelections, ModelCapabilities } from '@/lib/ai-registry/types'
-import type { VideoPricingTier } from '@/lib/ai-registry/catalog'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 import type { BatchVideoGenerationParams, VideoGenerationOptions } from './components/video'
 
 export interface WorkspaceStageVideoModelOption {

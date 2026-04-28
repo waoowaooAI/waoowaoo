@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
+import { DEFAULT_VOICE_DESIGN_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { CustomModel, Provider } from '../../api-config'
 import { getProviderKey } from '../../api-config'
 
@@ -18,8 +20,13 @@ const ALWAYS_SHOW_PROVIDERS: string[] = []
 /** 完全不在 UI 中展示的 provider（既不在主列表，也不在折叠区） */
 const HIDDEN_PROVIDER_KEYS = new Set(['siliconflow'])
 const PROVIDER_MODEL_TYPES: Array<'llm' | 'image' | 'video' | 'audio' | 'lipsync'> = ['llm', 'image', 'video', 'audio', 'lipsync']
+const DEFAULT_VOICE_DESIGN_MODEL_ID = parseModelKeyStrict(DEFAULT_VOICE_DESIGN_MODEL_KEY)?.modelId
+if (!DEFAULT_VOICE_DESIGN_MODEL_ID) {
+  throw new Error('DEFAULT_VOICE_DESIGN_MODEL_KEY_INVALID')
+}
+
 const DEFAULT_AUDIO_EXCLUDED_MODEL_IDS = new Set([
-  'qwen-voice-design',
+  DEFAULT_VOICE_DESIGN_MODEL_ID,
 ])
 const MODEL_PROVIDER_KEYS = [
   'ark',

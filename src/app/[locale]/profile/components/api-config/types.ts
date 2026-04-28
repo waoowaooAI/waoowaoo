@@ -302,4 +302,4 @@ export function getProviderTutorial(providerId: string): ProviderTutorial | unde
  * 用于 gemini-compatible 新增时自动预设模型。
  * 排除 batch 模型（Google 特有的异步批量处理）。
  */
-export { getGoogleCompatibleApiConfigPresetModels as getGoogleCompatiblePresetModels } from '@/lib/user-api/api-config-catalog'
+export { getGoogleCompatibleApiConfigPresetModels as getGoogleCompatiblePresetModels } from '@/lib/ai-registry/api-config-catalog'

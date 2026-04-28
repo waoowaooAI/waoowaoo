@@ -19,7 +19,7 @@ import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
 // ─── Types ────────────────────────────────────────────
 
 export interface ModelCapabilityOption {
-    /** Composite key e.g. "ark::doubao-seedance-1-0-pro-250528" */
+    /** Composite model key, e.g. "provider::model-id" */
     value: string
     /** Display name */
     label: string

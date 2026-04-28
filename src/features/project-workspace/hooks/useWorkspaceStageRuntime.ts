@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import type { WorkspaceStageRuntimeValue } from '../WorkspaceStageRuntimeContext'
 import type { CapabilitySelections, ModelCapabilities } from '@/lib/ai-registry/types'
-import type { VideoPricingTier } from '@/lib/ai-registry/catalog'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 import type { BatchVideoGenerationParams, VideoGenerationOptions } from '../components/video'
 
 interface UseWorkspaceStageRuntimeParams {
