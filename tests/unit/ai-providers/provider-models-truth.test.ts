@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
+import { ANTHROPIC_BUILTIN_CAPABILITY_CATALOG_ENTRIES, ANTHROPIC_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/anthropic/models'
 import { arkAdapter } from '@/lib/ai-providers/ark/adapter'
 import { ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES, ARK_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
 import { bailianAdapter } from '@/lib/ai-providers/bailian/adapter'
@@ -13,6 +14,7 @@ import { minimaxAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES, MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
 import { openAiCompatibleAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import { OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai-compatible/models'
+import { OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai/models'
 import { viduAdapter } from '@/lib/ai-providers/vidu/adapter'
 import { OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
 import { siliconFlowAdapter } from '@/lib/ai-providers/siliconflow/adapter'
@@ -24,11 +26,13 @@ import { registerBuiltinPricingCatalogEntries } from '@/lib/ai-registry/pricing-
 import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
 
 registerBuiltinCapabilityCatalogEntries([
+  ...ANTHROPIC_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
   ...SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
@@ -36,11 +40,13 @@ registerBuiltinCapabilityCatalogEntries([
 ])
 
 registerBuiltinPricingCatalogEntries([
+  ...ANTHROPIC_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...OPENAI_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
   ...SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES,
@@ -79,11 +85,13 @@ function isRecord(value: unknown): value is { [key: string]: unknown } {
 describe('provider models truth', () => {
   it('ensures capability/pricing catalog entries are well-formed', () => {
     const capabilityEntries: unknown[] = [
+      ...ANTHROPIC_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
       ...SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
@@ -109,11 +117,13 @@ describe('provider models truth', () => {
     }
 
     const pricingEntries: unknown[] = [
+      ...ANTHROPIC_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...OPENAI_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
       ...SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES,
@@ -180,6 +190,7 @@ describe('provider models truth', () => {
     expect(FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'banana-2')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
     expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3.1-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['0.5K', '1K', '2K', '4K'])
     expect(MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'minimax-hailuo-02')?.capabilities?.video?.firstlastframe).toBe(true)
+    expect(OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES).toHaveLength(0)
     expect(OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gpt-image-1')?.capabilities?.image?.resolutionOptions).toContain('1024x1024')
     expect(OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.capabilities?.llm?.reasoningEffortOptions).toEqual(['low', 'medium', 'high'])
     expect(SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES).toHaveLength(0)
@@ -192,6 +203,8 @@ describe('provider models truth', () => {
     expect(FAL_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'fal-ai/kling-video/lipsync/audio-to-video')?.pricing.flatAmount).toBe(0.5)
     expect(GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'veo-3.1-fast-generate-preview')?.pricing.tiers?.[0]?.amount).toBe(4.32)
     expect(MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 't2v-01-director')?.pricing.tiers?.[0]?.amount).toBe(6)
+    expect(ANTHROPIC_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
+    expect(OPENAI_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.pricing.tiers?.[1]?.amount).toBe(72)
     expect(SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)

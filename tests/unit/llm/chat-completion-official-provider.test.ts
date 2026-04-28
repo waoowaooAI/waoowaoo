@@ -86,8 +86,8 @@ vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
 }))
 
-vi.mock('@/lib/ai-providers/bailian', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/ai-providers/bailian')>()
+vi.mock('@/lib/ai-providers/bailian/llm', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/bailian/llm')>()
   return {
     ...actual,
     completeBailianLlm: completeBailianLlmMock,

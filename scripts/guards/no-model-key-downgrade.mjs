@@ -81,10 +81,10 @@ function assertFileContains(relativePath, requiredSnippets) {
 const files = scanRoots.flatMap((scanRoot) => walk(path.join(root, scanRoot)))
 const violations = files.flatMap((filePath) => collectViolations(filePath))
 
-assertFileContains('src/lib/model-config-contract.ts', ['parseModelKeyStrict', 'markerIndex === -1) return null'])
+assertFileContains('src/lib/ai-registry/selection.ts', ['parseModelKeyStrict', 'markerIndex === -1) return null'])
 assertFileContains('src/lib/config-service.ts', ['parseModelKeyStrict'])
-assertFileContains('src/app/api/user/api-config/route.ts', ['validateDefaultModelKey', 'must be provider::modelId'])
-assertFileContains('src/app/api/projects/[projectId]/config/route.ts', ['must be provider::modelId'])
+assertFileContains('src/lib/user-api/api-config-defaults.ts', ['validateDefaultModelKey', 'default model key must be provider::modelId'])
+assertFileContains('src/lib/user-api/runtime-config.ts', ['MODEL_KEY_INVALID', 'must be provider::modelId'])
 
 if (violations.length > 0) {
   fail('Found model key downgrade pattern', violations)
