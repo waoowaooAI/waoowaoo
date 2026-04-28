@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, type ChatStatus, type UIMessage } from 'ai'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 
 export type AssistantChatId = 'api-config-template' | 'tutorial'
 

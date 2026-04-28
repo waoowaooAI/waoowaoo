@@ -5,6 +5,7 @@ import { getLogContext } from '@/lib/logging/context'
 import { prisma } from '@/lib/prisma'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import {
   calcImage,
   calcLipSync,
@@ -1079,3 +1080,4 @@ export async function rollbackTaskBilling(task: {
     } satisfies TaskBillingInfo
   }
 }
+ensureAiCatalogsRegistered()

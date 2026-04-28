@@ -1,4 +1,3 @@
-import { BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/builtin-catalog'
 import type { CapabilityValue } from '@/lib/ai-registry/types'
 import { isCapabilityValue, isPlainObject, readTrimmedString } from './catalog-utils'
 
@@ -11,7 +10,7 @@ export function registerBuiltinPricingCatalogEntries(entries: readonly unknown[]
 
 function ensureBuiltinPricingCatalogEntriesRegistered() {
   if (registeredPricingEntries.length === 0) {
-    registerBuiltinPricingCatalogEntries(BUILTIN_PRICING_CATALOG_ENTRIES)
+    throw new Error('PRICING_CATALOG_MISSING: empty builtin catalog')
   }
 }
 
@@ -167,10 +166,6 @@ function clonePricingEntry(entry: BuiltinPricingCatalogEntry): BuiltinPricingCat
 function loadPricingCatalog(): PricingCatalogCache {
   if (pricingCache) return pricingCache
   ensureBuiltinPricingCatalogEntriesRegistered()
-  if (registeredPricingEntries.length === 0) {
-    throw new Error('PRICING_CATALOG_MISSING: empty builtin catalog')
-  }
-
   const entries: BuiltinPricingCatalogEntry[] = []
   for (let index = 0; index < registeredPricingEntries.length; index += 1) {
     entries.push(normalizePricingEntry(registeredPricingEntries[index], 'builtin', index))

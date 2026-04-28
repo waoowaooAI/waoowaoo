@@ -1,6 +1,6 @@
 import type { AiProviderImageExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { createOpenAICompatClient, readStringOption, resolveOpenAICompatClientConfig, toUploadFile } from '@/lib/ai-providers/openai-compatible/errors'
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 import { generateImageViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 

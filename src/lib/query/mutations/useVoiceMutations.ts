@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { resolveTaskResponse } from '@/lib/task/client'
-import type { SpeakerVoiceEntry, SpeakerVoicePatch } from '@/lib/ai-providers/shared/voice-line-binding'
+import type { SpeakerVoiceEntry, SpeakerVoicePatch } from '@/lib/ai-registry/voice-line'
 import {
     requestBlobWithError,
     requestJsonWithError,

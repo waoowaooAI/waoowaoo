@@ -1,4 +1,4 @@
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 import {
   parseOpenAICompatMediaTemplate,
   type ModelTemplateValidationIssue,

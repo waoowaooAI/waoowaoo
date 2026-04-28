@@ -10,7 +10,7 @@ import {
   readTrimmedString,
   type BailianSpeakerVoiceEntry,
   type RawSpeakerVoiceEntry,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 import { synthesizeWithBailianTTS } from './tts'
 
 const BAILIAN_VOICE_LINE_PROVIDER_KEY = 'bailian'

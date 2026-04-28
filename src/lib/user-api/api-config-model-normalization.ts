@@ -2,7 +2,8 @@ import { ApiError } from '@/lib/api-errors'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { getCapabilityOptionFields, resolveBuiltinModelContext } from '@/lib/ai-registry/capabilities-catalog'
 import { findBuiltinPricingCatalogEntry, type PricingApiType } from '@/lib/ai-registry/pricing-catalog'
-import type { OpenAICompatMediaTemplate, OpenAICompatMediaTemplateSource } from '@/lib/ai-providers/openai-compatible/user-template'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import type { OpenAICompatMediaTemplate, OpenAICompatMediaTemplateSource } from '@/lib/ai-registry/openai-compatible-template'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template/validator'
 import type { LlmProtocolType, StoredModel, StoredProvider } from './api-config-types'
 import { getProviderKey, isLlmProtocol, isMediaTemplateSource, isRecord, isUnifiedModelType, readTrimmedString } from './api-config-shared'
@@ -271,3 +272,4 @@ export function parseStoredModels(rawModels: string | null | undefined): StoredM
   }
   return normalized
 }
+ensureAiCatalogsRegistered()

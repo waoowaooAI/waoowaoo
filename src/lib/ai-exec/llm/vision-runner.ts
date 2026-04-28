@@ -4,6 +4,7 @@ import { getProviderKey } from '@/lib/ai-registry/selection'
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { emitChunkedText } from '@/lib/ai-providers/shared/llm-support'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import { getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 import {
   _ulogError,
@@ -20,6 +21,8 @@ import { describeLlmVariantBase } from '@/lib/ai-exec/llm-descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveAiProviderAdapter } from '@/lib/ai-providers'
 import type { AiProviderVisionExecutionContext } from '@/lib/ai-providers/runtime-types'
+
+ensureAiCatalogsRegistered()
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && typeof error.message === 'string') return error.message

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { getSpeakerVoicePreviewUrl, hasAnyVoiceBinding } from '@/lib/ai-providers/shared/voice-line-binding'
+import { getSpeakerVoicePreviewUrl, hasAnyVoiceBinding } from '@/lib/ai-registry/voice-line'
 import type { Character, SpeakerVoiceEntry, VoiceLine } from './types'
 
 interface UseVoiceSpeakerStateParams {

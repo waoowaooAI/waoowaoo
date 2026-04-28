@@ -9,6 +9,7 @@ import {
 import { BillingOperationError } from './errors'
 import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/pricing-resolution'
 import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import { TASK_TYPE, type TaskType } from '@/lib/task/types'
 import type { TaskBillingInfo } from './types'
 
@@ -309,3 +310,4 @@ export function buildDefaultTaskBillingInfo(taskType: TaskType, payload: AnyPayl
       return null
   }
 }
+ensureAiCatalogsRegistered()

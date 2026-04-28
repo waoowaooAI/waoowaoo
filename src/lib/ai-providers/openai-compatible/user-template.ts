@@ -1,74 +1,14 @@
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import {
+  TEMPLATE_PLACEHOLDER_ALLOWLIST,
+  type OpenAICompatMediaTemplate,
+  type TemplateBodyValue,
+  type TemplateEndpoint,
+  type TemplateHeaderMap,
+  type TemplateVariableMap,
+} from '@/lib/ai-registry/openai-compatible-template'
 import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { resolveOpenAICompatClientConfig, toUploadFile } from '@/lib/ai-providers/openai-compatible/errors'
-
-export type TemplateHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-
-export type TemplateContentType =
-  | 'application/json'
-  | 'multipart/form-data'
-  | 'application/x-www-form-urlencoded'
-
-export type TemplateHeaderMap = Record<string, string>
-
-export type TemplateBodyValue =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: TemplateBodyValue }
-  | TemplateBodyValue[]
-
-export interface TemplateEndpoint {
-  method: TemplateHttpMethod
-  path: string
-  contentType?: TemplateContentType
-  headers?: TemplateHeaderMap
-  bodyTemplate?: TemplateBodyValue
-  multipartFileFields?: string[]
-}
-
-export interface TemplateResponseMap {
-  taskIdPath?: string
-  statusPath?: string
-  outputUrlPath?: string
-  outputUrlsPath?: string
-  errorPath?: string
-}
-
-export interface TemplatePollingConfig {
-  intervalMs: number
-  timeoutMs: number
-  doneStates: string[]
-  failStates: string[]
-}
-
-export interface OpenAICompatMediaTemplate {
-  version: 1
-  mediaType: 'image' | 'video'
-  mode: 'sync' | 'async'
-  create: TemplateEndpoint
-  status?: TemplateEndpoint
-  content?: TemplateEndpoint
-  response: TemplateResponseMap
-  polling?: TemplatePollingConfig
-}
-
-export type OpenAICompatMediaTemplateSource = 'ai' | 'manual'
-
-export const TEMPLATE_PLACEHOLDER_ALLOWLIST = new Set([
-  'model',
-  'prompt',
-  'image',
-  'images',
-  'aspect_ratio',
-  'duration',
-  'resolution',
-  'size',
-  'task_id',
-])
-
-export type TemplateVariableMap = { [key: string]: TemplateBodyValue | undefined }
 
 function isRecord(value: unknown): value is { [key: string]: unknown } {
   return !!value && typeof value === 'object' && !Array.isArray(value)

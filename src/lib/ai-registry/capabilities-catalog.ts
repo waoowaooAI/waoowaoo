@@ -1,4 +1,3 @@
-import { BUILTIN_CAPABILITY_CATALOG_ENTRIES } from '@/lib/ai-providers/builtin-catalog'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import {
   validateModelCapabilities,
@@ -49,7 +48,7 @@ let capabilityCache: CapabilityCatalogCache | null = null
 
 function ensureBuiltinCatalogEntriesRegistered() {
   if (registeredCapabilityEntries.length === 0) {
-    registerBuiltinCapabilityCatalogEntries(BUILTIN_CAPABILITY_CATALOG_ENTRIES)
+    throw new Error('CAPABILITY_CATALOG_MISSING: empty builtin catalog')
   }
 }
 
@@ -123,10 +122,6 @@ const CAPABILITY_PROVIDER_ALIASES: Readonly<Record<string, string>> = {
 function loadCapabilityCatalog(): CapabilityCatalogCache {
   if (capabilityCache) return capabilityCache
   ensureBuiltinCatalogEntriesRegistered()
-  if (registeredCapabilityEntries.length === 0) {
-    throw new Error('CAPABILITY_CATALOG_MISSING: empty builtin catalog')
-  }
-
   const entries: BuiltinCapabilityCatalogEntry[] = registeredCapabilityEntries.map(
     (entry, index) => normalizeCapabilityEntry(entry, 'builtin', index),
   )

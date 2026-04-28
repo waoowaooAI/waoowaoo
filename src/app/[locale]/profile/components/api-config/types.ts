@@ -10,7 +10,7 @@ import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selectio
 import type {
     OpenAICompatMediaTemplate,
     OpenAICompatMediaTemplateSource,
-} from '@/lib/ai-providers/openai-compatible/user-template'
+} from '@/lib/ai-registry/openai-compatible-template'
 
 export interface ApiConfigCatalogProvider {
     id: string

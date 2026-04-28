@@ -37,18 +37,18 @@ import {
   type SpeakerVoiceEntry,
   type SpeakerVoiceEntryNormalizer,
   type SpeakerVoiceMap,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 import type { VideoTokenPricingContract } from '@/lib/ai-providers/shared/video-token-pricing'
 export {
   getSpeakerVoicePreviewUrl,
   hasAnyVoiceBinding,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 export type {
   CharacterVoiceFields,
   SpeakerVoiceEntry,
   SpeakerVoiceMap,
   SpeakerVoicePatch,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 
 function getProviderKey(providerId: string): string {
   const marker = providerId.indexOf(':')

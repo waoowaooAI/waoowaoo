@@ -16,6 +16,7 @@ import {
   parseModelKeyStrict,
 } from '@/lib/ai-registry/selection'
 import { findBuiltinCapabilities, resolveGenerationOptionsForModel } from '@/lib/ai-registry/capabilities-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import {
   type WorkflowConcurrencyConfig,
   normalizeWorkflowConcurrencyConfig,
@@ -344,3 +345,4 @@ export function buildImageBillingPayloadFromUserConfig(input: {
     ...(Object.keys(capabilityOptions).length > 0 ? { generationOptions: capabilityOptions } : {}),
   }
 }
+ensureAiCatalogsRegistered()

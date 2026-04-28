@@ -2,6 +2,7 @@ import { composeModelKey } from '@/lib/ai-registry/selection'
 import type { ModelCapabilities, UnifiedModelType } from '@/lib/ai-registry/types'
 import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
 import { listBuiltinPricingCatalog, type PricingApiType } from '@/lib/ai-registry/pricing-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import type { PricingDisplayMap, PricingDisplayItem, StoredModel } from './api-config-types'
 import { getProviderKey } from './api-config-shared'
 
@@ -227,3 +228,4 @@ export function withDisplayPricing(model: StoredModel, map: PricingDisplayMap): 
     ...(typeof display.output === 'number' ? { priceOutput: display.output } : {}),
   }
 }
+ensureAiCatalogsRegistered()

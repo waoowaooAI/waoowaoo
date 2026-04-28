@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import { shouldShowError } from '@/lib/error-utils'
 import { upsertTaskTargetOverlay } from '@/lib/query/task-target-overlay'
-import { hasAnyVoiceBinding } from '@/lib/ai-providers/shared/voice-line-binding'
+import { hasAnyVoiceBinding } from '@/lib/ai-registry/voice-line'
 import { getErrorMessage, getErrorStatus } from './utils'
 import type {
   Character,

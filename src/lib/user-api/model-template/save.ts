@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { composeModelKey, getProviderKey } from '@/lib/ai-registry/selection'
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 
 type StoredModelType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync'
 

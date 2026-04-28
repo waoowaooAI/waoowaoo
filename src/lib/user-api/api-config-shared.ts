@@ -1,5 +1,5 @@
 import type { UnifiedModelType } from '@/lib/ai-registry/types'
-import type { OpenAICompatMediaTemplateSource } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplateSource } from '@/lib/ai-registry/openai-compatible-template'
 import type { ApiModeType, GatewayRouteType, LlmProtocolType } from './api-config-types'
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

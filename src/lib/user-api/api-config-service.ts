@@ -10,6 +10,7 @@ import { encryptApiKey, decryptApiKey } from '@/lib/crypto-utils'
 import { ApiError } from '@/lib/api-errors'
 import { composeModelKey } from '@/lib/ai-registry/selection'
 import { buildApiConfigServerCatalog, DEFAULT_LIPSYNC_MODEL_KEY, getGoogleCompatibleApiConfigPresetModels } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import { getBillingMode } from '@/lib/billing/mode'
 import { normalizeWorkflowConcurrencyConfig } from '@/lib/workflow-concurrency'
 import type { ApiConfigPutBody, DefaultModelsPayload, StoredModel } from './api-config-types'
@@ -278,3 +279,4 @@ export async function putUserApiConfig(userId: string, body: unknown) {
 
   return { success: true }
 }
+ensureAiCatalogsRegistered()

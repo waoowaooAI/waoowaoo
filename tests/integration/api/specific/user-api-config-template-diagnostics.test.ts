@@ -5,7 +5,7 @@ import {
   mockAuthenticated,
   resetAuthMockState,
 } from '../../../helpers/auth'
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 
 const validateTemplateMock = vi.hoisted(() => vi.fn())
 const probeMediaTemplateMock = vi.hoisted(() => vi.fn())

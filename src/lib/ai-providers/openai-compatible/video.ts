@@ -2,7 +2,7 @@ import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { toFile } from 'openai'
 import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { createOpenAICompatClient, parseDataUrl, resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 import { generateVideoViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
 

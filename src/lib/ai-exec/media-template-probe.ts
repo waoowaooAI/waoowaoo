@@ -1,4 +1,4 @@
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
 import {
   buildRenderedTemplateRequest,

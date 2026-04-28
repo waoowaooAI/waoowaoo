@@ -16,11 +16,14 @@ import {
   resolveLlmRuntimeModel,
 } from '@/lib/ai-exec/llm-runtime'
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import { describeLlmVariantBase } from '@/lib/ai-exec/llm-descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveAiProviderAdapter } from '@/lib/ai-providers'
 import { emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
 import type { AiLlmExecutionInput, AiLlmExecutionResult } from '@/lib/ai-registry/types'
+
+ensureAiCatalogsRegistered()
 
 interface CompletionJsonObject {
   [key: string]: unknown

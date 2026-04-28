@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { API_CONFIG_CATALOG_MODELS, API_CONFIG_CATALOG_PROVIDERS } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import { API_CONFIG_CATALOG_PROVIDERS, listApiConfigCatalogModels } from '@/lib/ai-registry/api-config-catalog'
+
+ensureAiCatalogsRegistered()
 
 describe('api-config minimax preset', () => {
   it('uses official minimax baseUrl in preset provider', () => {
@@ -9,7 +12,7 @@ describe('api-config minimax preset', () => {
   })
 
   it('includes all required minimax official llm preset models', () => {
-    const minimaxLlmModelIds = API_CONFIG_CATALOG_MODELS
+    const minimaxLlmModelIds = listApiConfigCatalogModels()
       .filter((model) => model.provider === 'minimax' && model.type === 'llm')
       .map((model) => model.modelId)
 

@@ -1,5 +1,5 @@
 import type { ModelCapabilities, UnifiedModelType } from '@/lib/ai-registry/types'
-import type { OpenAICompatMediaTemplate, OpenAICompatMediaTemplateSource } from '@/lib/ai-providers/openai-compatible/user-template'
+import type { OpenAICompatMediaTemplate, OpenAICompatMediaTemplateSource } from '@/lib/ai-registry/openai-compatible-template'
 
 export type ApiModeType = 'gemini-sdk' | 'openai-official'
 export type GatewayRouteType = 'official' | 'openai-compat'

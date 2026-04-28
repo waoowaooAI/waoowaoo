@@ -14,7 +14,7 @@ import type {
   CharacterVoiceFields,
   SpeakerVoiceEntry,
   VoiceLineBindingSource,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 
 export type GenerateResult = {
   success: boolean

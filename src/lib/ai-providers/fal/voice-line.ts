@@ -12,7 +12,7 @@ import {
   readTrimmedString,
   type FalSpeakerVoiceEntry,
   type RawSpeakerVoiceEntry,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 import {
   downloadAudioData,
   getWavDurationFromBuffer,

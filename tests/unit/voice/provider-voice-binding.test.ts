@@ -6,7 +6,7 @@ import {
 import {
   getSpeakerVoicePreviewUrl,
   hasAnyVoiceBinding,
-} from '@/lib/ai-providers/shared/voice-line-binding'
+} from '@/lib/ai-registry/voice-line'
 
 describe('provider voice binding', () => {
   it('parses legacy fal speaker voice entry to explicit fal provider', () => {

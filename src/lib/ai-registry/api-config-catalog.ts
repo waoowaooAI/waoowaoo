@@ -1,10 +1,3 @@
-import {
-  BUILTIN_API_CONFIG_CATALOG_MODELS,
-  BUILTIN_DEFAULT_LIPSYNC_MODEL_KEY,
-  BUILTIN_DEFAULT_VOICE_DESIGN_MODEL_KEY,
-  BUILTIN_DEFAULT_VOICE_MODEL_KEY,
-  BUILTIN_GOOGLE_COMPATIBLE_API_CONFIG_CATALOG_MODELS,
-} from '@/lib/ai-providers/builtin-catalog'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { ModelCapabilities, UnifiedModelType } from '@/lib/ai-registry/types'
 import { resolveBuiltinCapabilitiesByModelKey } from './capabilities-catalog'
@@ -33,9 +26,44 @@ export interface ApiConfigServerCatalog {
   models: ApiConfigCatalogModel[]
 }
 
-export const DEFAULT_LIPSYNC_MODEL_KEY = BUILTIN_DEFAULT_LIPSYNC_MODEL_KEY
-export const DEFAULT_VOICE_MODEL_KEY = BUILTIN_DEFAULT_VOICE_MODEL_KEY
-export const DEFAULT_VOICE_DESIGN_MODEL_KEY = BUILTIN_DEFAULT_VOICE_DESIGN_MODEL_KEY
+export const DEFAULT_LIPSYNC_MODEL_KEY = 'fal::fal-ai/kling-video/lipsync/audio-to-video'
+export const DEFAULT_VOICE_MODEL_KEY = 'fal::fal-ai/index-tts-2/text-to-speech'
+export const DEFAULT_VOICE_DESIGN_MODEL_KEY = 'bailian::qwen-voice-design'
+
+interface BuiltinApiConfigCatalogRegistration {
+  models: readonly unknown[]
+  googleCompatibleModels: readonly ApiConfigCatalogModel[]
+  defaultLipSyncModelKey: string
+  defaultVoiceModelKey: string
+  defaultVoiceDesignModelKey: string
+}
+
+let registeredApiConfigCatalog: BuiltinApiConfigCatalogRegistration | null = null
+let apiConfigCatalogModelCache: ApiConfigCatalogModel[] | null = null
+
+export function registerBuiltinApiConfigCatalog(input: BuiltinApiConfigCatalogRegistration) {
+  registeredApiConfigCatalog = input
+  apiConfigCatalogModelCache = null
+}
+
+function requireBuiltinApiConfigCatalog(): BuiltinApiConfigCatalogRegistration {
+  if (!registeredApiConfigCatalog) {
+    throw new Error('API_CONFIG_CATALOG_MISSING: empty builtin catalog')
+  }
+  return registeredApiConfigCatalog
+}
+
+export function getDefaultLipSyncModelKey(): string {
+  return registeredApiConfigCatalog?.defaultLipSyncModelKey ?? DEFAULT_LIPSYNC_MODEL_KEY
+}
+
+export function getDefaultVoiceModelKey(): string {
+  return registeredApiConfigCatalog?.defaultVoiceModelKey ?? DEFAULT_VOICE_MODEL_KEY
+}
+
+export function getDefaultVoiceDesignModelKey(): string {
+  return registeredApiConfigCatalog?.defaultVoiceDesignModelKey ?? DEFAULT_VOICE_DESIGN_MODEL_KEY
+}
 
 export const API_CONFIG_CATALOG_PROVIDERS: ApiConfigCatalogProvider[] = [
   { id: 'ark', name: 'Volcengine Ark' },
@@ -82,10 +110,11 @@ function normalizeApiConfigCatalogModel(raw: unknown, index: number): ApiConfigC
 }
 
 function buildApiConfigCatalogModels(): ApiConfigCatalogModel[] {
+  const catalog = requireBuiltinApiConfigCatalog()
   const byKey = new Map<string, ApiConfigCatalogModel>()
 
-  for (let index = 0; index < BUILTIN_API_CONFIG_CATALOG_MODELS.length; index += 1) {
-    const model = normalizeApiConfigCatalogModel(BUILTIN_API_CONFIG_CATALOG_MODELS[index], index)
+  for (let index = 0; index < catalog.models.length; index += 1) {
+    const model = normalizeApiConfigCatalogModel(catalog.models[index], index)
     const modelKey = composeModelKey(model.provider, model.modelId)
     const capabilities = resolveBuiltinCapabilitiesByModelKey(model.type, modelKey)
     byKey.set(`${model.type}::${modelKey}`, {
@@ -103,7 +132,15 @@ function buildApiConfigCatalogModels(): ApiConfigCatalogModel[] {
   })
 }
 
-export const API_CONFIG_CATALOG_MODELS: ApiConfigCatalogModel[] = buildApiConfigCatalogModels()
+export function listApiConfigCatalogModels(): ApiConfigCatalogModel[] {
+  if (!apiConfigCatalogModelCache) {
+    apiConfigCatalogModelCache = buildApiConfigCatalogModels()
+  }
+  return apiConfigCatalogModelCache.map((model) => ({
+    ...model,
+    capabilities: cloneCapabilities(model.capabilities),
+  }))
+}
 
 export const API_CONFIG_PRESET_COMING_SOON_MODEL_KEYS = new Set<string>([])
 
@@ -166,7 +203,7 @@ export function getApiConfigProviderDisplayName(providerId?: string, locale?: st
 }
 
 export function getGoogleCompatibleApiConfigPresetModels(providerId: string): ApiConfigCatalogModel[] {
-  return BUILTIN_GOOGLE_COMPATIBLE_API_CONFIG_CATALOG_MODELS
+  return requireBuiltinApiConfigCatalog().googleCompatibleModels
     .map((model) => ({ ...model, provider: providerId }))
 }
 
@@ -175,7 +212,7 @@ export function buildApiConfigServerCatalog(input?: {
 }): ApiConfigServerCatalog {
   return {
     providers: API_CONFIG_CATALOG_PROVIDERS.map((provider) => ({ ...provider })),
-    models: API_CONFIG_CATALOG_MODELS.map((model) => {
+    models: listApiConfigCatalogModels().map((model) => {
       const capabilities = input?.resolveCapabilities
         ? input.resolveCapabilities(model)
         : model.capabilities
