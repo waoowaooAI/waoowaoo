@@ -30,6 +30,7 @@
 - [x] `adapters/media-option-schema.ts` 删除（数据已在 Step 1 搬走）
 - [x] `ai-exec/engine.ts` 路由改为 `adapter[modality]`
 - [x] guard：`no-cross-provider-switch.mjs`
+- [x] `adapters/{llm,media}/{execution,stream-execution}.ts` 清空（仅 re-export）
 
 ### Step 3 — 删散文件 + 取消 `adapters/` 中间层
 

@@ -7,7 +7,7 @@ import { resolveModelSelection } from '@/lib/api-config'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
 import { runChatCompletion } from '@/lib/ai-exec/llm/completion-runner'
-import { chatCompletionStream as runChatCompletionStream } from '@/lib/ai-providers/adapters/llm/stream-execution'
+import { chatCompletionStream as runChatCompletionStream } from '@/lib/ai-exec/llm/completion-runner'
 import {
   runChatCompletionWithVision,
   runChatCompletionWithVisionStream,

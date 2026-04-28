@@ -1,6 +1,6 @@
 {
   "note": "由 no-legacy-ai-entry-imports.mjs --update-snapshot 生成；只可缩短。",
-  "generatedAt": "2026-04-27T03:28:39.138Z",
+  "generatedAt": "2026-04-28T04:30:44.133Z",
   "files": [
     "src/app/[locale]/profile/components/api-config-tab/ApiConfigTabContainer.tsx",
     "src/app/[locale]/profile/components/api-config-tab/DefaultModelCards.tsx",
@@ -29,9 +29,6 @@
     "src/lib/ai-exec/llm/completion-runner.ts",
     "src/lib/ai-exec/llm/vision-runner.ts",
     "src/lib/ai-providers/adapters/llm/descriptor.ts",
-    "src/lib/ai-providers/adapters/llm/execution.ts",
-    "src/lib/ai-providers/adapters/llm/stream-execution.ts",
-    "src/lib/ai-providers/adapters/media/execution.ts",
     "src/lib/ai-providers/adapters/media/generators/ark.ts",
     "src/lib/ai-providers/adapters/media/generators/audio/bailian.ts",
     "src/lib/ai-providers/adapters/media/generators/factory.ts",

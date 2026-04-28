@@ -7,6 +7,7 @@ import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/llm/types'
 import { emitChunkedText } from '@/lib/llm/stream-helpers'
 import { getCompletionParts } from '@/lib/llm/completion-parts'
+import { getInternalBaseUrl } from '@/lib/env'
 import {
   _ulogError,
   _ulogInfo,
@@ -15,11 +16,13 @@ import {
   llmLogger,
   recordCompletionUsage,
   resolveLlmRuntimeModel,
+  completionUsageSummary,
 } from '@/lib/llm/runtime-shared'
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
-import { executeVisionCompletionViaAdapter } from '@/lib/ai-providers/adapters/llm/execution'
 import { describeLlmVariantBase } from '@/lib/ai-providers/adapters/llm/descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
+import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
+import type { AiProviderVisionExecutionContext } from '@/lib/ai-providers/runtime-types'
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && typeof error.message === 'string') return error.message
@@ -37,6 +40,61 @@ function getErrorBody(error: unknown): { message?: unknown; code?: unknown } {
     return root.error as { message?: unknown; code?: unknown }
   }
   return root
+}
+
+type OpenAiVisionContentItem = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
+
+async function runOpenAiVision(
+  input: AiProviderVisionExecutionContext,
+): Promise<{ completion: OpenAI.Chat.Completions.ChatCompletion; logProvider: string }> {
+  if (!input.providerConfig.baseUrl) {
+    throw new Error(`PROVIDER_BASE_URL_MISSING: ${input.selection.provider} (llm)`)
+  }
+
+  const client = new OpenAI({
+    baseURL: input.providerConfig.baseUrl,
+    apiKey: input.providerConfig.apiKey,
+  })
+
+  const content: OpenAiVisionContentItem[] = []
+  if (input.textPrompt) content.push({ type: 'text', text: input.textPrompt })
+
+  for (const url of input.imageUrls) {
+    let finalUrl = url
+    if (url.startsWith('/api/files/') || url.startsWith('/')) {
+      try {
+        const { normalizeToBase64ForGeneration } = await import('@/lib/media/outbound-image')
+        finalUrl = await normalizeToBase64ForGeneration(url)
+      } catch {
+        const baseUrl = getInternalBaseUrl()
+        finalUrl = `${baseUrl}${url}`
+      }
+    }
+    content.push({ type: 'image_url', image_url: { url: finalUrl } })
+  }
+
+  const completion = await client.chat.completions.create({
+    model: input.selection.modelId,
+    messages: [{ role: 'user', content }],
+    temperature: input.temperature,
+  })
+  const normalizedCompletion = completion as OpenAI.Chat.Completions.ChatCompletion
+  return {
+    completion: normalizedCompletion,
+    logProvider: input.selection.provider,
+  }
+}
+
+async function executeVisionCompletionViaAdapter(
+  input: AiProviderVisionExecutionContext,
+): Promise<{ completion: OpenAI.Chat.Completions.ChatCompletion; logProvider: string }> {
+  const provider = resolveRegisteredAiProvider(input.selection.provider)
+  if (provider.completeVision) {
+    const result = await provider.completeVision(input)
+    return result
+  }
+
+  return await runOpenAiVision(input)
 }
 
 export async function runChatCompletionWithVision(
