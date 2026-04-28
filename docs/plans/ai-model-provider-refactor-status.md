@@ -27,7 +27,7 @@
 - [x] 每 provider `adapter.ts` 落地
 - [x] `adapters/llm/{execution,stream-execution}.ts` switch 拆光
 - [x] `adapters/media/execution.ts` switch 拆光
-- [ ] `adapters/media-option-schema.ts` 删除（数据已在 Step 1 搬走）
+- [x] `adapters/media-option-schema.ts` 删除（数据已在 Step 1 搬走）
 - [x] `ai-exec/engine.ts` 路由改为 `adapter[modality]`
 - [x] guard：`no-cross-provider-switch.mjs`
 
