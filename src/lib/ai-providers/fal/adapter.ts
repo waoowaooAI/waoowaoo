@@ -1,5 +1,4 @@
-import { describeMediaVariantBase } from '@/lib/ai-providers/adapters/shared'
-import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/adapters/types'
+import { describeMediaVariantBase, type DescribeOnlyMediaAdapter } from '@/lib/ai-providers/shared/media-adapter'
 import { resolveFalOptionSchema } from './models'
 
 export const falMediaAdapter: DescribeOnlyMediaAdapter = {
