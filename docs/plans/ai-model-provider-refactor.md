@@ -248,13 +248,13 @@ src/lib/ai-exec/
 | 旧路径 | 新路径 |
 |---|---|
 | `src/lib/model-capabilities/catalog.ts` | 数据按 provider 拆入各 `ai-providers/<x>/models.ts` |
-| `src/lib/model-capabilities/lookup.ts` | `ai-registry/catalog.ts` 内的纯函数（fan-out `registry.list() → adapter.describe(...)`）；**禁止**在 `ai-registry/` 内 import `@/lib/ai-providers/<x>/*`，provider 注册与数据注入仅由 `ai-providers/index.ts` 承担（composition root）。 |
+| `src/lib/model-capabilities/lookup.ts` | `ai-registry/capabilities-catalog.ts` 内的纯函数；**禁止**在 `ai-registry/` 内 import `@/lib/ai-providers/<x>/*`，provider 注册与数据注入仅由 `ai-providers/index.ts` 承担（composition root）。 |
 | `src/lib/model-capabilities/{video-effective,video-model-options}.ts` | 进对应 video adapter（`ark/video.ts` 等） |
 | `src/lib/model-pricing/catalog.ts` | 数据按 provider 拆入各 `ai-providers/<x>/models.ts` |
-| `src/lib/model-pricing/lookup.ts` | `ai-registry/catalog.ts` |
-| `src/lib/model-pricing/{version,video-tier}.ts` | `ai-registry/catalog.ts` 内部 helper |
-| `src/lib/user-api/api-config-catalog.ts` | `ai-registry/catalog.ts`（user-api 改为 re-export 一行） |
-| `src/lib/user-api/api-config.ts`（1905 行） | 仅保留**用户配置 CRUD 与校验入口**；catalog 生成、能力 enrichment、pricing display 全部下沉到 `ai-registry/catalog.ts`（目标 ≤ 300 行） |
+| `src/lib/model-pricing/lookup.ts` | `ai-registry/pricing-catalog.ts` + `ai-registry/pricing-resolution.ts` |
+| `src/lib/model-pricing/{version,video-tier}.ts` | `ai-registry/pricing-resolution.ts` + `ai-registry/video-capabilities.ts` |
+| `src/lib/user-api/api-config-catalog.ts` | 删除；调用方直接使用 `ai-registry` 对应模块 |
+| `src/lib/user-api/api-config.ts`（1905 行） | 仅保留**用户配置 CRUD 与校验入口**；catalog 生成、能力 enrichment、pricing display 全部下沉到 `ai-registry/*-catalog.ts` 与 `pricing-resolution.ts`（目标 ≤ 300 行） |
 
 ### 3.4 冗余的第四个 ai-\* 目录
 
@@ -274,9 +274,9 @@ src/lib/ai-exec/
 ### 3.6 仍可保留但**不属于本重构**
 
 - `src/lib/llm-observe/**`：日志/观测，不是 AI 调用，不动。
-- `src/lib/async-poll.ts` / `src/lib/async-submit.ts` / `src/lib/async-task-utils.ts`：异步任务基础设施，不属 AI 模型层，不动；但 adapter `poll()` 必须使用其协议。
+- `src/lib/async-poll.ts` / `src/lib/async-submit.ts` / `src/lib/async-task-utils.ts`：属于 AI 调用入口散落，不允许保留。终态为：externalId 解析与轮询编排在 `src/lib/ai-exec/async-poll.ts`；provider HTTP 查询/队列提交在 `src/lib/ai-providers/<provider>/{poll,queue}.ts`；旧路径物理删除且不留 re-export。
 - `src/lib/workers/**`、`src/lib/task/**`：执行治理基础设施，不动；但只能通过 `ai-exec/engine` 调用 adapter。
-- `src/lib/billing/**`：通过 `ai-registry/catalog.ts` 读 pricing，不再直接 import `model-pricing/`。
+- `src/lib/billing/**`：通过 `ai-registry/pricing-catalog.ts` / `pricing-resolution.ts` 读 pricing，不再直接 import `model-pricing/`。
 - `src/lib/model-template/**`（在 `user-api` 下）：用户自定义模板的 schema/validator/probe/save，这是用户配置，不动；但 `probe.ts` 调用 LLM 必须经 `ai-exec/engine`。
 
 ---
@@ -353,16 +353,55 @@ src/lib/ai-providers/
 
 **完成判据**：`rg -l 'ark-api|ark-llm|llm-client|openai-compat-template-runtime|openai-compat-media-template|gemini-batch-utils|model-config-contract|api-config\.ts|model-capabilities|model-pricing|ai-runtime|src/lib/llm/' src tests` 返回 0 行。
 
-### Step 4 — `ai-registry/catalog.ts` 取代 `user-api/api-config-catalog.ts` 与 `user-api/api-config.ts` 的 catalog 部分
+### Step 4 — `ai-registry` 专职模块取代 `user-api/api-config-catalog.ts` 与 `user-api/api-config.ts` 的 catalog 部分
 
-- `ai-registry/catalog.ts` 通过 `registry.list()` fan-out 各 adapter 的 `describe()`，产出前端所需 catalog（providers + modelVariants + displayLabel + pricingDisplay + capabilityDefaults shape）。
-- `user-api/api-config-catalog.ts` → 一行 `export * from '@/lib/ai-registry/catalog'`，下个 PR 删除。
+- `ai-registry/api-config-catalog.ts` 产出前端所需 catalog（providers + modelVariants + displayLabel + pricingDisplay + capabilityDefaults shape）。
+- `user-api/api-config-catalog.ts` 必须物理删除，不允许用 `export * from '@/lib/ai-registry/*'` 留兼容层。
 - `user-api/api-config.ts`（1905 行）保留：
   - 用户启用集合、默认模型字段、capability defaults、并发配置的**读写与校验**。
-  - 全部 catalog 生成、capabilities/pricing enrichment 删除（改为读 `ai-registry/catalog`）。
+  - 全部 catalog 生成、capabilities/pricing enrichment 删除（改为读 `ai-registry` 专职模块）。
 - 行数目标：`user-api/api-config.ts` ≤ 300 行。
 
 **完成判据**：`/api/user/api-config` GET 契约测试通过；前端 `useApiConfigQuery` 数据结构不变；`user-api/api-config.ts` 行数不超标。
+
+### Step 5 — 执行入口收敛规则
+
+Step 1-4 的物理迁移不等于终态。执行入口还必须满足以下规则：
+
+- 每个 provider 只能导出一个 `AiProviderAdapter`；禁止长期保留 describe-only 与 runtime 两套注册体系。
+- `ai-registry` 不允许用单个 barrel 承载 pricing、display、capability、API-config 多类职责；这些职责必须拆入命名明确的同级 registry 模块。
+- `src/lib/lipsync/**`、`src/lib/voice/**`、`src/lib/user-api/**` 不得承载 provider SDK 调用、provider probe 或 providerKey 分流。
+- `src/lib/async-poll.ts` / `async-submit.ts` / `async-task-utils.ts` 不允许存在；旧路径不得保留 re-export 兼容层。
+- `ai-exec/async-poll.ts` 只允许负责 externalId 编排、用户配置读取与结果归一，provider HTTP 查询/队列提交必须位于 `ai-providers/<provider>/`。
+
+Step 5 的目标不是继续搬文件名，而是**恢复依赖方向与唯一执行入口**：
+
+```
+业务 / route / worker / billing
+        ↓
+src/lib/ai-exec
+        ↓
+src/lib/ai-registry
+        ↓
+src/lib/ai-providers/<providerKey>
+```
+
+落地顺序：
+
+1. `lipsync`：provider 实现归入 `ai-providers/{fal,vidu,bailian}/lipsync.ts`，业务调用走 `ai-exec/engine`，默认模型事实归入 `ai-registry`。
+2. `voice/audio`：`src/lib/voice/generate-voice-line.ts` 不得直接调用 FAL / Bailian SDK；业务层只传入 selection 与文本/音色绑定。
+3. `async poll`：provider HTTP 查询归入对应 `ai-providers/<provider>` 文件；新增 async provider 只能在对应 provider 目录补 `poll/queue` 实现并注册 externalId 编排。
+4. `provider probe`：provider-test、LLM connection、media template probe 不得放在 `user-api`。
+5. `catalog`：pricing calculator / API-config display / capability selection / video capability helpers 必须分文件；provider 数据仍只来自各 `models.ts`。
+6. `adapter`：合并 `DescribeOnlyMediaAdapter` 与 `RegisteredAiProvider`，最终每个 provider 只导出一个 `AiProviderAdapter`。
+
+Step 5 完成判据：
+
+- `src/lib/lipsync/`、`src/lib/voice/generate-voice-line.ts` 不再直接包含 provider SDK 调用或 providerKey 分流。
+- `src/lib/async-poll.ts` 不再存在；`ai-exec/async-poll.ts` 不含 provider 字面量分支，新增 provider 的 HTTP 细节只允许进入对应 `ai-providers/<x>`。
+- `src/lib/user-api/**` 不再直接 import `openai` 或写 provider probe 逻辑。
+- `ai-registry` 不再用 barrel 承担多类职责；新增 registry helper 必须进入命名明确的同级模块，且不得作为旧路径兼容 re-export。
+- `npm run check:ai-refactor-guards` 通过，且 snapshot 只允许缩短，不允许新增。
 
 ---
 

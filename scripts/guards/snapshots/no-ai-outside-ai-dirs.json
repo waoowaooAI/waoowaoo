@@ -1,16 +1,5 @@
 {
   "note": "由 no-ai-outside-ai-dirs.mjs --update-snapshot 生成；只可缩短。",
-  "generatedAt": "2026-04-28T07:46:59.592Z",
-  "files": [
-    "src/components/ui/config-modals/ModelCapabilityDropdown.tsx",
-    "src/lib/billing/cost.ts",
-    "src/lib/constants.ts",
-    "src/lib/operations/domains/media/lipsync-ops.ts",
-    "src/lib/operations/domains/media/video-generation-ops.ts",
-    "src/lib/user-api/api-config-catalog.ts",
-    "src/lib/user-api/api-config.ts",
-    "src/lib/user-api/llm-test-connection.ts",
-    "src/lib/user-api/provider-test.ts",
-    "src/lib/voice/generate-voice-line.ts"
-  ]
+  "generatedAt": "2026-04-28T15:41:13.214Z",
+  "files": []
 }
