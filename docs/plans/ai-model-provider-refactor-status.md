@@ -6,7 +6,7 @@
 
 ## 当前阶段
 
-- **进行中**：Step 2 — `AiProviderAdapter` 抽象升级 + 拆 switch
+- **进行中**：Step 3 — 删散文件 + 取消 `adapters/` 中间层
 
 ## Step 进度
 
@@ -35,7 +35,7 @@
 ### Step 3 — 删散文件 + 取消 `adapters/` 中间层
 
 - [ ] `ark-api.ts` + `ark-llm.ts` → `ai-providers/ark/{llm,image,video}.ts`
-- [ ] `openai-compat-template-runtime.ts` + `openai-compat-media-template.ts` → `ai-providers/openai-compatible/user-template.ts`
+- [x] `openai-compat-template-runtime.ts` + `openai-compat-media-template.ts` → `ai-providers/openai-compatible/user-template.ts`
 - [ ] `gemini-batch-utils.ts` → `ai-providers/google/llm.ts` + `ai-providers/shared/helpers.ts`
 - [ ] `llm-client.ts` → `ai-exec/llm-helpers.ts`
 - [ ] `model-config-contract.ts` 拆分到 `ai-registry/{types,selection}.ts` + 各 `models.ts`

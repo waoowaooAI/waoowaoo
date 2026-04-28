@@ -1,4 +1,4 @@
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import type { AiCompatibleProviderKey } from '@/lib/ai-registry/gateway-route'
 
 export type OpenAICompatImageProfile = AiCompatibleProviderKey

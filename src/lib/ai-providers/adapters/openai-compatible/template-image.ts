@@ -6,7 +6,7 @@ import {
   extractTemplateError,
   normalizeResponseJson,
   readJsonPath,
-} from '@/lib/openai-compat-template-runtime'
+} from '@/lib/ai-providers/openai-compatible/user-template'
 import { parseModelKeyStrict } from '@/lib/model-config-contract'
 import { resolveOpenAICompatClientConfig } from './common'
 

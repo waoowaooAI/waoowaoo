@@ -11,7 +11,7 @@ import {
 import type {
     OpenAICompatMediaTemplate,
     OpenAICompatMediaTemplateSource,
-} from '@/lib/openai-compat-media-template'
+} from '@/lib/ai-providers/openai-compatible/user-template'
 
 export interface ApiConfigCatalogProvider {
     id: string

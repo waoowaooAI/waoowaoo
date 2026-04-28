@@ -17,7 +17,7 @@ import {
 import type {
   OpenAICompatMediaTemplate,
   OpenAICompatMediaTemplateSource,
-} from './openai-compat-media-template'
+} from '@/lib/ai-providers/openai-compatible/user-template'
 import { validateOpenAICompatMediaTemplate } from './user-api/model-template/validator'
 
 export interface CustomModel {

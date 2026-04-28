@@ -1,5 +1,5 @@
 import type { ToolSet } from 'ai'
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 
 export type AssistantId = 'api-config-template' | 'tutorial'
 

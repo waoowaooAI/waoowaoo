@@ -37,7 +37,7 @@ import {
 import type {
   OpenAICompatMediaTemplate,
   OpenAICompatMediaTemplateSource,
-} from '@/lib/openai-compat-media-template'
+} from '@/lib/ai-providers/openai-compatible/user-template'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template/validator'
 import { buildApiConfigServerCatalog } from '@/lib/user-api/api-config-catalog'
 

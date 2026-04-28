@@ -1,4 +1,4 @@
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/adapters/openai-compatible/common'
 import {
   buildRenderedTemplateRequest,
@@ -6,7 +6,7 @@ import {
   extractTemplateError,
   normalizeResponseJson,
   readJsonPath,
-} from '@/lib/openai-compat-template-runtime'
+} from '@/lib/ai-providers/openai-compatible/user-template'
 
 export interface MediaTemplateProbeTrace {
   endpoint: 'create' | 'status'

@@ -5,7 +5,7 @@ import {
   mockAuthenticated,
   resetAuthMockState,
 } from '../../../helpers/auth'
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 
 const validateTemplateMock = vi.hoisted(() => vi.fn())
 const probeMediaTemplateMock = vi.hoisted(() => vi.fn())
@@ -153,4 +153,3 @@ describe('api specific - user api-config template diagnostics routes', () => {
     }))
   })
 })
-

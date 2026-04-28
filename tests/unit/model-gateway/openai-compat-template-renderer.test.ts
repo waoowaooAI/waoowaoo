@@ -7,7 +7,7 @@ import {
   renderTemplateString,
   renderTemplateValue,
   resolveTemplateEndpointUrl,
-} from '@/lib/openai-compat-template-runtime'
+} from '@/lib/ai-providers/openai-compatible/user-template'
 
 describe('model-gateway openai-compat template renderer', () => {
   it('renders placeholders in strings and nested body values', () => {
