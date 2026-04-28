@@ -48,6 +48,7 @@
 - [x] `ai-providers/official/model-registry.ts` 删除
 - [x] guard：`no-ai-outside-ai-dirs.mjs`
 - [x] 终态校验：`rg` 全 0
+- [x] 清理空目录壳：`src/lib/model-capabilities/`、`src/lib/model-pricing/`
 
 ### Step 4 — `ai-registry/catalog.ts` 取代 `user-api` catalog
 
