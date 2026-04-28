@@ -1,5 +1,4 @@
 import type OpenAI from 'openai'
-import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
 import type {
   AiLlmExecutionInput,
   AiLlmExecutionResult,
@@ -8,6 +7,20 @@ import type {
   AiLlmProviderConfig,
 } from '@/lib/ai-registry/types'
 import type { ProviderChatCompletionOptions, ProviderChatCompletionStreamCallbacks } from '@/lib/ai-providers/shared/llm-support'
+
+export type GenerateResult = {
+  success: boolean
+  imageUrl?: string
+  imageUrls?: string[]
+  imageBase64?: string
+  videoUrl?: string
+  audioUrl?: string
+  error?: string
+  requestId?: string
+  async?: boolean
+  endpoint?: string
+  externalId?: string
+}
 
 export type AiProviderLlmResult = Pick<
   AiLlmExecutionResult,

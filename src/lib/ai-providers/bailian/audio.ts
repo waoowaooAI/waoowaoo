@@ -1,6 +1,6 @@
 import { getProviderConfig } from '@/lib/api-config'
-import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
 import type { AiProviderAudioExecutionContext } from '@/lib/ai-providers/runtime-types'
+import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { synthesizeWithBailianTTS } from './tts'
 import type { BailianGenerateRequestOptions } from './types'
 import { assertBailianOfficialModelSupported } from './models'

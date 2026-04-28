@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
-import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
+import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
 import type {
   AiModality,
   AiStepExecutionInput,
