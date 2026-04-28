@@ -1,10 +1,9 @@
-import OpenAI from 'openai'
+import type OpenAI from 'openai'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { emitChunkedText } from '@/lib/ai-providers/shared/llm-support'
-import { getInternalBaseUrl } from '@/lib/env'
 import { getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 import {
   _ulogError,
@@ -40,49 +39,6 @@ function getErrorBody(error: unknown): { message?: unknown; code?: unknown } {
   return root
 }
 
-type OpenAiVisionContentItem = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
-
-async function runOpenAiVision(
-  input: AiProviderVisionExecutionContext,
-): Promise<{ completion: OpenAI.Chat.Completions.ChatCompletion; logProvider: string }> {
-  if (!input.providerConfig.baseUrl) {
-    throw new Error(`PROVIDER_BASE_URL_MISSING: ${input.selection.provider} (llm)`)
-  }
-
-  const client = new OpenAI({
-    baseURL: input.providerConfig.baseUrl,
-    apiKey: input.providerConfig.apiKey,
-  })
-
-  const content: OpenAiVisionContentItem[] = []
-  if (input.textPrompt) content.push({ type: 'text', text: input.textPrompt })
-
-  for (const url of input.imageUrls) {
-    let finalUrl = url
-    if (url.startsWith('/api/files/') || url.startsWith('/')) {
-      try {
-        const { normalizeToBase64ForGeneration } = await import('@/lib/media/outbound-image')
-        finalUrl = await normalizeToBase64ForGeneration(url)
-      } catch {
-        const baseUrl = getInternalBaseUrl()
-        finalUrl = `${baseUrl}${url}`
-      }
-    }
-    content.push({ type: 'image_url', image_url: { url: finalUrl } })
-  }
-
-  const completion = await client.chat.completions.create({
-    model: input.selection.modelId,
-    messages: [{ role: 'user', content }],
-    temperature: input.temperature,
-  })
-  const normalizedCompletion = completion as OpenAI.Chat.Completions.ChatCompletion
-  return {
-    completion: normalizedCompletion,
-    logProvider: input.selection.provider,
-  }
-}
-
 async function executeVisionCompletionViaAdapter(
   input: AiProviderVisionExecutionContext,
 ): Promise<{ completion: OpenAI.Chat.Completions.ChatCompletion; logProvider: string }> {
@@ -92,7 +48,7 @@ async function executeVisionCompletionViaAdapter(
     return result
   }
 
-  return await runOpenAiVision(input)
+  throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${input.selection.provider}:vision`)
 }
 
 export async function runChatCompletionWithVision(

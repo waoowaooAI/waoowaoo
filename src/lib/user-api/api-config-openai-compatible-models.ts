@@ -1,5 +1,4 @@
 import { ApiError } from '@/lib/api-errors'
-import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import type { StoredModel } from './api-config-types'
 import { getProviderKey } from './api-config-shared'
 
@@ -10,68 +9,6 @@ function isOpenAICompatibleLlmModel(model: StoredModel): boolean {
 function isOpenAICompatibleMediaTemplateModel(model: StoredModel): boolean {
   if (getProviderKey(model.provider) !== 'openai-compatible') return false
   return model.type === 'image' || model.type === 'video'
-}
-
-function getDefaultMediaTemplate(type: 'image' | 'video'): OpenAICompatMediaTemplate {
-  if (type === 'image') {
-    return {
-      version: 1,
-      mediaType: 'image',
-      mode: 'sync',
-      create: {
-        method: 'POST',
-        path: '/images/generations',
-        contentType: 'application/json',
-        bodyTemplate: {
-          model: '{{model}}',
-          prompt: '{{prompt}}',
-        },
-      },
-      response: {
-        outputUrlPath: '$.data[0].url',
-        outputUrlsPath: '$.data',
-        errorPath: '$.error.message',
-      },
-    }
-  }
-
-  return {
-    version: 1,
-    mediaType: 'video',
-    mode: 'async',
-    create: {
-      method: 'POST',
-      path: '/videos',
-      contentType: 'multipart/form-data',
-      multipartFileFields: ['input_reference'],
-      bodyTemplate: {
-        model: '{{model}}',
-        prompt: '{{prompt}}',
-        seconds: '{{duration}}',
-        size: '{{size}}',
-        input_reference: '{{image}}',
-      },
-    },
-    status: {
-      method: 'GET',
-      path: '/videos/{{task_id}}',
-    },
-    content: {
-      method: 'GET',
-      path: '/videos/{{task_id}}/content',
-    },
-    response: {
-      taskIdPath: '$.id',
-      statusPath: '$.status',
-      errorPath: '$.error.message',
-    },
-    polling: {
-      intervalMs: 3000,
-      timeoutMs: 600000,
-      doneStates: ['completed', 'succeeded'],
-      failStates: ['failed', 'error', 'canceled'],
-    },
-  }
 }
 
 export function resolveStoredLlmProtocols(
@@ -169,11 +106,9 @@ export function resolveStoredMediaTemplates(
       }
     }
 
-    return {
-      ...model,
-      compatMediaTemplate: getDefaultMediaTemplate(expectedMediaType),
-      compatMediaTemplateCheckedAt: checkedAtFallback,
-      compatMediaTemplateSource: 'manual',
-    }
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'MODEL_COMPAT_MEDIA_TEMPLATE_REQUIRED',
+      field: `models[${index}].compatMediaTemplate`,
+    })
   })
 }

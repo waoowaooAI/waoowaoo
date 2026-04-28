@@ -104,6 +104,6 @@
 
 - [x] `src/lib/user-api/model-llm-protocol-probe.ts` 与 `src/lib/user-api/model-template/probe.ts` 不再承载 provider probe HTTP 实现。
 - [x] `src/lib/user-api/runtime-config.ts` 仅保留用户配置读取/解密；runtime selection 与 provider baseUrl 策略迁入 `ai-registry/runtime-selection.ts`。
-- [ ] LLM vision 与 OpenAI-compatible 模板链路移除隐式 fallback，未声明能力或缺少模板时显式失败。
+- [x] LLM vision 与 OpenAI-compatible 模板链路移除隐式 fallback，未声明能力或缺少模板时显式失败。
 - [ ] guard 扫描覆盖 `user-api/**` 中的 provider probe / providerKey 字面量分支，防止非 `ai-*` 目录重新长出模型调用逻辑。
 - [ ] 每个 provider 最终只导出一个完整 adapter，`ai-providers/index.ts` 只做注册。
