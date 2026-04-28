@@ -112,10 +112,12 @@
     "newPreset": "New",
     "loading": "Loading",
     "empty": "No presets",
+    "userEmpty": "No personal styles yet",
+    "sectionCount": "{count}",
     "emptyDescription": "Use the plus button to create a visual or director style. Prompt details are only shown after opening a style.",
     "noSummary": "No summary",
     "createTitle": "New Style",
-    "createDescription": "Choose a type, generate it with AI from your request, then adjust the structured fields.",
+    "createDescription": "Fill only the required fields, consistent with asset creation dialogs.",
     "editTitle": "Edit Style",
     "editDescription": "Changes apply in real time the next time a referencing project generates content.",
     "systemTitle": "System Style",
@@ -123,12 +125,15 @@
     "loadFailed": "Failed to load style presets",
         "designFailed": "AI design failed",
         "saveFailed": "Save failed",
-        "archiveFailed": "Archive failed",
+    "deleteFailed": "Delete failed",
+    "deleteConfirm": "Delete this style? It will no longer be shown.",
+    "directorConfigDetails": "Director style configuration",
+    "directorDesignRequired": "Use AI Design to generate the director style before saving.",
         "design": "AI Design",
         "designing": "Designing",
         "save": "Save",
         "saving": "Saving",
-        "archive": "Archive",
+        "delete": "Delete",
     "kind": {
       "visual_style": "Visual Style",
       "director_style": "Director Style"
@@ -141,14 +146,14 @@
       "all": "All"
     },
     "source": {
-      "system": "System",
-      "user": "Mine"
+      "system": "Built-in",
+      "user": "Created by me"
     },
     "fields": {
             "name": "Name",
             "summary": "Summary",
             "instruction": "Design Request",
-            "prompt": "Positive Style",
+            "prompt": "Prompt",
             "negativePrompt": "Negative Directives",
             "colorPalette": "Color Palette",
             "lineStyle": "Line Style",

@@ -71,7 +71,7 @@ export default function VideoPromptModal({
             <textarea
               value={editValue}
               onChange={(e) => onEditValueChange(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)]"
+              className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:border-[var(--glass-stroke-focus)]"
               rows={6}
               placeholder={t('promptModal.placeholder')}
             />

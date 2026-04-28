@@ -9,14 +9,7 @@ import { apiFetch } from '@/lib/api-fetch'
 import { ART_STYLES, getArtStylePrompt } from '@/lib/constants'
 import { STYLE_PRESETS } from '@/lib/style-presets'
 import { buildDirectorStyleDoc, isDirectorStylePresetId } from '@/lib/director-style/presets'
-import type {
-  DirectorStyleConfig,
-  PresetSource,
-  StylePresetKind,
-  StylePresetView,
-  VisualStyleConfig,
-} from '@/lib/style-preset/types'
-import type { DirectorStyleDocField } from '@/lib/director-style/types'
+import { buildPromptOnlyVisualStyleConfig, normalizePromptOnlyVisualStyleConfig } from '@/lib/style-preset/visual-config'
 import StylePresetEditor from './StylePresetEditor'
 import {
   buildDraft,
@@ -24,11 +17,18 @@ import {
   readPresetList,
   type DraftState,
 } from './stylePresetEditorState'
+import type {
+  DirectorStyleConfig,
+  PresetSource,
+  StylePresetKind,
+  StylePresetView,
+  VisualStyleConfig,
+} from '@/lib/style-preset/types'
 
 type PresetFilter = 'all' | StylePresetKind
 type EditorMode = 'create' | 'edit-user' | 'view-system'
 
-type StylePresetListItem = {
+export type StylePresetListItem = {
   source: PresetSource
   id: string
   kind: StylePresetKind
@@ -37,21 +37,32 @@ type StylePresetListItem = {
   config: VisualStyleConfig | DirectorStyleConfig
 }
 
-function buildSystemVisualConfig(presetId: string, locale: string): VisualStyleConfig {
+export type StylePresetKindSections = Record<StylePresetKind, StylePresetListItem[]>
+
+export function splitStylePresetKindSections(presets: StylePresetListItem[]): StylePresetKindSections {
   return {
-    prompt: getArtStylePrompt(presetId, locale === 'en' ? 'en' : 'zh'),
-    negativePrompt: '',
-    colorPalette: [],
-    lineStyle: '',
-    texture: '',
-    lighting: '',
-    composition: '',
-    detailLevel: 'medium',
+    visual_style: presets.filter((preset) => preset.kind === 'visual_style'),
+    director_style: presets.filter((preset) => preset.kind === 'director_style'),
   }
 }
 
-function toPresetKey(preset: Pick<StylePresetListItem, 'source' | 'kind' | 'id'>): string {
-  return `${preset.source}:${preset.kind}:${preset.id}`
+const STYLE_PRESET_SECTION_ORDER: StylePresetKind[] = ['visual_style', 'director_style']
+
+function buildSystemVisualConfig(presetId: string, locale: string): VisualStyleConfig {
+  return buildPromptOnlyVisualStyleConfig(getArtStylePrompt(presetId, locale === 'en' ? 'en' : 'zh'))
+}
+
+function hasTextValue(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0
+  if (Array.isArray(value)) return value.some((item) => hasTextValue(item))
+  if (value && typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>).some((item) => hasTextValue(item))
+  }
+  return false
+}
+
+function hasDirectorStyleContent(config: DirectorStyleConfig): boolean {
+  return hasTextValue(config)
 }
 
 export default function StylePresetsTab() {
@@ -62,7 +73,6 @@ export default function StylePresetsTab() {
   const [presets, setPresets] = useState<StylePresetView[]>([])
   const [draft, setDraft] = useState<DraftState>(() => buildDraft('visual_style'))
   const [editorMode, setEditorMode] = useState<EditorMode>('create')
-  const [activePresetKey, setActivePresetKey] = useState<string | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -118,6 +128,14 @@ export default function StylePresetsTab() {
     ],
     [t],
   )
+  const canSaveDraft = useMemo(() => {
+    if (!draft.name.trim()) return false
+    if (draft.kind === 'visual_style') {
+      const config = normalizePromptOnlyVisualStyleConfig(draft.config as VisualStyleConfig)
+      return config.prompt.trim().length > 0
+    }
+    return hasDirectorStyleContent(draft.config as DirectorStyleConfig)
+  }, [draft])
 
   const loadPresets = useCallback(async () => {
     setLoading(true)
@@ -146,7 +164,6 @@ export default function StylePresetsTab() {
   const createPreset = (kind: StylePresetKind = 'visual_style') => {
     setDraft(buildDraft(kind))
     setEditorMode('create')
-    setActivePresetKey(null)
     setError(null)
     setEditorOpen(true)
   }
@@ -158,10 +175,11 @@ export default function StylePresetsTab() {
       name: preset.name,
       summary: preset.summary ?? '',
       instruction: '',
-      config: preset.config,
+      config: preset.kind === 'visual_style'
+        ? normalizePromptOnlyVisualStyleConfig(preset.config as VisualStyleConfig)
+        : preset.config,
     })
     setEditorMode(preset.source === 'user' ? 'edit-user' : 'view-system')
-    setActivePresetKey(toPresetKey(preset))
     setError(null)
     setEditorOpen(true)
   }
@@ -189,7 +207,9 @@ export default function StylePresetsTab() {
         kind: designed.kind,
         name: designed.name,
         summary: designed.summary,
-        config: designed.config,
+        config: designed.kind === 'visual_style'
+          ? normalizePromptOnlyVisualStyleConfig(designed.config as VisualStyleConfig)
+          : designed.config,
       }))
     } catch (err) {
       setError(err instanceof Error ? err.message : t('designFailed'))
@@ -199,7 +219,16 @@ export default function StylePresetsTab() {
   }
 
   const savePreset = async () => {
-    if (!draft.name.trim() || saving) return
+    if (saving) return
+    if (!draft.name.trim()) return
+    if (draft.kind === 'visual_style') {
+      const config = normalizePromptOnlyVisualStyleConfig(draft.config as VisualStyleConfig)
+      if (!config.prompt.trim()) return
+    }
+    if (draft.kind === 'director_style' && !hasDirectorStyleContent(draft.config as DirectorStyleConfig)) {
+      setError(t('directorDesignRequired'))
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -207,7 +236,9 @@ export default function StylePresetsTab() {
         kind: draft.kind,
         name: draft.name,
         summary: draft.summary.trim() ? draft.summary : null,
-        config: draft.config,
+        config: draft.kind === 'visual_style'
+          ? normalizePromptOnlyVisualStyleConfig(draft.config as VisualStyleConfig)
+          : draft.config,
       }
       const body = draft.id
         ? {
@@ -225,7 +256,6 @@ export default function StylePresetsTab() {
       await loadPresets()
       setEditorOpen(false)
       setEditorMode('create')
-      setActivePresetKey(null)
       setDraft(buildDraft('visual_style'))
     } catch (err) {
       setError(err instanceof Error ? err.message : t('saveFailed'))
@@ -234,18 +264,18 @@ export default function StylePresetsTab() {
     }
   }
 
-  const archivePreset = async (presetId: string) => {
+  const deletePreset = async (presetId: string) => {
+    if (!window.confirm(t('deleteConfirm'))) return
     setError(null)
     const response = await apiFetch(`/api/user/style-presets/${presetId}`, { method: 'DELETE' })
     if (!response.ok) {
-      setError(t('archiveFailed'))
+      setError(t('deleteFailed'))
       return
     }
     await loadPresets()
     if (draft.id === presetId) {
       setEditorOpen(false)
       setEditorMode('create')
-      setActivePresetKey(null)
       setDraft(buildDraft('visual_style'))
     }
   }
@@ -263,38 +293,15 @@ export default function StylePresetsTab() {
     })
   }
 
-  const updateDirectorBlock = (
-    field: DirectorStyleDocField,
-    key: string,
-    value: string,
-  ) => {
-    setDraft((current) => {
-      if (current.kind !== 'director_style') return current
-      const config = current.config as DirectorStyleConfig
-      const block = config[field] as unknown as Record<string, string>
-      return {
-        ...current,
-        config: {
-          ...config,
-          [field]: {
-            ...block,
-            [key]: value,
-          },
-        },
-      }
-    })
-  }
-
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between border-b border-[var(--glass-stroke-base)] px-6 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-[var(--glass-text-primary)]">{t('title')}</h2>
-            <p className="mt-1 text-sm text-[var(--glass-text-tertiary)]">{t('subtitle')}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="border-b border-[var(--glass-stroke-base)] px-6 py-5">
+        <h2 className="text-xl font-semibold text-[var(--glass-text-primary)]">{t('title')}</h2>
+        <p className="mt-1 text-sm leading-relaxed text-[var(--glass-text-tertiary)]">{t('subtitle')}</p>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 app-scrollbar">
+        <div className="mb-7 flex items-center justify-between gap-4">
           <SegmentedControl
             options={filterOptions}
             value={activeKind}
@@ -302,10 +309,11 @@ export default function StylePresetsTab() {
             layout="compact"
             className="min-w-max"
           />
+
           <button
             type="button"
             onClick={() => createPreset(activeKind === 'director_style' ? 'director_style' : 'visual_style')}
-            className="glass-btn-base glass-btn-primary flex items-center gap-2 px-3 py-1.5 text-sm font-semibold"
+            className="glass-btn-base glass-btn-primary flex items-center gap-2 px-4 py-2 text-sm font-semibold"
             aria-label={t('newPreset')}
             title={t('newPreset')}
           >
@@ -313,20 +321,18 @@ export default function StylePresetsTab() {
             {t('newPreset')}
           </button>
         </div>
-      </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-6 app-scrollbar">
         {error && !editorOpen ? (
           <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {error}
           </div>
         ) : null}
-          <PresetList
-          activePresetKey={activePresetKey}
+        <PresetList
           loading={loading}
           presets={filteredPresets}
           onOpen={openPreset}
           onCreate={createPreset}
+          onDelete={deletePreset}
         />
       </div>
 
@@ -335,14 +341,10 @@ export default function StylePresetsTab() {
         onClose={() => setEditorOpen(false)}
         title={editorMode === 'view-system' ? t('systemTitle') : draft.id ? t('editTitle') : t('createTitle')}
         description={editorMode === 'view-system' ? t('systemDescription') : draft.id ? t('editDescription') : t('createDescription')}
-        size="xl"
+        size="asset"
+        showDividers={false}
         footer={
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              {editorMode === 'edit-user' ? (
-                <ArchiveAction presetId={draft.id} label={t('archive')} onArchive={archivePreset} />
-              ) : null}
-            </div>
+          <div className="flex items-center justify-end gap-3">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -355,7 +357,7 @@ export default function StylePresetsTab() {
                 <button
                   type="button"
                   onClick={() => void savePreset()}
-                  disabled={!draft.name.trim() || saving}
+                  disabled={!canSaveDraft || saving}
                   className="glass-btn-base glass-btn-primary px-5 py-2 text-sm disabled:opacity-50"
                 >
                   {saving ? t('saving') : t('save')}
@@ -372,59 +374,38 @@ export default function StylePresetsTab() {
           readOnly={editorMode === 'view-system'}
           onKindChange={switchKind}
           onNameChange={(value) => setDraft((current) => ({ ...current, name: value }))}
-          onSummaryChange={(value) => setDraft((current) => ({ ...current, summary: value }))}
           onInstructionChange={(value) => setDraft((current) => ({ ...current, instruction: value }))}
           onDesign={() => void designPreset()}
           onVisualConfigChange={updateVisualConfig}
-          onDirectorBlockChange={updateDirectorBlock}
         />
       </GlassModalShell>
     </div>
   )
 }
 
-function ArchiveAction({
-  presetId,
-  label,
-  onArchive,
-}: {
-  presetId: string | null
-  label: string
-  onArchive: (presetId: string) => Promise<void>
-}) {
-  if (!presetId) return null
-  return (
-    <button
-      type="button"
-      onClick={() => void onArchive(presetId)}
-      className="glass-btn-base glass-btn-tone-danger px-4 py-2 text-sm"
-    >
-      {label}
-    </button>
-  )
-}
-
 function PresetList({
-  activePresetKey,
   loading,
   presets,
   onOpen,
   onCreate,
+  onDelete,
 }: {
-  activePresetKey: string | null
   loading: boolean
   presets: StylePresetListItem[]
   onOpen: (preset: StylePresetListItem) => void
   onCreate: (kind?: StylePresetKind) => void
+  onDelete: (presetId: string) => Promise<void>
 }) {
   const t = useTranslations('profile.stylePresets')
+  const sections = splitStylePresetKindSections(presets)
+  const visibleSectionKinds = STYLE_PRESET_SECTION_ORDER.filter((kind) => sections[kind].length > 0)
 
   return (
     <div>
       {loading ? (
         <div className="flex h-48 items-center justify-center text-sm text-[var(--glass-text-tertiary)]">{t('loading')}</div>
       ) : presets.length === 0 ? (
-        <div className="glass-surface flex min-h-[240px] flex-col items-center justify-center rounded-2xl p-8 text-center">
+        <div className="glass-surface glass-card-shadow-soft flex min-h-[240px] flex-col items-center justify-center rounded-2xl p-8 text-center">
           <span className="glass-surface-soft mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl text-[var(--glass-text-secondary)]">
             <AppIcon name="sparkles" className="h-6 w-6" />
           </span>
@@ -440,46 +421,117 @@ function PresetList({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-          {presets.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => onOpen(preset)}
-              className={`glass-surface group w-full rounded-2xl p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[var(--glass-stroke-strong)] ${
-                activePresetKey === toPresetKey(preset)
-                  ? 'border-[var(--glass-accent-from)]'
-                  : ''
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="glass-surface-soft inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--glass-text-secondary)]">
-                      <AppIcon name={preset.kind === 'visual_style' ? 'image' : 'video'} className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-bold text-[var(--glass-text-primary)]">{preset.name}</div>
-                      <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium text-[var(--glass-text-tertiary)]">
-                        <span>{t(`kind.${preset.kind}`)}</span>
-                        <span className="glass-chip glass-chip-neutral px-1.5 py-0.5 text-[10px]">
-                          {preset.source === 'system' ? t('source.system') : t('source.user')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-[var(--glass-text-secondary)]">
-                    {preset.summary ?? t('noSummary')}
-                  </p>
-                </div>
-                <span className="glass-btn-base glass-btn-soft inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--glass-text-tertiary)] transition-colors group-hover:text-[var(--glass-text-primary)]">
-                  <AppIcon name="edit" className="h-4 w-4" />
-                </span>
-              </div>
-            </button>
+        <div className="space-y-7">
+          {visibleSectionKinds.map((kind) => (
+            <StylePresetSection
+              key={kind}
+              title={t(`kind.${kind}`)}
+              count={sections[kind].length}
+              presets={sections[kind]}
+              onOpen={onOpen}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function StylePresetSection({
+  title,
+  count,
+  presets,
+  onOpen,
+  onDelete,
+}: {
+  title: string
+  count: number
+  presets: StylePresetListItem[]
+  onOpen: (preset: StylePresetListItem) => void
+  onDelete: (presetId: string) => Promise<void>
+}) {
+  const t = useTranslations('profile.stylePresets')
+
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-[var(--glass-text-primary)]">{title}</h3>
+        <span className="rounded-full bg-[var(--glass-bg-muted)] px-2.5 py-1 text-sm font-semibold text-[var(--glass-text-tertiary)]">
+          {t('sectionCount', { count })}
+        </span>
+      </div>
+      <div className="grid grid-cols-1 gap-3 2xl:grid-cols-2">
+        {presets.map((preset) => (
+          <StylePresetCard
+            key={`${preset.source}-${preset.id}`}
+            preset={preset}
+            onOpen={onOpen}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+export function StylePresetCard({
+  preset,
+  onOpen,
+  onDelete,
+}: {
+  preset: StylePresetListItem
+  onOpen: (preset: StylePresetListItem) => void
+  onDelete: (presetId: string) => Promise<void>
+}) {
+  const t = useTranslations('profile.stylePresets')
+
+  return (
+    <div className="glass-surface glass-card-shadow-soft group relative flex min-h-[132px] w-full rounded-2xl p-5 transition-all">
+      <button
+        type="button"
+        onClick={() => onOpen(preset)}
+        className="flex min-w-0 flex-1 items-start gap-4 pr-20 text-left"
+      >
+        <span className="glass-surface-soft mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--glass-text-secondary)]">
+          <AppIcon name={preset.kind === 'visual_style' ? 'image' : 'video'} className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <div className="truncate text-base font-bold text-[var(--glass-text-primary)]">{preset.name}</div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm font-medium text-[var(--glass-text-tertiary)]">
+            <span>{t(`kind.${preset.kind}`)}</span>
+            <span className="h-1 w-1 rounded-full bg-[var(--glass-text-tertiary)] opacity-50" />
+            <span className="rounded-full bg-[var(--glass-bg-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--glass-text-secondary)]">
+              {preset.source === 'system' ? t('source.system') : t('source.user')}
+            </span>
+          </div>
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--glass-text-secondary)]">
+            {preset.summary ?? t('noSummary')}
+          </p>
+        </div>
+      </button>
+      <div className="absolute right-4 top-4 flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onOpen(preset)}
+          className="glass-btn-base glass-btn-soft inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--glass-text-tertiary)] transition-colors group-hover:text-[var(--glass-text-primary)]"
+          aria-label={t('editTitle')}
+          title={t('editTitle')}
+        >
+          <AppIcon name="edit" className="h-4 w-4" />
+        </button>
+        {preset.source === 'user' ? (
+          <button
+            type="button"
+            onClick={() => void onDelete(preset.id)}
+            className="glass-btn-base glass-btn-soft inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--glass-text-tertiary)] transition-colors hover:text-[var(--glass-tone-danger-fg)]"
+            aria-label={t('delete')}
+            title={t('delete')}
+          >
+            <AppIcon name="trash" className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
     </div>
   )
 }

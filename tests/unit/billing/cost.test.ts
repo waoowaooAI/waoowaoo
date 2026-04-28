@@ -16,6 +16,12 @@ describe('billing/cost', () => {
     expect(cost).toBeCloseTo((3 + 15) * USD_TO_CNY, 8)
   })
 
+  it('prices Google Gemini 3.1 Flash-Lite Preview text usage', () => {
+    const cost = calcText('google::gemini-3.1-flash-lite-preview', 1_000_000, 1_000_000)
+
+    expect(cost).toBeCloseTo((0.25 + 1.5) * USD_TO_CNY, 8)
+  })
+
   it('throws when text model pricing is unknown', () => {
     expect(() => calcText('unknown-model', 500_000, 250_000)).toThrow('Unknown text model pricing')
   })

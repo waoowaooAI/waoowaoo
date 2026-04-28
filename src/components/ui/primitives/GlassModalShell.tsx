@@ -11,10 +11,11 @@ export interface GlassModalShellProps {
   description?: ReactNode
   footer?: ReactNode
   children: ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'asset' | 'md' | 'lg' | 'xl'
   closeOnBackdrop?: boolean
   closeOnEsc?: boolean
   showCloseButton?: boolean
+  showDividers?: boolean
 }
 
 function cx(...names: Array<string | false | null | undefined>) {
@@ -31,7 +32,8 @@ export default function GlassModalShell({
   size = 'md',
   closeOnBackdrop = true,
   closeOnEsc = true,
-  showCloseButton = true
+  showCloseButton = true,
+  showDividers = true
 }: GlassModalShellProps) {
   useEffect(() => {
     if (!open || !closeOnEsc) return
@@ -46,9 +48,10 @@ export default function GlassModalShell({
 
   const maxWidthClass =
     size === 'sm' ? 'max-w-md' :
-      size === 'lg' ? 'max-w-4xl' :
-        size === 'xl' ? 'max-w-6xl' :
-          'max-w-2xl'
+      size === 'asset' ? 'max-w-lg' :
+        size === 'lg' ? 'max-w-4xl' :
+          size === 'xl' ? 'max-w-6xl' :
+            'max-w-2xl'
 
   return createPortal(
     <div
@@ -85,12 +88,12 @@ export default function GlassModalShell({
           </div>
         )}
 
-        <div className="glass-divider" />
+        {showDividers ? <div className="glass-divider" /> : null}
         <div className="px-5 py-4 sm:px-6 sm:py-5">{children}</div>
 
         {footer ? (
           <>
-            <div className="glass-divider" />
+            {showDividers ? <div className="glass-divider" /> : null}
             <div className="px-5 py-4 sm:px-6">{footer}</div>
           </>
         ) : null}

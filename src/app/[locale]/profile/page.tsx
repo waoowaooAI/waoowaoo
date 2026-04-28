@@ -1,26 +1,37 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Navbar from '@/components/Navbar'
 import ApiConfigTab from './components/ApiConfigTab'
 import StylePresetsTab from './components/StylePresetsTab'
-import { AppIcon } from '@/components/ui/icons'
+import { AppIcon, type AppIconName } from '@/components/ui/icons'
 import { useRouter } from '@/i18n/navigation'
+import { readProfileSectionParam, type ProfileSection } from '@/lib/profile/sections'
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const t = useTranslations('profile')
   const tc = useTranslations('common')
+  if (!searchParams) {
+    throw new Error('ProfilePage requires searchParams')
+  }
 
-  // 主要分区：扣费记录 / API配置
-  const [activeSection, setActiveSection] = useState<'billing' | 'apiConfig' | 'stylePresets'>('apiConfig')
+  const urlSection = readProfileSectionParam(searchParams.get('section'))
+
+  const [activeSection, setActiveSection] = useState<ProfileSection>(urlSection)
 
   useEffect(() => {
     if (status === 'loading') return
     if (!session) { router.push({ pathname: '/auth/signin' }); return }
   }, [router, session, status])
+
+  useEffect(() => {
+    setActiveSection(urlSection)
+  }, [urlSection])
 
   if (status === 'loading' || !session) {
     return (
@@ -31,6 +42,23 @@ export default function ProfilePage() {
   }
 
   const noBillingText = t('openSourceNoBilling')
+  const sectionItems: Array<{
+    section: ProfileSection
+    icon: AppIconName
+    label: string
+  }> = [
+    { section: 'apiConfig', icon: 'settingsHexAlt', label: t('apiConfig') },
+    { section: 'stylePresets', icon: 'sparkles', label: t('stylePresets.title') },
+    { section: 'billing', icon: 'receipt', label: t('billingRecords') },
+  ]
+
+  const handleSectionChange = (section: ProfileSection) => {
+    setActiveSection(section)
+    router.replace(
+      { pathname: '/profile', query: { section } },
+      { scroll: false },
+    )
+  }
 
   return (
     <div className="glass-page min-h-screen">
@@ -59,37 +87,18 @@ export default function ProfilePage() {
 
               {/* 导航菜单 */}
               <nav className="flex-1 space-y-2">
-                <button
-                  onClick={() => setActiveSection('apiConfig')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${activeSection === 'apiConfig'
-                    ? 'glass-btn-base glass-btn-tone-info'
-                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                    }`}
-                >
-                  <AppIcon name="settingsHexAlt" className="w-5 h-5" />
-                  <span className="font-medium">{t('apiConfig')}</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveSection('billing')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${activeSection === 'billing'
-                    ? 'glass-btn-base glass-btn-tone-info'
-                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                    }`}
-                >
-                  <AppIcon name="receipt" className="w-5 h-5" />
-                  <span className="font-medium">{t('billingRecords')}</span>
-                </button>
-                <button
-                  onClick={() => setActiveSection('stylePresets')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all cursor-pointer ${activeSection === 'stylePresets'
-                    ? 'glass-btn-base glass-btn-tone-info'
-                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                    }`}
-                >
-                  <AppIcon name="sparkles" className="w-5 h-5" />
-                  <span className="font-medium">{t('stylePresets.title')}</span>
-                </button>
+                {sectionItems.map(item => (
+                  <button
+                    key={item.section}
+                    type="button"
+                    data-active={activeSection === item.section}
+                    onClick={() => handleSectionChange(item.section)}
+                    className="glass-selection-control w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left"
+                  >
+                    <AppIcon name={item.icon} className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                ))}
               </nav>
               {/* 退出登录 */}
               <button

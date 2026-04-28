@@ -68,6 +68,7 @@ function googleFlatPricing(flatAmount: number) {
 
 export const GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES = [
   { apiType: 'text', provider: 'google', modelId: 'gemini-3.1-pro-preview', pricing: googleTokenPricing(14.4, 86.4) },
+  { apiType: 'text', provider: 'google', modelId: 'gemini-3.1-flash-lite-preview', pricing: googleTokenPricing(1.8, 10.8) },
   { apiType: 'text', provider: 'google', modelId: 'gemini-3-pro-preview', pricing: googleTokenPricing(14.4, 86.4) },
   { apiType: 'text', provider: 'google', modelId: 'gemini-3-flash-preview', pricing: googleTokenPricing(3.6, 21.6) },
   {

@@ -163,7 +163,7 @@ export default function VoiceControlPanel({
                   onChange={(event) => onEditingContentChange(event.target.value)}
                   placeholder={t('lineEditor.contentPlaceholder')}
                   rows={4}
-                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] resize-y"
+                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--glass-stroke-focus)] resize-y"
                 />
               </div>
 
@@ -172,7 +172,7 @@ export default function VoiceControlPanel({
                 <select
                   value={editingSpeaker}
                   onChange={(event) => onEditingSpeakerChange(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)]"
+                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--glass-stroke-focus)]"
                 >
                   <option value="" disabled>{t('lineEditor.selectSpeaker')}</option>
                   {speakerOptions.map((speaker) => (
@@ -191,7 +191,7 @@ export default function VoiceControlPanel({
                 <select
                   value={editingMatchedPanelId}
                   onChange={(event) => onEditingMatchedPanelIdChange(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)]"
+                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--glass-stroke-focus)]"
                 >
                   <option value="">{t('lineEditor.unboundPanel')}</option>
                   {bindablePanelOptions.map((panel) => (

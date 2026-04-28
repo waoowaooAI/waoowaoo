@@ -8,7 +8,6 @@ import type { AbstractIntlMessages } from 'next-intl'
 import Navbar from '@/components/Navbar'
 
 const useSessionMock = vi.fn()
-
 vi.mock('next-auth/react', () => ({
   useSession: () => useSessionMock(),
 }))
@@ -39,10 +38,15 @@ vi.mock('@/i18n/navigation', () => ({
     children,
     ...props
   }: {
-    href: string | { pathname: string }
+    href: string | { pathname: string; query?: Record<string, string> }
     children: React.ReactNode
   } & Record<string, unknown>) => {
-    const resolvedHref = typeof href === 'string' ? href : href.pathname
+    if (typeof href === 'string') {
+      return createElement('a', { href, ...props }, children)
+    }
+
+    const query = href.query ? `?${new URLSearchParams(href.query).toString()}` : ''
+    const resolvedHref = `${href.pathname}${query}`
     return createElement('a', { href: resolvedHref, ...props }, children)
   },
 }))
@@ -52,6 +56,11 @@ const messages = {
     workspace: '工作区',
     assetHub: '资产中心',
     profile: '设置中心',
+    settingsMenu: {
+      apiConfig: 'API 配置',
+      stylePresets: '我的风格',
+      billingRecords: '扣费记录',
+    },
     downloadLogs: '下载日志',
     signin: '登录',
     signup: '注册',
@@ -99,6 +108,37 @@ describe('Navbar download logs entry', () => {
     expect(html).toContain('href="/home"')
     expect(html).toContain('href="/api/admin/download-logs"')
     expect(html).toContain('download=""')
+  })
+
+  it('renders settings center dropdown targets for signed-in users', () => {
+    Reflect.set(globalThis, 'React', React)
+    useSessionMock.mockReturnValue({
+      data: { user: { name: 'Earth' } },
+      status: 'authenticated',
+    })
+
+    const html = renderWithIntl(createElement(Navbar))
+
+    expect(html).toContain('aria-haspopup="menu"')
+    expect(html).toContain('href="/profile?section=apiConfig"')
+    expect(html).toContain('href="/profile?section=stylePresets"')
+    expect(html).toContain('href="/profile?section=billing"')
+    expect(html.indexOf('API 配置')).toBeLessThan(html.indexOf('我的风格'))
+    expect(html.indexOf('我的风格')).toBeLessThan(html.indexOf('扣费记录'))
+  })
+
+  it('does not keep a persistent selected state on the current navbar route', () => {
+    Reflect.set(globalThis, 'React', React)
+    useSessionMock.mockReturnValue({
+      data: { user: { name: 'Earth' } },
+      status: 'authenticated',
+    })
+
+    const html = renderWithIntl(createElement(Navbar))
+
+    expect(html).toContain('glass-selection-control')
+    expect(html).not.toContain('aria-current="page"')
+    expect(html).not.toContain('data-active="true"')
   })
 
   it('does not render the download logs entry for signed-out users', () => {

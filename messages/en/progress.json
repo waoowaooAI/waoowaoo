@@ -117,16 +117,6 @@
     "llmProxyExecute": "Execute LLM task",
     "llmProxyPersist": "Persist LLM result"
   },
-  "runConsole": {
-    "storyToScript": "Story to Script",
-    "scriptToStoryboard": "Script to Storyboard",
-    "storyToScriptRunning": "Story→Script running",
-    "scriptToStoryboardRunning": "Script→Storyboard running",
-    "storyToScriptSubtitle": "Story To Script V2",
-    "scriptToStoryboardSubtitle": "Script To Storyboard V2",
-    "stop": "Stop",
-    "minimize": "Minimize"
-  },
   "streamStep": {
     "analyzeCharacters": "Analyze characters",
     "analyzeLocations": "Analyze locations",

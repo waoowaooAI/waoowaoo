@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildPromptOnlyVisualStyleConfig,
+  normalizePromptOnlyVisualStyleConfig,
   parseDirectorStyleConfig,
   parseStylePresetRef,
   parseVisualStyleConfig,
@@ -27,6 +29,19 @@ describe('style preset schema', () => {
       composition: 'centered subject',
       detailLevel: 'medium',
     })
+  })
+
+  it('normalizes visual style UI configs to prompt-only semantics', () => {
+    expect(normalizePromptOnlyVisualStyleConfig({
+      prompt: 'warm watercolor',
+      negativePrompt: 'hidden negative prompt',
+      colorPalette: ['hidden'],
+      lineStyle: 'hidden line',
+      texture: 'hidden texture',
+      lighting: 'hidden lighting',
+      composition: 'hidden composition',
+      detailLevel: 'high',
+    })).toEqual(buildPromptOnlyVisualStyleConfig('warm watercolor'))
   })
 
   it('rejects invalid visual style detail levels', () => {

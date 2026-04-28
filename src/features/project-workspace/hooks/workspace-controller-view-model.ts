@@ -94,10 +94,6 @@ interface BuildWorkspaceControllerViewModelParams {
     isStartingStoryToScript: boolean
     isStartingScriptToStoryboard: boolean
     transitionProgress: { step?: string; total?: number; current?: number }
-    storyToScriptConsoleMinimized: boolean
-    setStoryToScriptConsoleMinimized: (minimized: boolean) => void
-    scriptToStoryboardConsoleMinimized: boolean
-    setScriptToStoryboardConsoleMinimized: (minimized: boolean) => void
     storyToScriptStream: StoryToScriptStreamState
     scriptToStoryboardStream: ScriptToStoryboardStreamState
     handleGenerateTTS: () => Promise<void>

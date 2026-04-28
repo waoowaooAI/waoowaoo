@@ -58,7 +58,7 @@ export default function EmotionSettingsPanel({
                     value={prompt}
                     onChange={(e) => handlePromptChange(e.target.value)}
                     placeholder={t("emotionPlaceholder")}
-                    className="w-full px-3 py-2 text-sm border border-[var(--glass-stroke-focus)]/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)]/50 focus:border-[var(--glass-stroke-focus)] bg-[var(--glass-bg-surface)]"
+                    className="w-full px-3 py-2 text-sm border border-[var(--glass-stroke-focus)]/60 rounded-xl focus:outline-none focus:border-[var(--glass-stroke-focus)] bg-[var(--glass-bg-surface)]"
                 />
             </div>
 

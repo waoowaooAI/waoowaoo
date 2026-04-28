@@ -112,10 +112,12 @@
         "newPreset": "新建",
         "loading": "加载中",
         "empty": "暂无预设",
+        "userEmpty": "还没有创建自己的风格",
+        "sectionCount": "{count} 个",
         "emptyDescription": "点击加号创建画风或导演风格。具体提示词只会在进入编辑后显示。",
         "noSummary": "暂无简介",
         "createTitle": "新建风格",
-        "createDescription": "先选择类型，也可以用 AI 根据需求生成，再人工微调。",
+        "createDescription": "按资产创建弹窗的方式填写必要信息。",
         "editTitle": "编辑风格",
         "editDescription": "这里的修改会在下一次生成时实时应用到引用它的项目。",
         "systemTitle": "系统内置风格",
@@ -123,12 +125,15 @@
         "loadFailed": "风格预设加载失败",
         "designFailed": "AI 设计失败",
         "saveFailed": "保存失败",
-        "archiveFailed": "归档失败",
+        "deleteFailed": "删除失败",
+        "deleteConfirm": "确定要删除这个风格吗？删除后将不再显示。",
+        "directorConfigDetails": "导演风格配置",
+        "directorDesignRequired": "请先使用 AI 设计生成导演风格后再保存。",
         "design": "AI 设计",
         "designing": "设计中",
         "save": "保存",
         "saving": "保存中",
-        "archive": "归档",
+        "delete": "删除",
         "kind": {
             "visual_style": "画风",
             "director_style": "导演风格"
@@ -141,14 +146,14 @@
             "all": "全部"
         },
         "source": {
-            "system": "系统",
-            "user": "我的"
+            "system": "系统内置",
+            "user": "我的创建"
         },
         "fields": {
             "name": "名称",
             "summary": "简介",
             "instruction": "设计需求",
-            "prompt": "正向画风",
+            "prompt": "提示词",
             "negativePrompt": "禁用项",
             "colorPalette": "色彩倾向",
             "lineStyle": "线条风格",

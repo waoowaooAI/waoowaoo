@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildDirectorStyleDoc } from '@/lib/director-style/presets'
 import { buildMockRequest } from '../../../helpers/request'
 
 type MockUserStylePreset = {
@@ -257,6 +258,62 @@ describe('api specific - user style presets', () => {
       userId: 'user-1',
       model: 'llm::analysis',
       messages: [{ role: 'user', content: 'design prompt' }],
+    }))
+  })
+
+  it('designs a director style preset through the director prompt and validates the config', async () => {
+    const directorConfig = buildDirectorStyleDoc('horror-suspense')
+    aiRuntimeMock.executeAiTextStep.mockResolvedValueOnce({
+      text: JSON.stringify({
+        name: 'AI Horror Director',
+        summary: 'Designed director style',
+        config: directorConfig,
+      }),
+    })
+    const mod = await import('@/app/api/user/style-presets/design/route')
+    const req = buildMockRequest({
+      path: '/api/user/style-presets/design',
+      method: 'POST',
+      body: {
+        kind: 'director_style',
+        instruction: 'Make suspense shots with oppressive interior lighting',
+        locale: 'en',
+      },
+    })
+
+    const res = await mod.POST(req, { params: Promise.resolve({}) })
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(promptMock.buildAiPrompt).toHaveBeenCalledWith(expect.objectContaining({
+      promptId: promptMock.AI_PROMPT_IDS.DESIGN_DIRECTOR_STYLE_PRESET,
+      variables: {
+        instruction: 'Make suspense shots with oppressive interior lighting',
+      },
+    }))
+    expect(billingMock.withTextBilling).toHaveBeenCalledWith(
+      'user-1',
+      'llm::analysis',
+      expect.any(Number),
+      2000,
+      expect.objectContaining({
+        action: 'design_director_style_preset',
+        metadata: { kind: 'director_style' },
+      }),
+      expect.any(Function),
+    )
+    expect(body).toEqual(expect.objectContaining({
+      kind: 'director_style',
+      name: 'AI Horror Director',
+      summary: 'Designed director style',
+      config: expect.objectContaining({
+        character: expect.objectContaining({
+          temperament: directorConfig.character.temperament,
+        }),
+        video: expect.objectContaining({
+          cameraMotion: directorConfig.video.cameraMotion,
+        }),
+      }),
     }))
   })
 })

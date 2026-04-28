@@ -75,6 +75,13 @@
   --glass-focus-ring-strong: rgba(47, 123, 255, 0.22);
   --glass-danger-ring: rgba(239, 68, 68, 0.14);
   --glass-ghost-hover-bg: rgba(255, 255, 255, 0.5);
+
+  /* Selection system: pinned hover-style active state for menus and dropdown items */
+  --glass-selection-bg: rgba(10, 10, 10, 0.05);
+  --glass-selection-hover-bg: rgba(10, 10, 10, 0.05);
+  --glass-selection-border: transparent;
+  --glass-selection-focus-ring: rgba(10, 10, 10, 0.1);
+  --glass-selection-shadow: none;
 }
 
 /* Low-cost preset for performance-sensitive environments */

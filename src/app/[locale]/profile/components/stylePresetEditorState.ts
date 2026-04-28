@@ -4,6 +4,7 @@ import type {
   StylePresetView,
   VisualStyleConfig,
 } from '@/lib/style-preset/types'
+import { buildPromptOnlyVisualStyleConfig } from '@/lib/style-preset/visual-config'
 
 export type DraftState = {
   id: string | null
@@ -14,16 +15,7 @@ export type DraftState = {
   config: VisualStyleConfig | DirectorStyleConfig
 }
 
-const EMPTY_VISUAL_STYLE_CONFIG: VisualStyleConfig = {
-  prompt: '',
-  negativePrompt: '',
-  colorPalette: [],
-  lineStyle: '',
-  texture: '',
-  lighting: '',
-  composition: '',
-  detailLevel: 'medium',
-}
+const EMPTY_VISUAL_STYLE_CONFIG: VisualStyleConfig = buildPromptOnlyVisualStyleConfig('')
 
 function buildEmptyDirectorStyleConfig(): DirectorStyleConfig {
   return {

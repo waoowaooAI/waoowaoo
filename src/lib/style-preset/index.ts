@@ -30,6 +30,10 @@ export {
   encodeStylePresetRef,
 } from './ref'
 export {
+  buildPromptOnlyVisualStyleConfig,
+  normalizePromptOnlyVisualStyleConfig,
+} from './visual-config'
+export {
   resolveDirectorStylePreset,
   resolveProjectDirectorStyleDoc,
   resolveProjectVisualStylePreset,
