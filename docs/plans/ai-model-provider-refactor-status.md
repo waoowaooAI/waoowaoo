@@ -6,8 +6,8 @@
 
 ## 当前阶段
 
-- **当前状态**：Step 5 已完成 lipsync、voice、assistant/project-agent LanguageModel、provider probe、async poll provider HTTP 实现下沉、单 runtime provider 注册表收敛、billing token-pricing provider contract 下沉，以及 `api-config-service.ts` 瘦身；旧散入口与兼容层已删除。
-- **下一阶段**：继续 Step 5 — 复审剩余非 `ai-*` 目录中的模型调用/配置边界。
+- **当前状态**：Step 5 主体迁移已完成；lipsync、voice、assistant/project-agent LanguageModel、async poll provider HTTP、billing token-pricing provider contract 与 `api-config-service.ts` 瘦身已落地，旧散入口与兼容层已删除。
+- **下一阶段**：继续 Step 5 收尾 — 收敛 `user-api` probe、runtime selection/provider config 边界、隐式 fallback、guard 扫描范围，以及最终单 adapter 形态。
 
 ## 2026-04-28 复审事实
 
@@ -91,11 +91,19 @@
 - [x] voice/audio provider 实现迁入对应 provider adapter，移除 `src/lib/voice/generate-voice-line.ts` 内直接 SDK 调用
 - [x] voice-line 音色绑定解析与缺失错误迁入 provider adapter，`src/lib/voice/generate-voice-line.ts` 不再包含 Fal/Bailian 分支
 - [x] async poll 旧散文件已删除，provider 字面量 switch 与非 index 路由表已移除；Fal/Ark/Google/MiniMax/Vidu/Bailian 具体 HTTP poll/query 已下沉到各 provider 文件，注册只在 `ai-providers/index.ts`
-- [x] provider test / protocol probe / media template probe 下沉到 provider adapter 或 `ai-exec` probe 入口
+- [~] provider test 已下沉到 `ai-exec`；protocol probe / media template probe 仍有实现留在 `src/lib/user-api/**`，需迁入 `ai-exec` 或对应 provider。
 - [x] `ai-registry/catalog.ts` 已删除；调用方直接使用 `capabilities-catalog`、`pricing-catalog`、`api-config-catalog`、`pricing-resolution`、`video-capabilities`
 - [x] `api-config-service.ts` 只保留用户配置 CRUD 编排；严格校验拆入 `api-config-{provider,model,custom-pricing,defaults,capability}-*.ts`
 - [x] billing 中 Ark Seedance 2 token 定价专用逻辑下沉到 `ai-providers/ark/video-token-pricing.ts`
 - [x] `ai-registry/builtin-catalog.ts` 已删除，provider catalog 聚合迁入 `ai-providers/builtin-catalog.ts`
-- [x] `mediaAdapterRegistry` 已删除，`image/video/audio` descriptor 与 execute 同属 `RegisteredAiProvider`
+- [~] `mediaAdapterRegistry` 已删除，`image/video/audio` descriptor 与 execute 已在 runtime registry 汇合；仍需合并 `DescribeOnlyMediaAdapter` 与 `RegisteredAiProvider`，让每个 provider 只导出一个最终 adapter。
 - [x] assistant/project-agent AI SDK LanguageModel 创建迁入 provider adapter，业务层不再按 Google/OpenAI 分流
 - [x] guard snapshot 已清空：`no-cross-provider-model-data=0`、`no-cross-provider-switch=0`、`no-ai-outside-ai-dirs=0`
+
+## Step 5 收尾待办
+
+- [ ] `src/lib/user-api/model-llm-protocol-probe.ts` 与 `src/lib/user-api/model-template/probe.ts` 不再承载 provider probe HTTP 实现。
+- [ ] `src/lib/user-api/runtime-config.ts` 仅保留用户配置读取/解密，不再构造 provider-specific runtime selection 或 provider baseUrl 策略。
+- [ ] LLM vision 与 OpenAI-compatible 模板链路移除隐式 fallback，未声明能力或缺少模板时显式失败。
+- [ ] guard 扫描覆盖 `user-api/**` 中的 provider probe / providerKey 字面量分支，防止非 `ai-*` 目录重新长出模型调用逻辑。
+- [ ] 每个 provider 最终只导出一个完整 adapter，`ai-providers/index.ts` 只做注册。
