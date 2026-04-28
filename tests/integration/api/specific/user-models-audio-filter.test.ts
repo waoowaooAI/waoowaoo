@@ -40,10 +40,8 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/api-auth', () => authMock)
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/model-capabilities/catalog', () => ({
+vi.mock('@/lib/ai-registry/catalog', () => ({
   findBuiltinCapabilities: vi.fn(() => undefined),
-}))
-vi.mock('@/lib/model-pricing/catalog', () => ({
   findBuiltinPricingCatalogEntry: vi.fn(() => undefined),
 }))
 

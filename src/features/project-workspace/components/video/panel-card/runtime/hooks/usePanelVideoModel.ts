@@ -5,8 +5,8 @@ import {
   normalizeVideoGenerationSelections,
   resolveEffectiveVideoCapabilityDefinitions,
   resolveEffectiveVideoCapabilityFields,
-} from '@/lib/model-capabilities/video-effective'
-import { projectVideoPricingTiersByFixedSelections } from '@/lib/model-pricing/video-tier'
+  projectVideoPricingTiersByFixedSelections,
+} from '@/lib/ai-registry/catalog'
 
 interface UsePanelVideoModelParams {
   defaultVideoModel: string

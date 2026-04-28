@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 
 import { recordTextUsage as recordBillingTextUsage } from '@/lib/billing/runtime-usage'
-import { resolveModelSelection } from '@/lib/api-config'
+import { resolveModelSelection } from '@/lib/user-api/runtime-config'
 import { createScopedLogger } from '@/lib/logging/core'
 
 export const llmLogger = createScopedLogger({

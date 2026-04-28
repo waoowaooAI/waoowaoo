@@ -55,7 +55,7 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/media/attach', () => mediaAttachMock)
 vi.mock('@/lib/logging/semantic', () => logMock)
 vi.mock('@/lib/ai-registry/selection', () => modelConfigContractMock)
-vi.mock('@/lib/model-capabilities/lookup', () => capabilityLookupMock)
+vi.mock('@/lib/ai-registry/catalog', () => capabilityLookupMock)
 
 describe('api specific - project config art style validation', () => {
   beforeEach(() => {

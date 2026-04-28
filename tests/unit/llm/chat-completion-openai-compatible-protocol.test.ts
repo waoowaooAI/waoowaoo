@@ -35,9 +35,8 @@ vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
   getInternalLLMStreamCallbacks: vi.fn(() => null),
 }))
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
-  getProviderKey: vi.fn((providerId: string) => providerId.split(':')[0] || providerId),
 }))
 
 vi.mock('@/lib/ai-providers/bailian', async (importOriginal) => {

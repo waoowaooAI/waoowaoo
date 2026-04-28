@@ -1,4 +1,4 @@
-import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/catalog'
 import type { AiModality, AiResolvedLlmSelection, AiResolvedSelection } from '@/lib/ai-registry/types'
 
 function resolveCapabilityModelType(modality: AiModality): 'llm' | 'image' | 'video' | 'audio' | 'lipsync' {

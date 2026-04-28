@@ -27,8 +27,9 @@ import {
   normalizeVideoGenerationSelections,
   resolveEffectiveVideoCapabilityDefinitions,
   resolveEffectiveVideoCapabilityFields,
-} from '@/lib/model-capabilities/video-effective'
-import { projectVideoPricingTiersByFixedSelections } from '@/lib/model-pricing/video-tier'
+  filterNormalVideoModelOptions,
+  projectVideoPricingTiersByFixedSelections,
+} from '@/lib/ai-registry/catalog'
 import { useVideoTaskStates } from './video-stage-runtime/useVideoTaskStates'
 import { useVideoPanelsProjection } from './video-stage-runtime/useVideoPanelsProjection'
 import { useVideoPromptState } from './video-stage-runtime/useVideoPromptState'
@@ -38,7 +39,6 @@ import { useVideoDownloadAll } from './video-stage-runtime/useVideoDownloadAll'
 import { useVideoStageUiState } from './video-stage-runtime/useVideoStageUiState'
 import { useVideoPanelViewport } from './video-stage-runtime/useVideoPanelViewport'
 import { useVideoFirstLastFrameFlow } from './video-stage-runtime/useVideoFirstLastFrameFlow'
-import { filterNormalVideoModelOptions } from '@/lib/model-capabilities/video-model-options'
 import {
   buildVideoSubmissionKey,
   createVideoSubmissionBaseline,

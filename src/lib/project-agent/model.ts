@@ -1,7 +1,7 @@
 import type { LanguageModel } from 'ai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { resolveLlmRuntimeModel } from '@/lib/ai-exec/llm-runtime'
 

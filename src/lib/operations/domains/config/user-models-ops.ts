@@ -7,9 +7,11 @@ import {
   type UnifiedModelType,
 } from '@/lib/ai-registry/types'
 import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
-import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
-import { findBuiltinPricingCatalogEntry } from '@/lib/model-pricing/catalog'
-import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
+import {
+  findBuiltinCapabilities,
+  findBuiltinPricingCatalogEntry,
+  type VideoPricingTier,
+} from '@/lib/ai-registry/catalog'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 
 type StoredModelType = UnifiedModelType | string

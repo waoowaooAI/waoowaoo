@@ -15,9 +15,9 @@ import {
   uploadVideoSourceToCos,
 } from './utils'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
-import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/catalog'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 
 type AnyObj = Record<string, unknown>
 type VideoOptionValue = string | number | boolean

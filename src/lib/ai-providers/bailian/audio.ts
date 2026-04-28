@@ -1,4 +1,4 @@
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import type { AiProviderAudioExecutionContext } from '@/lib/ai-providers/runtime-types'
 import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { synthesizeWithBailianTTS } from './tts'

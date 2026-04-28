@@ -18,7 +18,7 @@ const workerMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/ai-providers/bailian/voice-design', () => bailianMock)
-vi.mock('@/lib/api-config', () => apiConfigMock)
+vi.mock('@/lib/user-api/runtime-config', () => apiConfigMock)
 vi.mock('@/lib/workers/shared', () => ({
   reportTaskProgress: workerMock.reportTaskProgress,
 }))

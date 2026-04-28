@@ -5,7 +5,7 @@ import type { WorkspaceStageRuntimeValue } from '../WorkspaceStageRuntimeContext
 import type { TaskPresentationState } from '@/lib/task/presentation'
 import type { BatchVideoGenerationParams, VideoGenerationOptions } from '../components/video'
 import type { CapabilitySelections } from '@/lib/ai-registry/types'
-import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
+import type { VideoPricingTier } from '@/lib/ai-registry/catalog'
 import type {
   useScriptToStoryboardRunStream,
   useStoryToScriptRunStream,

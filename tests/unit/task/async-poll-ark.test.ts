@@ -13,7 +13,7 @@ const asyncTaskUtilsMock = vi.hoisted(() => ({
   querySeedanceVideoStatus: vi.fn(),
 }))
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
   getUserModels: vi.fn(),
 }))

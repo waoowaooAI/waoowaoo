@@ -5,7 +5,7 @@ import {
   validateVoicePrompt,
   type VoiceDesignInput,
 } from '@/lib/ai-providers/bailian/voice-design'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'

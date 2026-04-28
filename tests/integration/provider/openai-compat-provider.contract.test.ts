@@ -6,7 +6,7 @@ import { startScenarioServer } from '../../helpers/fakes/scenario-server'
 const getProviderConfigMock = vi.hoisted(() => vi.fn())
 const getUserModelsMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
   getUserModels: getUserModelsMock,
 }))

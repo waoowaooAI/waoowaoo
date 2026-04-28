@@ -32,7 +32,7 @@ import type {
   BillingRecordParams,
   TaskBillingInfo,
 } from './types'
-import { BUILTIN_PRICING_VERSION } from '@/lib/model-pricing/version'
+import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/catalog'
 
 type CostInput = {
   apiType: ApiType

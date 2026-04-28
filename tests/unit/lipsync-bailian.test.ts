@@ -14,7 +14,7 @@ const normalizeToOriginalMediaUrlMock = vi.hoisted(() => vi.fn(async (input: str
   return input
 }))
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   resolveModelSelectionOrSingle: resolveModelSelectionOrSingleMock,
   getProviderConfig: getProviderConfigMock,
   getProviderKey: getProviderKeyMock,

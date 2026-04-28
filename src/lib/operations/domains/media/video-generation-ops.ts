@@ -11,8 +11,7 @@ import { createMutationBatch } from '@/lib/mutation-batch/service'
 import { hasPanelVideoOutput } from '@/lib/task/has-output'
 import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { CapabilityValue } from '@/lib/ai-registry/types'
-import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
-import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
+import { resolveBuiltinCapabilitiesByModelKey, resolveBuiltinPricing } from '@/lib/ai-registry/catalog'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
 import type {
   TaskBatchSubmittedPartData,

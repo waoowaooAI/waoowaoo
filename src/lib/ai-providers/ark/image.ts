@@ -1,7 +1,7 @@
 import { getInternalBaseUrl } from '@/lib/env'
 import { logError as _ulogError, logInfo as _ulogInfo } from '@/lib/logging/core'
 import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'

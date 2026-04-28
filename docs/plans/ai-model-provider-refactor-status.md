@@ -6,7 +6,7 @@
 
 ## 当前阶段
 
-- **进行中**：Step 3 — 删散文件 + 取消 `adapters/` 中间层
+- **进行中**：Step 4 — `ai-registry/catalog.ts` 取代 `user-api` catalog
 
 ## Step 进度
 
@@ -46,7 +46,7 @@
 - [x] `ai-providers/llm/**` 删除（数据进各 `<x>/llm.ts`）
 - [x] `ai-providers/official/model-registry.ts` 删除
 - [x] guard：`no-ai-outside-ai-dirs.mjs`
-- [ ] 终态校验：`rg` 全 0
+- [x] 终态校验：`rg` 全 0
 
 ### Step 4 — `ai-registry/catalog.ts` 取代 `user-api` catalog
 

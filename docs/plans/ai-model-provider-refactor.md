@@ -248,7 +248,7 @@ src/lib/ai-exec/
 | 旧路径 | 新路径 |
 |---|---|
 | `src/lib/model-capabilities/catalog.ts` | 数据按 provider 拆入各 `ai-providers/<x>/models.ts` |
-| `src/lib/model-capabilities/lookup.ts` | `ai-registry/catalog.ts` 内的纯函数（fan-out adapter.describe） |
+| `src/lib/model-capabilities/lookup.ts` | `ai-registry/catalog.ts` 内的纯函数（fan-out `registry.list() → adapter.describe(...)`）；**禁止**在 `ai-registry/` 内 import `@/lib/ai-providers/<x>/*`，provider 注册与数据注入仅由 `ai-providers/index.ts` 承担（composition root）。 |
 | `src/lib/model-capabilities/{video-effective,video-model-options}.ts` | 进对应 video adapter（`ark/video.ts` 等） |
 | `src/lib/model-pricing/catalog.ts` | 数据按 provider 拆入各 `ai-providers/<x>/models.ts` |
 | `src/lib/model-pricing/lookup.ts` | `ai-registry/catalog.ts` |

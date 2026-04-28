@@ -1,7 +1,5 @@
 import OpenAI from 'openai'
-import {
-  getProviderConfig,
-} from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'

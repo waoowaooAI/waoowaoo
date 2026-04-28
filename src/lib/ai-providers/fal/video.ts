@@ -1,5 +1,5 @@
 import { createScopedLogger, logError as _ulogError } from '@/lib/logging/core'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { buildFalQueueUrl } from '@/lib/ai-providers/fal/base-url'
 

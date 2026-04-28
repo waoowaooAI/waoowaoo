@@ -15,8 +15,7 @@ import {
   composeModelKey as composeStrictModelKey,
   parseModelKeyStrict,
 } from '@/lib/ai-registry/selection'
-import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
-import { resolveGenerationOptionsForModel } from '@/lib/model-capabilities/lookup'
+import { findBuiltinCapabilities, resolveGenerationOptionsForModel } from '@/lib/ai-registry/catalog'
 import {
   type WorkflowConcurrencyConfig,
   normalizeWorkflowConcurrencyConfig,

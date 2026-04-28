@@ -89,14 +89,14 @@ vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/media/outbound-image', () => ({
   normalizeToBase64ForGeneration: vi.fn(async (input: string) => input),
 }))
-vi.mock('@/lib/model-capabilities/lookup', () => ({
+vi.mock('@/lib/ai-registry/catalog', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
 }))
 vi.mock('@/lib/ai-registry/selection', () => ({
   composeModelKey: vi.fn((provider: string, modelId: string) => `${provider}::${modelId}`),
   parseModelKeyStrict: vi.fn(() => ({ provider: 'fal' })),
 }))
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: vi.fn(async () => ({ apiKey: 'api-key' })),
 }))
 vi.mock('@/lib/config-service', () => configServiceMock)

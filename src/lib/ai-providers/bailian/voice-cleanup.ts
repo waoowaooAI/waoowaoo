@@ -1,4 +1,4 @@
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { prisma } from '@/lib/prisma'
 import { deleteBailianVoice } from './voice-manage'
 

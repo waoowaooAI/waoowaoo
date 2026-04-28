@@ -1,10 +1,15 @@
 import { AiRegistry } from '@/lib/ai-registry/registry'
 import { resolveAiGatewayRoute } from '@/lib/ai-registry/gateway-route'
 import type { AiLlmProviderConfig } from '@/lib/ai-registry/types'
+import {
+  registerBuiltinCapabilityCatalogEntries,
+  registerBuiltinPricingCatalogEntries,
+} from '@/lib/ai-registry/catalog'
 import { arkMediaAdapter } from '@/lib/ai-providers/ark/adapter'
 import { executeArkImageGeneration } from '@/lib/ai-providers/ark/image'
 import { runArkLlmCompletion, runArkLlmStream, runArkVisionCompletion } from '@/lib/ai-providers/ark/llm'
 import { executeArkVideoGeneration } from '@/lib/ai-providers/ark/video'
+import { ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES, ARK_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/ark/models'
 import { bailianMediaAdapter } from '@/lib/ai-providers/bailian/adapter'
 import {
   executeBailianAudioGeneration,
@@ -14,21 +19,27 @@ import {
   runBailianLlmStream,
   runBailianVisionCompletion,
 } from '@/lib/ai-providers/bailian'
+import { BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES, BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/bailian/models'
 import { falMediaAdapter } from '@/lib/ai-providers/fal/adapter'
 import { executeFalImageGeneration } from '@/lib/ai-providers/fal/image'
 import { executeFalVideoGeneration } from '@/lib/ai-providers/fal/video'
+import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES, FAL_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
 import { geminiCompatibleMediaAdapter, googleMediaAdapter } from '@/lib/ai-providers/google/adapter'
 import { executeGoogleImageGeneration } from '@/lib/ai-providers/google/image'
 import { runGoogleLlmCompletion, runGoogleLlmStream, runGoogleVisionCompletion } from '@/lib/ai-providers/google/llm'
 import { executeGoogleVideoGeneration } from '@/lib/ai-providers/google/video'
+import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
 import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { executeMinimaxVideoGeneration } from '@/lib/ai-providers/minimax/video'
+import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES, MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
 import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import { executeOpenAiCompatibleImageGeneration } from '@/lib/ai-providers/openai-compatible/image'
 import { runOpenAiCompatibleLlmCompletion, runOpenAiCompatibleLlmStream } from '@/lib/ai-providers/openai-compatible/llm'
 import { executeOpenAiCompatibleVideoGeneration } from '@/lib/ai-providers/openai-compatible/video'
+import { OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai-compatible/models'
 import { openRouterMediaAdapter } from '@/lib/ai-providers/openrouter/adapter'
 import { runOpenRouterLlmCompletion, runOpenRouterLlmStream } from '@/lib/ai-providers/openrouter/llm'
+import { OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
 import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import {
   executeSiliconFlowAudioGeneration,
@@ -38,10 +49,36 @@ import {
   runSiliconFlowLlmStream,
   runSiliconFlowVisionCompletion,
 } from '@/lib/ai-providers/siliconflow'
+import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES, SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
 import { executeViduVideoGeneration } from '@/lib/ai-providers/vidu/video'
+import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 import type { DescribeOnlyMediaAdapter } from '@/lib/ai-providers/shared/media-adapter'
 import type { RegisteredAiProvider } from '@/lib/ai-providers/runtime-types'
+
+registerBuiltinCapabilityCatalogEntries([
+  ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+  ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+])
+
+registerBuiltinPricingCatalogEntries([
+  ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES,
+  ...VIDU_BUILTIN_PRICING_CATALOG_ENTRIES,
+])
 
 const mediaAdapterRegistry = new AiRegistry<DescribeOnlyMediaAdapter>([
   bailianMediaAdapter,

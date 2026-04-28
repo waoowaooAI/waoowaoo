@@ -10,9 +10,9 @@ import {
   normalizeVideoGenerationSelections,
   resolveEffectiveVideoCapabilityDefinitions,
   resolveEffectiveVideoCapabilityFields,
-} from '@/lib/model-capabilities/video-effective'
-import { supportsFirstLastFrame } from '@/lib/model-capabilities/video-model-options'
-import { projectVideoPricingTiersByFixedSelections } from '@/lib/model-pricing/video-tier'
+  supportsFirstLastFrame,
+  projectVideoPricingTiersByFixedSelections,
+} from '@/lib/ai-registry/catalog'
 
 interface FirstLastFrameCapabilityField {
   field: string

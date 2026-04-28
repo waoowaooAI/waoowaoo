@@ -4,9 +4,10 @@ const lookupMock = vi.hoisted(() => ({
   resolveBuiltinPricing: vi.fn(),
 }))
 
-vi.mock('@/lib/model-pricing/lookup', () => ({
+vi.mock('@/lib/ai-registry/catalog', () => ({
   resolveBuiltinPricing: lookupMock.resolveBuiltinPricing,
 }))
+
 
 import { calcImage, calcText, calcVideo, calcVoice } from '@/lib/billing/cost'
 

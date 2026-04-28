@@ -7,7 +7,7 @@ import {
   calcVoiceDesign,
 } from './cost'
 import { BillingOperationError } from './errors'
-import { BUILTIN_PRICING_VERSION } from '@/lib/model-pricing/version'
+import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/catalog'
 import { TASK_TYPE, type TaskType } from '@/lib/task/types'
 import type { TaskBillingInfo } from './types'
 

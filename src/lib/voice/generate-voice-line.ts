@@ -1,7 +1,7 @@
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { fal } from '@fal-ai/client'
 import { prisma } from '@/lib/prisma'
-import { getAudioApiKey, getProviderConfig, resolveModelSelectionOrSingle } from '@/lib/api-config'
+import { getAudioApiKey, getProviderConfig, resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { extractStorageKey, getSignedUrl, toFetchableUrl, uploadObject } from '@/lib/storage'

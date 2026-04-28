@@ -19,12 +19,12 @@ import {
   resolveBuiltinCapabilitiesByModelKey,
   resolveBuiltinModelContext,
   validateCapabilitySelectionsPayload,
-} from '@/lib/model-capabilities/lookup'
+} from '@/lib/ai-registry/catalog'
 import {
   findBuiltinPricingCatalogEntry,
   listBuiltinPricingCatalog,
   type PricingApiType,
-} from '@/lib/model-pricing/catalog'
+} from '@/lib/ai-registry/catalog'
 import { getBillingMode } from '@/lib/billing/mode'
 import {
   DEFAULT_ANALYSIS_WORKFLOW_CONCURRENCY,

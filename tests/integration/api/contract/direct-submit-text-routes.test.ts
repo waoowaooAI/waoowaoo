@@ -61,15 +61,27 @@ vi.mock('@/lib/media/outbound-image', () => ({
     issues: [],
   })),
 }))
-vi.mock('@/lib/model-capabilities/lookup', () => ({
+vi.mock('@/lib/ai-registry/catalog', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({ video: { firstlastframe: true } })),
+  resolveBuiltinPricing: vi.fn(() => ({
+    status: 'resolved',
+    mode: 'flat',
+    amount: 0,
+    entry: {
+      apiType: 'text',
+      provider: 'ark',
+      modelId: 'stub',
+      pricing: { mode: 'flat', flatAmount: 0 },
+    },
+  })),
 }))
-vi.mock('@/lib/model-pricing/lookup', () => ({
-  resolveBuiltinPricing: vi.fn(() => ({ status: 'ok' })),
-}))
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   resolveModelSelection: vi.fn(async () => ({
-    model: 'img::storyboard',
+    provider: 'ark',
+    modelId: 'stub',
+    modelKey: 'ark::stub',
+    mediaType: 'llm',
+    variantSubKind: 'official',
   })),
   resolveModelSelectionOrSingle: vi.fn(async (_userId: string, model: string | null | undefined) => {
     const modelKey = typeof model === 'string' && model.trim().length > 0
@@ -84,10 +96,6 @@ vi.mock('@/lib/api-config', () => ({
       modelKey,
       mediaType: 'audio',
     }
-  }),
-  getProviderKey: vi.fn((providerId: string) => {
-    const marker = providerId.indexOf(':')
-    return marker === -1 ? providerId : providerId.slice(0, marker)
   }),
 }))
 vi.mock('@/lib/prisma', () => ({

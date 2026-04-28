@@ -7,7 +7,7 @@ const getProviderConfigMock = vi.hoisted(() =>
   })),
 )
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
 }))
 

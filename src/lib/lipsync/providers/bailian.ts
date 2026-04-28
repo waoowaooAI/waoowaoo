@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { normalizeToOriginalMediaUrl } from '@/lib/media/outbound-image'
 import { toFetchableUrl } from '@/lib/storage/utils'
 import type { LipSyncParams, LipSyncResult, LipSyncSubmitContext } from '@/lib/lipsync/types'

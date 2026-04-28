@@ -14,10 +14,10 @@ import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import {
   findBuiltinCapabilities,
   listBuiltinCapabilityCatalog,
-} from '@/lib/model-capabilities/catalog'
-import { validateCapabilitySelectionForModel } from '@/lib/model-capabilities/lookup'
-import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
-import type { PricingApiType } from '@/lib/model-pricing/catalog'
+  validateCapabilitySelectionForModel,
+  resolveBuiltinPricing,
+  type PricingApiType,
+} from '@/lib/ai-registry/catalog'
 
 export const USD_TO_CNY = 7.2
 

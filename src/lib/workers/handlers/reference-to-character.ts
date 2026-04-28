@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { generateImage } from '@/lib/ai-exec/engine'
 import { queryFalStatus } from '@/lib/async-submit'
 import { fetchWithTimeoutAndRetry } from '@/lib/ai-providers/ark/image'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { executeAiVisionStep } from '@/lib/ai-exec/engine'
 import { getUserModelConfig } from '@/lib/config-service'
 import {

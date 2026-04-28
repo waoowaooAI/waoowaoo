@@ -1,5 +1,5 @@
 import OpenAI, { toFile } from 'openai'
-import { getProviderConfig } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import { getInternalBaseUrl } from '@/lib/env'
 import { getImageBase64Cached } from '@/lib/image-cache'
 
@@ -79,4 +79,3 @@ export async function toUploadFile(imageSource: string, index: number): Promise<
   const bytes = Buffer.from(imageSource, 'base64')
   return await toFile(bytes, `reference-${index}.png`, { type: 'image/png' })
 }
-

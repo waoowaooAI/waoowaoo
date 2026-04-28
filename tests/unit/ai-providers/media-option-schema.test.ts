@@ -6,7 +6,7 @@ import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
 
-vi.mock('@/lib/model-capabilities/lookup', () => ({
+vi.mock('@/lib/ai-registry/catalog', () => ({
   resolveBuiltinCapabilitiesByModelKey: vi.fn(() => ({})),
 }))
 

@@ -11,7 +11,7 @@ import type {
   ChatCompletionStreamCallbacks,
   ChatMessage,
 } from '@/lib/ai-registry/types'
-import { resolveModelSelection } from '@/lib/api-config'
+import { resolveModelSelection } from '@/lib/user-api/runtime-config'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { resolveRegisteredAiProvider } from '@/lib/ai-providers'
 import { runChatCompletion } from '@/lib/ai-exec/llm/completion-runner'

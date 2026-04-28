@@ -16,7 +16,7 @@ import {
   getCapabilityOptionFields,
   validateCapabilitySelectionsPayload,
   type CapabilityModelContext,
-} from '@/lib/model-capabilities/lookup'
+} from '@/lib/ai-registry/catalog'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 
 const MODEL_FIELDS = [

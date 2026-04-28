@@ -6,7 +6,7 @@ const getProviderConfigMock = vi.hoisted(() => vi.fn(async () => ({
   baseUrl: 'https://oa.test/v1',
 })))
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
 }))
 
