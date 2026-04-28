@@ -257,7 +257,7 @@ export class GoogleGeminiBatchImageGenerator extends BaseImageGenerator {
         }
 
         // 使用 Batch API 提交异步任务
-        const { submitGeminiBatch } = await import('@/lib/gemini-batch-utils')
+        const { submitGeminiBatch } = await import('@/lib/ai-providers/google/llm')
         await setProxy()
 
         const result = await submitGeminiBatch(apiKey, prompt, {
