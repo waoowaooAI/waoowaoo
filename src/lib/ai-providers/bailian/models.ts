@@ -2,6 +2,33 @@ import type { MediaOptionSchemaConfig } from '@/lib/ai-providers/shared/media-op
 import type { AiOptionSchema } from '@/lib/ai-registry/types'
 import { booleanValidator, buildMediaOptionSchema, integerRangeValidator, type MediaModality } from '@/lib/ai-providers/shared/option-schema'
 
+export type BailianOfficialModality = 'llm' | 'image' | 'video' | 'audio'
+
+const BAILIAN_OFFICIAL_MODEL_ID_SETS = {
+  llm: new Set<string>([
+    'qwen3.5-plus',
+    'qwen3.5-flash',
+  ]),
+  image: new Set<string>([]),
+  video: new Set<string>([
+    'wan2.7-i2v',
+    'wan2.6-i2v-flash',
+    'wan2.6-i2v',
+    'wan2.5-i2v-preview',
+    'wan2.2-i2v-plus',
+    'wan2.2-kf2v-flash',
+    'wanx2.1-kf2v-plus',
+  ]),
+  audio: new Set<string>([
+    'qwen3-tts-vd-2026-01-26',
+  ]),
+} as const satisfies Record<BailianOfficialModality, ReadonlySet<string>>
+
+export function assertBailianOfficialModelSupported(modality: BailianOfficialModality, modelId: string): void {
+  if (BAILIAN_OFFICIAL_MODEL_ID_SETS[modality].has(modelId)) return
+  throw new Error(`MODEL_NOT_REGISTERED: bailian/${modality}/${modelId}`)
+}
+
 export const BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
   {
     modelType: 'video',

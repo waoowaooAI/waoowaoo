@@ -1,10 +1,6 @@
-import {
-  assertOfficialModelRegistered,
-  type OfficialModelModality,
-} from '@/lib/ai-providers/official/model-registry'
 import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime-types'
-import { ensureSiliconFlowCatalogRegistered } from './catalog'
 import type { SiliconFlowGenerateRequestOptions } from './types'
+import { assertSiliconFlowOfficialModelSupported } from './models'
 
 export interface SiliconFlowVideoGenerateParams {
   userId: string
@@ -14,12 +10,7 @@ export interface SiliconFlowVideoGenerateParams {
 }
 
 function assertRegistered(modelId: string): void {
-  ensureSiliconFlowCatalogRegistered()
-  assertOfficialModelRegistered({
-    provider: 'siliconflow',
-    modality: 'video' satisfies OfficialModelModality,
-    modelId,
-  })
+  assertSiliconFlowOfficialModelSupported('video', modelId)
 }
 
 export async function generateSiliconFlowVideo(params: SiliconFlowVideoGenerateParams): Promise<never> {

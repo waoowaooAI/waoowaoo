@@ -1,4 +1,3 @@
-export { ensureSiliconFlowCatalogRegistered, listSiliconFlowCatalogModels } from './catalog'
 export { completeSiliconFlowLlm, runSiliconFlowLlmCompletion, runSiliconFlowLlmStream, runSiliconFlowVisionCompletion } from './llm'
 export { generateSiliconFlowImage, executeSiliconFlowImageGeneration } from './image'
 export { generateSiliconFlowVideo, executeSiliconFlowVideoGeneration } from './video'

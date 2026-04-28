@@ -1,4 +1,3 @@
-export { ensureBailianCatalogRegistered, listBailianCatalogModels } from './catalog'
 export { completeBailianLlm, runBailianLlmCompletion, runBailianLlmStream, runBailianVisionCompletion } from './llm'
 export { generateBailianImage, executeBailianImageGeneration } from './image'
 export { generateBailianVideo, executeBailianVideoGeneration } from './video'

@@ -1,11 +1,6 @@
 import type OpenAI from 'openai'
-import {
-  assertOfficialModelRegistered,
-  type OfficialModelModality,
-} from '@/lib/ai-providers/official/model-registry'
 import { getCompletionParts } from '@/lib/ai-providers/shared/completion-parts'
 import { emitStreamChunk, emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
-import { ensureSiliconFlowCatalogRegistered } from './catalog'
 import { buildAiProviderLlmResult } from '@/lib/ai-providers/shared/llm-result'
 import type { SiliconFlowLlmMessage } from './types'
 import type {
@@ -13,6 +8,7 @@ import type {
   AiProviderLlmStreamContext,
   AiProviderVisionExecutionContext,
 } from '@/lib/ai-providers/runtime-types'
+import { assertSiliconFlowOfficialModelSupported } from './models'
 
 export interface SiliconFlowLlmCompletionParams {
   modelId: string
@@ -23,12 +19,7 @@ export interface SiliconFlowLlmCompletionParams {
 }
 
 function assertRegistered(modelId: string): void {
-  ensureSiliconFlowCatalogRegistered()
-  assertOfficialModelRegistered({
-    provider: 'siliconflow',
-    modality: 'llm' satisfies OfficialModelModality,
-    modelId,
-  })
+  assertSiliconFlowOfficialModelSupported('llm', modelId)
 }
 
 export async function completeSiliconFlowLlm(

@@ -1,11 +1,6 @@
 import OpenAI from 'openai'
-import {
-  assertOfficialModelRegistered,
-  type OfficialModelModality,
-} from '@/lib/ai-providers/official/model-registry'
 import { getCompletionParts } from '@/lib/ai-providers/shared/completion-parts'
 import { emitStreamChunk, emitStreamStage, resolveStreamStepMeta } from '@/lib/ai-providers/shared/llm-support'
-import { ensureBailianCatalogRegistered } from './catalog'
 import { buildAiProviderLlmResult } from '@/lib/ai-providers/shared/llm-result'
 import type { BailianLlmMessage } from './types'
 import type {
@@ -13,6 +8,7 @@ import type {
   AiProviderLlmStreamContext,
   AiProviderVisionExecutionContext,
 } from '@/lib/ai-providers/runtime-types'
+import { assertBailianOfficialModelSupported } from './models'
 
 export interface BailianLlmCompletionParams {
   modelId: string
@@ -23,12 +19,7 @@ export interface BailianLlmCompletionParams {
 }
 
 function assertRegistered(modelId: string): void {
-  ensureBailianCatalogRegistered()
-  assertOfficialModelRegistered({
-    provider: 'bailian',
-    modality: 'llm' satisfies OfficialModelModality,
-    modelId,
-  })
+  assertBailianOfficialModelSupported('llm', modelId)
 }
 
 export async function completeBailianLlm(
