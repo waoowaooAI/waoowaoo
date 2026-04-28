@@ -59,6 +59,11 @@ const FORBIDDEN_MODEL_TOKENS = [
   /\bwanx[0-9](?:\.[0-9])?-[a-z0-9-]+/i,
 ]
 
+const FORBIDDEN_LEGACY_USER_API_PROBE_IMPORTS = [
+  /['"]@\/lib\/user-api\/model-llm-protocol-probe['"]/,
+  /['"]@\/lib\/user-api\/model-template\/probe['"]/,
+]
+
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -74,8 +79,19 @@ function isInAllowedDir(rel) {
   return ALLOWED_AI_DIRS.some((d) => rel.startsWith(d))
 }
 
-function findHits(content) {
+function isUserApiProbeFile(rel) {
+  return rel.startsWith('src/lib/user-api/') && /(^|\/)[^/]*probe[^/]*\.tsx?$/.test(rel)
+}
+
+function findHits(content, rel) {
   const hits = []
+  if (isUserApiProbeFile(rel)) {
+    hits.push('user-api provider probe implementation')
+  }
+  for (const re of FORBIDDEN_LEGACY_USER_API_PROBE_IMPORTS) {
+    const m = content.match(re)
+    if (m) hits.push(`legacy user-api probe import: ${m[0]}`)
+  }
   for (const re of FORBIDDEN_SDK_IMPORTS) {
     const m = content.match(re)
     if (m) hits.push(`SDK import: ${m[0]}`)
@@ -96,7 +112,7 @@ function runCli() {
   for (const fullPath of files) {
     const rel = path.relative(ROOT, fullPath).split(path.sep).join('/')
     if (isInAllowedDir(rel)) continue
-    const hits = findHits(fs.readFileSync(fullPath, 'utf8'))
+    const hits = findHits(fs.readFileSync(fullPath, 'utf8'), rel)
     if (hits.length > 0) {
       violators.push(rel)
       for (const h of hits) violationLines.push(`${rel}: ${h}; move under src/lib/ai-providers/** or call via @/lib/ai-exec/engine`)
@@ -116,7 +132,7 @@ function runCli() {
   for (const allowed of allowlist) {
     const full = path.join(ROOT, allowed)
     if (!fs.existsSync(full)) { missing.push(allowed); continue }
-    if (findHits(fs.readFileSync(full, 'utf8')).length === 0) cleaned.push(allowed)
+    if (findHits(fs.readFileSync(full, 'utf8'), allowed).length === 0) cleaned.push(allowed)
   }
 
   let failed = false

@@ -31,19 +31,27 @@ const SCAN_ROOTS = [
 
 const WHITELIST = new Set([
   'src/lib/ai-providers/index.ts',
+  'src/lib/ai-registry/runtime-selection.ts',
 ])
 
 const JS_PRIMITIVE_TYPE_NAMES = new Set(['string', 'number', 'boolean', 'object', 'function', 'undefined', 'symbol', 'bigint'])
 
-function findHits(content) {
+function getProviderDirKey(rel) {
+  const match = /^src\/lib\/ai-providers\/([^/]+)\//.exec(rel)
+  return match ? match[1] : null
+}
+
+function findHits(content, rel = '') {
   const hits = []
-  const re = /(^|[^A-Za-z0-9_])(providerKey|providerId|provider)\s*===\s*['"]([A-Za-z0-9_-]+)['"]/g
+  const providerDirKey = getProviderDirKey(rel)
+  const re = /(^|[^A-Za-z0-9_])(providerKey|providerId|provider)\s*(===|!==|==|!=)\s*['"]([A-Za-z0-9_-]+)['"]/g
   let m
   while ((m = re.exec(content)) !== null) {
     const before = content.slice(Math.max(0, m.index - 8), m.index + m[1].length)
     if (/\btypeof\s+$/.test(before)) continue
-    if (JS_PRIMITIVE_TYPE_NAMES.has(m[3])) continue
-    hits.push(`${m[2]} === '${m[3]}'`)
+    if (JS_PRIMITIVE_TYPE_NAMES.has(m[4])) continue
+    if (providerDirKey && m[4] === providerDirKey) continue
+    hits.push(`${m[2]} ${m[3]} '${m[4]}'`)
   }
   return hits
 }
@@ -68,7 +76,7 @@ function runCli() {
   for (const fullPath of files) {
     const rel = path.relative(ROOT, fullPath).split(path.sep).join('/')
     if (WHITELIST.has(rel)) continue
-    const hits = findHits(fs.readFileSync(fullPath, 'utf8'))
+    const hits = findHits(fs.readFileSync(fullPath, 'utf8'), rel)
     if (hits.length > 0) {
       violators.push(rel)
       for (const h of hits) violationLines.push(`${rel}: forbidden cross-provider switch literal: ${h}`)
@@ -88,7 +96,7 @@ function runCli() {
   for (const allowed of allowlist) {
     const full = path.join(ROOT, allowed)
     if (!fs.existsSync(full)) { missing.push(allowed); continue }
-    if (findHits(fs.readFileSync(full, 'utf8')).length === 0) cleaned.push(allowed)
+    if (findHits(fs.readFileSync(full, 'utf8'), allowed).length === 0) cleaned.push(allowed)
   }
 
   let failed = false
