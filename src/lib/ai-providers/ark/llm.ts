@@ -19,7 +19,7 @@ import type {
   AiProviderLlmStreamContext,
   AiProviderVisionExecutionContext,
 } from '@/lib/ai-providers/runtime-types'
-import { buildOpenAIChatCompletion } from '@/lib/ai-providers/llm/openai-compat'
+import { buildOpenAIChatCompletion } from '@/lib/ai-providers/shared/openai-chat-completion'
 
 export type { ArkResponsesOptions, ArkResponsesResult, ArkStreamDelta, ArkStreamResult } from './responses'
 export { arkResponsesCompletion, arkResponsesStream, buildArkThinkingParam, convertChatMessagesToArkInput } from './responses'

@@ -5,7 +5,7 @@ import {
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
-import { GoogleEmptyResponseError } from '@/lib/ai-providers/llm/google'
+import { GoogleEmptyResponseError } from '@/lib/ai-providers/google/llm'
 import {
   _ulogError,
   _ulogWarn,

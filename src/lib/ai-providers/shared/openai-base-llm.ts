@@ -2,7 +2,7 @@ import OpenAI from 'openai'
 import { generateText, streamText, type ModelMessage } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { getCompletionParts } from '@/lib/ai-providers/shared/completion-parts'
-import { buildOpenAIChatCompletion } from '@/lib/ai-providers/llm/openai-compat'
+import { buildOpenAIChatCompletion } from '@/lib/ai-providers/shared/openai-chat-completion'
 import { buildAiProviderLlmResult } from '@/lib/ai-providers/shared/llm-result'
 import {
   buildReasoningAwareContent,

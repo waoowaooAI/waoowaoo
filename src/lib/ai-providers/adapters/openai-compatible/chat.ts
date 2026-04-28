@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import type { ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
-import { buildOpenAIChatCompletion } from '@/lib/ai-providers/llm/openai-compat'
+import { buildOpenAIChatCompletion } from '@/lib/ai-providers/shared/openai-chat-completion'
 import {
   emitStreamChunk,
   emitStreamStage,

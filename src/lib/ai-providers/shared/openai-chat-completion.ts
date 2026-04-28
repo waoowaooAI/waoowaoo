@@ -30,4 +30,3 @@ export function buildOpenAIChatCompletion(
     },
   } as OpenAI.Chat.Completions.ChatCompletion
 }
-
