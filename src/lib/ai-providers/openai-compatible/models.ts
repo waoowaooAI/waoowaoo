@@ -17,6 +17,17 @@ export const OPENAI_VIDEO_DURATIONS = ['4', '8', '12'] as const
 export const OPENAI_VIDEO_RATIOS = new Set(['16:9', '9:16', '4:3', '3:4', '3:2', '2:3', '21:9', '9:21', '1:1', 'auto'])
 export const OPENAI_VIDEO_SIZES = new Set(['720p', '1080p', '720x1280', '1280x720', '1024x1792', '1792x1024'])
 
+export const OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
+  {
+    modelType: 'image',
+    provider: 'openai-compatible',
+    modelId: 'gpt-image-1',
+    capabilities: { image: { resolutionOptions: [...OPENAI_IMAGE_SIZES] } },
+  },
+] as const
+
+export const OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES: readonly unknown[] = [] as const
+
 export const OPENAI_COMPATIBLE_IMAGE_OPTION_SCHEMA_CONFIG = {
   conflicts: [{ keys: ['size', 'resolution'], message: 'size_and_resolution_must_match', allowSameValue: true }],
   validators: {

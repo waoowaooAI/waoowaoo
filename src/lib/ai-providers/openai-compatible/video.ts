@@ -3,7 +3,7 @@ import {
   generateVideoViaOpenAICompatTemplate,
 } from '@/lib/ai-providers/adapters/openai-compatible/index'
 import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime-types'
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 
 export async function executeOpenAiCompatibleVideoGeneration(input: AiProviderVideoExecutionContext) {
   const { prompt, ...providerOptions } = input.options || {}

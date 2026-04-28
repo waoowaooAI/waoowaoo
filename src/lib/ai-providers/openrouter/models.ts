@@ -60,3 +60,11 @@ export const OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES = [
     },
   },
 ] as const
+
+export const OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES = [
+  { modelType: 'llm', provider: 'openrouter', modelId: 'google/gemini-3.1-pro-preview', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
+  { modelType: 'llm', provider: 'openrouter', modelId: 'google/gemini-3-pro-preview', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
+  { modelType: 'llm', provider: 'openrouter', modelId: 'google/gemini-3-flash-preview', capabilities: { llm: { reasoningEffortOptions: ['minimal', 'low', 'medium', 'high'] } } },
+  { modelType: 'llm', provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4.5', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
+  { modelType: 'llm', provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4', capabilities: { llm: { reasoningEffortOptions: ['low', 'medium', 'high'] } } },
+] as const

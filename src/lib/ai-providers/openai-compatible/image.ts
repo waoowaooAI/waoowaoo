@@ -3,7 +3,7 @@ import {
   generateImageViaOpenAICompatTemplate,
 } from '@/lib/ai-providers/adapters/openai-compatible/index'
 import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 
 function aspectRatioToOpenAISize(aspectRatio: string | undefined): string | undefined {
   if (!aspectRatio) return undefined

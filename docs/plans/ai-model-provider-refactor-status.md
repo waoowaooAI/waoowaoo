@@ -13,6 +13,7 @@
 ### Step 1 — 合并 6 套 catalog 为 `ai-providers/<x>/models.ts`
 
 - [x] 各 provider `models.ts` 起点文件
+- [x] `ai-providers/openrouter/{adapter,llm,models}.ts` 落地
 - [x] `model-capabilities/catalog.ts` 数据按 provider 搬迁
 - [x] `model-pricing/catalog.ts` 数据按 provider 搬迁
 - [x] `ai-providers/adapters/models/*.ts` 数据合并
@@ -27,7 +28,7 @@
 - [x] `adapters/llm/{execution,stream-execution}.ts` switch 拆光
 - [x] `adapters/media/execution.ts` switch 拆光
 - [ ] `adapters/media-option-schema.ts` 删除（数据已在 Step 1 搬走）
-- [ ] `ai-exec/engine.ts` 路由改为 `adapter[modality]`
+- [x] `ai-exec/engine.ts` 路由改为 `adapter[modality]`
 - [x] guard：`no-cross-provider-switch.mjs`
 
 ### Step 3 — 删散文件 + 取消 `adapters/` 中间层

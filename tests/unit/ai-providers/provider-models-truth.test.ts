@@ -12,8 +12,12 @@ import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, GOOGLE_BUILTIN_PRICING_CATAL
 import { minimaxMediaAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES, MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
 import { openAiCompatibleMediaAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
+import { OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai-compatible/models'
 import { viduMediaAdapter } from '@/lib/ai-providers/vidu/adapter'
-import { OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
+import { openRouterMediaAdapter } from '@/lib/ai-providers/openrouter/adapter'
+import { OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openrouter/models'
+import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
+import { SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES, SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/siliconflow/models'
 import { VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES, VIDU_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/vidu/models'
 
 function mediaSelection(input: {
@@ -35,19 +39,93 @@ function mediaSelection(input: {
 
 function expectValidOptions(
   schema: Parameters<typeof validateAiOptions>[0]['schema'],
-  options: Record<string, unknown>,
+  options: unknown,
   context = 'provider-models-truth',
 ) {
   expect(() => validateAiOptions({ schema, options, context })).not.toThrow()
 }
 
 describe('provider models truth', () => {
+  it('ensures capability/pricing catalog entries are well-formed', () => {
+    const capabilityEntries = [
+      ...ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+      ...VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES,
+    ]
+
+    const modelTypes = new Set(['llm', 'image', 'video', 'audio', 'lipsync'])
+
+    for (const entry of capabilityEntries) {
+      expect(modelTypes.has(entry.modelType)).toBe(true)
+      expect(typeof entry.provider).toBe('string')
+      expect(entry.provider.trim().length).toBeGreaterThan(0)
+      expect(typeof entry.modelId).toBe('string')
+      expect(entry.modelId.trim().length).toBeGreaterThan(0)
+
+      if (entry.capabilities === undefined) continue
+      expect(typeof entry.capabilities).toBe('object')
+      expect(Array.isArray(entry.capabilities)).toBe(false)
+    }
+
+    const pricingEntries = [
+      ...ARK_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...FAL_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES,
+      ...VIDU_BUILTIN_PRICING_CATALOG_ENTRIES,
+    ]
+
+    const apiTypes = new Set(['text', 'image', 'video', 'voice', 'voice-design', 'lip-sync'])
+
+    for (const entry of pricingEntries) {
+      expect(apiTypes.has(entry.apiType)).toBe(true)
+      expect(typeof entry.provider).toBe('string')
+      expect(entry.provider.trim().length).toBeGreaterThan(0)
+      expect(typeof entry.modelId).toBe('string')
+      expect(entry.modelId.trim().length).toBeGreaterThan(0)
+
+      expect(entry.pricing).toBeTruthy()
+      expect(typeof entry.pricing).toBe('object')
+      expect(Array.isArray(entry.pricing)).toBe(false)
+
+      if (entry.pricing.mode === 'flat') {
+        expect(typeof entry.pricing.flatAmount).toBe('number')
+        expect(Number.isFinite(entry.pricing.flatAmount)).toBe(true)
+        expect(entry.pricing.flatAmount).toBeGreaterThanOrEqual(0)
+        continue
+      }
+
+      expect(entry.pricing.mode).toBe('capability')
+      expect(Array.isArray(entry.pricing.tiers)).toBe(true)
+      expect(entry.pricing.tiers.length).toBeGreaterThan(0)
+      for (const tier of entry.pricing.tiers) {
+        expect(tier.when).toBeTruthy()
+        expect(typeof tier.when).toBe('object')
+        expect(Array.isArray(tier.when)).toBe(false)
+        expect(Object.keys(tier.when).length).toBeGreaterThan(0)
+        expect(typeof tier.amount).toBe('number')
+        expect(Number.isFinite(tier.amount)).toBe(true)
+        expect(tier.amount).toBeGreaterThanOrEqual(0)
+      }
+    }
+  })
+
   it('wires representative capability catalog entries from provider models', () => {
     expect(ARK_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'doubao-seedance-2-0-260128')?.capabilities?.video?.resolutionOptions).toEqual(['480p', '720p'])
     expect(BAILIAN_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'wan2.7-i2v')?.capabilities?.video?.generationModeOptions).toEqual(['normal', 'firstlastframe'])
     expect(FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'banana-2')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
     expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3.1-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['0.5K', '1K', '2K', '4K'])
     expect(MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'minimax-hailuo-02')?.capabilities?.video?.firstlastframe).toBe(true)
+    expect(OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gpt-image-1')?.capabilities?.image?.resolutionOptions).toContain('1024x1024')
+    expect(OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.capabilities?.llm?.reasoningEffortOptions).toEqual(['low', 'medium', 'high'])
+    expect(SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES).toHaveLength(0)
     expect(VIDU_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'viduq2-pro')?.capabilities?.video?.generateAudioOptions).toEqual([false, true])
   })
 
@@ -57,7 +135,9 @@ describe('provider models truth', () => {
     expect(FAL_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'fal-ai/kling-video/lipsync/audio-to-video')?.pricing.flatAmount).toBe(0.5)
     expect(GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'veo-3.1-fast-generate-preview')?.pricing.tiers?.[0]?.amount).toBe(4.32)
     expect(MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 't2v-01-director')?.pricing.tiers?.[0]?.amount).toBe(6)
+    expect(OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(OPENROUTER_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.pricing.tiers?.[1]?.amount).toBe(72)
+    expect(SILICONFLOW_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(VIDU_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'vidu-lipsync')?.pricing.flatAmount).toBe(0.5)
   })
 
@@ -135,5 +215,27 @@ describe('provider models truth', () => {
       options: { size: '1024x1024', resolution: '1536x1024' },
       context: 'openai-image',
     })).toThrow('AI_OPTION_CONFLICT:openai-image:size_and_resolution_must_match')
+
+    const openRouterImage = openRouterMediaAdapter.describeVariant('image', mediaSelection({
+      provider: 'openrouter',
+      modelId: 'google/gemini-3.1-pro-preview',
+      modelKey: 'openrouter::google/gemini-3.1-pro-preview',
+    }))
+    expect(() => validateAiOptions({
+      schema: openRouterImage.optionSchema,
+      options: { unsupportedField: true },
+      context: 'openrouter-image',
+    })).toThrow('AI_OPTION_UNSUPPORTED:openrouter-image:unsupportedField')
+
+    const siliconFlowImage = siliconFlowMediaAdapter.describeVariant('image', mediaSelection({
+      provider: 'siliconflow',
+      modelId: 'any',
+      modelKey: 'siliconflow::any',
+    }))
+    expect(() => validateAiOptions({
+      schema: siliconFlowImage.optionSchema,
+      options: { unsupportedField: true },
+      context: 'siliconflow-image',
+    })).toThrow('AI_OPTION_UNSUPPORTED:siliconflow-image:unsupportedField')
   })
 })

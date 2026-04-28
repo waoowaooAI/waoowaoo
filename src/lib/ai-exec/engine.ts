@@ -94,57 +94,62 @@ export async function executeMediaGeneration(input: AiMediaExecutionInput): Prom
   const selection = await resolveModelSelection(input.userId, input.modelKey, input.modality)
   _ulogInfo(`[ai-exec:${input.modality}] resolved model selection: ${selection.modelKey}`)
   const adapter = resolveRegisteredAiProvider(selection.provider)
-  if (input.modality === 'image') {
-    if (!adapter.image) {
-      throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+  switch (input.modality) {
+    case 'image': {
+      const modalityAdapter = adapter[input.modality]
+      if (!modalityAdapter) {
+        throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+      }
+      const descriptor = modalityAdapter.describe(selection)
+      validateAiOptions({
+        schema: descriptor.optionSchema,
+        options: input.options,
+        context: `${input.modality}:${selection.modelKey}`,
+      })
+      return await modalityAdapter.execute({
+        userId: input.userId,
+        selection,
+        prompt: input.prompt,
+        options: input.options,
+      })
     }
-    const descriptor = adapter.image.describe(selection)
-    validateAiOptions({
-      schema: descriptor.optionSchema,
-      options: input.options,
-      context: `${input.modality}:${selection.modelKey}`,
-    })
-    return await adapter.image.execute({
-      userId: input.userId,
-      selection,
-      prompt: input.prompt,
-      options: input.options,
-    })
-  }
-
-  if (input.modality === 'video') {
-    if (!adapter.video) {
-      throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+    case 'video': {
+      const modalityAdapter = adapter[input.modality]
+      if (!modalityAdapter) {
+        throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+      }
+      const descriptor = modalityAdapter.describe(selection)
+      validateAiOptions({
+        schema: descriptor.optionSchema,
+        options: input.options,
+        context: `${input.modality}:${selection.modelKey}`,
+      })
+      return await modalityAdapter.execute({
+        userId: input.userId,
+        selection,
+        imageUrl: input.imageUrl,
+        options: input.options,
+      })
     }
-    const descriptor = adapter.video.describe(selection)
-    validateAiOptions({
-      schema: descriptor.optionSchema,
-      options: input.options,
-      context: `${input.modality}:${selection.modelKey}`,
-    })
-    return await adapter.video.execute({
-      userId: input.userId,
-      selection,
-      imageUrl: input.imageUrl,
-      options: input.options,
-    })
+    case 'audio': {
+      const modalityAdapter = adapter[input.modality]
+      if (!modalityAdapter) {
+        throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+      }
+      const descriptor = modalityAdapter.describe(selection)
+      validateAiOptions({
+        schema: descriptor.optionSchema,
+        options: input.options,
+        context: `${input.modality}:${selection.modelKey}`,
+      })
+      return await modalityAdapter.execute({
+        userId: input.userId,
+        selection,
+        text: input.text,
+        options: input.options,
+      })
+    }
   }
-
-  if (!adapter.audio) {
-    throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
-  }
-  const descriptor = adapter.audio.describe(selection)
-  validateAiOptions({
-    schema: descriptor.optionSchema,
-    options: input.options,
-    context: `${input.modality}:${selection.modelKey}`,
-  })
-  return await adapter.audio.execute({
-    userId: input.userId,
-    selection,
-    text: input.text,
-    options: input.options,
-  })
 }
 
 export async function executeLlmCompletion(input: AiLlmExecutionInput): Promise<OpenAI.Chat.Completions.ChatCompletion> {
