@@ -9,8 +9,18 @@
 
 import { prisma } from '@/lib/prisma'
 import { decryptApiKey } from '@/lib/crypto-utils'
-import { composeModelKey, getProviderKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type { UnifiedModelType } from '@/lib/ai-registry/types'
+import {
+  findRuntimeModelByKey,
+  normalizeProviderRuntimeBaseUrl,
+  resolveRuntimeModelSelection,
+  resolveSingleRuntimeModelSelection,
+  type RuntimeGatewayRouteType,
+  type RuntimeLlmProtocolType,
+  type RuntimeModelMediaType,
+  type RuntimeModelSelection,
+} from '@/lib/ai-registry/runtime-selection'
 import type {
   OpenAICompatMediaTemplate,
   OpenAICompatMediaTemplateSource,
@@ -32,20 +42,10 @@ export interface CustomModel {
   price: number
 }
 
-export type ModelMediaType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync'
+export type ModelMediaType = RuntimeModelMediaType
+export type ModelSelection = RuntimeModelSelection<OpenAICompatMediaTemplate>
 
-export interface ModelSelection {
-  provider: string
-  modelId: string
-  modelKey: string
-  mediaType: ModelMediaType
-  variantSubKind: 'official' | 'user-template'
-  variantData?: { compatMediaTemplate: OpenAICompatMediaTemplate }
-  llmProtocol?: 'responses' | 'chat-completions'
-  compatMediaTemplate?: OpenAICompatMediaTemplate
-}
-
-type GatewayRouteType = 'official' | 'openai-compat'
+type GatewayRouteType = RuntimeGatewayRouteType
 
 interface CustomProvider {
   id: string
@@ -56,32 +56,7 @@ interface CustomProvider {
   gatewayRoute?: GatewayRouteType
 }
 
-type LlmProtocolType = 'responses' | 'chat-completions'
-
-function normalizeProviderBaseUrl(providerId: string, rawBaseUrl?: string): string | undefined {
-  const providerKey = getProviderKey(providerId)
-  if (providerKey === 'minimax') {
-    return 'https://api.minimaxi.com/v1'
-  }
-
-  const baseUrl = readTrimmedString(rawBaseUrl)
-  if (!baseUrl) return undefined
-  if (providerKey !== 'openai-compatible') return baseUrl
-
-  try {
-    const parsed = new URL(baseUrl)
-    const pathSegments = parsed.pathname.split('/').filter(Boolean)
-    const hasV1 = pathSegments.includes('v1')
-    if (hasV1) return baseUrl
-
-    const trimmedPath = parsed.pathname.replace(/\/+$/, '')
-    parsed.pathname = `${trimmedPath === '' || trimmedPath === '/' ? '' : trimmedPath}/v1`
-    return parsed.toString()
-  } catch {
-    // Keep original value to avoid hiding invalid-config errors.
-    return baseUrl
-  }
-}
+type LlmProtocolType = RuntimeLlmProtocolType
 
 function isPlainObject(value: unknown): value is object {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -262,8 +237,7 @@ async function readUserConfig(userId: string): Promise<{ models: CustomModel[]; 
 }
 
 function findModelByKey(models: CustomModel[], modelKey: string): CustomModel | null {
-  const parsed = assertModelKey(modelKey, 'model')
-  return models.find((model) => model.modelId === parsed.modelId && model.provider === parsed.provider) || null
+  return findRuntimeModelByKey(models, modelKey)
 }
 
 /**
@@ -274,66 +248,13 @@ export async function resolveModelSelection(
   model: string,
   mediaType: ModelMediaType,
 ): Promise<ModelSelection> {
-  const parsed = assertModelKey(model, `${mediaType} model`)
-  const models = await getModelsByType(userId, mediaType)
-
-  const exact = findModelByKey(models, parsed.modelKey)
-  if (!exact) {
-    throw new Error(`MODEL_NOT_FOUND: ${parsed.modelKey} is not enabled for ${mediaType}`)
-  }
-
-  const providerKey = getProviderKey(exact.provider).toLowerCase()
-  const llmProtocol = mediaType === 'llm' && providerKey === 'openai-compatible'
-    ? (exact.llmProtocol || 'chat-completions')
-    : undefined
-  const compatMediaTemplate = (mediaType === 'image' || mediaType === 'video') && providerKey === 'openai-compatible'
-    ? exact.compatMediaTemplate
-    : undefined
-  const variantSubKind = compatMediaTemplate ? 'user-template' as const : 'official' as const
-  const variantData = compatMediaTemplate ? { compatMediaTemplate } : undefined
-
-  return {
-    provider: exact.provider,
-    modelId: exact.modelId,
-    modelKey: composeModelKey(exact.provider, exact.modelId),
-    mediaType,
-    variantSubKind,
-    ...(variantData ? { variantData } : {}),
-    ...(llmProtocol ? { llmProtocol } : {}),
-    ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
-  }
+  const models = await getUserModels(userId)
+  return resolveRuntimeModelSelection(models, model, mediaType)
 }
 
 async function resolveSingleModelSelection(userId: string, mediaType: ModelMediaType): Promise<ModelSelection> {
-  const models = await getModelsByType(userId, mediaType)
-  if (models.length === 0) {
-    throw new Error(`MODEL_NOT_CONFIGURED: no ${mediaType} model is enabled`)
-  }
-  if (models.length > 1) {
-    throw new Error(`MODEL_SELECTION_REQUIRED: multiple ${mediaType} models are enabled, provide model_key explicitly`)
-  }
-
-  const model = models[0]
-  const providerKey = getProviderKey(model.provider).toLowerCase()
-  const llmProtocol = mediaType === 'llm' && providerKey === 'openai-compatible'
-    ? (model.llmProtocol || 'chat-completions')
-    : undefined
-  const compatMediaTemplate = (mediaType === 'image' || mediaType === 'video') && providerKey === 'openai-compatible'
-    ? model.compatMediaTemplate
-    : undefined
-  const variantSubKind = compatMediaTemplate ? 'user-template' as const : 'official' as const
-  const variantData = compatMediaTemplate ? { compatMediaTemplate } : undefined
-
-  return {
-    provider: model.provider,
-    modelId: model.modelId,
-    modelKey: composeModelKey(model.provider, model.modelId),
-    mediaType,
-    variantSubKind,
-    ...(variantData ? { variantData } : {}),
-    ...(llmProtocol ? { llmProtocol } : {}),
-    ...(compatMediaTemplate ? { compatMediaTemplate } : {}),
-  }
+  const models = await getUserModels(userId)
+  return resolveSingleRuntimeModelSelection(models, mediaType)
 }
 
 /**
@@ -381,7 +302,7 @@ export async function getProviderConfig(userId: string, providerId: string): Pro
     id: provider.id,
     name: provider.name,
     apiKey: decryptApiKey(provider.apiKey),
-    baseUrl: normalizeProviderBaseUrl(provider.id, provider.baseUrl),
+    baseUrl: normalizeProviderRuntimeBaseUrl(provider.id, provider.baseUrl),
     apiMode: provider.apiMode,
     gatewayRoute: provider.gatewayRoute,
   }
