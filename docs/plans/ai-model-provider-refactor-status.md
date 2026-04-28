@@ -45,7 +45,7 @@
 - [x] `ai-providers/adapters/**` 中间层物理删除
 - [x] `ai-providers/llm/**` 删除（数据进各 `<x>/llm.ts`）
 - [x] `ai-providers/official/model-registry.ts` 删除
-- [ ] guard：`no-ai-outside-ai-dirs.mjs`
+- [x] guard：`no-ai-outside-ai-dirs.mjs`
 - [ ] 终态校验：`rg` 全 0
 
 ### Step 4 — `ai-registry/catalog.ts` 取代 `user-api` catalog
