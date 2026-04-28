@@ -1,11 +1,13 @@
 import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai'
-import { getProviderKey } from '@/lib/ai-registry/selection'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
-import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import type { AiProviderImageExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
+import {
+  assertAllowedGoogleImageOptions,
+  normalizeGeminiImageSize,
+  toGoogleInlineData,
+  type GoogleContentPart,
+} from '@/lib/ai-providers/shared/google-image-helpers'
 import { setProxy } from '../../../../lib/prompts/proxy'
-
-type ContentPart = { inlineData: { mimeType: string; data: string } } | { text: string }
 
 type GoogleImageOptions = NonNullable<AiProviderImageExecutionContext['options']>
 
@@ -17,53 +19,9 @@ type ImagenResponse = {
   }>
 }
 
-function parseDataUrl(value: string): { mimeType: string; base64: string } | null {
-  const marker = ';base64,'
-  const markerIndex = value.indexOf(marker)
-  if (!value.startsWith('data:') || markerIndex === -1) return null
-  const mimeType = value.slice(5, markerIndex)
-  const base64 = value.slice(markerIndex + marker.length)
-  if (!mimeType || !base64) return null
-  return { mimeType, base64 }
-}
-
-function normalizeGeminiImageSize(value: string | undefined): string | undefined {
-  const normalized = typeof value === 'string' ? value.trim() : ''
-  if (!normalized) return undefined
-  if (normalized === '0.5K') return '512'
-  return normalized
-}
-
-function assertAllowedGoogleImageOptions(options: GoogleImageOptions) {
-  const allowedOptionKeys = new Set([
-    'provider',
-    'modelId',
-    'modelKey',
-    'aspectRatio',
-    'resolution',
-    'referenceImages',
-  ])
-  for (const [key, value] of Object.entries(options)) {
-    if (value === undefined) continue
-    if (!allowedOptionKeys.has(key)) {
-      throw new Error(`GOOGLE_IMAGE_OPTION_UNSUPPORTED: ${key}`)
-    }
-  }
-}
-
-async function toInlineData(imageSource: string): Promise<{ mimeType: string; data: string } | null> {
-  const parsedDataUrl = parseDataUrl(imageSource)
-  if (parsedDataUrl) {
-    return { mimeType: parsedDataUrl.mimeType, data: parsedDataUrl.base64 }
-  }
-
-  const base64DataUrl = imageSource.startsWith('data:') ? imageSource : await normalizeToBase64ForGeneration(imageSource)
-  const parsedNormalized = parseDataUrl(base64DataUrl)
-  if (!parsedNormalized) return null
-  return { mimeType: parsedNormalized.mimeType, data: parsedNormalized.base64 }
-}
-
-async function executeGeminiCompatibleImageGeneration(input: AiProviderImageExecutionContext): Promise<GenerateResult> {
+export async function executeGeminiCompatibleImageGeneration(
+  input: AiProviderImageExecutionContext,
+): Promise<GenerateResult> {
   const options: GoogleImageOptions = input.options ?? {}
   assertAllowedGoogleImageOptions(options)
 
@@ -78,11 +36,11 @@ async function executeGeminiCompatibleImageGeneration(input: AiProviderImageExec
     httpOptions: { baseUrl: providerConfig.baseUrl },
   })
 
-  const parts: ContentPart[] = []
+  const parts: GoogleContentPart[] = []
   const imageSize = normalizeGeminiImageSize(options.resolution)
 
   for (const referenceImage of (options.referenceImages ?? []).slice(0, 14)) {
-    const inlineData = await toInlineData(referenceImage)
+    const inlineData = await toGoogleInlineData(referenceImage)
     if (!inlineData) {
       throw new Error('GEMINI_COMPATIBLE_REFERENCE_INVALID: failed to parse reference image')
     }
@@ -90,17 +48,21 @@ async function executeGeminiCompatibleImageGeneration(input: AiProviderImageExec
   }
   parts.push({ text: input.prompt })
 
+  const modelId = input.selection.modelId || 'gemini-2.5-flash-image-preview'
+
+  const safetySettings = [
+    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  ]
+
   const response = await ai.models.generateContent({
-    model: input.selection.modelId || 'gemini-2.5-flash-image-preview',
+    model: modelId,
     contents: [{ parts }],
     config: {
       responseModalities: ['TEXT', 'IMAGE'],
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      ],
+      safetySettings,
       ...(options.aspectRatio || options.resolution
         ? {
           imageConfig: {
@@ -187,9 +149,9 @@ async function executeGoogleImageGenerationInternal(input: AiProviderImageExecut
     }
   }
 
-  const contentParts: ContentPart[] = []
+  const contentParts: GoogleContentPart[] = []
   for (const imageSource of referenceImages.slice(0, 14)) {
-    const inlineData = await toInlineData(imageSource)
+    const inlineData = await toGoogleInlineData(imageSource)
     if (inlineData) contentParts.push({ inlineData })
   }
   contentParts.push({ text: input.prompt })
@@ -241,9 +203,5 @@ async function executeGoogleImageGenerationInternal(input: AiProviderImageExecut
 }
 
 export async function executeGoogleImageGeneration(input: AiProviderImageExecutionContext): Promise<GenerateResult> {
-  const providerKey = getProviderKey(input.selection.provider).toLowerCase()
-  if (providerKey === 'gemini-compatible') {
-    return await executeGeminiCompatibleImageGeneration(input)
-  }
   return await executeGoogleImageGenerationInternal(input)
 }

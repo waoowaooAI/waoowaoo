@@ -31,6 +31,7 @@
 - [x] `ai-exec/engine.ts` 路由改为 `adapter[modality]`
 - [x] guard：`no-cross-provider-switch.mjs`
 - [x] `adapters/{llm,media}/{execution,stream-execution}.ts` 清空（仅 re-export）
+- [x] `ai-providers/google/image.ts` 删除 `providerKey === 'gemini-compatible'` 分流（改由 `ai-providers/index.ts` 绑定执行函数）
 
 ### Step 3 — 删散文件 + 取消 `adapters/` 中间层
 

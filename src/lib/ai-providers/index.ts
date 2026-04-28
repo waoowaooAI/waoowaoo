@@ -25,7 +25,7 @@ import { executeFalImageGeneration } from '@/lib/ai-providers/fal/image'
 import { executeFalVideoGeneration } from '@/lib/ai-providers/fal/video'
 import { FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES, FAL_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/fal/models'
 import { geminiCompatibleMediaAdapter, googleMediaAdapter } from '@/lib/ai-providers/google/adapter'
-import { executeGoogleImageGeneration } from '@/lib/ai-providers/google/image'
+import { executeGeminiCompatibleImageGeneration, executeGoogleImageGeneration } from '@/lib/ai-providers/google/image'
 import { runGoogleLlmCompletion, runGoogleLlmStream, runGoogleVisionCompletion } from '@/lib/ai-providers/google/llm'
 import { executeGoogleVideoGeneration } from '@/lib/ai-providers/google/video'
 import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
@@ -180,7 +180,7 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     providerKey: 'gemini-compatible',
     image: {
       describe: (selection) => geminiCompatibleMediaAdapter.describeVariant('image', selection),
-      execute: executeGoogleImageGeneration,
+      execute: executeGeminiCompatibleImageGeneration,
     },
     video: {
       describe: (selection) => geminiCompatibleMediaAdapter.describeVariant('video', selection),
