@@ -31,7 +31,7 @@ vi.mock('@/lib/image-cache', () => ({
   getImageBase64Cached: getImageBase64CachedMock,
 }))
 
-vi.mock('@/lib/ark-api', () => ({
+vi.mock('@/lib/ai-providers/ark/image', () => ({
   arkImageGeneration: arkImageGenerationMock,
 }))
 

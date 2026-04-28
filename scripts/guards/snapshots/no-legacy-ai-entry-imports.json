@@ -1,6 +1,6 @@
 {
   "note": "由 no-legacy-ai-entry-imports.mjs --update-snapshot 生成；只可缩短。",
-  "generatedAt": "2026-04-28T06:10:02.952Z",
+  "generatedAt": "2026-04-28T06:24:45.620Z",
   "files": [
     "src/app/[locale]/profile/components/api-config-tab/ApiConfigTabContainer.tsx",
     "src/app/[locale]/profile/components/api-config-tab/DefaultModelCards.tsx",
@@ -46,7 +46,6 @@
     "src/lib/ai-providers/bailian/audio.ts",
     "src/lib/ai-providers/bailian/video.ts",
     "src/lib/ai-providers/bailian/voice-cleanup.ts",
-    "src/lib/ai-providers/llm/ark.ts",
     "src/lib/ai-registry/gateway-route.ts",
     "src/lib/ai-registry/model-contracts.ts",
     "src/lib/ai-registry/registry.ts",
@@ -116,7 +115,6 @@
     "tests/integration/api/specific/voice-generate-default-audio-model.test.ts",
     "tests/integration/chain/text.chain.test.ts",
     "tests/integration/chain/video.chain.test.ts",
-    "tests/integration/provider/ark-provider.contract.test.ts",
     "tests/integration/provider/openai-compat-provider.contract.test.ts",
     "tests/system/text-workflow.system.test.ts",
     "tests/system/voice-generate.system.test.ts",
@@ -133,7 +131,6 @@
     "tests/unit/generators/openai-compatible-image.test.ts",
     "tests/unit/generators/openai-compatible-video.test.ts",
     "tests/unit/lipsync-bailian.test.ts",
-    "tests/unit/llm/ark-llm-thinking.test.ts",
     "tests/unit/llm/chat-completion-official-provider.test.ts",
     "tests/unit/llm/chat-completion-openai-compatible-protocol.test.ts",
     "tests/unit/llm/chat-stream-official-provider.test.ts",

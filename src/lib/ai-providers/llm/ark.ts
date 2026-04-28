@@ -1,2 +1,1 @@
-export { arkResponsesCompletion } from '@/lib/ark-llm'
-
+export { arkResponsesCompletion } from '@/lib/ai-providers/ark/llm'

@@ -366,7 +366,7 @@ interface GeminiGenerateContentResponse {
 
 async function testArkProvider(apiKey: string): Promise<TestProviderResult> {
   const steps: TestStep[] = []
-  // 和 src/lib/ark-llm.ts 的 arkResponsesCompletion 保持一致，使用字节原生 Responses API
+  // 和 src/lib/ai-providers/ark/llm.ts 的 arkResponsesCompletion 保持一致，使用字节原生 Responses API
   const model = 'doubao-seed-2-0-lite-260215'
 
   try {
@@ -401,7 +401,7 @@ async function testArkProvider(apiKey: string): Promise<TestProviderResult> {
     }
 
     const data = await response.json() as Record<string, unknown>
-    // 和 ark-llm.ts 一样提取 output_text
+    // 和 src/lib/ai-providers/ark/llm.ts 一样提取 output_text
     const outputText = typeof data.output_text === 'string'
       ? data.output_text
       : ''

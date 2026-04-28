@@ -21,6 +21,9 @@ import type {
 } from '@/lib/ai-providers/runtime-types'
 import { buildOpenAIChatCompletion } from '@/lib/ai-providers/llm/openai-compat'
 
+export type { ArkResponsesOptions, ArkResponsesResult, ArkStreamDelta, ArkStreamResult } from './responses'
+export { arkResponsesCompletion, arkResponsesStream, buildArkThinkingParam, convertChatMessagesToArkInput } from './responses'
+
 export async function runArkLlmCompletion(input: {
   apiKey: string
   modelId: string

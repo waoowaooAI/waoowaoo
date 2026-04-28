@@ -34,7 +34,7 @@
 
 ### Step 3 — 删散文件 + 取消 `adapters/` 中间层
 
-- [ ] `ark-api.ts` + `ark-llm.ts` → `ai-providers/ark/{llm,image,video}.ts`
+- [x] `ark-api.ts` + `ark-llm.ts` → `ai-providers/ark/{llm,image,video}.ts`
 - [x] `openai-compat-template-runtime.ts` + `openai-compat-media-template.ts` → `ai-providers/openai-compatible/user-template.ts`
 - [ ] `gemini-batch-utils.ts` → `ai-providers/google/llm.ts` + `ai-providers/shared/helpers.ts`
 - [x] `llm-client.ts` → `ai-exec/llm-helpers.ts`

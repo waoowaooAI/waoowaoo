@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { arkCreateVideoTask } from '@/lib/ark-api'
+import { arkCreateVideoTask } from '@/lib/ai-providers/ark/video'
 import { querySeedanceVideoStatus } from '@/lib/async-task-utils'
 
 describe('provider contract - ark seedance', () => {

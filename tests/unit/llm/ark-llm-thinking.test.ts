@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildArkThinkingParam } from '@/lib/ark-llm'
+import { buildArkThinkingParam } from '@/lib/ai-providers/ark/llm'
 
 describe('ark thinking param builder', () => {
   it('builds enabled thinking param without reasoning_effort', () => {

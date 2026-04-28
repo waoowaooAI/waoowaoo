@@ -24,7 +24,8 @@ import {
     GenerateResult
 } from './base'
 import { getProviderConfig } from '@/lib/api-config'
-import { arkImageGeneration, arkCreateVideoTask } from '@/lib/ark-api'
+import { arkImageGeneration } from '@/lib/ai-providers/ark/image'
+import { arkCreateVideoTask } from '@/lib/ai-providers/ark/video'
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 
 interface ArkImageOptions {
