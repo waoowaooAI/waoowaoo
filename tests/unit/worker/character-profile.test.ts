@@ -34,7 +34,7 @@ const workerMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => llmMock)
+vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
 vi.mock('@/lib/ai-runtime', () => ({
   executeAiTextStep: vi.fn(async () => ({
     text: llmMock.getCompletionContent(),

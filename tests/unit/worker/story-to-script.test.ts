@@ -46,7 +46,7 @@ const workflowLeaseMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => ({
+vi.mock('@/lib/ai-exec/llm-helpers', () => ({
   chatCompletion: vi.fn(),
   getCompletionParts: vi.fn(() => ({ text: '', reasoning: '' })),
   getCompletionContent: vi.fn(() => ''),

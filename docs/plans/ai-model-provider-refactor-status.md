@@ -37,7 +37,7 @@
 - [ ] `ark-api.ts` + `ark-llm.ts` → `ai-providers/ark/{llm,image,video}.ts`
 - [x] `openai-compat-template-runtime.ts` + `openai-compat-media-template.ts` → `ai-providers/openai-compatible/user-template.ts`
 - [ ] `gemini-batch-utils.ts` → `ai-providers/google/llm.ts` + `ai-providers/shared/helpers.ts`
-- [ ] `llm-client.ts` → `ai-exec/llm-helpers.ts`
+- [x] `llm-client.ts` → `ai-exec/llm-helpers.ts`
 - [ ] `model-config-contract.ts` 拆分到 `ai-registry/{types,selection}.ts` + 各 `models.ts`
 - [ ] `api-config.ts` 选择/解析部分 → `ai-registry/selection.ts`
 - [ ] `ai-runtime/**` 折叠进 `ai-exec/engine.ts`，目录删除

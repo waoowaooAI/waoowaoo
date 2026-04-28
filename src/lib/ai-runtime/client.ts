@@ -1,6 +1,5 @@
 import type OpenAI from 'openai'
-import { getCompletionContent } from '@/lib/llm-client'
-import { getCompletionParts } from '@/lib/llm/completion-parts'
+import { getCompletionContent, getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 import { chatCompletion, chatCompletionWithVision } from '@/lib/ai-exec/engine'
 import { toAiRuntimeError } from './errors'
 import type {

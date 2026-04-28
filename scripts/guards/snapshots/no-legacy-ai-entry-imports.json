@@ -1,6 +1,6 @@
 {
   "note": "由 no-legacy-ai-entry-imports.mjs --update-snapshot 生成；只可缩短。",
-  "generatedAt": "2026-04-28T05:18:06.169Z",
+  "generatedAt": "2026-04-28T06:10:02.952Z",
   "files": [
     "src/app/[locale]/profile/components/api-config-tab/ApiConfigTabContainer.tsx",
     "src/app/[locale]/profile/components/api-config-tab/DefaultModelCards.tsx",
@@ -50,7 +50,6 @@
     "src/lib/ai-registry/gateway-route.ts",
     "src/lib/ai-registry/model-contracts.ts",
     "src/lib/ai-registry/registry.ts",
-    "src/lib/ai-runtime/client.ts",
     "src/lib/asset-utils/ai-design.ts",
     "src/lib/assistant-platform/runtime.ts",
     "src/lib/assistant-platform/skills/api-config-template.ts",
@@ -162,9 +161,7 @@
     "tests/unit/worker/modify-image-reference-description.test.ts",
     "tests/unit/worker/reference-to-character.test.ts",
     "tests/unit/worker/screenplay-convert.test.ts",
-    "tests/unit/worker/script-to-storyboard.test.ts",
     "tests/unit/worker/shot-ai-variants.test.ts",
-    "tests/unit/worker/story-to-script.test.ts",
     "tests/unit/worker/video-worker.test.ts",
     "tests/unit/worker/voice-analyze.test.ts",
     "tests/unit/worker/voice-design.test.ts"

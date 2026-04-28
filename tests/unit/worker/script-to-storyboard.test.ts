@@ -126,7 +126,7 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 
-vi.mock('@/lib/llm-client', () => ({
+vi.mock('@/lib/ai-exec/llm-helpers', () => ({
   chatCompletion: vi.fn(),
   getCompletionParts: vi.fn(() => ({ text: 'voice lines json', reasoning: '' })),
   getCompletionContent: vi.fn(() => 'voice lines json'),

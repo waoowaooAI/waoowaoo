@@ -45,7 +45,7 @@ const llmStreamMock = vi.hoisted(() => {
   }
 })
 
-vi.mock('@/lib/llm-client', () => llmMock)
+vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
 vi.mock('@/lib/ai-runtime', () => aiRuntimeMock)
 vi.mock('@/lib/config-service', () => configMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => streamContextMock)

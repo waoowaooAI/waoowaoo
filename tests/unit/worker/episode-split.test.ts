@@ -55,7 +55,7 @@ const promptMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => llmClientMock)
+vi.mock('@/lib/ai-exec/llm-helpers', () => llmClientMock)
 vi.mock('@/lib/ai-runtime', () => ({
   executeAiTextStep: vi.fn(async () => ({
     text: llmClientMock.getCompletionContent(),
