@@ -2,20 +2,13 @@
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 
-interface ProgressToastRunBadge {
-  id: string
-  label: string
-  onClick: () => void
-}
-
 interface ProgressToastProps {
   show: boolean
   message: string
   step?: string
-  runBadges?: ProgressToastRunBadge[]
 }
 
-export default function ProgressToast({ show, message, step, runBadges }: ProgressToastProps) {
+export default function ProgressToast({ show, message, step }: ProgressToastProps) {
   if (!show) return null
   const runningState = resolveTaskPresentationState({
     phase: 'processing',
@@ -44,20 +37,6 @@ export default function ProgressToast({ show, message, step, runBadges }: Progre
               </div>
             )}
 
-            {runBadges && runBadges.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {runBadges.map((badge) => (
-                  <button
-                    key={badge.id}
-                    type="button"
-                    onClick={badge.onClick}
-                    className="glass-btn-base glass-btn-secondary rounded-full px-3 py-1 text-xs text-(--glass-tone-info-fg)"
-                  >
-                    {badge.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 

@@ -61,7 +61,7 @@ export function ProviderCardShell({
     : (hideProviderLabel || t('hideProvider'))
 
   return (
-    <div className="glass-surface overflow-hidden rounded-2xl">
+    <div className="glass-surface glass-card-shadow-soft overflow-hidden rounded-2xl">
 
       {/* ── 头部：logo + 名称 + 心电图 + 右侧操作 ── */}
       <div className="flex items-center justify-between px-3.5 py-2.5">

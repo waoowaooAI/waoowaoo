@@ -151,7 +151,7 @@ export default function FirstLastFramePanel({
           <textarea
             value={currentPrompt}
             onChange={(e) => onCustomPromptChange(panelKey, e.target.value)}
-            className="w-full text-xs p-2 border border-[var(--glass-stroke-focus)] rounded bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--glass-tone-info-fg)] resize-none"
+            className="w-full text-xs p-2 border border-[var(--glass-stroke-focus)] rounded bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] focus:outline-none resize-none"
             rows={3}
             placeholder={t("firstLastFrame.promptPlaceholder")}
           />

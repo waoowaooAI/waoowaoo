@@ -4,6 +4,12 @@ import { ApiError } from '@/lib/api-errors'
 import { toMoneyNumber, type MoneyValue } from '@/lib/billing/money'
 import { isArtStyleValue } from '@/lib/constants'
 import { resolveDirectorStyleFieldsFromPreset } from '@/lib/director-style'
+import {
+  parseStylePresetRef,
+  resolveDirectorStylePreset,
+  resolveVisualStylePreset,
+  type StylePresetRef,
+} from '@/lib/style-preset'
 import { resolveTaskLocale } from '@/lib/task/resolve-locale'
 import {
   formatProjectValidationIssue,
@@ -25,6 +31,15 @@ function readProjectDraftBody(body: unknown): ProjectDraftInput {
     description: typeof payload.description === 'string' ? payload.description : null,
     directorStylePresetId: typeof payload.directorStylePresetId === 'string' ? payload.directorStylePresetId : null,
   }
+}
+
+function readStylePresetRefField(body: unknown, field: string): StylePresetRef | null {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null
+  const payload = body as Record<string, unknown>
+  if (!Object.prototype.hasOwnProperty.call(payload, field)) return null
+  const value = payload[field]
+  if (value === null) return null
+  return parseStylePresetRef(value)
 }
 
 const EFFECTS_QUERY = {
@@ -210,6 +225,14 @@ export function createSystemProjectOperations(): ProjectAgentOperationRegistryDr
         name: z.string().min(1),
         description: z.string().optional().nullable(),
         directorStylePresetId: z.string().optional().nullable(),
+        visualStylePreset: z.object({
+          presetSource: z.enum(['system', 'user']),
+          presetId: z.string(),
+        }).optional(),
+        directorStylePreset: z.object({
+          presetSource: z.enum(['system', 'user']),
+          presetId: z.string(),
+        }).nullable().optional(),
       }).passthrough(),
       outputSchema: z.unknown(),
       execute: async (ctx, input) => {
@@ -229,14 +252,61 @@ export function createSystemProjectOperations(): ProjectAgentOperationRegistryDr
         let directorStyleFields: {
           directorStylePresetId: string | null
           directorStyleDoc: string | null
+          directorStylePresetSource?: string | null
         }
         try {
-          directorStyleFields = resolveDirectorStyleFieldsFromPreset(draft.directorStylePresetId)
+          const directorStylePresetRef = readStylePresetRefField(input, 'directorStylePreset')
+          if (directorStylePresetRef) {
+            const doc = await resolveDirectorStylePreset({
+              userId: ctx.userId,
+              presetSource: directorStylePresetRef.presetSource,
+              presetId: directorStylePresetRef.presetId,
+            })
+            directorStyleFields = {
+              directorStylePresetId: directorStylePresetRef.presetId,
+              directorStylePresetSource: directorStylePresetRef.presetSource,
+              directorStyleDoc: directorStylePresetRef.presetSource === 'system' ? JSON.stringify(doc) : null,
+            }
+          } else {
+            const legacyFields = resolveDirectorStyleFieldsFromPreset(draft.directorStylePresetId)
+            directorStyleFields = {
+              ...legacyFields,
+              directorStylePresetSource: legacyFields.directorStylePresetId ? 'system' : null,
+            }
+          }
         } catch {
           throw new ApiError('INVALID_PARAMS', {
             code: 'INVALID_DIRECTOR_STYLE_PRESET',
             field: 'directorStylePresetId',
             message: 'directorStylePresetId must be a supported value',
+          })
+        }
+
+        let visualStyleFields: {
+          visualStylePresetSource: string
+          visualStylePresetId: string
+          artStyle?: string
+        } | null = null
+        try {
+          const visualStylePresetRef = readStylePresetRefField(input, 'visualStylePreset')
+          if (visualStylePresetRef) {
+            await resolveVisualStylePreset({
+              userId: ctx.userId,
+              presetSource: visualStylePresetRef.presetSource,
+              presetId: visualStylePresetRef.presetId,
+              locale: 'zh',
+            })
+            visualStyleFields = {
+              visualStylePresetSource: visualStylePresetRef.presetSource,
+              visualStylePresetId: visualStylePresetRef.presetId,
+              ...(visualStylePresetRef.presetSource === 'system' ? { artStyle: visualStylePresetRef.presetId } : {}),
+            }
+          }
+        } catch {
+          throw new ApiError('INVALID_PARAMS', {
+            code: 'INVALID_VISUAL_STYLE_PRESET',
+            field: 'visualStylePreset',
+            message: 'visualStylePreset must reference a supported preset',
           })
         }
 
@@ -269,6 +339,10 @@ export function createSystemProjectOperations(): ProjectAgentOperationRegistryDr
               artStyle: userPreference.artStyle,
               imageResolution: userPreference.imageResolution,
             }),
+            ...(visualStyleFields ?? (userPreference?.artStyle ? {
+              visualStylePresetSource: 'system',
+              visualStylePresetId: userPreference.artStyle,
+            } : {})),
             ...directorStyleFields,
           },
         })

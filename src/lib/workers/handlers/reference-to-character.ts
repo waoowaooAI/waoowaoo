@@ -11,6 +11,7 @@ import {
   addCharacterPromptSuffix,
   getArtStylePrompt,
 } from '@/lib/constants'
+import { resolveProjectVisualStylePreset } from '@/lib/style-preset'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { generateUniqueKey, getSignedUrl, uploadObject } from '@/lib/storage'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
@@ -203,7 +204,13 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     }
   }
 
-  const artStylePrompt = getArtStylePrompt(artStyle, job.data.locale)
+  const artStylePrompt = isProject && !artStyle
+    ? (await resolveProjectVisualStylePreset({
+        projectId: job.data.projectId,
+        userId: job.data.userId,
+        locale: job.data.locale,
+      })).prompt
+    : getArtStylePrompt(artStyle, job.data.locale)
 
   const basePrompt = customDescription || buildPrompt({
     promptId: PROMPT_IDS.CHARACTER_REFERENCE_TO_SHEET,

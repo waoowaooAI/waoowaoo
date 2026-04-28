@@ -56,7 +56,7 @@ export function AiModifyDescriptionField({
       <label className="glass-field-label block">
         {label}
       </label>
-      <div className="relative overflow-hidden rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)] transition-[border-color,box-shadow,background-color] hover:border-[var(--glass-stroke-strong)] focus-within:border-[var(--glass-stroke-focus)] focus-within:bg-[var(--glass-bg-surface-strong)] focus-within:shadow-[0_0_0_3px_var(--glass-focus-ring)]">
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)] transition-[border-color,background-color] hover:border-[var(--glass-stroke-strong)] focus-within:border-[var(--glass-stroke-focus)] focus-within:bg-[var(--glass-bg-surface-strong)]">
         <textarea
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}

@@ -62,10 +62,8 @@ export function FolderSidebar({
                     {/* 所有资产 */}
                     <button
                         onClick={() => onSelectFolder(null)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${selectedFolderId === null
-                                ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]'
-                                : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                            }`}
+                        data-active={selectedFolderId === null}
+                        className="glass-selection-control w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm"
                     >
                         <FolderIcon className="w-4 h-4" />
                         <span className="truncate">{t('allAssets')}</span>
@@ -75,10 +73,8 @@ export function FolderSidebar({
                     {folders.map((folder) => (
                         <div
                             key={folder.id}
-                            className={`group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${selectedFolderId === folder.id
-                                    ? 'bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]'
-                                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)]'
-                                }`}
+                            data-active={selectedFolderId === folder.id}
+                            className="glass-selection-control group flex items-center gap-2 px-3 py-2 rounded-lg"
                         >
                             <button
                                 onClick={() => onSelectFolder(folder.id)}

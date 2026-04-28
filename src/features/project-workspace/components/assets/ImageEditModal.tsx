@@ -113,7 +113,7 @@ export default function ImageEditModal({
                                     ? t('imageEdit.propPlaceholder')
                                 : t('imageEdit.locationPlaceholder')
                             }
-                            className="w-full h-24 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] resize-none"
+                            className="w-full h-24 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:border-[var(--glass-stroke-focus)] resize-none"
                             autoFocus
                         />
                     </div>

@@ -142,7 +142,7 @@ export default function StepSource({
               <textarea
                 value={rawContent}
                 onChange={(e) => onRawContentChange(e.target.value)}
-                className="flex-grow w-full bg-[var(--glass-bg-muted)] border-2 border-[var(--glass-stroke-base)] rounded-xl p-4 text-sm text-[var(--glass-text-primary)] placeholder:text-[var(--glass-text-tertiary)] focus:bg-[var(--glass-bg-surface)] focus:border-[var(--glass-stroke-focus)] focus:ring-4 focus:ring-[var(--glass-tone-info-fg)]/10 outline-none transition-all resize-none leading-relaxed min-h-[180px]"
+                className="flex-grow w-full bg-[var(--glass-bg-muted)] border-2 border-[var(--glass-stroke-base)] rounded-xl p-4 text-sm text-[var(--glass-text-primary)] placeholder:text-[var(--glass-text-tertiary)] focus:bg-[var(--glass-bg-surface)] focus:border-[var(--glass-stroke-focus)] outline-none transition-all resize-none leading-relaxed min-h-[180px]"
                 placeholder={t('upload.placeholder')}
               />
 

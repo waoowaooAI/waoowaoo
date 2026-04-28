@@ -1,5 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildDirectorStyleDoc } from '@/lib/director-style'
 import { buildMockRequest } from '../../../helpers/request'
+
+type MockUserStylePreset = {
+  id: string
+  userId: string
+  kind: string
+  name: string
+  summary: string | null
+  config: string
+  archivedAt: Date | null
+}
 
 const authMock = vi.hoisted(() => ({
   requireProjectAuthLight: vi.fn(async () => ({
@@ -29,6 +40,9 @@ const prismaMock = vi.hoisted(() => ({
   userPreference: {
     upsert: vi.fn(async () => ({ userId: 'user-1', artStyle: 'realistic' })),
   },
+  userStylePreset: {
+    findFirst: vi.fn(async (): Promise<MockUserStylePreset | null> => null),
+  },
 }))
 
 const mediaAttachMock = vi.hoisted(() => ({
@@ -45,6 +59,7 @@ const modelConfigContractMock = vi.hoisted(() => ({
 }))
 
 const capabilityLookupMock = vi.hoisted(() => ({
+  registerBuiltinCapabilityCatalogEntries: vi.fn(),
   resolveBuiltinModelContext: vi.fn(() => null),
   getCapabilityOptionFields: vi.fn(() => ({})),
   validateCapabilitySelectionsPayload: vi.fn(() => []),
@@ -159,5 +174,67 @@ describe('api specific - project config art style validation', () => {
     expect(res.status).toBe(400)
     expect(body.error.code).toBe('INVALID_PARAMS')
     expect(prismaMock.project.update).not.toHaveBeenCalled()
+  })
+
+  it('accepts system visual style preset refs and mirrors artStyle', async () => {
+    const mod = await import('@/app/api/projects/[projectId]/config/route')
+    const req = buildMockRequest({
+      path: '/api/projects/project-1/config',
+      method: 'PATCH',
+      body: {
+        visualStylePreset: {
+          presetSource: 'system',
+          presetId: 'japanese-anime',
+        },
+      },
+    })
+
+    const res = await mod.PATCH(req, { params: Promise.resolve({ projectId: 'project-1' }) })
+    expect(res.status).toBe(200)
+    expect(prismaMock.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          visualStylePresetSource: 'system',
+          visualStylePresetId: 'japanese-anime',
+          artStyle: 'japanese-anime',
+        }),
+      }),
+    )
+  })
+
+  it('accepts user director style preset refs after ownership validation', async () => {
+    prismaMock.userStylePreset.findFirst.mockResolvedValueOnce({
+      id: 'preset-user-1',
+      userId: 'user-1',
+      kind: 'director_style',
+      name: 'Custom Director',
+      summary: null,
+      config: JSON.stringify(buildDirectorStyleDoc('horror-suspense')),
+      archivedAt: null,
+    })
+
+    const mod = await import('@/app/api/projects/[projectId]/config/route')
+    const req = buildMockRequest({
+      path: '/api/projects/project-1/config',
+      method: 'PATCH',
+      body: {
+        directorStylePreset: {
+          presetSource: 'user',
+          presetId: 'preset-user-1',
+        },
+      },
+    })
+
+    const res = await mod.PATCH(req, { params: Promise.resolve({ projectId: 'project-1' }) })
+    expect(res.status).toBe(200)
+    expect(prismaMock.project.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          directorStylePresetSource: 'user',
+          directorStylePresetId: 'preset-user-1',
+          directorStyleDoc: null,
+        }),
+      }),
+    )
   })
 })

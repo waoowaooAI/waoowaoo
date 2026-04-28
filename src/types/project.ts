@@ -260,6 +260,9 @@ export interface ProjectWorkflowData {
   capabilityOverrides?: CapabilitySelections | string | null
   artStyle: string | null
   artStylePrompt: string | null
+  visualStylePresetSource: string | null
+  visualStylePresetId: string | null
+  directorStylePresetSource: string | null
   directorStylePresetId: string | null
   directorStyleDoc: DirectorStyleDoc | null
   videoResolution?: string | null

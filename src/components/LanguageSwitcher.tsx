@@ -96,7 +96,7 @@ export default function LanguageSwitcher() {
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     aria-label={SWITCH_CONFIRM_COPY[targetLocale].triggerLabel}
                     aria-expanded={isMenuOpen}
-                    className="glass-btn-base glass-btn-secondary inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+                    className="glass-selection-control inline-flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm font-medium"
                 >
                     <AppIcon name="globe" className="h-4 w-4" />
                     <span>{LANGUAGE_LABELS[currentLocale]}</span>
@@ -112,10 +112,8 @@ export default function LanguageSwitcher() {
                                     key={locale}
                                     type="button"
                                     onClick={() => requestLanguageSwitch(locale)}
-                                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${isActive
-                                        ? 'bg-[var(--glass-fill-active)] text-[var(--glass-text-primary)]'
-                                        : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-fill-hover)] hover:text-[var(--glass-text-primary)]'
-                                        }`}
+                                    data-active={isActive}
+                                    className="glass-selection-control w-full rounded-lg px-3 py-2 text-left text-sm"
                                 >
                                     {label}
                                 </button>

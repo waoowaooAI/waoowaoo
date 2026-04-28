@@ -203,6 +203,7 @@ describe('provider models truth', () => {
     expect(BAILIAN_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'qwen-voice-design')?.pricing.flatAmount).toBe(0.2)
     expect(FAL_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'fal-ai/kling-video/lipsync/audio-to-video')?.pricing.flatAmount).toBe(0.5)
     expect(GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'veo-3.1-fast-generate-preview')?.pricing.tiers?.[0]?.amount).toBe(4.32)
+    expect(GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3.1-flash-lite-preview')?.pricing.tiers?.[1]?.amount).toBe(10.8)
     expect(MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES.find((entry) => entry.modelId === 't2v-01-director')?.pricing.tiers?.[0]?.amount).toBe(6)
     expect(ANTHROPIC_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
     expect(OPENAI_BUILTIN_PRICING_CATALOG_ENTRIES).toHaveLength(0)
@@ -258,6 +259,20 @@ describe('provider models truth', () => {
       throw new Error('provider-models-truth: openrouter llm capabilities missing')
     }
     expect(openRouterCaps.llm.reasoningEffortOptions).toEqual(['low', 'medium', 'high'])
+  })
+
+  it('keeps every built-in Google LLM capability entry billable', () => {
+    const pricedTextModelIds = new Set(
+      GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES
+        .filter((entry) => entry.apiType === 'text')
+        .map((entry) => entry.modelId),
+    )
+    const googleLlmCapabilityModelIds = GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES
+      .filter((entry) => entry.modelType === 'llm')
+      .map((entry) => entry.modelId)
+
+    expect(googleLlmCapabilityModelIds).toEqual(expect.arrayContaining(['gemini-3.1-flash-lite-preview']))
+    expect(googleLlmCapabilityModelIds.filter((modelId) => !pricedTextModelIds.has(modelId))).toEqual([])
   })
 
   it('builds option schemas from provider models data', () => {

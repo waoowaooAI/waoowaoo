@@ -36,6 +36,9 @@ type ProjectWorkflowSource = {
   capabilityOverrides?: ProjectWorkflowData['capabilityOverrides']
   artStyle?: string | null
   artStylePrompt?: string | null
+  visualStylePresetSource?: string | null
+  visualStylePresetId?: string | null
+  directorStylePresetSource?: string | null
   directorStylePresetId?: string | null
   directorStyleDoc?: string | null
   videoResolution?: string | null
@@ -75,6 +78,9 @@ function buildProjectWorkflowData(source: ProjectWorkflowSource): ProjectWorkflo
     capabilityOverrides: source.capabilityOverrides ?? null,
     artStyle: source.artStyle ?? null,
     artStylePrompt: source.artStylePrompt ?? null,
+    visualStylePresetSource: source.visualStylePresetSource ?? null,
+    visualStylePresetId: source.visualStylePresetId ?? null,
+    directorStylePresetSource: source.directorStylePresetSource ?? null,
     directorStylePresetId: source.directorStylePresetId ?? null,
     directorStyleDoc: parseDirectorStyleDoc(source.directorStyleDoc),
     videoResolution: source.videoResolution ?? null,

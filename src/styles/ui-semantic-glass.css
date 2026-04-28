@@ -47,6 +47,18 @@
   border-radius: var(--glass-radius-lg);
 }
 
+.glass-card-shadow-soft {
+  box-shadow:
+    0 3px 9px rgba(15, 23, 42, 0.075),
+    0 1px 3px rgba(15, 23, 42, 0.045) !important;
+}
+
+.glass-card-shadow-soft:hover {
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.085),
+    0 1px 4px rgba(15, 23, 42, 0.05) !important;
+}
+
 .glass-divider {
   border-top: 1px solid var(--glass-stroke-base);
 }
@@ -91,9 +103,7 @@
 .glass-input-base:focus-visible,
 .glass-textarea-base:focus-visible,
 .glass-select-base:focus-visible {
-  box-shadow:
-    inset 0 0 0 1px var(--glass-stroke-focus),
-    0 0 0 3px var(--glass-focus-ring);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke-focus);
   background: var(--glass-bg-surface-strong);
 }
 
@@ -225,6 +235,35 @@
 
 .glass-btn-tone-danger:hover:not(:disabled) {
   background: color-mix(in srgb, var(--glass-tone-danger-bg) 85%, white);
+}
+
+.glass-selection-control {
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--glass-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.glass-selection-control:hover:not(:disabled) {
+  background: var(--glass-selection-hover-bg);
+  color: var(--glass-text-primary);
+}
+
+.glass-selection-control[data-active='true'] {
+  border-color: transparent;
+  background: var(--glass-selection-hover-bg);
+  color: var(--glass-text-primary);
+}
+
+.glass-selection-active {
+  border-color: transparent;
+  background: var(--glass-selection-hover-bg);
+  color: var(--glass-text-primary);
+}
+
+.glass-selection-control:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--glass-selection-focus-ring);
 }
 
 .glass-chip {

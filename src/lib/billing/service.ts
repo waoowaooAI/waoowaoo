@@ -631,6 +631,11 @@ export async function withTextBilling<T>(
   recordParams: BillingRecordParams,
   generateFn: () => Promise<T>,
 ): Promise<T> {
+  const mode = await getBillingMode()
+  if (mode === 'OFF') {
+    return await generateFn()
+  }
+
   const customPricing = await loadUserCustomPricing(userId, model)
   const quotedCost = calcText(model, maxInputTokens, maxOutputTokens, customPricing)
   return await withSyncBillingCore(

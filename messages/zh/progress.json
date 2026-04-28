@@ -117,16 +117,6 @@
     "llmProxyExecute": "执行 LLM 任务",
     "llmProxyPersist": "保存 LLM 结果"
   },
-  "runConsole": {
-    "storyToScript": "内容到剧本",
-    "scriptToStoryboard": "剧本到分镜",
-    "storyToScriptRunning": "Story→Script 运行中",
-    "scriptToStoryboardRunning": "Script→Storyboard 运行中",
-    "storyToScriptSubtitle": "Story To Script V2",
-    "scriptToStoryboardSubtitle": "Script To Storyboard V2",
-    "stop": "停止",
-    "minimize": "最小化"
-  },
   "streamStep": {
     "analyzeCharacters": "角色分析",
     "analyzeLocations": "场景分析",

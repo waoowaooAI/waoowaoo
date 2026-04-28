@@ -69,6 +69,24 @@ describe('billing/service', () => {
     expect(ledgerMock.confirmChargeWithRecord).not.toHaveBeenCalled()
   })
 
+  it('does not resolve text pricing in OFF mode', async () => {
+    modeMock.getBillingMode.mockResolvedValue('OFF')
+
+    const result = await withTextBilling(
+      'u1',
+      'uncatalogued::missing-text-model',
+      1000,
+      1000,
+      { projectId: 'p1', action: 'a1' },
+      async () => ({ ok: true }),
+    )
+
+    expect(result).toEqual({ ok: true })
+    expect(prismaMock.userPreference.findUnique).not.toHaveBeenCalled()
+    expect(ledgerMock.freezeBalance).not.toHaveBeenCalled()
+    expect(ledgerMock.recordShadowUsage).not.toHaveBeenCalled()
+  })
+
   it('records shadow usage in SHADOW mode without freezing', async () => {
     modeMock.getBillingMode.mockResolvedValue('SHADOW')
 

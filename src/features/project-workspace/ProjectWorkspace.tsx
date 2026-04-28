@@ -4,7 +4,6 @@ import { useState } from 'react'
 import ProgressToast from '@/components/ProgressToast'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { AnimatedBackground } from '@/components/ui/SharedComponents'
-import { useTranslations } from 'next-intl'
 import { WorkspaceProvider } from './WorkspaceProvider'
 import WorkspaceStageContent from './components/WorkspaceStageContent'
 import WorkspaceAssetLibraryModal from './components/WorkspaceAssetLibraryModal'
@@ -17,7 +16,6 @@ import '@/styles/animations.css'
 
 function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
   const vm = useProjectWorkspaceController(props)
-  const tProgress = useTranslations('progress')
   const [isAssistantPanelCollapsed, setIsAssistantPanelCollapsed] = useState(false)
 
   const {
@@ -30,45 +28,6 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
     onEpisodeRename,
     onEpisodeDelete,
   } = props
-
-  const storyToScriptStream = vm.execution.storyToScriptStream
-  const scriptToStoryboardStream = vm.execution.scriptToStoryboardStream
-  const storyToScriptActive =
-    storyToScriptStream.isRunning ||
-    storyToScriptStream.isRecoveredRunning ||
-    storyToScriptStream.status === 'running'
-  const scriptToStoryboardActive =
-    scriptToStoryboardStream.isRunning ||
-    scriptToStoryboardStream.isRecoveredRunning ||
-    scriptToStoryboardStream.status === 'running'
-
-  const showStoryToScriptMinBadge =
-    storyToScriptStream.isVisible &&
-    storyToScriptActive &&
-    vm.execution.storyToScriptConsoleMinimized
-
-  const showScriptToStoryboardMinBadge =
-    scriptToStoryboardStream.isVisible &&
-    scriptToStoryboardActive &&
-    vm.execution.scriptToStoryboardConsoleMinimized
-
-  const runBadges: { id: string; label: string; onClick: () => void }[] = []
-
-  if (showStoryToScriptMinBadge) {
-    runBadges.push({
-      id: 'story-to-script',
-      label: tProgress('runConsole.storyToScriptRunning'),
-      onClick: () => vm.execution.setStoryToScriptConsoleMinimized(false),
-    })
-  }
-
-  if (showScriptToStoryboardMinBadge) {
-    runBadges.push({
-      id: 'script-to-storyboard',
-      label: tProgress('runConsole.scriptToStoryboardRunning'),
-      onClick: () => vm.execution.setScriptToStoryboardConsoleMinimized(false),
-    })
-  }
 
   if (!vm.project.projectData) {
     return <div className="text-center text-(--glass-text-secondary)">{vm.i18n.tc('loading')}</div>
@@ -156,7 +115,6 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
             show
             message={vm.i18n.t('storyInput.creating')}
             step={vm.execution.transitionProgress.step || ''}
-            runBadges={runBadges}
           />
         )}
 

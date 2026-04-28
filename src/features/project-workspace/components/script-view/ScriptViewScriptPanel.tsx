@@ -92,7 +92,7 @@ function EditableText({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onBlur={handleBlur}
-        className={`w-full bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-focus)] rounded p-1 outline-none focus:ring-2 focus:ring-[var(--glass-focus-ring-strong)] ${className}`}
+        className={`w-full bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-focus)] rounded p-1 outline-none ${className}`}
         style={{ resize: 'none', minHeight: '1.5em' }}
       />
     )

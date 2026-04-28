@@ -94,7 +94,6 @@
     "voiceDesignTitle": "No voice design models available",
     "voiceDesignDescription": "Go to the provider pool below, configure a voice design model, and enable it first."
   },
-  "imageModelTip": "We recommend using Google's Banana series models. Other image models currently have limited generation quality.",
   "customProviderTip": "This project is currently in beta. Due to varying custom API formats across providers, custom API compatibility is still limited. We recommend using the built-in official APIs. Future updates will expand compatibility with more providers.",
   "providerPool": "Provider Pool",
   "dragToSort": "Drag to sort",
@@ -170,8 +169,11 @@
   },
   "workflowConcurrency": {
     "analysis": "Analysis Concurrency",
-    "image": "Image Concurrency",
-    "video": "Video Concurrency"
+    "image": "Image Task Concurrency",
+    "imageDescription": "Number of image generation/editing tasks processed at the same time",
+    "video": "Video Concurrency",
+    "decrease": "Decrease",
+    "increase": "Increase"
   },
   "viewTutorial": "View Tutorial",
   "tutorial": {

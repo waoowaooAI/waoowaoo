@@ -1,0 +1,42 @@
+{
+  "eyebrow": "Development Preview",
+  "title": "Selected State UI Comparison",
+  "description": "This page compares the current blue gradient with several more restrained selected states. The navbar can use hover-only feedback, while settings sidebars, dropdowns, and segmented controls can use a persistent selected style.",
+  "sidebarLabel": "Side Menu",
+  "dropdownLabel": "Dropdown Menu",
+  "items": {
+    "apiConfig": "API Configuration",
+    "stylePresets": "My Styles",
+    "billingRecords": "Billing Records"
+  },
+  "variants": {
+    "hoverOnly": {
+      "name": "Option A · Hover Only",
+      "description": "Best for the navbar. It does not persist active page styling, and only shows a light gray state on hover."
+    },
+    "currentBlue": {
+      "name": "Option B · Current Blue Gradient",
+      "description": "A reference for the current strong blue gradient selected state. It is clear but visually heavy."
+    },
+    "pinnedHover": {
+      "name": "Option C · Pinned Hover",
+      "description": "Uses the same light gray hover feedback as the persistent selected state, without extra border or shadow weight."
+    },
+    "raisedWhite": {
+      "name": "Option D · Raised White",
+      "description": "Uses a white surface and soft shadow, closer to the default model configuration card style."
+    },
+    "inkOutline": {
+      "name": "Option E · Fine Outline",
+      "description": "Cleaner than a gray fill, using only a very light outline and translucent white surface."
+    },
+    "leftRail": {
+      "name": "Option F · Small Dot",
+      "description": "Keeps the surface close to hover styling, with a small dot on the right as the selected marker."
+    },
+    "checkMark": {
+      "name": "Option G · Check Mark",
+      "description": "Better for dropdown menus, where the check mark carries the selected state."
+    }
+  }
+}

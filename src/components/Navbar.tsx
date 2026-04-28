@@ -1,15 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from './LanguageSwitcher'
-import { AppIcon } from '@/components/ui/icons'
+import { AppIcon, type AppIconName } from '@/components/ui/icons'
 import UpdateNoticeModal from './UpdateNoticeModal'
 import { useGithubReleaseUpdate } from '@/hooks/common/useGithubReleaseUpdate'
 import { Link } from '@/i18n/navigation'
 import { buildAuthenticatedHomeTarget } from '@/lib/home/default-route'
+import type { ProfileSection } from '@/lib/profile/sections'
 
 
 export default function Navbar() {
@@ -20,7 +23,24 @@ export default function Navbar() {
   const [checkMsg, setCheckMsg] = useState<string | null>(null)
   const [checkMsgFading, setCheckMsgFading] = useState(false)
   const [manualChecking, setManualChecking] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsMenuStyle, setSettingsMenuStyle] = useState<CSSProperties | null>(null)
+  const settingsTriggerRef = useRef<HTMLDivElement>(null)
+  const settingsMenuRef = useRef<HTMLDivElement>(null)
   const downloadLogsHref = '/api/admin/download-logs'
+  const settingsMenuId = 'navbar-settings-menu'
+  const navControlClass = 'glass-selection-control flex items-center gap-1 rounded-full px-2.5 py-1.5 text-sm font-medium'
+
+  const settingsMenuItems: Array<{
+    section: ProfileSection
+    icon: AppIconName
+    label: string
+  }> = [
+    { section: 'apiConfig', icon: 'settingsHexAlt', label: t('settingsMenu.apiConfig') },
+    { section: 'stylePresets', icon: 'sparkles', label: t('settingsMenu.stylePresets') },
+    { section: 'billing', icon: 'receipt', label: t('settingsMenu.billingRecords') },
+  ]
 
   const handleCheckUpdate = async () => {
     setCheckMsg(null)
@@ -35,6 +55,83 @@ export default function Navbar() {
       setTimeout(() => { setCheckMsg(null); setCheckMsgFading(false) }, 3000)
     }, 100)
   }
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!settingsOpen) return
+
+    const updatePosition = () => {
+      const trigger = settingsTriggerRef.current
+      if (!trigger) return
+
+      const rect = trigger.getBoundingClientRect()
+      const width = 240
+      const viewportPadding = 16
+      const maxLeft = Math.max(viewportPadding, window.innerWidth - width - viewportPadding)
+      const left = Math.min(Math.max(viewportPadding, rect.right - width), maxLeft)
+
+      setSettingsMenuStyle({
+        position: 'fixed',
+        top: rect.bottom + 8,
+        left,
+        width,
+      })
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (settingsTriggerRef.current?.contains(target)) return
+      if (settingsMenuRef.current?.contains(target)) return
+      setSettingsOpen(false)
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSettingsOpen(false)
+      }
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [settingsOpen])
+
+  const settingsMenu = (
+    <div
+      id={settingsMenuId}
+      ref={settingsMenuRef}
+      role="menu"
+      aria-label={t('profile')}
+      style={settingsMenuStyle ?? undefined}
+      className="z-[1000] rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface-strong)] p-2 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+    >
+      {settingsMenuItems.map(item => (
+        <Link
+          key={item.section}
+          href={{ pathname: '/profile', query: { section: item.section } }}
+          role="menuitem"
+          onClick={() => setSettingsOpen(false)}
+          className="glass-selection-control group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium"
+        >
+          <AppIcon name={item.icon} className="h-4 w-4 transition-transform group-hover:scale-110" />
+          <span>{item.label}</span>
+        </Link>
+      ))}
+    </div>
+  )
 
   return (
     <>
@@ -105,31 +202,50 @@ export default function Navbar() {
                 <>
                   <Link
                     href={{ pathname: '/workspace' }}
-                    className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors flex items-center gap-1"
+                    className={navControlClass}
                   >
                     <AppIcon name="monitor" className="w-4 h-4" />
                     {t('workspace')}
                   </Link>
                   <Link
                     href={{ pathname: '/workspace/asset-hub' }}
-                    className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors flex items-center gap-1"
+                    className={navControlClass}
                   >
                     <AppIcon name="folderHeart" className="w-4 h-4" />
                     {t('assetHub')}
                   </Link>
-                  <Link
-                    href={{ pathname: '/profile' }}
-                    className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors flex items-center gap-1"
-                    title={t('profile')}
-                  >
-                    <AppIcon name="userRoundCog" className="w-5 h-5" />
-                    {t('profile')}
-                  </Link>
+                  <div ref={settingsTriggerRef} className="relative">
+                    <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={settingsOpen}
+                      aria-controls={settingsMenuId}
+                      onClick={() => setSettingsOpen(open => !open)}
+                      className={navControlClass}
+                      title={t('profile')}
+                    >
+                      <AppIcon name="userRoundCog" className="w-5 h-5" />
+                      {t('profile')}
+                      <AppIcon name="chevronDown" className={`h-3.5 w-3.5 transition-transform ${settingsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+                  {!mounted ? (
+                    <div className="hidden" aria-hidden="true">
+                      {settingsMenuItems.map(item => (
+                        <Link
+                          key={item.section}
+                          href={{ pathname: '/profile', query: { section: item.section } }}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
                   <LanguageSwitcher />
                   <a
                     href={downloadLogsHref}
                     download
-                    className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors flex items-center gap-1"
+                    className={navControlClass}
                     title={t('downloadLogs')}
                   >
                     <AppIcon name="download" className="w-4 h-4" />
@@ -141,7 +257,7 @@ export default function Navbar() {
                 <>
                   <Link
                     href={{ pathname: '/auth/signin' }}
-                    className="text-sm text-[var(--glass-text-secondary)] hover:text-[var(--glass-text-primary)] font-medium transition-colors"
+                    className="glass-selection-control rounded-full px-2.5 py-1.5 text-sm font-medium"
                   >
                     {t('signin')}
                   </Link>
@@ -169,6 +285,7 @@ export default function Navbar() {
           onDismiss={dismissCurrentUpdate}
         />
       ) : null}
+      {mounted && settingsOpen && settingsMenuStyle ? createPortal(settingsMenu, document.body) : null}
     </>
   )
 }
