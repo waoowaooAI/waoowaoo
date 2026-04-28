@@ -1,5 +1,5 @@
 import type { OpenAICompatMediaTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
-import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/adapters/openai-compatible/common'
+import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
 import {
   buildRenderedTemplateRequest,
   buildTemplateVariables,

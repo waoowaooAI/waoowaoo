@@ -1,5 +1,5 @@
 import { getProviderKey } from '@/lib/ai-registry/selection'
-import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/adapters/openai-compatible/common'
+import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
 
 const PROBE_TIMEOUT_MS = 15_000
 

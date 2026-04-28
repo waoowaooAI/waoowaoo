@@ -1,4 +1,6 @@
-import { toUploadFile } from '@/lib/ai-providers/adapters/openai-compatible/common'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
+import { resolveOpenAICompatClientConfig, toUploadFile } from '@/lib/ai-providers/openai-compatible/errors'
 
 export type TemplateHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
@@ -541,4 +543,280 @@ export function extractTemplateError(
     }
   }
   return `Template request failed with status ${status}`
+}
+
+const OPENAI_COMPAT_PROVIDER_PREFIX = 'openai-compatible:'
+const PROVIDER_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const MAX_ERROR_BODY_PREVIEW_CHARS = 1200
+const SENSITIVE_HEADER_KEYS = new Set([
+  'authorization',
+  'proxy-authorization',
+  'x-api-key',
+  'api-key',
+  'x-auth-token',
+  'x-access-token',
+  'cookie',
+  'set-cookie',
+])
+
+function truncate(value: string, maxChars: number): string {
+  if (value.length <= maxChars) return value
+  return `${value.slice(0, maxChars)}…(truncated)`
+}
+
+function sanitizeHeaders(input: Record<string, string> | undefined): Record<string, string> | null {
+  if (!input) return null
+  const out: Record<string, string> = {}
+  for (const [key, rawValue] of Object.entries(input)) {
+    const lower = key.toLowerCase()
+    if (SENSITIVE_HEADER_KEYS.has(lower)) {
+      out[lower] = '[REDACTED]'
+      continue
+    }
+    out[lower] = String(rawValue)
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
+
+function encodeProviderToken(providerId: string): string {
+  const value = providerId.trim()
+  if (value.startsWith(OPENAI_COMPAT_PROVIDER_PREFIX)) {
+    const uuid = value.slice(OPENAI_COMPAT_PROVIDER_PREFIX.length).trim()
+    if (PROVIDER_UUID_PATTERN.test(uuid)) {
+      return `u_${uuid.toLowerCase()}`
+    }
+  }
+  return `b64_${Buffer.from(value, 'utf8').toString('base64url')}`
+}
+
+function encodeModelRef(modelRef: string): string {
+  return Buffer.from(modelRef, 'utf8').toString('base64url')
+}
+
+function resolveModelRef(kind: 'image' | 'video', input: { modelId?: string; modelKey?: string }): string {
+  const modelId = typeof input.modelId === 'string' ? input.modelId.trim() : ''
+  if (modelId) return modelId
+  const parsed = typeof input.modelKey === 'string' ? parseModelKeyStrict(input.modelKey) : null
+  if (parsed?.modelId) return parsed.modelId
+  throw new Error(kind === 'image' ? 'OPENAI_COMPAT_IMAGE_MODEL_REF_REQUIRED' : 'OPENAI_COMPAT_VIDEO_MODEL_REF_REQUIRED')
+}
+
+function readTemplateOutputUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const urls: string[] = []
+  for (const item of value) {
+    if (typeof item === 'string' && item.trim()) {
+      urls.push(item.trim())
+      continue
+    }
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+    const url = (item as { url?: unknown }).url
+    if (typeof url === 'string' && url.trim()) {
+      urls.push(url.trim())
+    }
+  }
+  return urls
+}
+
+function buildUnsupportedVideoFormatError(detail: string): Error {
+  return new Error(`VIDEO_API_FORMAT_UNSUPPORTED: ${detail}`)
+}
+
+export async function generateImageViaOpenAICompatTemplate(request: {
+  userId: string
+  providerId: string
+  modelId?: string
+  modelKey?: string
+  prompt: string
+  referenceImages?: string[]
+  options?: { [key: string]: unknown }
+  profile?: string
+  template: OpenAICompatMediaTemplate
+}): Promise<GenerateResult> {
+  if (request.template.mediaType !== 'image') {
+    throw new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_MEDIA_TYPE_INVALID')
+  }
+
+  const config = await resolveOpenAICompatClientConfig(request.userId, request.providerId)
+  const firstReference = Array.isArray(request.referenceImages) && request.referenceImages.length > 0
+    ? request.referenceImages[0]
+    : ''
+  const variables = buildTemplateVariables({
+    model: request.modelId || 'gpt-image-1',
+    prompt: request.prompt,
+    image: firstReference,
+    images: request.referenceImages || [],
+    aspectRatio: typeof request.options?.aspectRatio === 'string' ? request.options.aspectRatio : undefined,
+    resolution: typeof request.options?.resolution === 'string' ? request.options.resolution : undefined,
+    size: typeof request.options?.size === 'string' ? request.options.size : undefined,
+    extra: request.options,
+  })
+
+  const createRequest = await buildRenderedTemplateRequest({
+    baseUrl: config.baseUrl,
+    endpoint: request.template.create,
+    variables,
+    defaultAuthHeader: `Bearer ${config.apiKey}`,
+  })
+  if (['POST', 'PUT', 'PATCH'].includes(createRequest.method) && !createRequest.body) {
+    throw new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_CREATE_BODY_REQUIRED')
+  }
+  const response = await fetch(createRequest.endpointUrl, {
+    method: createRequest.method,
+    headers: createRequest.headers,
+    ...(createRequest.body ? { body: createRequest.body } : {}),
+  }).catch((error: unknown) => {
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_REQUEST_FAILED',
+        `providerId=${request.providerId}`,
+        `endpointUrl=${createRequest.endpointUrl}`,
+        `method=${createRequest.method}`,
+        `cause=${error instanceof Error ? error.message : String(error)}`,
+      ].join(' '),
+      { cause: error },
+    )
+  })
+  const rawText = await response.text().catch(() => '')
+  const payload = normalizeResponseJson(rawText)
+  if (!response.ok) {
+    const templateError = extractTemplateError(request.template, payload, response.status)
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_HTTP_ERROR',
+        `providerId=${request.providerId}`,
+        `status=${response.status}`,
+        `endpointUrl=${createRequest.endpointUrl}`,
+        `method=${createRequest.method}`,
+        `headers=${JSON.stringify(sanitizeHeaders(createRequest.headers) || {})}`,
+        `bodyPreview=${JSON.stringify(truncate(rawText, MAX_ERROR_BODY_PREVIEW_CHARS))}`,
+        `templateError=${truncate(templateError, 400)}`,
+      ].join(' '),
+    )
+  }
+
+  if (request.template.mode === 'sync') {
+    const outputUrls = readTemplateOutputUrls(
+      readJsonPath(payload, request.template.response.outputUrlsPath),
+    )
+    if (outputUrls.length > 0) {
+      const first = outputUrls[0]
+      return {
+        success: true,
+        imageUrl: first,
+        ...(outputUrls.length > 1 ? { imageUrls: outputUrls } : {}),
+      }
+    }
+
+    const outputUrl = readJsonPath(payload, request.template.response.outputUrlPath)
+    if (typeof outputUrl === 'string' && outputUrl.trim().length > 0) {
+      return {
+        success: true,
+        imageUrl: outputUrl.trim(),
+      }
+    }
+    throw new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_OUTPUT_NOT_FOUND')
+  }
+
+  const taskIdRaw = readJsonPath(payload, request.template.response.taskIdPath)
+  const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : ''
+  if (!taskId) {
+    throw new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_TASK_ID_NOT_FOUND')
+  }
+  const providerToken = encodeProviderToken(config.providerId)
+  const modelRefToken = encodeModelRef(resolveModelRef('image', { modelId: request.modelId, modelKey: request.modelKey }))
+  return {
+    success: true,
+    async: true,
+    requestId: taskId,
+    externalId: `OCOMPAT:IMAGE:${providerToken}:${modelRefToken}:${taskId}`,
+  }
+}
+
+export async function generateVideoViaOpenAICompatTemplate(request: {
+  userId: string
+  providerId: string
+  modelId?: string
+  modelKey?: string
+  imageUrl: string
+  prompt: string
+  options?: { [key: string]: unknown }
+  profile?: string
+  template: OpenAICompatMediaTemplate
+}): Promise<GenerateResult> {
+  if (request.template.mediaType !== 'video') {
+    throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_MEDIA_TYPE_INVALID')
+  }
+
+  const config = await resolveOpenAICompatClientConfig(request.userId, request.providerId)
+  const variables = buildTemplateVariables({
+    model: request.modelId || '',
+    prompt: request.prompt,
+    image: request.imageUrl,
+    images: [request.imageUrl],
+    aspectRatio: typeof request.options?.aspectRatio === 'string' ? request.options.aspectRatio : undefined,
+    resolution: typeof request.options?.resolution === 'string' ? request.options.resolution : undefined,
+    size: typeof request.options?.size === 'string' ? request.options.size : undefined,
+    duration: typeof request.options?.duration === 'number' ? request.options.duration : undefined,
+    extra: request.options,
+  })
+
+  const createRequest = await buildRenderedTemplateRequest({
+    baseUrl: config.baseUrl,
+    endpoint: request.template.create,
+    variables,
+    defaultAuthHeader: `Bearer ${config.apiKey}`,
+  })
+  if (['POST', 'PUT', 'PATCH'].includes(createRequest.method) && !createRequest.body) {
+    throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_CREATE_BODY_REQUIRED')
+  }
+  const createResponse = await fetch(createRequest.endpointUrl, {
+    method: createRequest.method,
+    headers: createRequest.headers,
+    ...(createRequest.body ? { body: createRequest.body } : {}),
+  })
+  const rawText = await createResponse.text().catch(() => '')
+  const payload = normalizeResponseJson(rawText)
+
+  if (!createResponse.ok) {
+    const errorMessage = extractTemplateError(request.template, payload, createResponse.status)
+    if ([404, 405, 415].includes(createResponse.status)) {
+      throw buildUnsupportedVideoFormatError(errorMessage)
+    }
+    throw new Error(errorMessage)
+  }
+
+  if (request.template.mode === 'sync') {
+    const outputUrl = readJsonPath(payload, request.template.response.outputUrlPath)
+    if (typeof outputUrl === 'string' && outputUrl.trim()) {
+      return {
+        success: true,
+        videoUrl: outputUrl.trim(),
+      }
+    }
+    const outputUrls = readJsonPath(payload, request.template.response.outputUrlsPath)
+    if (Array.isArray(outputUrls) && outputUrls.length > 0 && typeof outputUrls[0] === 'string') {
+      return {
+        success: true,
+        videoUrl: String(outputUrls[0]).trim(),
+      }
+    }
+    throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_OUTPUT_NOT_FOUND')
+  }
+
+  const taskIdRaw = readJsonPath(payload, request.template.response.taskIdPath)
+  const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : ''
+  if (!taskId) {
+    throw buildUnsupportedVideoFormatError('OPENAI_COMPAT_VIDEO_TEMPLATE_TASK_ID_NOT_FOUND')
+  }
+
+  const providerToken = encodeProviderToken(config.providerId)
+  const modelRefToken = encodeModelRef(resolveModelRef('video', { modelId: request.modelId, modelKey: request.modelKey }))
+
+  return {
+    success: true,
+    async: true,
+    requestId: taskId,
+    externalId: `OCOMPAT:VIDEO:${providerToken}:${modelRefToken}:${taskId}`,
+  }
 }

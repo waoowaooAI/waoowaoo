@@ -8,11 +8,11 @@ const resolveOpenAICompatClientConfigMock = vi.hoisted(() =>
   })),
 )
 
-vi.mock('@/lib/ai-providers/adapters/openai-compatible/common', () => ({
+vi.mock('@/lib/ai-providers/openai-compatible/errors', () => ({
   resolveOpenAICompatClientConfig: resolveOpenAICompatClientConfigMock,
 }))
 
-import { runOpenAICompatResponsesCompletion } from '@/lib/ai-providers/adapters/openai-compatible/responses'
+import { runOpenAICompatResponsesCompletion } from '@/lib/ai-providers/openai-compatible/llm'
 
 describe('model-gateway openai-compat responses executor', () => {
   beforeEach(() => {
