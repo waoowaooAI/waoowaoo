@@ -29,7 +29,6 @@ import { runOpenAiCompatibleLlmCompletion, runOpenAiCompatibleLlmStream } from '
 import { executeOpenAiCompatibleVideoGeneration } from '@/lib/ai-providers/openai-compatible/video'
 import { openRouterMediaAdapter } from '@/lib/ai-providers/openrouter/adapter'
 import { runOpenRouterLlmCompletion, runOpenRouterLlmStream } from '@/lib/ai-providers/openrouter/llm'
-import { executeGenericAudioGeneration } from '@/lib/ai-providers/shared/audio'
 import { siliconFlowMediaAdapter } from '@/lib/ai-providers/siliconflow/adapter'
 import {
   executeSiliconFlowAudioGeneration,
@@ -115,10 +114,6 @@ const runtimeProviderRegistry = new AiRegistry<RegisteredAiProvider>([
     video: {
       describe: (selection) => falMediaAdapter.describeVariant('video', selection),
       execute: executeFalVideoGeneration,
-    },
-    audio: {
-      describe: (selection) => falMediaAdapter.describeVariant('audio', selection),
-      execute: executeGenericAudioGeneration,
     },
   },
   {
