@@ -5,8 +5,6 @@
     "src/components/ui/config-modals/ModelCapabilityDropdown.tsx",
     "src/lib/billing/cost.ts",
     "src/lib/constants.ts",
-    "src/lib/llm/completion-parts.ts",
-    "src/lib/llm/runtime-shared.ts",
     "src/lib/operations/domains/media/lipsync-ops.ts",
     "src/lib/operations/domains/media/video-generation-ops.ts",
     "src/lib/user-api/api-config-catalog.ts",
