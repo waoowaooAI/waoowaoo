@@ -8,7 +8,8 @@ import {
   type TemplateVariableMap,
 } from '@/lib/ai-registry/openai-compatible-template'
 import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
-import { resolveOpenAICompatClientConfig, toUploadFile } from '@/lib/ai-providers/openai-compatible/errors'
+import { resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
+import { toOpenAIUploadFile } from '@/lib/ai-providers/shared/openai-image'
 
 function isRecord(value: unknown): value is { [key: string]: unknown } {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -137,7 +138,7 @@ async function appendMultipartFileValue(
   indexSeed: number,
 ): Promise<number> {
   if (typeof value === 'string') {
-    formData.append(formKey, await toUploadFile(value, indexSeed))
+    formData.append(formKey, await toOpenAIUploadFile(value, indexSeed))
     return indexSeed + 1
   }
   if (Array.isArray(value)) {

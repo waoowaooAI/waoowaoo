@@ -44,6 +44,9 @@ export type AiImageExecutionOptions = {
   size?: string
   quality?: string
   responseFormat?: string
+  background?: string
+  outputCompression?: number
+  moderation?: string
 }
 
 export type AiVideoExecutionOptions = {

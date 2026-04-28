@@ -12,6 +12,7 @@ import { googleAdapter } from '@/lib/ai-providers/google/adapter'
 import { GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, GOOGLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/google/models'
 import { minimaxAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES, MINIMAX_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/minimax/models'
+import { openAiAdapter } from '@/lib/ai-providers/openai/adapter'
 import { openAiCompatibleAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import { OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_COMPATIBLE_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai-compatible/models'
 import { OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES, OPENAI_BUILTIN_PRICING_CATALOG_ENTRIES } from '@/lib/ai-providers/openai/models'
@@ -190,7 +191,7 @@ describe('provider models truth', () => {
     expect(FAL_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'banana-2')?.capabilities?.image?.resolutionOptions).toEqual(['1K', '2K', '4K'])
     expect(GOOGLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gemini-3.1-flash-image-preview')?.capabilities?.image?.resolutionOptions).toEqual(['0.5K', '1K', '2K', '4K'])
     expect(MINIMAX_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'minimax-hailuo-02')?.capabilities?.video?.firstlastframe).toBe(true)
-    expect(OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES).toHaveLength(0)
+    expect(OPENAI_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gpt-image-2')?.capabilities?.image?.resolutionOptions).toContain('1024x1024')
     expect(OPENAI_COMPATIBLE_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'gpt-image-1')?.capabilities?.image?.resolutionOptions).toContain('1024x1024')
     expect(OPENROUTER_BUILTIN_CAPABILITY_CATALOG_ENTRIES.find((entry) => entry.modelId === 'google/gemini-3.1-pro-preview')?.capabilities?.llm?.reasoningEffortOptions).toEqual(['low', 'medium', 'high'])
     expect(SILICONFLOW_BUILTIN_CAPABILITY_CATALOG_ENTRIES).toHaveLength(0)
@@ -340,6 +341,25 @@ describe('provider models truth', () => {
       options: { size: '1024x1024', resolution: '1536x1024' },
       context: 'openai-image',
     })).toThrow('AI_OPTION_CONFLICT:openai-image:size_and_resolution_must_match')
+
+    const officialOpenAiImage = openAiAdapter.image?.describe(mediaSelection({
+      provider: 'openai',
+      modelId: 'gpt-image-2',
+      modelKey: 'openai::gpt-image-2',
+    }))
+    expect(officialOpenAiImage).toBeDefined()
+    expectValidOptions(officialOpenAiImage!.optionSchema, {
+      size: '1024x1024',
+      quality: 'high',
+      outputFormat: 'webp',
+      outputCompression: 90,
+      background: 'auto',
+    }, 'openai-image-2')
+    expect(() => validateAiOptions({
+      schema: officialOpenAiImage!.optionSchema,
+      options: { responseFormat: 'url' },
+      context: 'openai-image-2',
+    })).toThrow('AI_OPTION_INVALID:openai-image-2:responseFormat_unsupported')
 
     const siliconFlowImage = siliconFlowAdapter.image?.describe(mediaSelection({
       provider: 'siliconflow',

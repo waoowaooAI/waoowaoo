@@ -66,6 +66,7 @@ export function getDefaultVoiceDesignModelKey(): string {
 }
 
 export const API_CONFIG_CATALOG_PROVIDERS: ApiConfigCatalogProvider[] = [
+  { id: 'openai', name: 'OpenAI' },
   { id: 'ark', name: 'Volcengine Ark' },
   { id: 'google', name: 'Google AI Studio' },
   { id: 'bailian', name: 'Alibaba Bailian' },

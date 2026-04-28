@@ -1,40 +1,10 @@
-import OpenAI, { toFile } from 'openai'
+import OpenAI from 'openai'
 import { getProviderConfig } from '@/lib/user-api/runtime-config'
-import { getInternalBaseUrl } from '@/lib/env'
-import { getImageBase64Cached } from '@/lib/image-cache'
 
 export interface OpenAICompatClientConfig {
   providerId: string
   baseUrl: string
   apiKey: string
-}
-
-function toAbsoluteUrlIfNeeded(value: string): string {
-  if (!value.startsWith('/')) return value
-  const baseUrl = getInternalBaseUrl()
-  return `${baseUrl}${value}`
-}
-
-export function parseDataUrl(value: string): { mimeType: string; base64: string } | null {
-  const marker = ';base64,'
-  const markerIndex = value.indexOf(marker)
-  if (!value.startsWith('data:') || markerIndex === -1) return null
-  const mimeType = value.slice(5, markerIndex)
-  const base64 = value.slice(markerIndex + marker.length)
-  if (!mimeType || !base64) return null
-  return { mimeType, base64 }
-}
-
-export function readStringOption(value: unknown, optionName: string): string | undefined {
-  if (value === undefined || value === null) return undefined
-  if (typeof value !== 'string') {
-    throw new Error(`OPENAI_COMPAT_OPTION_INVALID: ${optionName}`)
-  }
-  const trimmed = value.trim()
-  if (!trimmed) {
-    throw new Error(`OPENAI_COMPAT_OPTION_INVALID: ${optionName}`)
-  }
-  return trimmed
 }
 
 export async function resolveOpenAICompatClientConfig(
@@ -57,25 +27,4 @@ export function createOpenAICompatClient(config: OpenAICompatClientConfig): Open
     apiKey: config.apiKey,
     baseURL: config.baseUrl,
   })
-}
-
-export async function toUploadFile(imageSource: string, index: number): Promise<File> {
-  const parsedDataUrl = parseDataUrl(imageSource)
-  if (parsedDataUrl) {
-    const bytes = Buffer.from(parsedDataUrl.base64, 'base64')
-    return await toFile(bytes, `reference-${index}.png`, { type: parsedDataUrl.mimeType })
-  }
-
-  if (imageSource.startsWith('http://') || imageSource.startsWith('https://') || imageSource.startsWith('/')) {
-    const cachedDataUrl = await getImageBase64Cached(toAbsoluteUrlIfNeeded(imageSource))
-    const parsedCached = parseDataUrl(cachedDataUrl)
-    if (!parsedCached) {
-      throw new Error(`OPENAI_COMPAT_REFERENCE_INVALID: failed to parse image source ${index}`)
-    }
-    const bytes = Buffer.from(parsedCached.base64, 'base64')
-    return await toFile(bytes, `reference-${index}.png`, { type: parsedCached.mimeType })
-  }
-
-  const bytes = Buffer.from(imageSource, 'base64')
-  return await toFile(bytes, `reference-${index}.png`, { type: 'image/png' })
 }

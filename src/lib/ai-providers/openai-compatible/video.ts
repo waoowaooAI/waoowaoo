@@ -1,7 +1,8 @@
 import { normalizeToBase64ForGeneration } from '@/lib/media/outbound-image'
 import { toFile } from 'openai'
 import type { AiProviderVideoExecutionContext, GenerateResult } from '@/lib/ai-providers/runtime-types'
-import { createOpenAICompatClient, parseDataUrl, resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
+import { createOpenAICompatClient, resolveOpenAICompatClientConfig } from '@/lib/ai-providers/openai-compatible/errors'
+import { parseOpenAIImageDataUrl } from '@/lib/ai-providers/shared/openai-image'
 import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 import { generateVideoViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 import { requireSelectedModelId } from '@/lib/ai-providers/shared/model-selection'
@@ -144,7 +145,7 @@ function encodeProviderId(providerId: string): string {
 
 async function toUploadFileFromImageUrl(imageUrl: string): Promise<File> {
   const base64DataUrl = imageUrl.startsWith('data:') ? imageUrl : await normalizeToBase64ForGeneration(imageUrl)
-  const parsed = parseDataUrl(base64DataUrl)
+  const parsed = parseOpenAIImageDataUrl(base64DataUrl)
   if (!parsed) {
     throw new Error('OPENAI_COMPAT_VIDEO_INPUT_REFERENCE_INVALID')
   }

@@ -71,10 +71,20 @@ const OPENROUTER_UPSTREAM_PROVIDERS = new Set([
   'openai-compatible',
 ])
 
+const OPENAI_PROTOCOL_PROVIDER_DIRS = new Set([
+  'openai',
+  'openai-compatible',
+])
+
 function isAllowedHomeDir(file, providerKey) {
   const rel = file.replaceAll(path.sep, '/')
   if (rel.startsWith('tests/')) return true
   if (rel.startsWith(`src/lib/ai-providers/${providerKey}/`)) return true
+  if (providerKey === 'openai-compatible') {
+    for (const providerDir of OPENAI_PROTOCOL_PROVIDER_DIRS) {
+      if (rel.startsWith(`src/lib/ai-providers/${providerDir}/`)) return true
+    }
+  }
   if (rel.startsWith('src/lib/ai-providers/openrouter/') && OPENROUTER_UPSTREAM_PROVIDERS.has(providerKey)) return true
   return false
 }

@@ -87,6 +87,9 @@ export type AiProviderImageExecutionContext = {
     size?: string
     quality?: string
     responseFormat?: string
+    background?: string
+    outputCompression?: number
+    moderation?: string
     [key: string]: unknown
   }
 }

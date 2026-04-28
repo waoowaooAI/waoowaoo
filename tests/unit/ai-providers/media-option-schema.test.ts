@@ -3,6 +3,7 @@ import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { arkAdapter } from '@/lib/ai-providers/ark/adapter'
 import { falAdapter } from '@/lib/ai-providers/fal/adapter'
 import { minimaxAdapter } from '@/lib/ai-providers/minimax/adapter'
+import { openAiAdapter } from '@/lib/ai-providers/openai/adapter'
 import { openAiCompatibleAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
 import { viduAdapter } from '@/lib/ai-providers/vidu/adapter'
 import type { AiVariantDescriptor } from '@/lib/ai-registry/types'
@@ -101,6 +102,30 @@ describe('media adapter option schema', () => {
       schema: descriptor!.optionSchema,
       options: { size: '1024x1024', resolution: '1536x1024' },
     })).toThrow('AI_OPTION_CONFLICT:unit:size_and_resolution_must_match')
+  })
+
+  it('validates official OpenAI image-2 options without enabling OpenAI-compatible response format', () => {
+    const descriptor = openAiAdapter.image?.describe(mediaSelection({
+      provider: 'openai',
+      modelId: 'gpt-image-2',
+      modelKey: 'openai::gpt-image-2',
+    }))
+    expect(descriptor).toBeDefined()
+
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: {
+        resolution: '1536x1024',
+        quality: 'medium',
+        outputFormat: 'webp',
+        outputCompression: 80,
+      },
+    })).not.toThrow()
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { responseFormat: 'url' },
+      context: 'openai-image-2',
+    })).toThrow('AI_OPTION_INVALID:openai-image-2:responseFormat_unsupported')
   })
 
   it('rejects Ark video duration outside model descriptor bounds', () => {
