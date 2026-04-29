@@ -79,7 +79,7 @@ tmp/
 
 # internal AI agent config (not for public)
 AGENTS.md
-agent/
+/agent/
 
 # internal docs (not for public)
 docs/**
