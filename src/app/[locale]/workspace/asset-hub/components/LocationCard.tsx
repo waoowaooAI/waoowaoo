@@ -1,7 +1,7 @@
 'use client'
 import { resolveErrorDisplay } from '@/lib/errors/display'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   useGenerateLocationImage,
@@ -79,15 +79,7 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
   const generatedImageCount = countGeneratedImageSlots(orderedImages)
   const selectedImage = orderedImages.find((img) => img.isSelected)
   const serverSelectedIndex = selectedImage?.imageIndex ?? null
-  const imageSignature = useMemo(
-    () => orderedImages.map((image) => `${image.id}:${image.imageIndex}:${image.imageUrl ?? ''}`).join('\u0000'),
-    [orderedImages],
-  )
-  const [draftSelectedIndex, setDraftSelectedIndex] = useState<number | null>(serverSelectedIndex)
-  useEffect(() => {
-    setDraftSelectedIndex(serverSelectedIndex)
-  }, [location.id, serverSelectedIndex, imageSignature])
-  const effectiveSelectedIndex = draftSelectedIndex
+  const effectiveSelectedIndex = serverSelectedIndex
   const currentImageUrl = selectedImage?.imageUrl || imagesWithUrl[0]?.imageUrl || null
   const currentImageIndex = effectiveSelectedIndex ?? imagesWithUrl[0]?.imageIndex ?? 0
   const hasPreviousVersion = location.images?.some(img => img.previousImageUrl) || false
@@ -142,9 +134,21 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
     })
   }
 
-  // 选择图片：只更新本地草稿，确认时才写后端
+  // 选择图片（依赖 query 缓存乐观更新）
   const handleSelectImage = (imageIndex: number | null) => {
-    setDraftSelectedIndex(imageIndex)
+    if (imageIndex === effectiveSelectedIndex) return
+    const requestId = latestSelectRequestRef.current + 1
+    latestSelectRequestRef.current = requestId
+    selectImage.mutate({
+      locationId: location.id,
+      imageIndex,
+      confirm: false
+    }, {
+      onError: (error) => {
+        if (latestSelectRequestRef.current !== requestId) return
+        alert(error.message || t('selectFailed'))
+      }
+    })
   }
 
   // 确认选择
@@ -266,7 +270,7 @@ export function LocationCard({ location, assetType = 'location', onImageClick, o
         {/* 图片列表 */}
         <div className="grid grid-cols-3 gap-3">
           {displaySelectionImages.map((img) => {
-            const isThisSelected = effectiveSelectedIndex === img.imageIndex
+            const isThisSelected = img.isSelected
             const hasPendingEmptySlots = isTaskRunning && generatedImageCount < displaySlotCount
             const slotTaskRunning = hasPendingEmptySlots
               ? !img.imageUrl && isTaskRunning

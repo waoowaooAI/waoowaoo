@@ -12,7 +12,6 @@ import {
   countGeneratedImageSlots,
   resolveGroupedImageSlotPhase,
 } from '@/lib/image-generation/slot-state'
-import '../AssetImageOverlays.css'
 
 type SelectionImage = {
   id: string
@@ -26,18 +25,21 @@ type SelectionImage = {
 type LocationImageListProps =
   | {
     mode: 'selection'
+    locationId: string
     locationName: string
     images: SelectionImage[]
+    selectedImageId?: string | null
     selectedIndex: number | null
     isGroupTaskRunning: boolean
     isImageTaskRunning: (imageIndex: number) => boolean
     displayTaskPresentation: TaskPresentationState | null
     onImageClick: (imageUrl: string) => void
-    onSelectImage?: (imageIndex: number) => void
+    onSelectImage?: (locationId: string, imageIndex: number | null) => void
   }
   | {
     mode: 'single'
     locationName: string
+    aspectClassName: string
     currentImageUrl: string | null | undefined
     selectedIndex: number | null
     hasMultipleImages: boolean
@@ -56,9 +58,11 @@ export default function LocationImageList(props: LocationImageListProps) {
     const hasPendingEmptySlots = props.isGroupTaskRunning && generatedCount < props.images.length
 
     return (
-      <div className="asset-selection-image-grid grid gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {props.images.map((img) => {
-          const isThisSelected = props.selectedIndex === img.imageIndex
+          const isThisSelected = props.selectedImageId
+            ? img.id === props.selectedImageId
+            : img.isSelected
           const slotTaskRunning =
             props.isImageTaskRunning(img.imageIndex) ||
             (props.isGroupTaskRunning && !img.imageUrl)
@@ -75,14 +79,14 @@ export default function LocationImageList(props: LocationImageListProps) {
             message: img.imageErrorMessage || null,
           })
           return (
-            <div key={img.id} className="asset-selection-image-frame relative group/thumb">
+            <div key={img.id} className="relative group/thumb">
               <div
                 onClick={() => {
                   if (img.imageUrl) {
                     props.onImageClick(img.imageUrl)
                   }
                 }}
-                className={`flex min-h-[88px] items-center justify-center rounded-lg overflow-hidden border-2 bg-[var(--glass-bg-muted)] transition-all relative ${img.imageUrl ? 'cursor-pointer' : 'cursor-default'} ${isThisSelected
+                className={`rounded-lg overflow-hidden border-2 transition-all relative ${img.imageUrl ? 'cursor-pointer' : 'cursor-default'} ${isThisSelected
                   ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-focus-ring)]'
                   : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
                   }`}
@@ -91,8 +95,8 @@ export default function LocationImageList(props: LocationImageListProps) {
                   <MediaImageWithLoading
                     src={img.imageUrl}
                     alt={t('image.optionAlt', { name: props.locationName, number: img.imageIndex + 1 })}
-                    containerClassName="flex w-full min-h-[88px] items-center justify-center"
-                    className="h-auto w-full object-contain"
+                    containerClassName="w-full min-h-[88px]"
+                    className="w-full h-auto object-contain"
                   />
                 ) : (
                   <div className="flex min-h-[88px] items-center justify-center bg-[var(--glass-bg-muted)]">
@@ -119,7 +123,7 @@ export default function LocationImageList(props: LocationImageListProps) {
                 )}
 
                 <div
-                  className={`asset-image-selection-label absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
+                  className={`absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
                     }`}
                 >
                   <span>{t('image.optionNumber', { number: img.imageIndex + 1 })}</span>
@@ -132,11 +136,11 @@ export default function LocationImageList(props: LocationImageListProps) {
                   onClick={(e) => {
                     e.stopPropagation()
                     if (phase !== 'generating' && phase !== 'regenerating' && img.imageUrl) {
-                      props.onSelectImage?.(img.imageIndex)
+                      props.onSelectImage?.(props.locationId, isThisSelected ? null : img.imageIndex)
                     }
                   }}
                   disabled={phase === 'generating' || phase === 'regenerating' || !img.imageUrl}
-                  className={`asset-image-select-button absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
+                  className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
                     ? 'bg-[var(--glass-tone-success-fg)] text-white'
                     : 'bg-[var(--glass-bg-surface-strong)] hover:bg-[var(--glass-accent-from)] hover:text-white'
                     } disabled:opacity-50`}
@@ -158,24 +162,24 @@ export default function LocationImageList(props: LocationImageListProps) {
   })
 
   return (
-    <div className="asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)]">
+    <div className={`relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
       {props.currentImageUrl ? (
-        <div className="relative w-full">
+        <div className="relative h-full w-full">
           <MediaImageWithLoading
             src={props.currentImageUrl}
             alt={props.locationName}
-            containerClassName="w-full min-h-[120px]"
-            className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+            containerClassName="h-full w-full"
+            className="h-full w-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
             onClick={() => props.onImageClick(props.currentImageUrl!)}
           />
           {props.selectedIndex !== null && props.hasMultipleImages && (
-            <div className="asset-image-selection-label absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
+            <div className="absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
               {t('image.optionNumber', { number: props.selectedIndex + 1 })}
             </div>
           )}
         </div>
       ) : (
-        <div className="flex min-h-[120px] w-full items-center justify-center bg-[var(--glass-bg-muted)]">
+        <div className="flex h-full w-full items-center justify-center bg-[var(--glass-bg-muted)]">
           {locationErrorDisplay && !props.isTaskRunning ? (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
               <AppIcon name="alert" className="w-8 h-8 text-[var(--glass-tone-danger-fg)] mb-2" />
@@ -191,7 +195,7 @@ export default function LocationImageList(props: LocationImageListProps) {
         <TaskStatusOverlay state={props.displayTaskPresentation} />
       )}
       {!props.isTaskRunning && (
-        <div className="asset-image-overlay-actions absolute top-2 left-2 flex gap-1">
+        <div className="absolute top-2 left-2 flex gap-1">
           {props.overlayActions}
         </div>
       )}

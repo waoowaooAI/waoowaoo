@@ -28,7 +28,8 @@ interface LocationSectionProps {
     onEditLocation: (location: Location | Prop) => void
     // 🔥 V6.6 重构：重命名为 handleGenerateImage
     handleGenerateImage: (type: 'character' | 'location' | 'prop', id: string, appearanceId?: string, count?: number) => Promise<void>
-    onConfirmSelection: (locationId: string, imageIndex: number) => Promise<void> | void
+    onSelectImage: (locationId: string, imageIndex: number | null) => void
+    onConfirmSelection: (locationId: string) => Promise<void> | void
     onRegenerateSingle: (locationId: string, imageIndex: number) => Promise<void>
     onRegenerateGroup: (locationId: string, count?: number) => Promise<void>
     onUndo: (locationId: string) => void
@@ -50,6 +51,7 @@ export default function LocationSection({
     onDeleteLocation,
     onEditLocation,
     handleGenerateImage,
+    onSelectImage,
     onConfirmSelection,
     onRegenerateSingle,
     onRegenerateGroup,
@@ -70,13 +72,13 @@ export default function LocationSection({
     const generateType = resolveLocationBackedGenerateType(assetType)
 
     return (
-        <div className="glass-surface p-4">
-            <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
-                        <AppIcon name="imageLandscape" className="h-4 w-4" />
+        <div className="glass-surface p-6">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
+                        <AppIcon name="imageLandscape" className="h-5 w-5" />
                     </span>
-                    <h3 className="text-base font-bold text-[var(--glass-text-primary)]">
+                    <h3 className="text-lg font-bold text-[var(--glass-text-primary)]">
                         {assetType === 'prop' ? t('stage.propAssets') : t("stage.locationAssets")}
                     </h3>
                     <span className="text-sm text-[var(--glass-text-tertiary)] bg-[var(--glass-bg-muted)]/50 px-2 py-1 rounded-lg">
@@ -93,10 +95,7 @@ export default function LocationSection({
                 </button>
             </div>
 
-            <div
-                className="grid gap-4"
-                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 108px), 1fr))' }}
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-6">
                 {locations.map(location => (
                     <LocationCard
                         key={location.id}
@@ -144,6 +143,7 @@ export default function LocationSection({
                         }}
                         onUndo={() => onUndo(location.id)}
                         onImageClick={onImageClick}
+                        onSelectImage={onSelectImage}
                         onImageEdit={(locId, imgIdx) => onImageEdit(locId, imgIdx, location.name)}
                         onCopyFromGlobal={() => onCopyFromGlobal(location.id)}
                         activeTaskKeys={activeTaskKeys}

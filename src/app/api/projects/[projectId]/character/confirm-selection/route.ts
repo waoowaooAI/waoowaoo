@@ -5,10 +5,10 @@ import { executeProjectAgentOperationFromApi } from '@/lib/adapters/api/execute-
 
 /**
  * POST - 确认选择并删除未选中的候选图片
- * Body: { characterId, appearanceId, imageIndex }
+ * Body: { characterId, appearanceId }
  * 
  * 工作流程：
- * 1. 验证传入的草稿图片索引有效
+ * 1. 验证已经选择了一张图片（selectedIndex 不为 null）
  * 2. 删除 imageUrls 中未选中的图片（从 COS 和数据库）
  * 3. 将选中的图片设为唯一图片
  */
@@ -23,9 +23,9 @@ export const POST = apiHandler(async (
   if (isErrorResponse(authResult)) return authResult
 
   const body = await request.json()
-  const { characterId, appearanceId, imageIndex } = body
+  const { characterId, appearanceId } = body
 
-  if (!characterId || !appearanceId || !Number.isInteger(imageIndex)) {
+  if (!characterId || !appearanceId) {
     throw new ApiError('INVALID_PARAMS')
   }
 
@@ -37,7 +37,6 @@ export const POST = apiHandler(async (
     input: {
       characterId,
       appearanceId,
-      selectedIndex: imageIndex,
     },
     source: 'project-ui',
   })

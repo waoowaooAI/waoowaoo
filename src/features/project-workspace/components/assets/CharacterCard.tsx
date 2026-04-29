@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl'
  * 布局：上面名字+描述，下面三张图片（每张图片有独立的编辑和重新生成按钮）
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useState, useRef } from 'react'
 import { Character, CharacterAppearance } from '@/types/project'
 import { shouldShowError } from '@/lib/error-utils'
 import VoiceSettings from './VoiceSettings'
@@ -36,13 +36,14 @@ interface CharacterCardProps {
   onImageClick: (imageUrl: string) => void
   showDeleteButton: boolean
   appearanceCount?: number  // 该角色的形象数量
+  onSelectImage?: (characterId: string, appearanceId: string, imageIndex: number | null) => void
   activeTaskKeys?: Set<string>
   onClearTaskKey?: (key: string) => void
   onImageEdit?: (characterId: string, appearanceId: string, imageIndex: number) => void
   isPrimaryAppearance?: boolean
   primaryAppearanceSelected?: boolean
   projectId: string
-  onConfirmSelection?: (characterId: string, appearanceId: string, imageIndex: number) => Promise<void> | void  // 确认选择
+  onConfirmSelection?: (characterId: string, appearanceId: string) => void  // 确认选择
   // 音色相关
   onVoiceChange?: (characterId: string, customVoiceUrl?: string) => void
   onVoiceDesign?: (characterId: string, characterName: string) => void  // AI 声音设计
@@ -61,6 +62,7 @@ export default function CharacterCard({
   onImageClick,
   showDeleteButton,
   appearanceCount = 1,
+  onSelectImage,
   activeTaskKeys = new Set(),
   onImageEdit,
   isPrimaryAppearance = false,
@@ -79,7 +81,6 @@ export default function CharacterCard({
   const [pendingUploadIndex, setPendingUploadIndex] = useState<number | undefined>(undefined)
   const [showDeleteMenu, setShowDeleteMenu] = useState(false)
   const [isConfirmingSelection, setIsConfirmingSelection] = useState(false)
-  const [draftSelectedIndex, setDraftSelectedIndex] = useState<number | null>(appearance.selectedIndex ?? null)
 
   // 处理删除按钮点击
   const handleDeleteClick = () => {
@@ -136,18 +137,13 @@ export default function CharacterCard({
 
   // 获取图片数组（已经是数组，不需要 JSON 解析）
   const rawImageUrls = appearance.imageUrls || []
-  const imageUrlsSignature = useMemo(() => rawImageUrls.join('\u0000'), [rawImageUrls])
-  useEffect(() => {
-    setDraftSelectedIndex(appearance.selectedIndex ?? null)
-  }, [appearance.id, appearance.selectedIndex, imageUrlsSignature])
-
   const imageUrlsWithIndex = rawImageUrls
     .map((url, idx) => ({ url, originalIndex: idx }))
     .filter((item) => !!item.url) as { url: string; originalIndex: number }[]
   const generatedImageCount = imageUrlsWithIndex.length
 
   const hasMultipleImages = imageUrlsWithIndex.length > 1
-  const selectedIndex = draftSelectedIndex
+  const selectedIndex = appearance.selectedIndex ?? null
 
   // 🔥 统一图片URL优先级：imageUrl > imageUrls[selectedIndex] > imageUrls[0]
   // 这样确保编辑后的新图片能正确显示
@@ -253,44 +249,13 @@ export default function CharacterCard({
           </button>
         )}
         {showDeleteButton && (
-          <div className="relative">
-            <button
-              onClick={handleDeleteClick}
-              className="w-6 h-6 rounded hover:bg-[var(--glass-tone-danger-bg)] flex items-center justify-center transition-colors"
-              title={appearanceCount <= 1 ? t('character.delete') : t('character.deleteOptions')}
-            >
-              <AppIcon name="trash" className="w-4 h-4 text-[var(--glass-tone-danger-fg)]" />
-            </button>
-
-            {showDeleteMenu && appearanceCount > 1 && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowDeleteMenu(false)}
-                />
-                <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg shadow-lg py-1 min-w-[100px]">
-                  <button
-                    onClick={() => {
-                      setShowDeleteMenu(false)
-                      onDeleteAppearance?.()
-                    }}
-                    className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)] whitespace-nowrap"
-                  >
-                    {t('image.deleteThis')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDeleteMenu(false)
-                      onDelete()
-                    }}
-                    className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-tone-danger-fg)] hover:bg-[var(--glass-tone-danger-bg)] whitespace-nowrap"
-                  >
-                    {t('character.deleteWhole')}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            onClick={onDelete}
+            className="w-6 h-6 rounded hover:bg-[var(--glass-tone-danger-bg)] flex items-center justify-center transition-colors"
+            title={t('character.delete')}
+          >
+            <AppIcon name="trash" className="w-4 h-4 text-[var(--glass-tone-danger-fg)]" />
+          </button>
         )}
       </>
     )
@@ -308,7 +273,7 @@ export default function CharacterCard({
     )
 
     return (
-      <div className="col-span-full bg-[var(--glass-bg-surface)] rounded-lg border-2 border-[var(--glass-stroke-base)] p-3 shadow-sm transition-all">
+      <div className="col-span-3 bg-[var(--glass-bg-surface)] rounded-lg border-2 border-[var(--glass-stroke-base)] p-4 shadow-sm transition-all">
         <input
           ref={fileInputRef}
           type="file"
@@ -328,6 +293,8 @@ export default function CharacterCard({
 
         <CharacterCardGallery
           mode="selection"
+          characterId={character.id}
+          appearanceId={appearance.id}
           characterName={character.name}
           imageUrlsWithIndex={imageUrlsWithIndex}
           selectedIndex={selectedIndex}
@@ -335,9 +302,7 @@ export default function CharacterCard({
           isImageTaskRunning={isImageTaskRunning}
           displayTaskPresentation={displayTaskPresentation}
           onImageClick={onImageClick}
-          onSelectImage={(imageIndex) => setDraftSelectedIndex((current) => (
-            current === imageIndex ? null : imageIndex
-          ))}
+          onSelectImage={onSelectImage}
         />
 
         <CharacterCardActions
@@ -345,11 +310,9 @@ export default function CharacterCard({
           selectedIndex={selectedIndex}
           isConfirmingSelection={isConfirmingSelection}
           confirmSelectionState={confirmSelectionState}
-          onConfirmSelection={selectedIndex === null ? undefined : () => {
+          onConfirmSelection={() => {
             setIsConfirmingSelection(true)
-            void Promise.resolve(onConfirmSelection?.(character.id, appearance.id, selectedIndex)).finally(() => {
-              setIsConfirmingSelection(false)
-            })
+            onConfirmSelection?.(character.id, appearance.id)
           }}
           isPrimaryAppearance={isPrimaryAppearance}
           voiceSettings={selectionVoiceSettings}
@@ -443,7 +406,7 @@ export default function CharacterCard({
                     setShowDeleteMenu(false)
                     onDeleteAppearance?.()
                   }}
-                  className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)] whitespace-nowrap"
+                  className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)] whitespace-nowrap"
                 >
                   {t('image.deleteThis')}
                 </button>
@@ -478,7 +441,7 @@ export default function CharacterCard({
   )
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <input
         ref={fileInputRef}
         type="file"
@@ -491,6 +454,7 @@ export default function CharacterCard({
           mode="single"
           characterName={character.name}
           changeReason={appearance.changeReason}
+          aspectClassName="aspect-[3/2]"
           currentImageUrl={currentImageUrl}
           selectedIndex={selectedIndex}
           hasMultipleImages={hasMultipleImages}

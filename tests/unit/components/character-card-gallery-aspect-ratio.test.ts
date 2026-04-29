@@ -36,8 +36,8 @@ const TestIntlProvider = NextIntlClientProvider as React.ComponentType<{
   children?: React.ReactNode
 }>
 
-describe('CharacterCardGallery natural image sizing', () => {
-  it('renders the single-image slot without a fixed aspect ratio', async () => {
+describe('CharacterCardGallery aspect ratio', () => {
+  it('renders the single-image slot at a fixed 3:2 ratio', async () => {
     Reflect.set(globalThis, 'React', React)
     const { default: CharacterCardGallery } = await import('@/features/project-workspace/components/assets/character-card/CharacterCardGallery')
 
@@ -53,6 +53,7 @@ describe('CharacterCardGallery natural image sizing', () => {
           mode: 'single',
           characterName: '沈烬',
           changeReason: '默认形象',
+          aspectClassName: 'aspect-[3/2]',
           currentImageUrl: null,
           selectedIndex: null,
           hasMultipleImages: false,
@@ -64,7 +65,6 @@ describe('CharacterCardGallery natural image sizing', () => {
       ),
     )
 
-    expect(html).not.toContain('aspect-[3/2]')
-    expect(html).toContain('min-h-[120px]')
+    expect(html).toContain('aspect-[3/2]')
   })
 })

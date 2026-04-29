@@ -18,6 +18,7 @@ import {
     useRegenerateSingleLocationImage,
     useRegenerateLocationGroup,
     useDeleteProjectLocation,
+    useSelectProjectLocationImage,
     useConfirmProjectLocationSelection,
     useUpdateProjectLocationDescription,
 } from '@/lib/query/hooks'
@@ -56,6 +57,7 @@ export function useLocationActions({
     const regenerateSingleImage = useRegenerateSingleLocationImage(projectId)
     const regenerateGroup = useRegenerateLocationGroup(projectId)
     const deleteLocationMutation = useDeleteProjectLocation(projectId)
+    const selectLocationImageMutation = useSelectProjectLocationImage(projectId)
     const confirmLocationSelectionMutation = useConfirmProjectLocationSelection(projectId, assetType)
     const updateLocationDescriptionMutation = useUpdateProjectLocationDescription(projectId)
 
@@ -75,10 +77,27 @@ export function useLocationActions({
         }
     }, [assetKey, assetType, deleteLocationMutation, propActions, t])
 
-    // 确认选择并删除其他候选图片
-    const handleConfirmLocationSelection = useCallback(async (locationId: string, imageIndex: number) => {
+    // 处理场景图片选择
+    const handleSelectLocationImage = useCallback(async (locationId: string, imageIndex: number | null) => {
         try {
-            await confirmLocationSelectionMutation.mutateAsync({ locationId, imageIndex })
+            if (assetType === 'prop') {
+                await propActions.selectRender({ id: locationId, imageIndex })
+            } else {
+                await selectLocationImageMutation.mutateAsync({ locationId, imageIndex })
+            }
+        } catch (error: unknown) {
+            if (isAbortError(error)) {
+                _ulogInfo('请求被中断（可能是页面刷新），后端仍在执行')
+                return
+            }
+            alert(t('image.selectFailed', { error: getErrorMessage(error, t('common.unknownError')) }))
+        }
+    }, [assetType, propActions, selectLocationImageMutation, t])
+
+    // 确认选择并删除其他候选图片
+    const handleConfirmLocationSelection = useCallback(async (locationId: string) => {
+        try {
+            await confirmLocationSelectionMutation.mutateAsync({ locationId })
             showToast?.(`✓ ${t('image.confirmSuccess')}`, 'success')
         } catch (error: unknown) {
             if (isAbortError(error)) {
@@ -87,7 +106,7 @@ export function useLocationActions({
             }
             showToast?.(t('image.confirmFailed', { error: getErrorMessage(error, t('common.unknownError')) }), 'error')
         }
-    }, [confirmLocationSelectionMutation, showToast, t])
+    }, [assetType, confirmLocationSelectionMutation, showToast, t])
 
     // 单张重新生成场景图片 - 🔥 V6.7: 使用mutation hook
     const handleRegenerateSingleLocation = useCallback(async (locationId: string, imageIndex: number) => {
@@ -156,6 +175,7 @@ export function useLocationActions({
         // 🔥 暴露 locations 供组件使用
         locations,
         handleDeleteLocation,
+        handleSelectLocationImage,
         handleConfirmLocationSelection,
         handleRegenerateSingleLocation,
         handleRegenerateLocationGroup,

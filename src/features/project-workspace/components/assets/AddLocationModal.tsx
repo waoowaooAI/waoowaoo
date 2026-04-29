@@ -3,6 +3,7 @@ import { logError as _ulogError } from '@/lib/logging/core'
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { ART_STYLES } from '@/lib/constants'
 import { shouldShowError } from '@/lib/error-utils'
 import { useImageGenerationCount } from '@/lib/image-generation/use-image-generation-count'
 import { useAiCreateProjectLocation, useCreateProjectLocation } from '@/lib/query/hooks'
@@ -57,6 +58,7 @@ export default function AddLocationModal({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [aiInstruction, setAiInstruction] = useState('')
+  const [artStyle, setArtStyle] = useState('american-comic')
   const [availableSlots, setAvailableSlots] = useState<LocationAvailableSlot[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAiDesigning, setIsAiDesigning] = useState(false)
@@ -112,6 +114,7 @@ export default function AddLocationModal({
       await createLocationMutation.mutateAsync({
         name: name.trim(),
         description: description.trim(),
+        artStyle,
         count: locationGenerationCount,
         availableSlots,
       })
@@ -158,6 +161,28 @@ export default function AddLocationModal({
                 placeholder={t('modal.namePlaceholder')}
                 className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg text-sm focus:border-[var(--glass-stroke-focus)]"
               />
+            </div>
+
+            {/* 风格选择 */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[var(--glass-text-secondary)]">
+                {t('modal.artStyle')}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {ART_STYLES.map((style) => (
+                  <button
+                    key={style.value}
+                    type="button"
+                    onClick={() => setArtStyle(style.value)}
+                    className={`px-3 py-2 rounded-lg text-sm border transition-all flex items-center ${artStyle === style.value
+                      ? 'border-[var(--glass-stroke-focus)] bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]'
+                      : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-strong)] text-[var(--glass-text-secondary)]'
+                      }`}
+                  >
+                    <span>{style.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* AI 设计区域 */}

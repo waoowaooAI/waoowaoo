@@ -123,7 +123,7 @@
         "confirmFailed": "Confirm selection failed: {error}",
         "selectFailed": "Select image failed: {error}",
         "cancelSelection": "Cancel Selection",
-        "deleteThis": "Delete this sub-appearance",
+        "deleteThis": "Delete this appearance",
         "undoFailed": "Undo failed",
         "undoSuccess": "✓ Reverted to previous version",
         "editFailed": "Image edit failed",

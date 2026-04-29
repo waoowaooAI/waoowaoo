@@ -7,11 +7,12 @@ import TaskStatusOverlay from '@/components/task/TaskStatusOverlay'
 import type { TaskPresentationState } from '@/lib/task/presentation'
 import { MediaImageWithLoading } from '@/components/media/MediaImageWithLoading'
 import { AppIcon } from '@/components/ui/icons'
-import '../AssetImageOverlays.css'
 
 type CharacterCardGalleryProps =
   | {
     mode: 'selection'
+    characterId: string
+    appearanceId: string
     characterName: string
     imageUrlsWithIndex: Array<{ url: string; originalIndex: number }>
     selectedIndex: number | null
@@ -19,12 +20,13 @@ type CharacterCardGalleryProps =
     isImageTaskRunning: (imageIndex: number) => boolean
     displayTaskPresentation: TaskPresentationState | null
     onImageClick: (imageUrl: string) => void
-    onSelectImage?: (imageIndex: number) => void
+    onSelectImage?: (characterId: string, appearanceId: string, imageIndex: number | null) => void
   }
   | {
     mode: 'single'
     characterName: string
     changeReason: string
+    aspectClassName: string
     currentImageUrl: string | null | undefined
     selectedIndex: number | null
     hasMultipleImages: boolean
@@ -40,15 +42,15 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
 
   if (props.mode === 'selection') {
     return (
-      <div className="asset-selection-image-grid grid gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {props.imageUrlsWithIndex.map(({ url, originalIndex }) => {
           const isThisSelected = props.selectedIndex === originalIndex
           const isThisTaskRunning = props.isImageTaskRunning(originalIndex) || props.isGroupTaskRunning
           return (
-            <div key={originalIndex} className="asset-selection-image-frame relative group/thumb">
+            <div key={originalIndex} className="relative group/thumb">
               <div
                 onClick={() => props.onImageClick(url)}
-                className={`flex min-h-[96px] items-center justify-center rounded-lg overflow-hidden border-2 bg-[var(--glass-bg-muted)] transition-all cursor-pointer relative ${isThisSelected
+                className={`rounded-lg overflow-hidden border-2 transition-all cursor-pointer relative ${isThisSelected
                   ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-focus-ring)]'
                   : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
                   }`}
@@ -56,8 +58,8 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
                 <MediaImageWithLoading
                   src={url}
                   alt={`${props.characterName} - ${t('image.optionNumber', { number: originalIndex + 1 })}`}
-                  containerClassName="flex w-full min-h-[96px] items-center justify-center"
-                  className="h-auto w-full object-contain"
+                  containerClassName="w-full min-h-[96px]"
+                  className="w-full h-auto object-contain"
                 />
 
                 {isThisTaskRunning && (
@@ -65,7 +67,7 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
                 )}
 
                 <div
-                  className={`asset-image-selection-label absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
+                  className={`absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
                     }`}
                 >
                   <span>{t('image.optionNumber', { number: originalIndex + 1 })}</span>
@@ -78,11 +80,11 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
                   onClick={(e) => {
                     e.stopPropagation()
                     if (!isThisTaskRunning) {
-                      props.onSelectImage?.(originalIndex)
+                      props.onSelectImage?.(props.characterId, props.appearanceId, isThisSelected ? null : originalIndex)
                     }
                   }}
                   disabled={isThisTaskRunning}
-                  className={`asset-image-select-button absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
+                  className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
                     ? 'bg-[var(--glass-tone-success-fg)] text-white'
                     : 'bg-[var(--glass-bg-surface-strong)] hover:bg-[var(--glass-accent-from)] hover:text-white'
                     } disabled:opacity-50`}
@@ -104,24 +106,24 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
   })
 
   return (
-    <div className="asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)]">
+    <div className={`relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
       {props.currentImageUrl ? (
-        <div className="relative w-full">
+        <div className="relative h-full w-full">
           <MediaImageWithLoading
             src={props.currentImageUrl}
             alt={`${props.characterName} - ${props.changeReason}`}
-            containerClassName="w-full min-h-[120px]"
-            className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+            containerClassName="h-full w-full"
+            className="h-full w-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
             onClick={() => props.onImageClick(props.currentImageUrl!)}
           />
           {props.selectedIndex !== null && props.hasMultipleImages && (
-            <div className="asset-image-selection-label absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
+            <div className="absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
               {t('image.optionNumber', { number: props.selectedIndex + 1 })}
             </div>
           )}
         </div>
       ) : (
-        <div className="flex min-h-[120px] w-full items-center justify-center bg-[var(--glass-bg-muted)]">
+        <div className="flex h-full w-full items-center justify-center bg-[var(--glass-bg-muted)]">
           {appearanceErrorDisplay && !props.isAppearanceTaskRunning ? (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
               <AppIcon name="alert" className="w-8 h-8 text-[var(--glass-tone-danger-fg)] mb-2" />
@@ -137,7 +139,7 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
         <TaskStatusOverlay state={props.displayTaskPresentation} />
       )}
       {!props.isAppearanceTaskRunning && (
-        <div className="asset-image-overlay-actions absolute top-2 left-2 flex gap-1">
+        <div className="absolute top-2 left-2 flex gap-1">
           {props.overlayActions}
         </div>
       )}

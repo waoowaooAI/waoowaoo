@@ -2,7 +2,7 @@
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { resolveErrorDisplay } from '@/lib/errors/display'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
     useGenerateCharacterImage,
@@ -91,15 +91,9 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
     }
 
     const imageUrls = appearance?.imageUrls || []
-    const imageUrlsSignature = useMemo(() => imageUrls.join('\u0000'), [imageUrls])
     const generatedImageCount = imageUrls.filter(u => isValidUrl(u)).length
     const hasMultipleImages = generatedImageCount > 1
-    const persistedSelectedIndex: number | null = appearance?.selectedIndex ?? null
-    const [draftSelectedIndex, setDraftSelectedIndex] = useState<number | null>(persistedSelectedIndex)
-    useEffect(() => {
-        setDraftSelectedIndex(persistedSelectedIndex)
-    }, [appearance?.id, persistedSelectedIndex, imageUrlsSignature])
-    const effectiveSelectedIndex: number | null = draftSelectedIndex
+    const effectiveSelectedIndex: number | null = appearance?.selectedIndex ?? null
     const currentImageUrl = appearance?.imageUrl || (effectiveSelectedIndex !== null ? imageUrls[effectiveSelectedIndex] : null) || imageUrls.find(u => u) || null
     const hasPreviousVersion = !!(appearance?.previousImageUrl || (appearance?.previousImageUrls && appearance.previousImageUrls.length > 0))
 
@@ -140,9 +134,22 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
         )
     }
 
-    // 选择图片：只更新本地草稿，确认时才写后端
+    // 选择图片（依赖 query 缓存乐观更新）
     const handleSelectImage = (imageIndex: number | null) => {
-        setDraftSelectedIndex(imageIndex)
+        if (imageIndex === effectiveSelectedIndex) return
+        const requestId = latestSelectRequestRef.current + 1
+        latestSelectRequestRef.current = requestId
+        selectImage.mutate({
+            characterId: character.id,
+            appearanceIndex: appearance.appearanceIndex,
+            imageIndex,
+            confirm: false
+        }, {
+            onError: (error) => {
+                if (latestSelectRequestRef.current !== requestId) return
+                alert(error.message || t('selectFailed'))
+            }
+        })
     }
 
     // 确认选择
@@ -355,7 +362,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                     <>
                         <div className="fixed inset-0 z-10" onClick={() => setShowDeleteMenu(false)} />
                         <div className="absolute right-4 top-12 z-20 glass-surface-modal py-1 min-w-[120px]">
-                            <button onClick={handleDeleteAppearance} className="glass-btn-base w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)]">{tAssets('image.deleteThis')}</button>
+                            <button onClick={handleDeleteAppearance} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs">{tAssets('image.deleteThis')}</button>
                             <button onClick={() => { setShowDeleteMenu(false); setShowDeleteConfirm(true) }} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-tone-danger-fg)]">{tAssets('character.deleteWhole')}</button>
                         </div>
                     </>
@@ -503,7 +510,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowDeleteMenu(false)} />
                     <div className="absolute right-3 top-auto bottom-16 z-20 glass-surface-modal py-1 min-w-[120px]">
-                        <button onClick={handleDeleteAppearance} className="glass-btn-base w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)]">{tAssets('image.deleteThis')}</button>
+                        <button onClick={handleDeleteAppearance} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs">{tAssets('image.deleteThis')}</button>
                         <button onClick={() => { setShowDeleteMenu(false); setShowDeleteConfirm(true) }} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-tone-danger-fg)]">{tAssets('character.deleteWhole')}</button>
                     </div>
                 </>

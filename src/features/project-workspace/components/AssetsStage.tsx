@@ -246,6 +246,7 @@ export default function AssetsStage({
   const {
     handleDeleteCharacter,
     handleDeleteAppearance,
+    handleSelectCharacterImage,
     handleConfirmSelection,
     handleRegenerateSingleCharacter,
     handleRegenerateCharacterGroup
@@ -257,6 +258,7 @@ export default function AssetsStage({
   // 场景操作
   const {
     handleDeleteLocation,
+    handleSelectLocationImage,
     handleConfirmLocationSelection,
     handleRegenerateSingleLocation,
     handleRegenerateLocationGroup
@@ -266,6 +268,7 @@ export default function AssetsStage({
   })
   const {
     handleDeleteLocation: handleDeleteProp,
+    handleSelectLocationImage: handleSelectPropImage,
     handleConfirmLocationSelection: handleConfirmPropSelection,
     handleRegenerateSingleLocation: handleRegenerateSingleProp,
     handleRegenerateLocationGroup: handleRegeneratePropGroup,
@@ -417,6 +420,7 @@ export default function AssetsStage({
             onDeleteAppearance={handleDeleteAppearance}
             onEditAppearance={handleEditAppearance}
             handleGenerateImage={handleGenerateImage}
+            onSelectImage={handleSelectCharacterImage}
             onConfirmSelection={handleConfirmSelection}
             onRegenerateSingle={handleRegenerateSingleCharacter}
             onRegenerateGroup={handleRegenerateCharacterGroup}
@@ -453,6 +457,7 @@ export default function AssetsStage({
             onDeleteLocation={handleDeleteLocation}
             onEditLocation={handleEditLocation}
             handleGenerateImage={handleGenerateImage}
+            onSelectImage={handleSelectLocationImage}
             onConfirmSelection={handleConfirmLocationSelection}
             onRegenerateSingle={handleRegenerateSingleLocation}
             onRegenerateGroup={handleRegenerateLocationGroup}
@@ -475,6 +480,7 @@ export default function AssetsStage({
             onDeleteLocation={handleDeleteProp}
             onEditLocation={handleEditProp}
             handleGenerateImage={handleGenerateImage}
+            onSelectImage={handleSelectPropImage}
             onConfirmSelection={handleConfirmPropSelection}
             onRegenerateSingle={handleRegenerateSingleProp}
             onRegenerateGroup={handleRegeneratePropGroup}
