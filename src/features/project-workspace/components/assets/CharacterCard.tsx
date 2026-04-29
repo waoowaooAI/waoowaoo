@@ -249,13 +249,44 @@ export default function CharacterCard({
           </button>
         )}
         {showDeleteButton && (
-          <button
-            onClick={onDelete}
-            className="w-6 h-6 rounded hover:bg-[var(--glass-tone-danger-bg)] flex items-center justify-center transition-colors"
-            title={t('character.delete')}
-          >
-            <AppIcon name="trash" className="w-4 h-4 text-[var(--glass-tone-danger-fg)]" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={handleDeleteClick}
+              className="w-6 h-6 rounded hover:bg-[var(--glass-tone-danger-bg)] flex items-center justify-center transition-colors"
+              title={appearanceCount <= 1 ? t('character.delete') : t('character.deleteOptions')}
+            >
+              <AppIcon name="trash" className="w-4 h-4 text-[var(--glass-tone-danger-fg)]" />
+            </button>
+
+            {showDeleteMenu && appearanceCount > 1 && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowDeleteMenu(false)}
+                />
+                <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-base)] rounded-lg shadow-lg py-1 min-w-[100px]">
+                  <button
+                    onClick={() => {
+                      setShowDeleteMenu(false)
+                      onDeleteAppearance?.()
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)] whitespace-nowrap"
+                  >
+                    {t('image.deleteThis')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteMenu(false)
+                      onDelete()
+                    }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-tone-danger-fg)] hover:bg-[var(--glass-tone-danger-bg)] whitespace-nowrap"
+                  >
+                    {t('character.deleteWhole')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         )}
       </>
     )
@@ -406,7 +437,7 @@ export default function CharacterCard({
                     setShowDeleteMenu(false)
                     onDeleteAppearance?.()
                   }}
-                  className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-muted)] whitespace-nowrap"
+                  className="w-full px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)] whitespace-nowrap"
                 >
                   {t('image.deleteThis')}
                 </button>

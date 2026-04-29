@@ -362,7 +362,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                     <>
                         <div className="fixed inset-0 z-10" onClick={() => setShowDeleteMenu(false)} />
                         <div className="absolute right-4 top-12 z-20 glass-surface-modal py-1 min-w-[120px]">
-                            <button onClick={handleDeleteAppearance} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs">{tAssets('image.deleteThis')}</button>
+                            <button onClick={handleDeleteAppearance} className="glass-btn-base w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)]">{tAssets('image.deleteThis')}</button>
                             <button onClick={() => { setShowDeleteMenu(false); setShowDeleteConfirm(true) }} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-tone-danger-fg)]">{tAssets('character.deleteWhole')}</button>
                         </div>
                     </>
@@ -510,7 +510,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowDeleteMenu(false)} />
                     <div className="absolute right-3 top-auto bottom-16 z-20 glass-surface-modal py-1 min-w-[120px]">
-                        <button onClick={handleDeleteAppearance} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs">{tAssets('image.deleteThis')}</button>
+                        <button onClick={handleDeleteAppearance} className="glass-btn-base w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-text-secondary)] hover:bg-[rgba(75,85,99,0.12)] hover:text-[var(--glass-text-primary)]">{tAssets('image.deleteThis')}</button>
                         <button onClick={() => { setShowDeleteMenu(false); setShowDeleteConfirm(true) }} className="glass-btn-base glass-btn-soft w-full justify-start rounded-none px-3 py-1.5 text-left text-xs text-[var(--glass-tone-danger-fg)]">{tAssets('character.deleteWhole')}</button>
                     </div>
                 </>

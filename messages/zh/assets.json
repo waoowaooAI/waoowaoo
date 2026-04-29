@@ -123,7 +123,7 @@
         "confirmFailed": "确认选择失败: {error}",
         "selectFailed": "选择图片失败: {error}",
         "cancelSelection": "取消选择",
-        "deleteThis": "删除此形象",
+        "deleteThis": "删除此子形象",
         "undoFailed": "撤回失败",
         "undoSuccess": "✓ 已撤回到上一版本",
         "editFailed": "图片编辑失败",
