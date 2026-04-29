@@ -142,15 +142,22 @@ export default function StoryboardGroup({
   }, [hasAnyImage, isSelectingCandidate, isSubmittingStoryboardTask])
 
   const handleRegeneratePanelImage = useCallback(
-    (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => {
+    (
+      panelId: string,
+      count?: number,
+      force?: boolean,
+      referencePanelIds?: string[],
+      extraImageUrls?: string[],
+      referenceImageNotes?: unknown[],
+    ) => {
       clearPanelTaskError(panelId)
-      onRegeneratePanelImage(panelId, count, force, referencePanelIds, extraImageUrls)
+      onRegeneratePanelImage(panelId, count, force, referencePanelIds, extraImageUrls, referenceImageNotes)
     },
     [clearPanelTaskError, onRegeneratePanelImage],
   )
 
   return (
-    <div ref={panelGrid.containerRef} className="w-full">
+    <div ref={panelGrid.containerRef} className="flex w-full justify-center">
       <div
         className={`glass-surface-elevated relative p-6 ${failedError ? 'border-2 border-[var(--glass-stroke-danger)] bg-[var(--glass-danger-ring)]' : ''}`}
         style={panelGrid.contentStyle}
@@ -222,6 +229,7 @@ export default function StoryboardGroup({
         )}
 
         <StoryboardPanelList
+          projectId={projectId}
           storyboardId={storyboard.id}
           textPanels={textPanels}
           storyboardStartIndex={storyboardStartIndex}

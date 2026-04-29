@@ -11,7 +11,14 @@ interface UseStoryboardBatchPanelGenerationProps {
   sortedStoryboards: ProjectStoryboard[]
   submittingPanelImageIds: Set<string>
   getTextPanels: (storyboard: ProjectStoryboard) => StoryboardPanel[]
-  regeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => Promise<void>
+  regeneratePanelImage: (
+    panelId: string,
+    count?: number,
+    force?: boolean,
+    referencePanelIds?: string[],
+    extraImageUrls?: string[],
+    referenceImageNotes?: unknown[],
+  ) => Promise<void>
   setIsEpisodeBatchSubmitting: (value: boolean) => void
 }
 

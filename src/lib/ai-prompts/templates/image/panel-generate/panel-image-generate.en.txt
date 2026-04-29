@@ -16,6 +16,9 @@ Aspect ratio (must be exact):
 Storyboard panel data:
 {storyboard_text_json_input}
 
+Reference image usage:
+If `context.additional_reference_images` is present in the storyboard data, treat each entry as paired image-plus-text guidance. Previous storyboard images are for continuity, staging, character placement, and spatial relationships. Asset-library character images are for identity and appearance. Asset-library location/prop images are for layout, anchors, and object form. Custom images should be used only for the user-described purpose. The text guidance defines how each reference image should affect the output; do not copy composition, old style, or unrelated content by default.
+
 Source text:
 {source_text}
 

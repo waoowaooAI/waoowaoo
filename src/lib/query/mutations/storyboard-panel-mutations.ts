@@ -37,11 +37,13 @@ export function useRegenerateProjectPanelImage(projectId: string, episodeId?: st
             count,
             referencePanelIds,
             extraImageUrls,
+            referenceImageNotes,
         }: {
             panelId: string
             count?: number
             referencePanelIds?: string[]
             extraImageUrls?: string[]
+            referenceImageNotes?: unknown[]
         }) => {
             const res = await apiFetch(`/api/projects/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
@@ -51,6 +53,7 @@ export function useRegenerateProjectPanelImage(projectId: string, episodeId?: st
                     count: count ?? 1,
                     ...(referencePanelIds && referencePanelIds.length > 0 ? { referencePanelIds } : {}),
                     ...(extraImageUrls && extraImageUrls.length > 0 ? { extraImageUrls } : {}),
+                    ...(referenceImageNotes && referenceImageNotes.length > 0 ? { referenceImageNotes } : {}),
                 }),
             })
             if (!res.ok) {

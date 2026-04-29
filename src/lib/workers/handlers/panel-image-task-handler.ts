@@ -83,6 +83,7 @@ function buildPanelPromptContext(params: {
     actingNotes: string | null
   }
   projectData: Awaited<ReturnType<typeof resolveNovelData>>
+  referenceImageNotes?: string[]
 }) {
   const panelCharacters = parsePanelCharacterReferences(params.panel.characters)
   const characterContexts = panelCharacters.map((reference) => {
@@ -145,6 +146,10 @@ function buildPanelPromptContext(params: {
     context: {
       character_appearances: characterContexts,
       location_reference: locationContext,
+      additional_reference_images: (params.referenceImageNotes || []).map((note, index) => ({
+        reference_image_order: index + 1,
+        note,
+      })),
     },
   }
 }
@@ -200,6 +205,12 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       if (typeof url === 'string' && url.trim()) refs.push(url.trim())
     }
   }
+  const referenceImageNotes = Array.isArray(payload.referenceImageNotes)
+    ? payload.referenceImageNotes
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean)
+      .slice(0, 16)
+    : []
   const normalizationIssues: OutboundImageNormalizationIssue[] = []
   const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
     onIssue: (issue) => {
@@ -232,6 +243,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       candidateCount,
       referenceImagesRawCount: refs.length,
       referenceImagesNormalizedCount: normalizedRefs.length,
+      referenceImageNotes,
       expectedCharacterReferenceCount: refCollection.expectedCharacterReferenceCount,
       referenceImageDiagnostics: refCollection.diagnostics,
       referenceImageNormalizationIssues: normalizationIssues,
@@ -265,6 +277,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       actingNotes: panel.actingNotes,
     },
     projectData,
+    referenceImageNotes,
   })
   const contextJson = JSON.stringify(promptContext, null, 2)
   const prompt = buildPanelPrompt({

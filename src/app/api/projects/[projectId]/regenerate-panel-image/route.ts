@@ -28,6 +28,7 @@ export const POST = apiHandler(async (
       ...(body?.count !== undefined ? { count: body.count } : {}),
       ...(Array.isArray(body?.referencePanelIds) ? { referencePanelIds: body.referencePanelIds } : {}),
       ...(Array.isArray(body?.extraImageUrls) ? { extraImageUrls: body.extraImageUrls } : {}),
+      ...(Array.isArray(body?.referenceImageNotes) ? { referenceImageNotes: body.referenceImageNotes } : {}),
     },
     source: 'project-ui',
   })

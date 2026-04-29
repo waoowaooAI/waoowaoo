@@ -18,6 +18,7 @@ interface PanelCardProps {
   panelData: PanelEditData
   imageUrl: string | null
   globalPanelNumber: number
+  projectId: string
   storyboardId: string
   videoRatio: string
   isSaving: boolean
@@ -43,7 +44,14 @@ interface PanelCardProps {
   onRetrySave?: () => void
   onRemoveCharacter: (index: number) => void
   onRemoveLocation: () => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
+  onRegeneratePanelImage: (
+    panelId: string,
+    count?: number,
+    force?: boolean,
+    referencePanelIds?: string[],
+    extraImageUrls?: string[],
+    referenceImageNotes?: unknown[],
+  ) => void
   onOpenEditModal: () => void
   onOpenAIDataModal: () => void
   onSelectCandidateIndex: (panelId: string, index: number) => void
@@ -62,6 +70,7 @@ export default function PanelCard({
   panelData,
   imageUrl,
   globalPanelNumber,
+  projectId,
   storyboardId,
   videoRatio,
   isSaving,
@@ -118,6 +127,7 @@ export default function PanelCard({
       {/* 镜头图片区域 - 包含插入按钮 */}
       <div className="storyboard-panel-image-frame relative">
         <ImageSection
+          projectId={projectId}
           panelId={panel.id}
           imageUrl={imageUrl}
           globalPanelNumber={globalPanelNumber}

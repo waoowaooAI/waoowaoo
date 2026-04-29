@@ -226,6 +226,10 @@ describe('worker panel-image-task-handler behavior', () => {
       candidateCount: 1,
       referencePanelImageUrls: ['images/previous-panel.png'],
       extraImageUrls: ['https://example.com/manual-ref.png'],
+      referenceImageNotes: [
+        'source=storyboard; label=#1 close-up; usage=Use for continuity and staging',
+        'source=character; label=Hero asset; usage=Use for identity only',
+      ],
     })
     await handlePanelImageTask(job)
 
@@ -251,6 +255,16 @@ describe('worker panel-image-task-handler behavior', () => {
         }),
       }),
     )
+    expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
+      variables: expect.objectContaining({
+        storyboard_text_json_input: expect.stringContaining('"additional_reference_images"'),
+      }),
+    }))
+    expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
+      variables: expect.objectContaining({
+        storyboard_text_json_input: expect.stringContaining('Use for continuity and staging'),
+      }),
+    }))
   })
 
   it('regeneration branch -> keeps old image in previousImageUrl and stores candidates only', async () => {

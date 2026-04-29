@@ -32,6 +32,7 @@ vi.mock('@/lib/adapters/api/execute-project-agent-operation', () => apiAdapterMo
 import { POST as modifyAssetImagePost } from '@/app/api/projects/[projectId]/modify-asset-image/route'
 import { POST as voiceGeneratePost } from '@/app/api/projects/[projectId]/voice-generate/route'
 import { POST as generateVideoPost } from '@/app/api/projects/[projectId]/generate-video/route'
+import { POST as regeneratePanelImagePost } from '@/app/api/projects/[projectId]/regenerate-panel-image/route'
 
 describe('api contract - project media generation routes (operation adapter)', () => {
   beforeEach(() => {
@@ -69,6 +70,61 @@ describe('api contract - project media generation routes (operation adapter)', (
     }))
     expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenNthCalledWith(2, expect.objectContaining({
       operationId: 'modify_location_image',
+    }))
+  })
+
+  it('POST /api/projects/[projectId]/regenerate-panel-image -> forwards reference image usage notes', async () => {
+    apiAdapterMock.executeProjectAgentOperationFromApi.mockResolvedValueOnce({ success: true })
+
+    const res = await regeneratePanelImagePost(
+      buildMockRequest({
+        path: '/api/projects/project-1/regenerate-panel-image',
+        method: 'POST',
+        body: {
+          panelId: 'panel-1',
+          referencePanelIds: ['panel-previous'],
+          extraImageUrls: ['https://example.com/asset-ref.png'],
+          referenceImageNotes: [
+            {
+              source: 'storyboard',
+              referencePanelId: 'panel-previous',
+              label: 'previous panel',
+              instruction: 'Use for continuity',
+            },
+            {
+              source: 'character',
+              url: 'https://example.com/asset-ref.png',
+              label: 'hero asset',
+              instruction: 'Use for identity',
+            },
+          ],
+        },
+      }),
+      { params: Promise.resolve({ projectId: 'project-1' }) },
+    )
+
+    expect(res.status).toBe(200)
+    expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledWith(expect.objectContaining({
+      operationId: 'regenerate_panel_image',
+      input: expect.objectContaining({
+        panelId: 'panel-1',
+        referencePanelIds: ['panel-previous'],
+        extraImageUrls: ['https://example.com/asset-ref.png'],
+        referenceImageNotes: [
+          {
+            source: 'storyboard',
+            referencePanelId: 'panel-previous',
+            label: 'previous panel',
+            instruction: 'Use for continuity',
+          },
+          {
+            source: 'character',
+            url: 'https://example.com/asset-ref.png',
+            label: 'hero asset',
+            instruction: 'Use for identity',
+          },
+        ],
+      }),
     }))
   })
 

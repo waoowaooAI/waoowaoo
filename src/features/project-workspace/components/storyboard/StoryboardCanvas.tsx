@@ -57,7 +57,14 @@ interface StoryboardCanvasProps {
   onRemoveCharacter: (panel: StoryboardPanel, index: number, storyboardId: string) => void
   onRemoveLocation: (panel: StoryboardPanel, storyboardId: string) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
+  onRegeneratePanelImage: (
+    panelId: string,
+    count?: number,
+    force?: boolean,
+    referencePanelIds?: string[],
+    extraImageUrls?: string[],
+    referenceImageNotes?: unknown[],
+  ) => void
   onOpenEditModal: (storyboardId: string, panelIndex: number) => void
   onOpenAIDataModal: (storyboardId: string, panelIndex: number) => void
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null

@@ -9,6 +9,7 @@ import PanelCard from './PanelCard'
 import type { PanelSaveState } from './hooks/usePanelCrudActions'
 
 interface StoryboardPanelListProps {
+  projectId: string
   storyboardId: string
   textPanels: StoryboardPanel[]
   storyboardStartIndex: number
@@ -37,7 +38,14 @@ interface StoryboardPanelListProps {
   onRemoveCharacter: (panel: StoryboardPanel, index: number) => void
   onRemoveLocation: (panel: StoryboardPanel) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
+  onRegeneratePanelImage: (
+    panelId: string,
+    count?: number,
+    force?: boolean,
+    referencePanelIds?: string[],
+    extraImageUrls?: string[],
+    referenceImageNotes?: unknown[],
+  ) => void
   onOpenEditModal: (panelIndex: number) => void
   onOpenAIDataModal: (panelIndex: number) => void
   onSelectPanelCandidateIndex: (panelId: string, index: number) => void
@@ -52,6 +60,7 @@ interface StoryboardPanelListProps {
 }
 
 export default function StoryboardPanelList({
+  projectId,
   storyboardId,
   textPanels,
   storyboardStartIndex,
@@ -131,6 +140,7 @@ export default function StoryboardPanelList({
                 panelData={panelData}
                 imageUrl={imageUrl}
                 globalPanelNumber={globalPanelNumber}
+                projectId={projectId}
                 storyboardId={storyboardId}
                 videoRatio={videoRatio}
                 isSaving={isPanelSaving}

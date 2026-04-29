@@ -50,7 +50,14 @@ export interface StoryboardGroupProps {
     label: string
     imageUrl: string
   }>
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
+  onRegeneratePanelImage: (
+    panelId: string,
+    count?: number,
+    force?: boolean,
+    referencePanelIds?: string[],
+    extraImageUrls?: string[],
+    referenceImageNotes?: unknown[],
+  ) => void
   onOpenEditModal: (panelIndex: number) => void
   onOpenAIDataModal: (panelIndex: number) => void
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null

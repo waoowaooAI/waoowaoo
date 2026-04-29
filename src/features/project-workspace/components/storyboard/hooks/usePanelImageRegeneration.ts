@@ -15,6 +15,7 @@ interface RegeneratePanelMutationLike {
     count: number
     referencePanelIds?: string[]
     extraImageUrls?: string[]
+    referenceImageNotes?: unknown[]
   }) => Promise<unknown>
 }
 
@@ -47,6 +48,7 @@ export function usePanelImageRegeneration({
       force: boolean = false,
       referencePanelIds: string[] = [],
       extraImageUrls: string[] = [],
+      referenceImageNotes: unknown[] = [],
     ) => {
       if (!force && submittingPanelImageIds.has(panelId)) return
 
@@ -59,6 +61,7 @@ export function usePanelImageRegeneration({
           count,
           ...(referencePanelIds.length > 0 ? { referencePanelIds } : {}),
           ...(extraImageUrls.length > 0 ? { extraImageUrls } : {}),
+          ...(referenceImageNotes.length > 0 ? { referenceImageNotes } : {}),
         })
         const result = (data || {}) as StoryboardImageMutationResult
 

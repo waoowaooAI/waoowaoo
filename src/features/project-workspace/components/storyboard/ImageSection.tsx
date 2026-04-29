@@ -16,6 +16,7 @@ interface PanelCandidateData {
 }
 
 interface ImageSectionProps {
+  projectId: string
   panelId: string
   imageUrl: string | null
   globalPanelNumber: number
@@ -32,7 +33,14 @@ interface ImageSectionProps {
     label: string
     imageUrl: string
   }>
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
+  onRegeneratePanelImage: (
+    panelId: string,
+    count?: number,
+    force?: boolean,
+    referencePanelIds?: string[],
+    extraImageUrls?: string[],
+    referenceImageNotes?: unknown[],
+  ) => void
   onOpenEditModal: () => void
   onOpenAIDataModal: () => void
   onSelectCandidateIndex: (panelId: string, index: number) => void
@@ -44,6 +52,7 @@ interface ImageSectionProps {
 }
 
 export default function ImageSection({
+  projectId,
   panelId,
   imageUrl,
   globalPanelNumber,
@@ -189,6 +198,7 @@ export default function ImageSection({
 
       {!candidateData && (
         <ImageSectionActionButtons
+          projectId={projectId}
           panelId={panelId}
           imageUrl={imageUrl}
           previousImageUrl={previousImageUrl}

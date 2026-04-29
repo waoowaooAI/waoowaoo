@@ -48,6 +48,47 @@ function normalizeStringArray(input: unknown): string[] {
     .filter(Boolean)))
 }
 
+type ReferenceImageNoteInput = {
+  source: string
+  label: string
+  instruction: string
+  url?: string
+  referencePanelId?: string
+}
+
+function normalizeReferenceImageNotes(input: unknown): ReferenceImageNoteInput[] {
+  if (!Array.isArray(input)) return []
+  return input
+    .map((item) => {
+      if (!isRecord(item)) return null
+      const source = normalizeString(item.source) || 'custom'
+      const label = normalizeString(item.label)
+      const instruction = normalizeString(item.instruction)
+      const url = normalizeString(item.url)
+      const referencePanelId = normalizeString(item.referencePanelId)
+      if (!label && !instruction && !url && !referencePanelId) return null
+      return {
+        source,
+        label,
+        instruction,
+        ...(url ? { url } : {}),
+        ...(referencePanelId ? { referencePanelId } : {}),
+      }
+    })
+    .filter((item): item is ReferenceImageNoteInput => Boolean(item))
+    .slice(0, 16)
+}
+
+function formatReferenceImageNote(note: ReferenceImageNoteInput | undefined, fallback: string): string {
+  if (!note) return fallback
+  const parts = [
+    note.source ? `source=${note.source}` : '',
+    note.label ? `label=${note.label}` : '',
+    note.instruction ? `usage=${note.instruction}` : '',
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join('; ') : fallback
+}
+
 function createReferenceSignature(input: unknown): string {
   const serialized = JSON.stringify(input)
   return createHash('sha1').update(serialized).digest('hex').slice(0, 12)
@@ -151,6 +192,7 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
         count: z.number().int().positive().max(4).optional(),
         referencePanelIds: z.array(z.string().min(1)).max(8).optional(),
         extraImageUrls: z.array(z.unknown()).max(8).optional(),
+        referenceImageNotes: z.array(z.unknown()).max(16).optional(),
       }).refine((value) => Boolean(value.panelId || (value.storyboardId && typeof value.panelIndex === 'number')), {
         message: 'panelId or (storyboardId + panelIndex) is required',
         path: ['panelId'],
@@ -218,10 +260,28 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
         if (extraImageAudit.issues.some((issue) => (issue as { reason?: unknown }).reason === 'relative_path_rejected')) {
           throw new Error('PROJECT_AGENT_REFERENCE_IMAGE_INVALID')
         }
+        const rawReferenceNotes = normalizeReferenceImageNotes((input as Record<string, unknown>).referenceImageNotes)
+        const notesByPanelId = new Map(rawReferenceNotes
+          .filter((note) => note.referencePanelId)
+          .map((note) => [note.referencePanelId!, note]))
+        const notesByUrl = new Map(rawReferenceNotes
+          .filter((note) => note.url)
+          .map((note) => [note.url!, note]))
+        const referenceImageNotes = [
+          ...referencePanelIds.map((referencePanelId, index) => formatReferenceImageNote(
+            notesByPanelId.get(referencePanelId),
+            `source=storyboard; label=previous storyboard panel ${index + 1}; usage=Use this previous storyboard panel as continuity reference for staging, placement, and spatial relationship.`,
+          )),
+          ...extraImageAudit.normalized.map((url, index) => formatReferenceImageNote(
+            notesByUrl.get(url),
+            `source=custom; label=extra reference ${index + 1}; usage=Use this extra image only as directed by the user reference note.`,
+          )),
+        ].slice(0, 16)
         const referenceSignature = createReferenceSignature({
           referencePanelIds,
           referencePanelImageUrls,
           extraImageUrls: extraImageAudit.normalized,
+          referenceImageNotes,
         })
         const body = {
           panelId,
@@ -230,6 +290,7 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
           ...(referencePanelIds.length > 0 ? { referencePanelIds } : {}),
           ...(referencePanelImageUrls.length > 0 ? { referencePanelImageUrls } : {}),
           ...(extraImageAudit.normalized.length > 0 ? { extraImageUrls: extraImageAudit.normalized } : {}),
+          ...(referenceImageNotes.length > 0 ? { referenceImageNotes } : {}),
           meta: {
             locale,
             ...(extraImageAudit.issues.length > 0 ? { outboundImageInputAudit: { extraImageUrls: extraImageAudit.issues } } : {}),
