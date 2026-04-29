@@ -255,6 +255,53 @@ function appendUrlEncodedValue(
   }
 }
 
+function isImageGenerationEndpoint(path: string): boolean {
+  try {
+    const parsed = new URL(path, 'https://openai-compatible.local')
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '').toLowerCase()
+    return /(?:^|\/)images\/generations$/.test(normalizedPath)
+  } catch {
+    const normalizedPath = path.split('?')[0]?.replace(/\/+$/, '').toLowerCase() || ''
+    return /(?:^|\/)images\/generations$/.test(normalizedPath)
+  }
+}
+
+function applyImageGenerationJsonDefaults(input: {
+  endpoint: TemplateEndpoint
+  renderedPath: string
+  renderedBody: TemplateBodyValue
+  variables: TemplateVariableMap
+}): TemplateBodyValue {
+  const contentType = input.endpoint.contentType || 'application/json'
+  if (contentType !== 'application/json') return input.renderedBody
+  if (!isImageGenerationEndpoint(input.renderedPath)) return input.renderedBody
+  if (!isRecord(input.renderedBody)) return input.renderedBody
+
+  const body: Record<string, TemplateBodyValue> = {
+    ...(input.renderedBody as Record<string, TemplateBodyValue>),
+  }
+
+  if (body.n === undefined) {
+    body.n = 1
+  }
+
+  const size = input.variables.size
+  if (body.size === undefined && typeof size === 'string' && size.trim()) {
+    body.size = size.trim()
+  }
+
+  if (body.model === 'gpt-image-2') {
+    if (body.quality === undefined) {
+      body.quality = 'low'
+    }
+    if (body.format === undefined && body.output_format === undefined) {
+      body.format = 'jpeg'
+    }
+  }
+
+  return body
+}
+
 async function buildRequestBody(
   endpoint: TemplateEndpoint,
   renderedBody: TemplateBodyValue,
@@ -403,7 +450,12 @@ export async function buildRenderedTemplateRequest(input: {
 
   let body: BodyInit | undefined
   if (input.endpoint.bodyTemplate !== undefined) {
-    const renderedBody = renderTemplateValue(input.endpoint.bodyTemplate, input.variables)
+    const renderedBody = applyImageGenerationJsonDefaults({
+      endpoint: input.endpoint,
+      renderedPath,
+      renderedBody: renderTemplateValue(input.endpoint.bodyTemplate, input.variables),
+      variables: input.variables,
+    })
     body = await buildRequestBody(input.endpoint, renderedBody, headers)
   }
 
@@ -621,6 +673,33 @@ function readTemplateOutputUrls(value: unknown): string[] {
   return urls
 }
 
+function readTemplateImageBase64(payload: unknown): string | null {
+  const candidates = [
+    readJsonPath(payload, '$.data[0].b64_json'),
+    readJsonPath(payload, '$.data.b64_json'),
+    readJsonPath(payload, '$.b64_json'),
+  ]
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim()
+  }
+  const data = readJsonPath(payload, '$.data')
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      if (!isRecord(item)) continue
+      const b64 = item.b64_json
+      if (typeof b64 === 'string' && b64.trim()) return b64.trim()
+    }
+  }
+  return null
+}
+
+function imageMimeFromTemplatePayload(payload: unknown): string {
+  const raw = readJsonPath(payload, '$.output_format')
+  if (raw === 'jpeg' || raw === 'jpg') return 'image/jpeg'
+  if (raw === 'webp') return 'image/webp'
+  return 'image/png'
+}
+
 function buildUnsupportedVideoFormatError(detail: string): Error {
   return new Error(`VIDEO_API_FORMAT_UNSUPPORTED: ${detail}`)
 }
@@ -752,7 +831,21 @@ export async function generateImageViaOpenAICompatTemplate(request: {
         imageUrl: outputUrl.trim(),
       }
     }
-    throw new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_OUTPUT_NOT_FOUND')
+
+    const imageBase64 = readTemplateImageBase64(payload)
+    if (imageBase64) {
+      return {
+        success: true,
+        imageBase64,
+        imageUrl: `data:${imageMimeFromTemplatePayload(payload)};base64,${imageBase64}`,
+      }
+    }
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_OUTPUT_NOT_FOUND',
+        `bodyPreview=${JSON.stringify(truncate(rawText, MAX_ERROR_BODY_PREVIEW_CHARS))}`,
+      ].join(' '),
+    )
   }
 
   const taskIdRaw = readJsonPath(payload, request.template.response.taskIdPath)

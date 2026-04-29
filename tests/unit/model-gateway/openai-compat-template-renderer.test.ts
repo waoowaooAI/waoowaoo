@@ -62,6 +62,36 @@ describe('model-gateway openai-compat template renderer', () => {
     }))
   })
 
+  it('adds image generation JSON defaults for legacy templates', async () => {
+    const request = await buildRenderedTemplateRequest({
+      baseUrl: 'https://yunwu.ai/v1',
+      endpoint: {
+        method: 'POST',
+        path: '/images/generations',
+        contentType: 'application/json',
+        bodyTemplate: {
+          model: '{{model}}',
+          prompt: '{{prompt}}',
+        },
+      },
+      variables: buildTemplateVariables({
+        model: 'gpt-image-2',
+        prompt: 'draw a character',
+        size: '1536x1024',
+      }),
+      defaultAuthHeader: 'Bearer sk-test',
+    })
+
+    expect(request.body).toBe(JSON.stringify({
+      model: 'gpt-image-2',
+      prompt: 'draw a character',
+      n: 1,
+      size: '1536x1024',
+      quality: 'low',
+      format: 'jpeg',
+    }))
+  })
+
   it('deduplicates /v1 prefix when base url already ends with /v1', async () => {
     const request = await buildRenderedTemplateRequest({
       baseUrl: 'https://yunwu.ai/v1',

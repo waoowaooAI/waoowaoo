@@ -69,11 +69,24 @@ function aspectRatioToOpenAISize(aspectRatio: string | undefined): string | unde
   return mapping[ratio] || undefined
 }
 
+function applyAspectRatioSize(options: OpenAICompatImageOptions): OpenAICompatImageOptions {
+  let openaiCompatOptions = { ...options }
+  if (openaiCompatOptions.aspectRatio && typeof openaiCompatOptions.aspectRatio === 'string') {
+    const mappedSize = aspectRatioToOpenAISize(openaiCompatOptions.aspectRatio)
+    if (mappedSize && !openaiCompatOptions.size) {
+      openaiCompatOptions = { ...openaiCompatOptions, size: mappedSize }
+    }
+    delete openaiCompatOptions.aspectRatio
+  }
+  return openaiCompatOptions
+}
+
 export async function executeOpenAiCompatibleImageGeneration(input: AiProviderImageExecutionContext) {
   const options = input.options ?? {}
   const referenceImages = options.referenceImages ?? []
-  const generatorOptions: OpenAICompatImageOptions = { ...options }
+  let generatorOptions: OpenAICompatImageOptions = { ...options }
   delete generatorOptions.referenceImages
+  generatorOptions = applyAspectRatioSize(generatorOptions)
   const modelId = requireSelectedModelId(input.selection, 'openai-compatible:image')
   const compatTemplate = input.selection.variantData?.compatMediaTemplate as OpenAICompatMediaTemplate | undefined
   if (compatTemplate) {
@@ -95,15 +108,6 @@ export async function executeOpenAiCompatibleImageGeneration(input: AiProviderIm
     })
   }
 
-  let openaiCompatOptions = { ...generatorOptions }
-  if (openaiCompatOptions.aspectRatio && typeof openaiCompatOptions.aspectRatio === 'string') {
-    const mappedSize = aspectRatioToOpenAISize(openaiCompatOptions.aspectRatio)
-    if (mappedSize && !openaiCompatOptions.size) {
-      openaiCompatOptions = { ...openaiCompatOptions, size: mappedSize }
-    }
-    delete openaiCompatOptions.aspectRatio
-  }
-
   return await generateImageViaOpenAICompat({
     userId: input.userId,
     providerId: input.selection.provider,
@@ -111,7 +115,7 @@ export async function executeOpenAiCompatibleImageGeneration(input: AiProviderIm
     prompt: input.prompt,
     referenceImages,
     options: {
-      ...openaiCompatOptions,
+      ...generatorOptions,
       provider: input.selection.provider,
       modelId,
       modelKey: input.selection.modelKey,
