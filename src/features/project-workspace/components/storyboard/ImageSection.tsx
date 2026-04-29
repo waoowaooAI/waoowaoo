@@ -134,7 +134,7 @@ export default function ImageSection({
 
   return (
     <div
-      className={`relative overflow-hidden group rounded-t-2xl transition-all bg-[var(--glass-bg-muted)] ${isTaskPulseAnimating ? 'animate-brightness-boost' : ''}`}
+      className={`storyboard-image-section relative overflow-hidden group rounded-t-2xl transition-all bg-[var(--glass-bg-muted)] ${isTaskPulseAnimating ? 'animate-brightness-boost' : ''}`}
       style={{ aspectRatio: cssAspectRatio }}
     >
       {isDeleting ? (
@@ -173,11 +173,11 @@ export default function ImageSection({
         renderEmptyState()
       )}
 
-      <div className="absolute top-2 left-2">
+      <div className="storyboard-image-badge storyboard-image-badge--index absolute top-2 left-2">
         <span className="glass-chip glass-chip-neutral px-2 py-0.5 text-xs font-medium">{globalPanelNumber}</span>
       </div>
 
-      <div className="absolute top-2 right-2">
+      <div className="storyboard-image-badge storyboard-image-badge--shot absolute top-2 right-2">
         <span className="glass-chip glass-chip-info px-2 py-0.5 text-xs">{shotType}</span>
       </div>
 

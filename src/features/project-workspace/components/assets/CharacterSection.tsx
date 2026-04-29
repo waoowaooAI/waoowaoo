@@ -262,7 +262,10 @@ export default function CharacterSection({
             )}
 
             {/* 按角色分组显示：外层 grid 让多角色并排 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div
+                className="grid gap-6"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))' }}
+            >
                 {characters.map(character => {
                     const appearances = getAppearances(character)
                     const sortedAppearances = [...appearances].sort((a, b) => a.appearanceIndex - b.appearanceIndex)
@@ -307,7 +310,10 @@ export default function CharacterSection({
                             </div>
 
                             {/* 形象网格 */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div
+                                className="grid gap-3"
+                                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))' }}
+                            >
                                 {sortedAppearances.map(appearance => {
                                     const isPrimary = appearance.appearanceIndex === (primaryAppearance?.appearanceIndex ?? PRIMARY_APPEARANCE_INDEX)
                                     return (

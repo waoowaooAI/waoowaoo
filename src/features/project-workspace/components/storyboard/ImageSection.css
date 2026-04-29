@@ -15,3 +15,119 @@
 .animate-brightness-boost {
     animation: brightness-boost 0.6s ease-out;
 }
+
+.storyboard-image-section,
+.storyboard-panel-image-frame {
+    container-type: inline-size;
+}
+
+.storyboard-panel-list-container {
+    container-type: inline-size;
+}
+
+.storyboard-panel-list-grid--horizontal {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 248px), 360px));
+}
+
+.storyboard-panel-list-grid--vertical {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 260px));
+}
+
+.storyboard-panel-list-grid {
+    justify-content: start;
+}
+
+.storyboard-image-actions {
+    max-width: calc(100cqw - 0.75rem);
+}
+
+.storyboard-image-actions__panel,
+.storyboard-image-actions__row {
+    max-width: 100%;
+}
+
+.storyboard-image-actions__row {
+    min-width: 0;
+}
+
+@container (max-width: 260px) {
+    .storyboard-image-actions {
+        bottom: 0.75rem;
+    }
+
+    .storyboard-image-actions__row {
+        justify-content: center;
+    }
+
+    .storyboard-image-actions__text {
+        display: none;
+    }
+
+    .storyboard-image-action-button {
+        min-width: 1.625rem;
+        justify-content: center;
+        gap: 0;
+        padding-left: 0.375rem;
+        padding-right: 0.375rem;
+    }
+}
+
+@container (max-width: 200px) {
+    .storyboard-image-badge {
+        top: 0.375rem;
+    }
+
+    .storyboard-image-badge--index {
+        left: 0.375rem;
+    }
+
+    .storyboard-image-badge--shot {
+        right: 0.375rem;
+    }
+
+    .storyboard-image-badge span {
+        padding-left: 0.375rem;
+        padding-right: 0.375rem;
+        font-size: 0.625rem;
+        line-height: 1rem;
+    }
+
+    .storyboard-image-actions__divider {
+        display: none;
+    }
+
+    .storyboard-panel-side-actions {
+        top: 0.5rem;
+        right: 0.5rem;
+        transform: none;
+    }
+
+    .storyboard-panel-side-actions > div {
+        flex-direction: row;
+    }
+}
+
+@container (max-width: 220px) {
+    .storyboard-candidate-actions {
+        left: 0.375rem;
+        right: 0.375rem;
+        bottom: 0.375rem;
+        padding: 0.375rem;
+    }
+
+    .storyboard-candidate-actions__row {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .storyboard-candidate-actions__thumbs {
+        max-width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.125rem;
+    }
+
+    .storyboard-candidate-actions__buttons {
+        justify-content: flex-end;
+    }
+}

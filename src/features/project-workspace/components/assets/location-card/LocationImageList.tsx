@@ -12,6 +12,7 @@ import {
   countGeneratedImageSlots,
   resolveGroupedImageSlotPhase,
 } from '@/lib/image-generation/slot-state'
+import '../AssetImageOverlays.css'
 
 type SelectionImage = {
   id: string
@@ -58,7 +59,7 @@ export default function LocationImageList(props: LocationImageListProps) {
     const hasPendingEmptySlots = props.isGroupTaskRunning && generatedCount < props.images.length
 
     return (
-      <div className="grid grid-cols-3 gap-3">
+      <div className="asset-selection-image-grid grid gap-3">
         {props.images.map((img) => {
           const isThisSelected = props.selectedImageId
             ? img.id === props.selectedImageId
@@ -79,7 +80,7 @@ export default function LocationImageList(props: LocationImageListProps) {
             message: img.imageErrorMessage || null,
           })
           return (
-            <div key={img.id} className="relative group/thumb">
+            <div key={img.id} className="asset-selection-image-frame relative group/thumb">
               <div
                 onClick={() => {
                   if (img.imageUrl) {
@@ -123,7 +124,7 @@ export default function LocationImageList(props: LocationImageListProps) {
                 )}
 
                 <div
-                  className={`absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
+                  className={`asset-image-selection-label absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs px-2 py-0.5 rounded ${isThisSelected ? 'bg-[var(--glass-tone-success-fg)]' : 'bg-[var(--glass-overlay)]'
                     }`}
                 >
                   <span>{t('image.optionNumber', { number: img.imageIndex + 1 })}</span>
@@ -140,7 +141,7 @@ export default function LocationImageList(props: LocationImageListProps) {
                     }
                   }}
                   disabled={phase === 'generating' || phase === 'regenerating' || !img.imageUrl}
-                  className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
+                  className={`asset-image-select-button absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-sm ${isThisSelected
                     ? 'bg-[var(--glass-tone-success-fg)] text-white'
                     : 'bg-[var(--glass-bg-surface-strong)] hover:bg-[var(--glass-accent-from)] hover:text-white'
                     } disabled:opacity-50`}
@@ -162,7 +163,7 @@ export default function LocationImageList(props: LocationImageListProps) {
   })
 
   return (
-    <div className={`relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
+    <div className={`asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
       {props.currentImageUrl ? (
         <div className="relative h-full w-full">
           <MediaImageWithLoading
@@ -173,7 +174,7 @@ export default function LocationImageList(props: LocationImageListProps) {
             onClick={() => props.onImageClick(props.currentImageUrl!)}
           />
           {props.selectedIndex !== null && props.hasMultipleImages && (
-            <div className="absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
+            <div className="asset-image-selection-label absolute bottom-2 left-2 bg-[var(--glass-tone-success-fg)] text-white text-xs px-2 py-0.5 rounded">
               {t('image.optionNumber', { number: props.selectedIndex + 1 })}
             </div>
           )}
@@ -195,7 +196,7 @@ export default function LocationImageList(props: LocationImageListProps) {
         <TaskStatusOverlay state={props.displayTaskPresentation} />
       )}
       {!props.isTaskRunning && (
-        <div className="absolute top-2 left-2 flex gap-1">
+        <div className="asset-image-overlay-actions absolute top-2 left-2 flex gap-1">
           {props.overlayActions}
         </div>
       )}

@@ -95,7 +95,10 @@ export default function LocationSection({
                 </button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-6">
+            <div
+                className="grid gap-6"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))' }}
+            >
                 {locations.map(location => (
                     <LocationCard
                         key={location.id}

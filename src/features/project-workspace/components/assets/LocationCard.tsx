@@ -235,7 +235,7 @@ export default function LocationCard({
     )
 
     return (
-      <div className="col-span-3 glass-surface-elevated p-4 transition-all">
+      <div className="col-span-full glass-surface-elevated p-4 transition-all">
         <input
           ref={fileInputRef}
           type="file"

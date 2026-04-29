@@ -304,7 +304,7 @@ export default function CharacterCard({
     )
 
     return (
-      <div className="col-span-3 bg-[var(--glass-bg-surface)] rounded-lg border-2 border-[var(--glass-stroke-base)] p-4 shadow-sm transition-all">
+      <div className="col-span-full bg-[var(--glass-bg-surface)] rounded-lg border-2 border-[var(--glass-stroke-base)] p-4 shadow-sm transition-all">
         <input
           ref={fileInputRef}
           type="file"
