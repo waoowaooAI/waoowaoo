@@ -11,23 +11,21 @@ export const POST = apiHandler(async (
   const authResult = await requireProjectAuthLight(projectId)
   if (isErrorResponse(authResult)) return authResult
 
-  const body = await request.json()
-  const panelId = body?.panelId
-
-  if (!panelId) {
+  const body = await request.json().catch(() => ({})) as Record<string, unknown>
+  const sourceStoryboardId = typeof body.sourceStoryboardId === 'string' ? body.sourceStoryboardId.trim() : ''
+  if (!sourceStoryboardId) {
     throw new ApiError('INVALID_PARAMS')
   }
 
   const result = await executeProjectAgentOperationFromApi({
     request,
-    operationId: 'regenerate_panel_image',
+    operationId: 'copy_storyboard_group',
     projectId,
     userId: authResult.session.user.id,
     input: {
-      panelId,
-      ...(body?.count !== undefined ? { count: body.count } : {}),
-      ...(Array.isArray(body?.referencePanelIds) ? { referencePanelIds: body.referencePanelIds } : {}),
-      ...(Array.isArray(body?.extraImageUrls) ? { extraImageUrls: body.extraImageUrls } : {}),
+      sourceStoryboardId,
+      ...(typeof body.insertIndex === 'number' ? { insertIndex: body.insertIndex } : {}),
+      ...(typeof body.includeImages === 'boolean' ? { includeImages: body.includeImages } : {}),
     },
     source: 'project-ui',
   })

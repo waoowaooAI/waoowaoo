@@ -32,3 +32,4 @@ Execution rules:
 7. Repaint the background according to shot type and angle.
 8. If storyboard conflicts with source text, keep narrative logic from source text.
 9. The final visual style must follow the project style requirement above. Do not let old styles from reference images override the current project visual style.
+10. Unless the panel or source text explicitly calls for a selfie, interview, surveillance view, subjective gaze toward the audience, or looking into the camera, characters must not stare directly at the camera. Prefer gaze toward scene partners, props, off-screen targets, travel direction, profile, or three-quarter profile.

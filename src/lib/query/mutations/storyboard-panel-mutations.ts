@@ -13,14 +13,45 @@ import {
     requestTaskResponseWithError,
 } from './mutation-shared'
 
-export function useRegenerateProjectPanelImage(projectId: string) {
+function invalidateStoryboardMutationCaches(
+    queryClient: ReturnType<typeof useQueryClient>,
+    projectId: string,
+    episodeId?: string | null,
+) {
+    const queryTemplates: Array<readonly unknown[]> = [
+        queryKeys.projectAssets.all(projectId),
+        queryKeys.projectData(projectId),
+    ]
+    if (episodeId) {
+        queryTemplates.push(queryKeys.episodeData(projectId, episodeId))
+        queryTemplates.push(queryKeys.storyboards.all(episodeId))
+    }
+    return invalidateQueryTemplates(queryClient, queryTemplates)
+}
+
+export function useRegenerateProjectPanelImage(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
-        mutationFn: async ({ panelId, count }: { panelId: string; count?: number }) => {
+        mutationFn: async ({
+            panelId,
+            count,
+            referencePanelIds,
+            extraImageUrls,
+        }: {
+            panelId: string
+            count?: number
+            referencePanelIds?: string[]
+            extraImageUrls?: string[]
+        }) => {
             const res = await apiFetch(`/api/projects/${projectId}/regenerate-panel-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ panelId, count: count ?? 1 }),
+                body: JSON.stringify({
+                    panelId,
+                    count: count ?? 1,
+                    ...(referencePanelIds && referencePanelIds.length > 0 ? { referencePanelIds } : {}),
+                    ...(extraImageUrls && extraImageUrls.length > 0 ? { extraImageUrls } : {}),
+                }),
             })
             if (!res.ok) {
                 const error = await res.json().catch(() => ({}))
@@ -52,7 +83,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
             })
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -61,7 +92,7 @@ export function useRegenerateProjectPanelImage(projectId: string) {
  * 修改镜头图片（storyboard）
  */
 
-export function useModifyProjectStoryboardImage(projectId: string) {
+export function useModifyProjectStoryboardImage(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: {
@@ -85,7 +116,7 @@ export function useModifyProjectStoryboardImage(projectId: string) {
             }, '修改失败')
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -111,7 +142,7 @@ export function useDownloadProjectImages(projectId: string) {
  * 更新分镜 panel
  */
 
-export function useUpdateProjectPanel(projectId: string) {
+export function useUpdateProjectPanel(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
 
     return useMutation({
@@ -126,7 +157,7 @@ export function useUpdateProjectPanel(projectId: string) {
                 '保存失败',
             ),
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -135,7 +166,7 @@ export function useUpdateProjectPanel(projectId: string) {
  * 选择/取消镜头候选图（项目）
  */
 
-export function useCreateProjectPanel(projectId: string) {
+export function useCreateProjectPanel(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: Record<string, unknown>) => {
@@ -146,7 +177,7 @@ export function useCreateProjectPanel(projectId: string) {
             }, '添加失败')
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -155,7 +186,7 @@ export function useCreateProjectPanel(projectId: string) {
  * 删除 panel
  */
 
-export function useDeleteProjectPanel(projectId: string) {
+export function useDeleteProjectPanel(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async ({ panelId }: { panelId: string }) => {
@@ -164,7 +195,7 @@ export function useDeleteProjectPanel(projectId: string) {
             }, '删除失败')
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -173,7 +204,7 @@ export function useDeleteProjectPanel(projectId: string) {
  * 删除 storyboard group
  */
 
-export function useDeleteProjectStoryboardGroup(projectId: string) {
+export function useDeleteProjectStoryboardGroup(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async ({ storyboardId }: { storyboardId: string }) => {
@@ -184,7 +215,7 @@ export function useDeleteProjectStoryboardGroup(projectId: string) {
             )
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -224,8 +255,32 @@ export function useCreateProjectStoryboardGroup(projectId: string) {
                 body: JSON.stringify(payload),
             }, '添加失败')
         },
+        onSettled: (_data, _error, variables) => {
+            return invalidateStoryboardMutationCaches(queryClient, projectId, variables.episodeId)
+        },
+    })
+}
+
+/**
+ * 复制 storyboard group
+ */
+
+export function useCopyProjectStoryboardGroup(projectId: string, episodeId?: string | null) {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: async (payload: {
+            sourceStoryboardId: string
+            insertIndex: number
+            includeImages?: boolean
+        }) => {
+            return await requestJsonWithError(`/api/projects/${projectId}/storyboard-group/copy`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            }, '复制失败')
+        },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -244,8 +299,8 @@ export function useMoveProjectStoryboardGroup(projectId: string) {
                 body: JSON.stringify(payload),
             }, '移动失败')
         },
-        onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+        onSettled: (_data, _error, variables) => {
+            return invalidateStoryboardMutationCaches(queryClient, projectId, variables.episodeId)
         },
     })
 }
@@ -254,7 +309,7 @@ export function useMoveProjectStoryboardGroup(projectId: string) {
  * 插入 panel（异步）
  */
 
-export function useInsertProjectPanel(projectId: string) {
+export function useInsertProjectPanel(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: { storyboardId: string; insertAfterPanelId: string; userInput: string }) => {
@@ -265,7 +320,7 @@ export function useInsertProjectPanel(projectId: string) {
             }, '插入分镜失败')
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -274,7 +329,7 @@ export function useInsertProjectPanel(projectId: string) {
  * 生成镜头变体（异步）
  */
 
-export function useCreateProjectPanelVariant(projectId: string) {
+export function useCreateProjectPanelVariant(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async (payload: {
@@ -298,7 +353,7 @@ export function useCreateProjectPanelVariant(projectId: string) {
             }, '生成变体失败')
         },
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -306,7 +361,7 @@ export function useCreateProjectPanelVariant(projectId: string) {
 /**
  * 清除 storyboard 错误
  */
-export function useClearProjectStoryboardError(projectId: string) {
+export function useClearProjectStoryboardError(projectId: string, episodeId?: string | null) {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: async ({ storyboardId }: { storyboardId: string }) =>
@@ -320,7 +375,7 @@ export function useClearProjectStoryboardError(projectId: string) {
                 '清除分镜错误失败',
             ),
         onSettled: () => {
-            invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
         },
     })
 }

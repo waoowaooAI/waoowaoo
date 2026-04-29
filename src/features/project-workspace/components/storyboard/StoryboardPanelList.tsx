@@ -23,6 +23,11 @@ interface StoryboardPanelListProps {
   isPanelTaskRunning: (panel: StoryboardPanel) => boolean
   getPanelEditData: (panel: StoryboardPanel) => PanelEditData
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null
+  getReferencePanelOptions: (panelId: string) => Array<{
+    panelId: string
+    label: string
+    imageUrl: string
+  }>
   onPanelUpdate: (panelId: string, panel: StoryboardPanel, updates: Partial<PanelEditData>) => void
   onPanelDelete: (panelId: string) => void
   onOpenCharacterPicker: (panelId: string) => void
@@ -30,7 +35,7 @@ interface StoryboardPanelListProps {
   onRemoveCharacter: (panel: StoryboardPanel, index: number) => void
   onRemoveLocation: (panel: StoryboardPanel) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
   onOpenEditModal: (panelIndex: number) => void
   onOpenAIDataModal: (panelIndex: number) => void
   onSelectPanelCandidateIndex: (panelId: string, index: number) => void
@@ -59,6 +64,7 @@ export default function StoryboardPanelList({
   isPanelTaskRunning,
   getPanelEditData,
   getPanelCandidates,
+  getReferencePanelOptions,
   onPanelUpdate,
   onPanelDelete,
   onOpenCharacterPicker,
@@ -107,6 +113,7 @@ export default function StoryboardPanelList({
           const panelFailedError = taskError?.message || null
           const panelData = getPanelEditData(panel)
           const panelCandidateData = getPanelCandidates(panel as unknown as ProjectPanel)
+          const referencePanelOptions = getReferencePanelOptions(panel.id)
 
           return (
             <div
@@ -129,6 +136,7 @@ export default function StoryboardPanelList({
                 isSubmittingPanelImageTask={panelTaskRunning}
                 failedError={panelFailedError}
                 candidateData={panelCandidateData}
+                referencePanelOptions={referencePanelOptions}
                 onUpdate={(updates) => onPanelUpdate(panel.id, panel, updates)}
                 onDelete={() => onPanelDelete(panel.id)}
                 onOpenCharacterPicker={() => onOpenCharacterPicker(panel.id)}

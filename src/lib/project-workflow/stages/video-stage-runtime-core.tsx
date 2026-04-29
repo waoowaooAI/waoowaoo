@@ -93,7 +93,7 @@ export function useVideoStageRuntime({
 
   const lipSyncMutation = useLipSync(projectId, episodeId)
   const listEpisodeVideoUrlsMutation = useListProjectEpisodeVideoUrls(projectId)
-  const updatePanelLinkMutation = useUpdateProjectPanelLink(projectId)
+  const updatePanelLinkMutation = useUpdateProjectPanelLink(projectId, episodeId)
   const downloadRemoteBlobMutation = useDownloadRemoteBlob()
   const matchedVoiceLinesQuery = useMatchedVoiceLines(projectId, episodeId)
 

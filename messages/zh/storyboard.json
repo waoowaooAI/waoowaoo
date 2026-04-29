@@ -46,6 +46,8 @@
         "regenerateText": "重新生成文字",
         "generateMissingImages": "生成该片段所有未有图片的镜头",
         "segment": "片段",
+        "copy": "复制",
+        "copying": "复制中...",
         "addAtStart": "在开头添加新分镜组",
         "insertHere": "在此插入新分镜组"
     },
@@ -145,6 +147,8 @@
         "cancelSelection": "取消选择",
         "noValidCandidates": "暂无有效候选图",
         "selectCount": "选择生成数量",
+        "referencePanel": "参考分镜图",
+        "noReferencePanel": "无参考",
         "generateMultiple": "生成多张候选",
         "generateCount": "生成 {count} 张",
         "generateCountSuffix": "张",
@@ -247,6 +251,7 @@
         "deleteGroupFailed": "删除分镜组失败: {error}",
         "regenerateGroupFailed": "重新生成分镜失败: {error}",
         "addGroupFailed": "添加分镜组失败: {error}",
+        "copyGroupFailed": "复制分镜组失败: {error}",
         "moveGroupFailed": "移动分镜组失败: {error}",
         "batchGenerateCompleted": "批量生成完成:\n成功: {succeeded}\n失败: {failed}\n\n部分错误: {errors}",
         "batchGenerateFailed": "批量生成失败: {error}"

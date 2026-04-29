@@ -2,10 +2,14 @@
 
 import { useCallback, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import ProjectInputStage from './ProjectInputStage'
 import SmartImportWizard from './SmartImportWizard'
 import { useWorkspaceStageRuntime } from '../WorkspaceStageRuntimeContext'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
+import { apiFetch } from '@/lib/api-fetch'
+import { queryKeys } from '@/lib/query/keys'
+import { useRouter } from '@/i18n/navigation'
 import type { SplitEpisode } from './smart-import/types'
 
 /**
@@ -20,6 +24,8 @@ export default function ConfigStage() {
   const { episodeName, novelText } = useWorkspaceEpisodeStageData()
   const params = useParams<{ projectId: string }>()
   const projectId = params?.projectId ?? ''
+  const router = useRouter()
+  const queryClient = useQueryClient()
 
   // 智能分集模式
   const [smartSplitMode, setSmartSplitMode] = useState(false)
@@ -30,13 +36,24 @@ export default function ConfigStage() {
     setSmartSplitMode(true)
   }, [])
 
-  const handleSmartSplitComplete = useCallback((episodes: SplitEpisode[], triggerGlobalAnalysis?: boolean) => {
-    // 分集完成后，刷新页面以加载新的剧集数据
-    // 通过 window.location.reload 简单处理，因为分集会重新创建所有剧集
+  const handleSmartSplitComplete = useCallback(async (episodes: SplitEpisode[], triggerGlobalAnalysis?: boolean) => {
     void episodes
-    void triggerGlobalAnalysis
-    window.location.reload()
-  }, [])
+    await queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
+
+    const response = await apiFetch(`/api/projects/${projectId}/data`)
+    const data = await response.json().catch(() => null)
+    const createdEpisodes = Array.isArray(data?.project?.episodes) ? data.project.episodes : []
+    const firstEpisodeId = createdEpisodes[0]?.id
+
+    setSmartSplitMode(false)
+    if (!firstEpisodeId) return
+
+    if (triggerGlobalAnalysis) {
+      router.replace(`?stage=assets&episode=${firstEpisodeId}&globalAnalyze=1`, { scroll: false })
+      return
+    }
+    router.replace(`?episode=${firstEpisodeId}`, { scroll: false })
+  }, [projectId, queryClient, router])
 
   // 如果已进入智能分集模式，显示 SmartImportWizard
   if (smartSplitMode) {

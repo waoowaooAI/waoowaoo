@@ -2,6 +2,19 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '../keys'
 import { invalidateQueryTemplates, requestJsonWithError } from './mutation-shared'
 
+function invalidateVideoPanelCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  projectId: string,
+  episodeId?: string | null,
+) {
+  const queryTemplates: Array<readonly unknown[]> = [queryKeys.projectData(projectId)]
+  if (episodeId) {
+    queryTemplates.push(queryKeys.episodeData(projectId, episodeId))
+    queryTemplates.push(queryKeys.storyboards.all(episodeId))
+  }
+  return invalidateQueryTemplates(queryClient, queryTemplates)
+}
+
 /**
  * 获取剧集可下载视频列表（项目）
  */
@@ -26,7 +39,9 @@ export function useListProjectEpisodeVideoUrls(projectId: string) {
 /**
  * 更新 panel 首尾帧链接状态（项目）
  */
-export function useUpdateProjectPanelLink(projectId: string) {
+export function useUpdateProjectPanelLink(projectId: string, episodeId?: string | null) {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (payload: {
       storyboardId: string
@@ -42,13 +57,16 @@ export function useUpdateProjectPanelLink(projectId: string) {
         },
         '保存链接状态失败',
       ),
+    onSettled: () => {
+      return invalidateVideoPanelCaches(queryClient, projectId, episodeId)
+    },
   })
 }
 
 /**
  * 更新 Panel 视频提示词
  */
-export function useUpdateProjectPanelVideoPrompt(projectId: string) {
+export function useUpdateProjectPanelVideoPrompt(projectId: string, episodeId?: string | null) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -79,7 +97,7 @@ export function useUpdateProjectPanelVideoPrompt(projectId: string) {
         'update failed',
       ),
     onSettled: () => {
-      invalidateQueryTemplates(queryClient, [queryKeys.projectData(projectId)])
+      return invalidateVideoPanelCaches(queryClient, projectId, episodeId)
     },
   })
 }

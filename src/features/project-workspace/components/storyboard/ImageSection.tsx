@@ -27,7 +27,12 @@ interface ImageSectionProps {
   failedError: string | null
   candidateData: PanelCandidateData | null
   previousImageUrl?: string | null
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
+  referencePanelOptions?: Array<{
+    panelId: string
+    label: string
+    imageUrl: string
+  }>
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
   onOpenEditModal: () => void
   onOpenAIDataModal: () => void
   onSelectCandidateIndex: (panelId: string, index: number) => void
@@ -50,6 +55,7 @@ export default function ImageSection({
   failedError,
   candidateData,
   previousImageUrl,
+  referencePanelOptions,
   onRegeneratePanelImage,
   onOpenEditModal,
   onOpenAIDataModal,
@@ -188,6 +194,7 @@ export default function ImageSection({
           previousImageUrl={previousImageUrl}
           isSubmittingPanelImageTask={isSubmittingPanelImageTask}
           isModifying={isModifying}
+          referencePanelOptions={referencePanelOptions}
           onRegeneratePanelImage={onRegeneratePanelImage}
           onOpenEditModal={onOpenEditModal}
           onOpenAIDataModal={onOpenAIDataModal}

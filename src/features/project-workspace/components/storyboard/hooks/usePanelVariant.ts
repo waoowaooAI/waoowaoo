@@ -3,7 +3,7 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 import { useTranslations } from 'next-intl'
 
 import { useState, useCallback } from 'react'
-import { useCreateProjectPanelVariant, useRefreshEpisodeData } from '@/lib/query/hooks'
+import { useCreateProjectPanelVariant, useRefreshEpisodeData, useRefreshStoryboards } from '@/lib/query/hooks'
 import { ProjectStoryboard, ProjectPanel } from '@/types/project'
 
 /**
@@ -45,7 +45,8 @@ export function usePanelVariant({ projectId, episodeId, setLocalStoryboards }: U
     const t = useTranslations('storyboard')
     // 🔥 使用 React Query 刷新 - 刷新 episodeData（包含 storyboards 和 panels）
     const onRefresh = useRefreshEpisodeData(projectId, episodeId)
-    const createPanelVariantMutation = useCreateProjectPanelVariant(projectId)
+    const refreshStoryboards = useRefreshStoryboards(episodeId)
+    const createPanelVariantMutation = useCreateProjectPanelVariant(projectId, episodeId)
     // 变体模态框状态
     const [variantModalState, setVariantModalState] = useState<VariantModalState | null>(null)
 
@@ -162,9 +163,7 @@ export function usePanelVariant({ projectId, episodeId, setLocalStoryboards }: U
             }
 
             // 刷新获取完整的服务端状态
-            if (onRefresh) {
-                await onRefresh()
-            }
+            await Promise.all([onRefresh(), refreshStoryboards()])
         } catch (error) {
             // API 失败：移除临时 panel 并显示错误
             setLocalStoryboards(prev => prev.map(sb => {
@@ -177,7 +176,7 @@ export function usePanelVariant({ projectId, episodeId, setLocalStoryboards }: U
         } finally {
             setSubmittingVariantPanelId(null)
         }
-    }, [createPanelVariantMutation, onRefresh, setLocalStoryboards, t])
+    }, [createPanelVariantMutation, onRefresh, refreshStoryboards, setLocalStoryboards, t])
 
     // 处理模态框中的变体选择
     const handleVariantSelect = useCallback(async (

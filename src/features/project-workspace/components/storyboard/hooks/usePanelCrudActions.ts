@@ -25,6 +25,7 @@ import { syncPanelCharacterDependentJson } from '@/lib/project-workflow/panel-ai
 
 interface UsePanelCrudActionsProps {
   projectId: string
+  episodeId: string
   panelEditsRef: React.MutableRefObject<Record<string, PanelEditData>>
   onRefresh: () => Promise<void> | void
 }
@@ -33,6 +34,7 @@ export type { PanelSaveState, PanelSaveStatus }
 
 export function usePanelCrudActions({
   projectId,
+  episodeId,
   panelEditsRef,
   onRefresh,
 }: UsePanelCrudActionsProps) {
@@ -43,9 +45,9 @@ export function usePanelCrudActions({
   const saveTimeouts = useRef<Record<string, NodeJS.Timeout>>({})
   const panelSaveCoordinatorRef = useRef<PanelSaveCoordinator | null>(null)
 
-  const savePanelMutation = useUpdateProjectPanel(projectId)
-  const createPanelMutation = useCreateProjectPanel(projectId)
-  const deletePanelMutation = useDeleteProjectPanel(projectId)
+  const savePanelMutation = useUpdateProjectPanel(projectId, episodeId)
+  const createPanelMutation = useCreateProjectPanel(projectId, episodeId)
+  const deletePanelMutation = useDeleteProjectPanel(projectId, episodeId)
 
   const setPanelSaveState = useCallback((panelId: string, nextState: PanelSaveState) => {
     setSaveStateByPanel((previous) => {

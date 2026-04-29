@@ -2,8 +2,10 @@
 import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core'
 import { useTranslations } from 'next-intl'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import type { ProjectStoryboard } from '@/types/project'
 import {
+  useCopyProjectStoryboardGroup,
   useCreateProjectStoryboardGroup,
   useDeleteProjectStoryboardGroup,
   useMoveProjectStoryboardGroup,
@@ -16,21 +18,26 @@ interface UseStoryboardGroupActionsProps {
   projectId: string
   episodeId: string
   onRefresh: () => Promise<void> | void
+  setLocalStoryboards: React.Dispatch<React.SetStateAction<ProjectStoryboard[]>>
 }
 
 export function useStoryboardGroupActions({
   projectId,
   episodeId,
   onRefresh,
+  setLocalStoryboards,
 }: UseStoryboardGroupActionsProps) {
   const t = useTranslations('storyboard')
   const [submittingStoryboardTextIds, setSubmittingStoryboardTextIds] = useState<Set<string>>(new Set())
   const [addingStoryboardGroup, setAddingStoryboardGroup] = useState(false)
+  const [copyingStoryboardId, setCopyingStoryboardId] = useState<string | null>(null)
   const [movingClipId, setMovingClipId] = useState<string | null>(null)
+  const copyInFlightRef = useRef(false)
 
-  const deleteStoryboardMutation = useDeleteProjectStoryboardGroup(projectId)
+  const deleteStoryboardMutation = useDeleteProjectStoryboardGroup(projectId, episodeId)
   const regenerateStoryboardTextMutation = useRegenerateProjectStoryboardText(projectId)
   const addStoryboardGroupMutation = useCreateProjectStoryboardGroup(projectId)
+  const copyStoryboardGroupMutation = useCopyProjectStoryboardGroup(projectId, episodeId)
   const moveStoryboardGroupMutation = useMoveProjectStoryboardGroup(projectId)
 
   const deleteStoryboard = useCallback(async (storyboardId: string, panelCount: number) => {
@@ -39,6 +46,7 @@ export function useStoryboardGroupActions({
     }
     try {
       await deleteStoryboardMutation.mutateAsync({ storyboardId })
+      setLocalStoryboards((previous) => previous.filter((storyboard) => storyboard.id !== storyboardId))
       await onRefresh()
     } catch (error: unknown) {
       _ulogError('删除分镜组失败:', error)
@@ -48,7 +56,7 @@ export function useStoryboardGroupActions({
         }),
       )
     }
-  }, [deleteStoryboardMutation, onRefresh, t])
+  }, [deleteStoryboardMutation, onRefresh, setLocalStoryboards, t])
 
   const regenerateStoryboardText = useCallback(async (storyboardId: string) => {
     if (submittingStoryboardTextIds.has(storyboardId)) return
@@ -100,6 +108,30 @@ export function useStoryboardGroupActions({
     }
   }, [addingStoryboardGroup, addStoryboardGroupMutation, episodeId, onRefresh, t])
 
+  const copyStoryboardGroup = useCallback(async (sourceStoryboardId: string, insertIndex: number) => {
+    if (copyInFlightRef.current) return
+    copyInFlightRef.current = true
+    setCopyingStoryboardId(sourceStoryboardId)
+    try {
+      await copyStoryboardGroupMutation.mutateAsync({
+        sourceStoryboardId,
+        insertIndex,
+        includeImages: true,
+      })
+      await onRefresh()
+    } catch (error: unknown) {
+      _ulogError('复制分镜组失败:', error)
+      alert(
+        t('messages.copyGroupFailed', {
+          error: getErrorMessage(error, t('common.unknownError')),
+        }),
+      )
+    } finally {
+      copyInFlightRef.current = false
+      setCopyingStoryboardId(null)
+    }
+  }, [copyStoryboardGroupMutation, onRefresh, t])
+
   const moveStoryboardGroup = useCallback(async (clipId: string, direction: 'up' | 'down') => {
     if (movingClipId) return
     setMovingClipId(clipId)
@@ -121,10 +153,12 @@ export function useStoryboardGroupActions({
   return {
     submittingStoryboardTextIds,
     addingStoryboardGroup,
+    copyingStoryboardId,
     movingClipId,
     deleteStoryboard,
     regenerateStoryboardText,
     addStoryboardGroup,
+    copyStoryboardGroup,
     moveStoryboardGroup,
   }
 }

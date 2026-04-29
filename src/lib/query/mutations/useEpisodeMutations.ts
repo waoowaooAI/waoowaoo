@@ -84,6 +84,8 @@ export function useSplitProjectEpisodesByMarkers(projectId: string) {
  * 批量保存项目剧集
  */
 export function useSaveProjectEpisodesBatch(projectId: string) {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (payload: {
       episodes: Array<{
@@ -104,6 +106,9 @@ export function useSaveProjectEpisodesBatch(projectId: string) {
         },
         '保存剧集失败',
       ),
+    onSettled: () => {
+      return invalidateQueryTemplates(queryClient, [queryKeys.projectData(projectId)])
+    },
   })
 }
 

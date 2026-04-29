@@ -124,6 +124,7 @@ export {
     useDeleteProjectStoryboardGroup,
     useRegenerateProjectStoryboardText,
     useCreateProjectStoryboardGroup,
+    useCopyProjectStoryboardGroup,
     useMoveProjectStoryboardGroup,
     useInsertProjectPanel,
     useConfirmProjectCharacterSelection,

@@ -50,6 +50,15 @@
     min-width: 0;
 }
 
+.storyboard-image-reference-label {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.storyboard-image-reference-select {
+    min-width: 0;
+}
+
 @container (max-width: 260px) {
     .storyboard-image-actions {
         bottom: 0.75rem;
@@ -69,6 +78,27 @@
         gap: 0;
         padding-left: 0.375rem;
         padding-right: 0.375rem;
+    }
+
+    .storyboard-image-reference-label {
+        height: 1.625rem;
+        width: 1.625rem;
+        min-width: 1.625rem;
+        overflow: visible;
+        padding: 0;
+    }
+
+    .storyboard-image-reference-icon {
+        pointer-events: none;
+    }
+
+    .storyboard-image-reference-select {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        width: 100%;
+        max-width: none;
+        opacity: 0;
     }
 }
 

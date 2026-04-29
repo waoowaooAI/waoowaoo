@@ -29,6 +29,11 @@ interface PanelCardProps {
   failedError: string | null
   candidateData: PanelCandidateData | null
   previousImageUrl?: string | null  // 支持撤回
+  referencePanelOptions?: Array<{
+    panelId: string
+    label: string
+    imageUrl: string
+  }>
   onUpdate: (updates: Partial<PanelEditData>) => void
   onDelete: () => void
   onOpenCharacterPicker: () => void
@@ -36,7 +41,7 @@ interface PanelCardProps {
   onRetrySave?: () => void
   onRemoveCharacter: (index: number) => void
   onRemoveLocation: () => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
   onOpenEditModal: () => void
   onOpenAIDataModal: () => void
   onSelectCandidateIndex: (panelId: string, index: number) => void
@@ -66,6 +71,7 @@ export default function PanelCard({
   failedError,
   candidateData,
   previousImageUrl,
+  referencePanelOptions,
   onUpdate,
   onDelete,
   onOpenCharacterPicker,
@@ -119,6 +125,7 @@ export default function PanelCard({
           failedError={failedError}
           candidateData={candidateData}
           previousImageUrl={previousImageUrl}
+          referencePanelOptions={referencePanelOptions}
           onRegeneratePanelImage={onRegeneratePanelImage}
           onOpenEditModal={onOpenEditModal}
           onOpenAIDataModal={onOpenAIDataModal}

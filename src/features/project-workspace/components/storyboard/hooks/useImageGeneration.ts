@@ -47,10 +47,10 @@ export function useStoryboardImageGeneration({
   const onSilentRefresh = useRefreshProjectAssets(projectId)
   const refreshEpisode = useRefreshEpisodeData(projectId, episodeId ?? null)
   const refreshStoryboards = useRefreshStoryboards(episodeId ?? null)
-  const regeneratePanelMutation = useRegenerateProjectPanelImage(projectId)
-  const modifyPanelMutation = useModifyProjectStoryboardImage(projectId)
+  const regeneratePanelMutation = useRegenerateProjectPanelImage(projectId, episodeId)
+  const modifyPanelMutation = useModifyProjectStoryboardImage(projectId, episodeId)
   const downloadImagesMutation = useDownloadProjectImages(projectId)
-  const clearStoryboardErrorMutation = useClearProjectStoryboardError(projectId)
+  const clearStoryboardErrorMutation = useClearProjectStoryboardError(projectId, episodeId)
 
   const submittingStoryboardIds = new Set<string>(
     localStoryboards
@@ -158,11 +158,11 @@ export function useStoryboardImageGeneration({
 
     try {
       await clearStoryboardErrorMutation.mutateAsync({ storyboardId })
-      if (onSilentRefresh) {
-        await onSilentRefresh()
-      }
-      refreshEpisode()
-      refreshStoryboards()
+      await Promise.all([
+        onSilentRefresh?.() ?? Promise.resolve(),
+        refreshEpisode(),
+        refreshStoryboards(),
+      ])
     } catch (error: unknown) {
       if (snapshot) {
         setLocalStoryboards(snapshot)

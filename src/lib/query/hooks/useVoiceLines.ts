@@ -36,6 +36,18 @@ export interface MatchedVoiceLinesData {
     voiceLines: MatchedVoiceLine[]
 }
 
+function invalidateVoiceLineCaches(
+    queryClient: ReturnType<typeof useQueryClient>,
+    projectId: string | null,
+    episodeId: string | null,
+) {
+    if (!projectId || !episodeId) return Promise.resolve()
+    return Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(episodeId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.matched(projectId, episodeId) }),
+    ]).then(() => undefined)
+}
+
 // ============ 查询 Hooks ============
 
 /**
@@ -95,9 +107,7 @@ export function useGenerateVoice(projectId: string | null, episodeId: string | n
             return res.json()
         },
         onSettled: () => {
-            if (episodeId) {
-                queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(episodeId) })
-            }
+            return invalidateVoiceLineCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -124,9 +134,7 @@ export function useBatchGenerateVoices(projectId: string | null, episodeId: stri
             return res.json()
         },
         onSettled: () => {
-            if (episodeId) {
-                queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(episodeId) })
-            }
+            return invalidateVoiceLineCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -167,11 +175,22 @@ export function useUpdateVoiceText(projectId: string | null, episodeId: string |
                     }
                 }
             )
+            if (!projectId) return
+            queryClient.setQueryData<MatchedVoiceLinesData>(
+                queryKeys.voiceLines.matched(projectId, episodeId),
+                (old) => {
+                    if (!old) return old
+                    return {
+                        ...old,
+                        voiceLines: old.voiceLines.map(line =>
+                            line.id === lineId ? { ...line, content: text } : line
+                        )
+                    }
+                }
+            )
         },
         onSettled: () => {
-            if (episodeId) {
-                queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(episodeId) })
-            }
+            return invalidateVoiceLineCaches(queryClient, projectId, episodeId)
         },
     })
 }
@@ -184,7 +203,8 @@ export function useRefreshVoiceLines(episodeId: string | null) {
 
     return () => {
         if (episodeId) {
-            queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(episodeId) })
+            return queryClient.invalidateQueries({ queryKey: queryKeys.voiceLines.all(episodeId) })
         }
+        return Promise.resolve()
     }
 }

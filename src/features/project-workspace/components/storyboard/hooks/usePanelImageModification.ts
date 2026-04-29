@@ -29,8 +29,8 @@ interface UsePanelImageModificationParams {
   modifyPanelMutation: ModifyPanelMutationLike
   setModifyingPanels: React.Dispatch<React.SetStateAction<Set<string>>>
   onSilentRefresh?: (() => void | Promise<void>) | null
-  refreshEpisode: () => void
-  refreshStoryboards: () => void
+  refreshEpisode: () => Promise<void>
+  refreshStoryboards: () => Promise<void>
 }
 
 export function usePanelImageModification({
@@ -77,11 +77,11 @@ export function usePanelImageModification({
         if (result.async) {
           _ulogInfo(`[Modify Panel] 异步任务已提交: ${panelId}`)
           isAsync = true
-          if (onSilentRefresh) {
-            await onSilentRefresh()
-          }
-          refreshEpisode()
-          refreshStoryboards()
+          await Promise.all([
+            onSilentRefresh?.() ?? Promise.resolve(),
+            refreshEpisode(),
+            refreshStoryboards(),
+          ])
           return
         }
 

@@ -1,6 +1,7 @@
 'use client'
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { useTranslations } from 'next-intl'
+import { useState } from 'react'
 import { AppIcon } from '@/components/ui/icons'
 import ImageGenerationInlineCountButton from '@/components/image-generation/ImageGenerationInlineCountButton'
 import { getImageGenerationCountOptions } from '@/lib/image-generation/count'
@@ -14,7 +15,12 @@ interface ImageSectionActionButtonsProps {
   previousImageUrl?: string | null
   isSubmittingPanelImageTask: boolean
   isModifying: boolean
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
+  referencePanelOptions?: Array<{
+    panelId: string
+    label: string
+    imageUrl: string
+  }>
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
   onOpenEditModal: () => void
   onOpenAIDataModal: () => void
   onUndo?: (panelId: string) => void
@@ -27,6 +33,7 @@ export default function ImageSectionActionButtons({
   previousImageUrl,
   isSubmittingPanelImageTask,
   isModifying,
+  referencePanelOptions = [],
   onRegeneratePanelImage,
   onOpenEditModal,
   onOpenAIDataModal,
@@ -35,6 +42,8 @@ export default function ImageSectionActionButtons({
 }: ImageSectionActionButtonsProps) {
   const t = useTranslations('storyboard')
   const { count, setCount } = useImageGenerationCount('storyboard-candidates')
+  const [selectedReferencePanelId, setSelectedReferencePanelId] = useState('')
+  const selectedReferencePanelIds = selectedReferencePanelId ? [selectedReferencePanelId] : []
 
   return (
     <>
@@ -57,7 +66,7 @@ export default function ImageSectionActionButtons({
                 _ulogInfo('[ImageSection] isSubmittingPanelImageTask:', isSubmittingPanelImageTask)
                 _ulogInfo('[ImageSection] 将传递 force:', isSubmittingPanelImageTask)
                 triggerPulse()
-                onRegeneratePanelImage(panelId, count, isSubmittingPanelImageTask)
+                onRegeneratePanelImage(panelId, count, isSubmittingPanelImageTask, selectedReferencePanelIds)
               }}
               disabled={false}
               ariaLabel={t('image.selectCount')}
@@ -65,6 +74,32 @@ export default function ImageSectionActionButtons({
               selectClassName="appearance-none bg-transparent border-0 pl-0 pr-3 text-[10px] font-semibold text-[var(--glass-text-primary)] outline-none cursor-pointer leading-none transition-colors"
               labelClassName="inline-flex items-center gap-0.5"
             />
+
+            {referencePanelOptions.length > 0 && (
+              <>
+                <div className="storyboard-image-actions__divider w-px h-3 bg-[var(--glass-stroke-base)]" />
+                <label
+                  className={`storyboard-image-reference-label storyboard-image-action-button glass-btn-base glass-btn-secondary relative inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] transition-all active:scale-95 ${selectedReferencePanelId ? 'text-[var(--glass-tone-info-fg)]' : 'text-[var(--glass-text-secondary)]'}`}
+                  title={t('image.referencePanel')}
+                >
+                  <AppIcon name="imagePreview" className="storyboard-image-reference-icon w-2.5 h-2.5" />
+                  <select
+                    value={selectedReferencePanelId}
+                    onChange={(event) => setSelectedReferencePanelId(event.target.value)}
+                    className="storyboard-image-reference-select max-w-[6.5rem] appearance-none bg-transparent text-[10px] outline-none cursor-pointer"
+                    title={t('image.referencePanel')}
+                    aria-label={t('image.referencePanel')}
+                  >
+                    <option value="">{t('image.noReferencePanel')}</option>
+                    {referencePanelOptions.map((option) => (
+                      <option key={option.panelId} value={option.panelId}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
 
             <div className="storyboard-image-actions__divider w-px h-3 bg-[var(--glass-stroke-base)]" />
 

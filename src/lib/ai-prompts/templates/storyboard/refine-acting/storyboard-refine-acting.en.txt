@@ -39,4 +39,5 @@ Strict constraints:
 2. Array length must equal {panel_count}.
 3. Each character object must contain only "name" and "acting".
 4. Keep character names exactly consistent with panel input.
-5. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.
+5. Unless the source explicitly calls for looking into the camera, a selfie, interview, or subjective gaze at the audience, acting notes must not say the character looks into or faces the camera. Place gaze on a scene partner, prop, off-screen target, travel direction, downward glance, evasive glance, or side glance.
+6. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

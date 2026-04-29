@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getRequestId } from '@/lib/api-errors'
@@ -24,6 +24,7 @@ import {
   refineTaskSubmitOperationOutputSchema,
   taskSubmitOperationOutputSchemaBase,
 } from '@/lib/operations/output-schemas'
+import { sanitizeImageInputsForTaskPayload } from '@/lib/media/outbound-image'
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -38,6 +39,18 @@ function resolveCandidateCount(input?: unknown): number {
   const parsed = typeof input === 'number' ? input : Number(input)
   if (!Number.isFinite(parsed)) return 1
   return Math.max(1, Math.min(4, Math.trunc(parsed)))
+}
+
+function normalizeStringArray(input: unknown): string[] {
+  if (!Array.isArray(input)) return []
+  return Array.from(new Set(input
+    .map((item) => normalizeString(item))
+    .filter(Boolean)))
+}
+
+function createReferenceSignature(input: unknown): string {
+  const serialized = JSON.stringify(input)
+  return createHash('sha1').update(serialized).digest('hex').slice(0, 12)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -136,6 +149,8 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
         storyboardId: z.string().min(1).optional(),
         panelIndex: z.number().int().min(0).max(1000).optional(),
         count: z.number().int().positive().max(4).optional(),
+        referencePanelIds: z.array(z.string().min(1)).max(8).optional(),
+        extraImageUrls: z.array(z.unknown()).max(8).optional(),
       }).refine((value) => Boolean(value.panelId || (value.storyboardId && typeof value.panelIndex === 'number')), {
         message: 'panelId or (storyboardId + panelIndex) is required',
         path: ['panelId'],
@@ -168,12 +183,56 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
         }
 
         const candidateCount = resolveCandidateCount(input.count)
+        const referencePanelIds = normalizeStringArray((input as { referencePanelIds?: unknown }).referencePanelIds).slice(0, 8)
+        const referencePanelImageUrls: string[] = []
+        if (referencePanelIds.length > 0) {
+          const referencePanels = await prisma.projectPanel.findMany({
+            where: {
+              id: { in: referencePanelIds },
+              storyboard: {
+                episode: {
+                  projectId: ctx.projectId,
+                },
+              },
+            },
+            select: {
+              id: true,
+              imageUrl: true,
+            },
+          })
+          const panelById = new Map(referencePanels.map((panel) => [panel.id, panel]))
+          for (const referencePanelId of referencePanelIds) {
+            const referencePanel = panelById.get(referencePanelId)
+            if (!referencePanel || !referencePanel.imageUrl) {
+              throw new Error('PROJECT_AGENT_REFERENCE_PANEL_NOT_FOUND')
+            }
+            referencePanelImageUrls.push(referencePanel.imageUrl)
+          }
+        }
+
+        const extraImageAudit = sanitizeImageInputsForTaskPayload(
+          Array.isArray((input as Record<string, unknown>).extraImageUrls)
+            ? (input as Record<string, unknown>).extraImageUrls as unknown[]
+            : [],
+        )
+        if (extraImageAudit.issues.some((issue) => (issue as { reason?: unknown }).reason === 'relative_path_rejected')) {
+          throw new Error('PROJECT_AGENT_REFERENCE_IMAGE_INVALID')
+        }
+        const referenceSignature = createReferenceSignature({
+          referencePanelIds,
+          referencePanelImageUrls,
+          extraImageUrls: extraImageAudit.normalized,
+        })
         const body = {
           panelId,
           candidateCount,
           count: candidateCount,
+          ...(referencePanelIds.length > 0 ? { referencePanelIds } : {}),
+          ...(referencePanelImageUrls.length > 0 ? { referencePanelImageUrls } : {}),
+          ...(extraImageAudit.normalized.length > 0 ? { extraImageUrls: extraImageAudit.normalized } : {}),
           meta: {
             locale,
+            ...(extraImageAudit.issues.length > 0 ? { outboundImageInputAudit: { extraImageUrls: extraImageAudit.issues } } : {}),
           },
         }
 
@@ -217,7 +276,7 @@ export function createStoryboardPanelImageOperations(): ProjectAgentOperationReg
             intent: 'regenerate',
             hasOutputAtStart,
           }),
-          dedupeKey: `image_panel:${panelId}:${candidateCount}:${styleSignature}`,
+          dedupeKey: `image_panel:${panelId}:${candidateCount}:${styleSignature}:${referenceSignature}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.IMAGE_PANEL, billingPayload),
         })
 

@@ -166,12 +166,15 @@ export function useRefreshProjectAssets(projectId: string | null) {
     return () => {
         if (projectId) {
             _ulogInfo('[刷新资产] 同时刷新 projectAssets / projectData / tasks 缓存')
-            queryClient.invalidateQueries({
-                queryKey: queryKeys.assets.all('project', projectId),
-            })
-            queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) })
-            queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
-            queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all(projectId), exact: false })
+            return Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.assets.all('project', projectId),
+                }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) }),
+                queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all(projectId), exact: false }),
+            ]).then(() => undefined)
         }
+        return Promise.resolve()
     }
 }

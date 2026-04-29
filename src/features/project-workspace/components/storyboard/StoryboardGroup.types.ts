@@ -30,6 +30,7 @@ export interface StoryboardGroupProps {
   onMoveDown: () => void
   onRegenerateText: () => void
   onAddPanel: () => void
+  onCopyStoryboard: () => void
   onDeleteStoryboard: () => void
   onGenerateAllIndividually: () => void
   onPreviewImage: (url: string) => void
@@ -42,7 +43,12 @@ export interface StoryboardGroupProps {
   onRemoveCharacter: (panel: StoryboardPanel, index: number) => void
   onRemoveLocation: (panel: StoryboardPanel) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
+  getReferencePanelOptions: (panelId: string) => Array<{
+    panelId: string
+    label: string
+    imageUrl: string
+  }>
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
   onOpenEditModal: (panelIndex: number) => void
   onOpenAIDataModal: (panelIndex: number) => void
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null
@@ -52,6 +58,8 @@ export interface StoryboardGroupProps {
 
   formatClipTitle: (clip: ProjectClip | undefined) => string
   movingClipId: string | null
+  isCopyingStoryboard: boolean
+  isCopyingAnyStoryboard: boolean
   onInsertPanel: (storyboardId: string, insertAfterPanelId: string, userInput: string) => Promise<void>
   insertingAfterPanelId: string | null
   projectId: string

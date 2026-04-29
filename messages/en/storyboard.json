@@ -46,6 +46,8 @@
         "regenerateText": "Regenerate Text",
         "generateMissingImages": "Generate all panels without images in this segment",
         "segment": "Segment",
+        "copy": "Copy",
+        "copying": "Copying...",
         "addAtStart": "Add new storyboard group at the start",
         "insertHere": "Insert new storyboard group here"
     },
@@ -145,6 +147,8 @@
         "cancelSelection": "Cancel Selection",
         "noValidCandidates": "No valid candidates",
         "selectCount": "Select count",
+        "referencePanel": "Reference panel image",
+        "noReferencePanel": "No reference",
         "generateMultiple": "Generate multiple candidates",
         "generateCount": "Generate {count}",
         "generateCountSuffix": "candidates",
@@ -247,6 +251,7 @@
         "deleteGroupFailed": "Delete storyboard group failed: {error}",
         "regenerateGroupFailed": "Regenerate storyboard failed: {error}",
         "addGroupFailed": "Add storyboard group failed: {error}",
+        "copyGroupFailed": "Copy storyboard group failed: {error}",
         "moveGroupFailed": "Move storyboard group failed: {error}",
         "batchGenerateCompleted": "Batch generation completed:\nSucceeded: {succeeded}\nFailed: {failed}\n\nSample errors: {errors}",
         "batchGenerateFailed": "Batch generation failed: {error}"

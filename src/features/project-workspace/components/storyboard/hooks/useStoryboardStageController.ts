@@ -77,6 +77,7 @@ export function useStoryboardStageController({
     projectId,
     episodeId,
     panelEditsRef,
+    setLocalStoryboards,
   })
 
   const {
@@ -86,6 +87,7 @@ export function useStoryboardStageController({
     hasUnsavedByPanel,
     submittingStoryboardTextIds,
     addingStoryboardGroup,
+    copyingStoryboardId,
     movingClipId,
     insertingAfterPanelId,
     savePanelWithData,
@@ -96,6 +98,7 @@ export function useStoryboardStageController({
     deleteStoryboard,
     regenerateStoryboardText,
     addStoryboardGroup,
+    copyStoryboardGroup,
     moveStoryboardGroup,
     addCharacterToPanel,
     removeCharacterFromPanel,
@@ -139,8 +142,8 @@ export function useStoryboardStageController({
     clearStoryboardError,
   } = imageOps
 
-  const updatePhotographyPlanMutation = useUpdateProjectPhotographyPlan(projectId)
-  const updatePanelActingNotesMutation = useUpdateProjectPanelActingNotes(projectId)
+  const updatePhotographyPlanMutation = useUpdateProjectPhotographyPlan(projectId, episodeId)
+  const updatePanelActingNotesMutation = useUpdateProjectPanelActingNotes(projectId, episodeId)
 
   const {
     assetPickerPanel,
@@ -193,8 +196,8 @@ export function useStoryboardStageController({
   return {
     localStoryboards, setLocalStoryboards, sortedStoryboards, expandedClips, toggleExpandedClip,
     getClipInfo, getTextPanels, getPanelEditData, updatePanelEdit, formatClipTitle, totalPanels, storyboardStartIndex,
-    savingPanels, deletingPanelIds, saveStateByPanel, hasUnsavedByPanel, submittingStoryboardTextIds, addingStoryboardGroup, movingClipId, insertingAfterPanelId,
-    savePanelWithData, addPanel, deletePanel, deleteStoryboard, regenerateStoryboardText, addStoryboardGroup, moveStoryboardGroup, insertPanel,
+    savingPanels, deletingPanelIds, saveStateByPanel, hasUnsavedByPanel, submittingStoryboardTextIds, addingStoryboardGroup, copyingStoryboardId, movingClipId, insertingAfterPanelId,
+    savePanelWithData, addPanel, deletePanel, deleteStoryboard, regenerateStoryboardText, addStoryboardGroup, copyStoryboardGroup, moveStoryboardGroup, insertPanel,
     submittingVariantPanelId, generatePanelVariant,
     submittingStoryboardIds, submittingPanelImageIds, selectingCandidateIds,
     editingPanel, setEditingPanel, modifyingPanels, isDownloadingImages, previewImage, setPreviewImage,

@@ -43,6 +43,7 @@ export default function StoryboardGroup({
   onMoveDown,
   onRegenerateText,
   onAddPanel,
+  onCopyStoryboard,
   onDeleteStoryboard,
   onGenerateAllIndividually,
   onPreviewImage,
@@ -55,6 +56,7 @@ export default function StoryboardGroup({
   onRemoveCharacter,
   onRemoveLocation,
   onRetryPanelSave,
+  getReferencePanelOptions,
   onRegeneratePanelImage,
   onOpenEditModal,
   onOpenAIDataModal,
@@ -64,6 +66,8 @@ export default function StoryboardGroup({
   onCancelPanelCandidate,
   formatClipTitle,
   movingClipId,
+  isCopyingStoryboard,
+  isCopyingAnyStoryboard,
   onInsertPanel,
   insertingAfterPanelId,
   projectId,
@@ -136,9 +140,9 @@ export default function StoryboardGroup({
   }, [hasAnyImage, isSelectingCandidate, isSubmittingStoryboardTask])
 
   const handleRegeneratePanelImage = useCallback(
-    (panelId: string, count?: number, force?: boolean) => {
+    (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => {
       clearPanelTaskError(panelId)
-      onRegeneratePanelImage(panelId, count, force)
+      onRegeneratePanelImage(panelId, count, force, referencePanelIds)
     },
     [clearPanelTaskError, onRegeneratePanelImage],
   )
@@ -185,6 +189,9 @@ export default function StoryboardGroup({
             onRegenerateText={onRegenerateText}
             onGenerateAllIndividually={onGenerateAllIndividually}
             onAddPanel={onAddPanel}
+            onCopyStoryboard={onCopyStoryboard}
+            isCopyingStoryboard={isCopyingStoryboard}
+            isCopyingAnyStoryboard={isCopyingAnyStoryboard}
             onDeleteStoryboard={onDeleteStoryboard}
           />
         </div>
@@ -227,6 +234,7 @@ export default function StoryboardGroup({
           isPanelTaskRunning={isPanelTaskRunning}
           getPanelEditData={getPanelEditData}
           getPanelCandidates={getPanelCandidates}
+          getReferencePanelOptions={getReferencePanelOptions}
           onPanelUpdate={onPanelUpdate}
           onPanelDelete={onPanelDelete}
           onOpenCharacterPicker={onOpenCharacterPicker}

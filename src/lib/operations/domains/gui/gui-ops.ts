@@ -80,6 +80,22 @@ function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function resolveStoryboardGroupInsertCreatedAt<T extends { createdAt: Date }>(
+  existingClips: T[],
+  insertIndex?: number,
+): Date {
+  const insertAt = insertIndex !== undefined ? insertIndex : existingClips.length
+  if (existingClips.length === 0) return new Date()
+  if (insertAt === 0) return new Date(existingClips[0].createdAt.getTime() - 1000)
+  if (insertAt >= existingClips.length) {
+    return new Date(existingClips[existingClips.length - 1].createdAt.getTime() + 1000)
+  }
+
+  const prevClip = existingClips[insertAt - 1]
+  const nextClip = existingClips[insertAt]
+  return new Date((prevClip.createdAt.getTime() + nextClip.createdAt.getTime()) / 2)
+}
+
 async function resolveMatchedPanelData(matchedPanelId: string | null | undefined, expectedEpisodeId?: string) {
   if (matchedPanelId === undefined) {
     return null
@@ -1095,22 +1111,7 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
         })
         if (!episode) throw new ApiError('NOT_FOUND')
 
-        const existingClips = episode.clips
-        const insertAt = input.insertIndex !== undefined ? input.insertIndex : existingClips.length
-
-        let newCreatedAt: Date
-        if (existingClips.length === 0) {
-          newCreatedAt = new Date()
-        } else if (insertAt === 0) {
-          newCreatedAt = new Date(existingClips[0].createdAt.getTime() - 1000)
-        } else if (insertAt >= existingClips.length) {
-          newCreatedAt = new Date(existingClips[existingClips.length - 1].createdAt.getTime() + 1000)
-        } else {
-          const prevClip = existingClips[insertAt - 1]
-          const nextClip = existingClips[insertAt]
-          const midTime = (prevClip.createdAt.getTime() + nextClip.createdAt.getTime()) / 2
-          newCreatedAt = new Date(midTime)
-        }
+        const newCreatedAt = resolveStoryboardGroupInsertCreatedAt(episode.clips, input.insertIndex)
 
         const result = await prisma.$transaction(async (tx) => {
           const clip = await tx.projectClip.create({
@@ -1142,6 +1143,108 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
             },
           })
           return { clip, storyboard, panel }
+        })
+
+        return { success: true, ...result }
+      },
+    }),
+    copy_storyboard_group: defineOperation({
+      id: 'copy_storyboard_group',
+      summary: 'Copy a storyboard group (clip + storyboard + panels) into the same episode.',
+      intent: 'act',
+      effects: EFFECTS_WRITE,
+      inputSchema: z.object({
+        sourceStoryboardId: z.string().min(1),
+        insertIndex: z.number().int().min(0).optional(),
+        includeImages: z.boolean().optional(),
+      }),
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => {
+        const source = await prisma.projectStoryboard.findFirst({
+          where: {
+            id: input.sourceStoryboardId,
+            episode: {
+              projectId: ctx.projectId,
+            },
+          },
+          include: {
+            clip: true,
+            episode: {
+              include: {
+                clips: { orderBy: { createdAt: 'asc' } },
+              },
+            },
+            panels: { orderBy: { panelIndex: 'asc' } },
+          },
+        })
+        if (!source) throw new ApiError('NOT_FOUND')
+
+        const includeImages = input.includeImages !== false
+        const newCreatedAt = resolveStoryboardGroupInsertCreatedAt(source.episode.clips, input.insertIndex)
+
+        const result = await prisma.$transaction(async (tx) => {
+          const clip = await tx.projectClip.create({
+            data: {
+              episodeId: source.episodeId,
+              start: source.clip.start,
+              end: source.clip.end,
+              duration: source.clip.duration,
+              summary: source.clip.summary,
+              location: source.clip.location,
+              content: source.clip.content,
+              characters: source.clip.characters,
+              props: source.clip.props,
+              endText: source.clip.endText,
+              shotCount: source.clip.shotCount,
+              startText: source.clip.startText,
+              screenplay: source.clip.screenplay,
+              createdAt: newCreatedAt,
+            },
+          })
+
+          const storyboard = await tx.projectStoryboard.create({
+            data: {
+              episodeId: source.episodeId,
+              clipId: clip.id,
+              panelCount: source.panels.length,
+              storyboardTextJson: source.storyboardTextJson,
+              photographyPlan: source.photographyPlan,
+              storyboardImageUrl: includeImages ? source.storyboardImageUrl : null,
+            },
+          })
+
+          if (source.panels.length > 0) {
+            await tx.projectPanel.createMany({
+              data: source.panels.map((panel, index) => ({
+                storyboardId: storyboard.id,
+                panelIndex: index,
+                panelNumber: panel.panelNumber ?? index + 1,
+                shotType: panel.shotType,
+                cameraMove: panel.cameraMove,
+                description: panel.description,
+                location: panel.location,
+                characters: panel.characters,
+                props: panel.props,
+                srtSegment: panel.srtSegment,
+                srtStart: panel.srtStart,
+                srtEnd: panel.srtEnd,
+                duration: panel.duration,
+                imagePrompt: panel.imagePrompt,
+                imageUrl: includeImages ? panel.imageUrl : null,
+                imageMediaId: includeImages ? panel.imageMediaId : null,
+                videoPrompt: panel.videoPrompt,
+                firstLastFramePrompt: panel.firstLastFramePrompt,
+                sceneType: panel.sceneType,
+                linkedToNextPanel: panel.linkedToNextPanel,
+                sketchImageUrl: includeImages ? panel.sketchImageUrl : null,
+                sketchImageMediaId: includeImages ? panel.sketchImageMediaId : null,
+                photographyRules: panel.photographyRules,
+                actingNotes: panel.actingNotes,
+              })),
+            })
+          }
+
+          return { clip, storyboard, panelCount: source.panels.length }
         })
 
         return { success: true, ...result }

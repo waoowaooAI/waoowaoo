@@ -60,6 +60,7 @@ export default function StoryboardStage({
     hasUnsavedByPanel,
     submittingStoryboardTextIds,
     addingStoryboardGroup,
+    copyingStoryboardId,
     movingClipId,
     insertingAfterPanelId,
     savePanelWithData,
@@ -68,6 +69,7 @@ export default function StoryboardStage({
     deleteStoryboard,
     regenerateStoryboardText,
     addStoryboardGroup,
+    copyStoryboardGroup,
     moveStoryboardGroup,
     insertPanel,
 
@@ -179,6 +181,7 @@ export default function StoryboardStage({
           submittingPanelImageIds={submittingPanelImageIds}
 
           movingClipId={movingClipId}
+          copyingStoryboardId={copyingStoryboardId}
           insertingAfterPanelId={insertingAfterPanelId}
           submittingVariantPanelId={submittingVariantPanelId}
           projectId={projectId}
@@ -192,6 +195,7 @@ export default function StoryboardStage({
           onMoveStoryboardGroup={moveStoryboardGroup}
           onRegenerateStoryboardText={regenerateStoryboardText}
           onAddPanel={addPanel}
+          onCopyStoryboard={copyStoryboardGroup}
           onDeleteStoryboard={deleteStoryboard}
           onGenerateAllIndividually={regenerateAllPanelsIndividually}
           onPreviewImage={setPreviewImage}

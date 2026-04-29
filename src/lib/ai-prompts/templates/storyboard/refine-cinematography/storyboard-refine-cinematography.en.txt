@@ -36,5 +36,6 @@ Rules:
 6. When a panel is about movement, entry/exit, path traversal, transition space, temporary space, empty space, imagination, dream, memory, or abstract/non-literal space, composition and placement may deviate from a static slot if the shot logic requires it.
 7. Treat `slot` as one full placement phrase from the location context, not as a short token, whenever you reference it.
 8. Do not shorten, rewrite, summarize, or replace a provided `slot` phrase with a short token.
-9. JSON only, no markdown.
-10. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.
+9. Unless the input explicitly calls for breaking the fourth wall, do not direct characters to face or look into the camera. Use facing toward screen left/right, a scene partner, a prop, an off-screen target, profile, or three-quarter profile instead.
+10. JSON only, no markdown.
+11. ⚠️ JSON SAFETY: All quotation marks in text (""''「」 etc.) MUST be converted to corner brackets「」in JSON string values. NEVER use raw ASCII double quotes " inside string values.

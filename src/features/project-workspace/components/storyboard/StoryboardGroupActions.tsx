@@ -16,6 +16,9 @@ interface StoryboardGroupActionsProps {
   onRegenerateText: () => void
   onGenerateAllIndividually: () => void
   onAddPanel: () => void
+  onCopyStoryboard: () => void
+  isCopyingStoryboard: boolean
+  isCopyingAnyStoryboard: boolean
   onDeleteStoryboard: () => void
 }
 
@@ -28,6 +31,9 @@ export default function StoryboardGroupActions({
   onRegenerateText,
   onGenerateAllIndividually,
   onAddPanel,
+  onCopyStoryboard,
+  isCopyingStoryboard,
+  isCopyingAnyStoryboard,
   onDeleteStoryboard,
 }: StoryboardGroupActionsProps) {
   const t = useTranslations('storyboard')
@@ -100,6 +106,26 @@ export default function StoryboardGroupActions({
       </GlassButton>
 
       <GlassButton
+        variant="secondary"
+        size="sm"
+        onClick={onCopyStoryboard}
+        disabled={isCopyingAnyStoryboard || isSubmittingStoryboardTask}
+        title={isCopyingStoryboard ? t('group.copying') : t('group.copy')}
+      >
+        {isCopyingStoryboard ? (
+          <>
+            <AppIcon name="loader" className="h-3.5 w-3.5 animate-spin text-[var(--glass-tone-info-fg)]" />
+            <span>{t('group.copying')}</span>
+          </>
+        ) : (
+          <>
+            <AppIcon name="copy" className="h-3.5 w-3.5" />
+            <span>{t('group.copy')}</span>
+          </>
+        )}
+      </GlassButton>
+
+      <GlassButton
         variant="danger"
         size="sm"
         onClick={onDeleteStoryboard}
@@ -112,4 +138,3 @@ export default function StoryboardGroupActions({
     </div>
   )
 }
-

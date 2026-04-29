@@ -116,10 +116,11 @@ export function useRefreshEpisodeData(projectId: string | null, episodeId: strin
 
     return () => {
         if (projectId && episodeId) {
-            queryClient.invalidateQueries({
+            return queryClient.invalidateQueries({
                 queryKey: queryKeys.episodeData(projectId, episodeId)
             })
         }
+        return Promise.resolve()
     }
 }
 
@@ -130,17 +131,19 @@ export function useRefreshAll(projectId: string | null, episodeId: string | null
     const queryClient = useQueryClient()
 
     return () => {
+        const promises: Promise<unknown>[] = []
         if (projectId) {
-            queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) })
-            queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) })
+            promises.push(queryClient.invalidateQueries({ queryKey: queryKeys.projectData(projectId) }))
+            promises.push(queryClient.invalidateQueries({ queryKey: queryKeys.projectAssets.all(projectId) }))
         }
         if (projectId && episodeId) {
-            queryClient.invalidateQueries({
+            promises.push(queryClient.invalidateQueries({
                 queryKey: queryKeys.episodeData(projectId, episodeId)
-            })
-            queryClient.invalidateQueries({
+            }))
+            promises.push(queryClient.invalidateQueries({
                 queryKey: queryKeys.storyboards.all(episodeId)
-            })
+            }))
         }
+        return Promise.all(promises).then(() => undefined)
     }
 }

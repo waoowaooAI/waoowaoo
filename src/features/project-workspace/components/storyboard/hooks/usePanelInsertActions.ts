@@ -9,16 +9,18 @@ import { getErrorMessage, isAbortError, type InsertPanelMutationResult } from '.
 
 interface UsePanelInsertActionsProps {
   projectId: string
+  episodeId: string
   onRefresh: () => Promise<void> | void
 }
 
 export function usePanelInsertActions({
   projectId,
+  episodeId,
   onRefresh,
 }: UsePanelInsertActionsProps) {
   const t = useTranslations('storyboard')
   const [insertingAfterPanelId, setInsertingAfterPanelId] = useState<string | null>(null)
-  const insertPanelMutation = useInsertProjectPanel(projectId)
+  const insertPanelMutation = useInsertProjectPanel(projectId, episodeId)
 
   const insertPanel = useCallback(async (storyboardId: string, panelId: string, userInput: string) => {
     if (insertingAfterPanelId) return

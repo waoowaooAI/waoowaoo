@@ -34,7 +34,7 @@ export function useWorkspaceVideoActions({
 }: UseWorkspaceVideoActionsParams) {
   const generateVideoMutation = useGenerateVideo(projectId, episodeId || null)
   const batchGenerateVideosMutation = useBatchGenerateVideos(projectId, episodeId || null)
-  const updateProjectPanelVideoPromptMutation = useUpdateProjectPanelVideoPrompt(projectId)
+  const updateProjectPanelVideoPromptMutation = useUpdateProjectPanelVideoPrompt(projectId, episodeId || null)
   const updateProjectClipMutation = useUpdateProjectClip(projectId)
   const updateProjectConfigMutation = useUpdateProjectConfig(projectId)
 

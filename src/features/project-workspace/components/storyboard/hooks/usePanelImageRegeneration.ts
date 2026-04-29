@@ -10,7 +10,12 @@ import {
 } from './image-generation-runtime'
 
 interface RegeneratePanelMutationLike {
-  mutateAsync: (payload: { panelId: string; count: number }) => Promise<unknown>
+  mutateAsync: (payload: {
+    panelId: string
+    count: number
+    referencePanelIds?: string[]
+    extraImageUrls?: string[]
+  }) => Promise<unknown>
 }
 
 interface UsePanelImageRegenerationParams {
@@ -19,8 +24,8 @@ interface UsePanelImageRegenerationParams {
   submittingPanelImageIds: Set<string>
   setSubmittingPanelImageIds: React.Dispatch<React.SetStateAction<Set<string>>>
   onSilentRefresh?: (() => void | Promise<void>) | null
-  refreshEpisode: () => void
-  refreshStoryboards: () => void
+  refreshEpisode: () => Promise<void>
+  refreshStoryboards: () => Promise<void>
   regeneratePanelMutation: RegeneratePanelMutationLike
   selectPanelCandidateIndex: (panelId: string, index: number) => void
 }
@@ -36,32 +41,41 @@ export function usePanelImageRegeneration({
   selectPanelCandidateIndex,
 }: UsePanelImageRegenerationParams) {
   const regeneratePanelImage = useCallback(
-    async (panelId: string, count: number = 1, force: boolean = false) => {
+    async (
+      panelId: string,
+      count: number = 1,
+      force: boolean = false,
+      referencePanelIds: string[] = [],
+    ) => {
       if (!force && submittingPanelImageIds.has(panelId)) return
 
       setSubmittingPanelImageIds((previous) => new Set(previous).add(panelId))
 
       let handoffToTaskState = false
       try {
-        const data = await regeneratePanelMutation.mutateAsync({ panelId, count })
+        const data = await regeneratePanelMutation.mutateAsync({
+          panelId,
+          count,
+          ...(referencePanelIds.length > 0 ? { referencePanelIds } : {}),
+        })
         const result = (data || {}) as StoryboardImageMutationResult
 
         if (result.async) {
           _ulogInfo(`[regeneratePanelImage] async submitted: ${panelId}`)
           handoffToTaskState = true
-          if (onSilentRefresh) {
-            await onSilentRefresh()
-          }
-          refreshEpisode()
-          refreshStoryboards()
+          await Promise.all([
+            onSilentRefresh?.() ?? Promise.resolve(),
+            refreshEpisode(),
+            refreshStoryboards(),
+          ])
           return
         }
 
-        if (onSilentRefresh) {
-          await onSilentRefresh()
-        }
-        refreshEpisode()
-        refreshStoryboards()
+        await Promise.all([
+          onSilentRefresh?.() ?? Promise.resolve(),
+          refreshEpisode(),
+          refreshStoryboards(),
+        ])
         selectPanelCandidateIndex(panelId, 0)
       } catch (error: unknown) {
         if (isAbortError(error)) return

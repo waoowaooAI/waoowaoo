@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { ProjectClip, ProjectPanel, ProjectStoryboard } from '@/types/project'
 import StoryboardGroup from './StoryboardGroup'
@@ -24,6 +25,7 @@ interface StoryboardCanvasProps {
   modifyingPanels: Set<string>
   submittingPanelImageIds: Set<string>
   movingClipId: string | null
+  copyingStoryboardId: string | null
   insertingAfterPanelId: string | null
   submittingVariantPanelId: string | null
   projectId: string
@@ -37,6 +39,7 @@ interface StoryboardCanvasProps {
   onMoveStoryboardGroup: (clipId: string, direction: 'up' | 'down') => Promise<void>
   onRegenerateStoryboardText: (storyboardId: string) => Promise<void>
   onAddPanel: (storyboardId: string) => Promise<void>
+  onCopyStoryboard: (storyboardId: string, insertIndex: number) => Promise<void>
   onDeleteStoryboard: (storyboardId: string, panelCount: number) => Promise<void>
   onGenerateAllIndividually: (storyboardId: string) => Promise<void>
   onPreviewImage: (url: string) => void
@@ -52,7 +55,7 @@ interface StoryboardCanvasProps {
   onRemoveCharacter: (panel: StoryboardPanel, index: number, storyboardId: string) => void
   onRemoveLocation: (panel: StoryboardPanel, storyboardId: string) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
   onOpenEditModal: (storyboardId: string, panelIndex: number) => void
   onOpenAIDataModal: (storyboardId: string, panelIndex: number) => void
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null
@@ -86,6 +89,7 @@ export default function StoryboardCanvas({
   modifyingPanels,
   submittingPanelImageIds,
   movingClipId,
+  copyingStoryboardId,
   insertingAfterPanelId,
   submittingVariantPanelId,
   projectId,
@@ -99,6 +103,7 @@ export default function StoryboardCanvas({
   onMoveStoryboardGroup,
   onRegenerateStoryboardText,
   onAddPanel,
+  onCopyStoryboard,
   onDeleteStoryboard,
   onGenerateAllIndividually,
   onPreviewImage,
@@ -124,6 +129,30 @@ export default function StoryboardCanvas({
   setLocalStoryboards,
 }: StoryboardCanvasProps) {
   const t = useTranslations('storyboard')
+  const referencePanelOptionsByPanelId = useMemo(() => {
+    const optionsByPanelId = new Map<string, Array<{ panelId: string; label: string; imageUrl: string }>>()
+    const previousOptions: Array<{ panelId: string; label: string; imageUrl: string }> = []
+
+    for (const storyboard of sortedStoryboards) {
+      const panels = getTextPanels(storyboard)
+      const startIndex = storyboardStartIndex[storyboard.id] ?? 0
+      panels.forEach((panel, panelIndex) => {
+        optionsByPanelId.set(panel.id, [...previousOptions])
+        if (panel.imageUrl) {
+          const panelNumber = startIndex + panelIndex + 1
+          const shotType = panel.shot_type || t('panel.noShotType')
+          previousOptions.push({
+            panelId: panel.id,
+            label: `#${panelNumber} ${shotType}`,
+            imageUrl: panel.imageUrl,
+          })
+        }
+      })
+    }
+
+    return optionsByPanelId
+  }, [getTextPanels, sortedStoryboards, storyboardStartIndex, t])
+
   if (sortedStoryboards.length === 0) {
     return (
       <div className="text-center py-12 text-[var(--glass-text-tertiary)]">
@@ -183,6 +212,7 @@ export default function StoryboardCanvas({
               onRemoveCharacter={(panel, index) => onRemoveCharacter(panel, index, storyboard.id)}
               onRemoveLocation={(panel) => onRemoveLocation(panel, storyboard.id)}
               onRetryPanelSave={onRetryPanelSave}
+              getReferencePanelOptions={(panelId) => referencePanelOptionsByPanelId.get(panelId) || []}
               onRegeneratePanelImage={onRegeneratePanelImage}
               onOpenEditModal={(panelIndex) => onOpenEditModal(storyboard.id, panelIndex)}
               onOpenAIDataModal={(panelIndex) => onOpenAIDataModal(storyboard.id, panelIndex)}
@@ -192,12 +222,15 @@ export default function StoryboardCanvas({
               onCancelPanelCandidate={onCancelPanelCandidate}
               formatClipTitle={formatClipTitle}
               movingClipId={movingClipId}
+              isCopyingStoryboard={copyingStoryboardId === storyboard.id}
+              isCopyingAnyStoryboard={copyingStoryboardId !== null}
               onInsertPanel={onInsertPanel}
               insertingAfterPanelId={insertingAfterPanelId}
               projectId={projectId}
               episodeId={episodeId}
               onPanelVariant={onPanelVariant}
               submittingVariantPanelId={submittingVariantPanelId}
+              onCopyStoryboard={() => onCopyStoryboard(storyboard.id, sbIndex + 1)}
             />
 
             <div className="flex justify-center py-2">

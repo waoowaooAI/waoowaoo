@@ -38,7 +38,7 @@ export function usePanelCandidates({
   const onSilentRefresh = useRefreshProjectAssets(projectId)
   const refreshEpisode = useRefreshEpisodeData(projectId, episodeId ?? null)
   const refreshStoryboards = useRefreshStoryboards(episodeId ?? null)
-  const selectCandidateMutation = useSelectProjectPanelCandidate(projectId)
+  const selectCandidateMutation = useSelectProjectPanelCandidate(projectId, episodeId ?? null)
 
   const candidateSystem = useCandidateSystem<string>()
   const patchPanelInEpisodeCache = usePanelEpisodeCachePatch({
@@ -83,11 +83,11 @@ export function usePanelCandidates({
         imageErrorMessage: null,
       })
 
-      if (onSilentRefresh) {
-        await onSilentRefresh()
-      }
-      refreshEpisode()
-      refreshStoryboards()
+      await Promise.all([
+        onSilentRefresh?.() ?? Promise.resolve(),
+        refreshEpisode(),
+        refreshStoryboards(),
+      ])
       _ulogInfo('[confirmPanelCandidate] ✅ 数据刷新完成')
     } catch (error: unknown) {
       _ulogError('[confirmPanelCandidate] ❌ 确认失败:', error)
@@ -121,11 +121,11 @@ export function usePanelCandidates({
         imageTaskRunning: false,
       })
 
-      if (onSilentRefresh) {
-        await onSilentRefresh()
-      }
-      refreshEpisode()
-      refreshStoryboards()
+      await Promise.all([
+        onSilentRefresh?.() ?? Promise.resolve(),
+        refreshEpisode(),
+        refreshStoryboards(),
+      ])
     } catch (error: unknown) {
       _ulogError('取消选择失败:', error)
     }
