@@ -83,7 +83,7 @@ export default function LocationImageList(props: LocationImageListProps) {
                     props.onImageClick(img.imageUrl)
                   }
                 }}
-                className={`rounded-lg overflow-hidden border-2 transition-all relative ${img.imageUrl ? 'cursor-pointer' : 'cursor-default'} ${isThisSelected
+                className={`flex min-h-[88px] items-center justify-center rounded-lg overflow-hidden border-2 bg-[var(--glass-bg-muted)] transition-all relative ${img.imageUrl ? 'cursor-pointer' : 'cursor-default'} ${isThisSelected
                   ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-focus-ring)]'
                   : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
                   }`}
@@ -92,8 +92,8 @@ export default function LocationImageList(props: LocationImageListProps) {
                   <MediaImageWithLoading
                     src={img.imageUrl}
                     alt={t('image.optionAlt', { name: props.locationName, number: img.imageIndex + 1 })}
-                    containerClassName="w-full min-h-[88px]"
-                    className="w-full h-auto object-contain"
+                    containerClassName="flex w-full min-h-[88px] items-center justify-center"
+                    className="h-auto w-full object-contain"
                   />
                 ) : (
                   <div className="flex min-h-[88px] items-center justify-center bg-[var(--glass-bg-muted)]">
@@ -161,7 +161,7 @@ export default function LocationImageList(props: LocationImageListProps) {
   return (
     <div className={`asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
       {props.currentImageUrl ? (
-        <div className="relative h-full w-full">
+        <div className="relative flex h-full w-full items-center justify-center bg-[var(--glass-bg-muted)]">
           <MediaImageWithLoading
             src={props.currentImageUrl}
             alt={props.locationName}

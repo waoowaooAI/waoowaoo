@@ -49,7 +49,7 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
             <div key={originalIndex} className="asset-selection-image-frame relative group/thumb">
               <div
                 onClick={() => props.onImageClick(url)}
-                className={`rounded-lg overflow-hidden border-2 transition-all cursor-pointer relative ${isThisSelected
+                className={`flex min-h-[96px] items-center justify-center rounded-lg overflow-hidden border-2 bg-[var(--glass-bg-muted)] transition-all cursor-pointer relative ${isThisSelected
                   ? 'border-[var(--glass-stroke-success)] ring-2 ring-[var(--glass-focus-ring)]'
                   : 'border-[var(--glass-stroke-base)] hover:border-[var(--glass-stroke-focus)]'
                   }`}
@@ -57,8 +57,8 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
                 <MediaImageWithLoading
                   src={url}
                   alt={`${props.characterName} - ${t('image.optionNumber', { number: originalIndex + 1 })}`}
-                  containerClassName="w-full min-h-[96px]"
-                  className="w-full h-auto object-contain"
+                  containerClassName="flex w-full min-h-[96px] items-center justify-center"
+                  className="h-auto w-full object-contain"
                 />
 
                 {isThisTaskRunning && (
@@ -107,7 +107,7 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
   return (
     <div className={`asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
       {props.currentImageUrl ? (
-        <div className="relative h-full w-full">
+        <div className="relative flex h-full w-full items-center justify-center bg-[var(--glass-bg-muted)]">
           <MediaImageWithLoading
             src={props.currentImageUrl}
             alt={`${props.characterName} - ${props.changeReason}`}

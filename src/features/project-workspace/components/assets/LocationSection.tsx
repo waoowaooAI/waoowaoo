@@ -70,13 +70,13 @@ export default function LocationSection({
     const generateType = resolveLocationBackedGenerateType(assetType)
 
     return (
-        <div className="glass-surface p-6">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
-                        <AppIcon name="imageLandscape" className="h-5 w-5" />
+        <div className="glass-surface p-4">
+            <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)]">
+                        <AppIcon name="imageLandscape" className="h-4 w-4" />
                     </span>
-                    <h3 className="text-lg font-bold text-[var(--glass-text-primary)]">
+                    <h3 className="text-base font-bold text-[var(--glass-text-primary)]">
                         {assetType === 'prop' ? t('stage.propAssets') : t("stage.locationAssets")}
                     </h3>
                     <span className="text-sm text-[var(--glass-text-tertiary)] bg-[var(--glass-bg-muted)]/50 px-2 py-1 rounded-lg">
@@ -94,8 +94,8 @@ export default function LocationSection({
             </div>
 
             <div
-                className="grid gap-6"
-                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))' }}
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 108px), 1fr))' }}
             >
                 {locations.map(location => (
                     <LocationCard

@@ -308,7 +308,7 @@ export default function CharacterCard({
     )
 
     return (
-      <div className="col-span-full bg-[var(--glass-bg-surface)] rounded-lg border-2 border-[var(--glass-stroke-base)] p-4 shadow-sm transition-all">
+      <div className="col-span-full bg-[var(--glass-bg-surface)] rounded-lg border-2 border-[var(--glass-stroke-base)] p-3 shadow-sm transition-all">
         <input
           ref={fileInputRef}
           type="file"
@@ -478,7 +478,7 @@ export default function CharacterCard({
   )
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <input
         ref={fileInputRef}
         type="file"

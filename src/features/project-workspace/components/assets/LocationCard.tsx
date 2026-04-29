@@ -242,7 +242,7 @@ export default function LocationCard({
     )
 
     return (
-      <div className="col-span-full glass-surface-elevated p-4 transition-all">
+      <div className="col-span-full glass-surface-elevated p-3 transition-all">
         <input
           ref={fileInputRef}
           type="file"
@@ -375,7 +375,7 @@ export default function LocationCard({
   const canGenerate = canGenerateLocationBackedAsset(location, assetType)
 
   return (
-    <div className="flex flex-col gap-2 glass-surface-elevated p-3">
+    <div className="flex flex-col gap-1.5 glass-surface-elevated p-2">
       <input
         ref={fileInputRef}
         type="file"

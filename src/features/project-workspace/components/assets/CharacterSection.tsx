@@ -187,13 +187,13 @@ export default function CharacterSection({
     }, [characters, focusCharacterId, focusCharacterRequestId])
 
     return (
-        <div className="glass-surface p-6">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]">
-                        <AppIcon name="user" className="h-5 w-5" />
+        <div className="glass-surface p-4">
+            <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--glass-bg-muted)] text-[var(--glass-text-secondary)]">
+                        <AppIcon name="user" className="h-4 w-4" />
                     </span>
-                    <h3 className="text-lg font-bold text-[var(--glass-text-primary)]">{t("stage.characterAssets")}</h3>
+                    <h3 className="text-base font-bold text-[var(--glass-text-primary)]">{t("stage.characterAssets")}</h3>
                     {isAnalyzingAssets && (
                         <span className="px-2 py-1 text-xs bg-[var(--glass-tone-info-bg)] text-[var(--glass-tone-info-fg)] rounded-lg flex items-center gap-1">
                             <TaskStatusInline state={analyzingAssetsState} />
@@ -213,7 +213,7 @@ export default function CharacterSection({
 
             {/* 🔥 V7：待确认角色档案 - 内嵌引导横幅 */}
             {unconfirmedCharacters.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-4">
                     {/* 引导横幅 */}
                     <div className="flex items-center justify-between mb-3 px-1">
                         <div className="flex items-center gap-2">
@@ -236,7 +236,10 @@ export default function CharacterSection({
                         </button>
                     </div>
                     {/* 待确认卡片网格 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <div
+                        className="grid gap-3"
+                        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))' }}
+                    >
                         {unconfirmedCharacters.map((character) => {
                             const profileData = parseProfileData(character.profileData!)
                             if (!profileData) return null
@@ -261,8 +264,8 @@ export default function CharacterSection({
 
             {/* 按角色分组显示：外层 grid 让多角色并排 */}
             <div
-                className="grid gap-6"
-                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))' }}
+                className="grid gap-4"
+                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))' }}
             >
                 {characters.map(character => {
                     const appearances = getAppearances(character)
@@ -278,7 +281,7 @@ export default function CharacterSection({
                         <div
                             key={character.id}
                             id={`project-character-${character.id}`}
-                            className={`glass-surface rounded-xl p-4 scroll-mt-24 transition-all duration-700 ${highlightedCharacterId === character.id ? 'ring-2 ring-[var(--glass-focus-ring)] bg-[var(--glass-tone-info-bg)]/40' : ''}`}
+                            className={`glass-surface rounded-lg p-3 scroll-mt-24 transition-all duration-700 ${highlightedCharacterId === character.id ? 'ring-2 ring-[var(--glass-focus-ring)] bg-[var(--glass-tone-info-bg)]/40' : ''}`}
                         >
                             {/* 角色标题 */}
                             <div className="flex items-center justify-between pb-2">
@@ -309,8 +312,8 @@ export default function CharacterSection({
 
                             {/* 形象网格 */}
                             <div
-                                className="grid gap-3"
-                                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))' }}
+                                className="grid gap-2"
+                                style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 96px), 1fr))' }}
                             >
                                 {sortedAppearances.map(appearance => {
                                     const isPrimary = appearance.appearanceIndex === (primaryAppearance?.appearanceIndex ?? PRIMARY_APPEARANCE_INDEX)
