@@ -24,6 +24,8 @@ type JsonRecord = Record<string, unknown>
 export type ClipCharacterRef = string | { name?: string | null }
 
 type CharacterAppearance = {
+    id?: string
+    appearanceIndex?: number | null
     changeReason?: string | null
     descriptions?: string | null
     selectedIndex?: number | null
@@ -31,6 +33,7 @@ type CharacterAppearance = {
 }
 
 export type CharacterAsset = {
+    id?: string
     name: string
     appearances?: CharacterAppearance[]
 }

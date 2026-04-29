@@ -8,19 +8,25 @@ import {
   assertTaskActive,
   getProjectModels,
   resolveImageSourceFromGeneration,
+  toSignedUrlIfCos,
   uploadImageSourceToCos,
 } from '../utils'
 import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
   clampCount,
-  collectPanelReferenceImages,
-  findCharacterByName,
+  collectPanelReferenceImagesWithDiagnostics,
   parsePanelCharacterReferences,
   pickFirstString,
   resolveNovelData,
 } from './image-task-handler-shared'
+import {
+  findAppearanceForStoryboardReference,
+  findCharacterForStoryboardReference,
+  type StoryboardPanelCharacterReference,
+} from '@/lib/storyboard-character-bindings'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS } from '@/lib/ai-prompts'
+import type { OutboundImageNormalizationIssue } from '@/lib/media/outbound-image'
 import {
   parseLocationAvailableSlots,
 } from '@/lib/location-available-slots'
@@ -80,7 +86,10 @@ function buildPanelPromptContext(params: {
 }) {
   const panelCharacters = parsePanelCharacterReferences(params.panel.characters)
   const characterContexts = panelCharacters.map((reference) => {
-    const character = findCharacterByName(params.projectData.characters || [], reference.name)
+    const character = findCharacterForStoryboardReference(
+      params.projectData.characters || [],
+      reference as StoryboardPanelCharacterReference,
+    )
     if (!character) {
       return {
         name: reference.name,
@@ -90,13 +99,15 @@ function buildPanelPromptContext(params: {
     }
 
     const appearances = character.appearances || []
-    const matchedAppearance =
-      (reference.appearance
-        ? appearances.find((appearance) => (appearance.changeReason || '').toLowerCase() === reference.appearance!.toLowerCase())
-        : null) || appearances[0] || null
+    const matchedAppearance = findAppearanceForStoryboardReference(
+      appearances,
+      reference as StoryboardPanelCharacterReference,
+    ) || null
 
     return {
       name: character.name,
+      characterId: character.id || reference.characterId || null,
+      appearanceId: matchedAppearance?.id || reference.appearanceId || null,
       appearance: matchedAppearance?.changeReason || null,
       description: matchedAppearance ? pickAppearanceDescription(matchedAppearance) : '无角色外貌数据',
       slot: reference.slot || null,
@@ -176,10 +187,34 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
   if (!modelKey) throw new Error('Storyboard model not configured')
 
   const candidateCount = clampCount(payload.candidateCount ?? payload.count, 1, 4, 1)
-  const refs = await collectPanelReferenceImages(projectData, panel)
+  const refCollection = await collectPanelReferenceImagesWithDiagnostics(projectData, panel, { strict: true })
+  const refs = [...refCollection.refs]
+  if (Array.isArray(payload.referencePanelImageUrls)) {
+    for (const url of payload.referencePanelImageUrls) {
+      const signed = toSignedUrlIfCos(typeof url === 'string' ? url : null, 3600)
+      if (signed) refs.push(signed)
+    }
+  }
+  if (Array.isArray(payload.extraImageUrls)) {
+    for (const url of payload.extraImageUrls) {
+      if (typeof url === 'string' && url.trim()) refs.push(url.trim())
+    }
+  }
+  const normalizationIssues: OutboundImageNormalizationIssue[] = []
   const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
+    onIssue: (issue) => {
+      normalizationIssues.push(issue)
+    },
     context: { taskType: String(job.data.type), scope: 'panel-image.refs' },
   })
+  const failedCharacterReferenceIssues = refCollection.diagnostics.filter((diagnostic) =>
+    diagnostic.kind === 'character'
+    && typeof diagnostic.inputIndex === 'number'
+    && normalizationIssues.some((issue) => issue.index === diagnostic.inputIndex),
+  )
+  if (failedCharacterReferenceIssues.length > 0) {
+    throw new Error(`PANEL_CHARACTER_REFERENCE_NORMALIZE_FAILED:${failedCharacterReferenceIssues.map((issue) => `${issue.name || issue.characterId}:${issue.appearance || issue.appearanceId}`).join('; ')}`)
+  }
 
   const logger = createScopedLogger({
     module: 'worker.panel-image',
@@ -197,6 +232,9 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       candidateCount,
       referenceImagesRawCount: refs.length,
       referenceImagesNormalizedCount: normalizedRefs.length,
+      expectedCharacterReferenceCount: refCollection.expectedCharacterReferenceCount,
+      referenceImageDiagnostics: refCollection.diagnostics,
+      referenceImageNormalizationIssues: normalizationIssues,
       rawUrls: refs.map((u) => u.substring(0, 100)),
       normalizedUrls: normalizedRefs.map((u) => u.substring(0, 100)),
       panelCharacters: panel.characters,

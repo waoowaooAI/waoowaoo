@@ -6,6 +6,12 @@ import type { DirectorStyleDoc } from '@/lib/director-style'
 import { parseDirectorStyleDoc } from '@/lib/director-style'
 import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
 import {
+  findAppearanceForStoryboardReference,
+  findCharacterForStoryboardReference,
+  parseStoryboardPanelCharacterReferences,
+  type StoryboardPanelCharacterReference,
+} from '@/lib/storyboard-character-bindings'
+import {
   resolveImageSourceFromGeneration,
   toSignedUrlIfCos,
   uploadImageSourceToCos,
@@ -15,6 +21,7 @@ import {
 export type AnyObj = Record<string, unknown>
 
 interface CharacterAppearanceLike {
+  id?: string
   appearanceIndex?: number
   changeReason: string | null
   description?: string | null
@@ -25,6 +32,7 @@ interface CharacterAppearanceLike {
 }
 
 interface CharacterLike {
+  id?: string
   name: string
   appearances?: CharacterAppearanceLike[]
 }
@@ -56,9 +64,32 @@ interface PanelLike {
 }
 
 export interface PanelCharacterReference {
+  characterId?: string
   name: string
+  appearanceId?: string
+  appearanceIndex?: number
   appearance?: string
   slot?: string
+}
+
+export type PanelReferenceImageDiagnostic = {
+  kind: 'sketch' | 'character' | 'location'
+  inputIndex: number | null
+  name?: string | null
+  characterId?: string | null
+  appearance?: string | null
+  appearanceId?: string | null
+  selectedIndex?: number | null
+  sourceUrl?: string | null
+  signedUrl?: string | null
+  issue?: string | null
+}
+
+export type PanelReferenceImageCollection = {
+  refs: string[]
+  diagnostics: PanelReferenceImageDiagnostic[]
+  issues: PanelReferenceImageDiagnostic[]
+  expectedCharacterReferenceCount: number
 }
 
 interface ProjectDataDb {
@@ -185,80 +216,135 @@ export async function resolveNovelData(projectId: string, userId?: string) {
 }
 
 export function parsePanelCharacterReferences(value: string | null | undefined): PanelCharacterReference[] {
-  if (!value) return []
-  try {
-    const parsed = JSON.parse(value)
-    if (!Array.isArray(parsed)) return []
-    return parsed
-      .map((item: unknown) => {
-        if (typeof item === 'string') return { name: item }
-        if (!item || typeof item !== 'object') return null
-        const candidate = item as { name?: unknown; appearance?: unknown; slot?: unknown }
-        if (typeof candidate.name === 'string') {
-          return {
-            name: candidate.name,
-            appearance: typeof candidate.appearance === 'string' ? candidate.appearance : undefined,
-            slot: typeof candidate.slot === 'string' ? candidate.slot : undefined,
-          }
-        }
-        return null
-      })
-      .filter(Boolean) as PanelCharacterReference[]
-  } catch {
-    return []
-  }
+  return parseStoryboardPanelCharacterReferences(value) as PanelCharacterReference[]
 }
 
-/**
- * 按角色名查找角色（支持别名匹配）
- * 优先级：1. 精确全名匹配  2. 按 '/' 拆分后别名精确匹配
- * 例：引用名 "顾娘子" 可匹配角色 "顾娘子/顾盼之"
- */
-export function findCharacterByName<T extends { name: string }>(characters: T[], referenceName: string): T | undefined {
-  const refLower = referenceName.toLowerCase().trim()
-  if (!refLower) return undefined
-
-  // 优先级 1：精确全名匹配
-  const exact = characters.find((c) => c.name.toLowerCase().trim() === refLower)
-  if (exact) return exact
-
-  // 优先级 2：别名匹配 — 按 '/' 拆分后任一别名精确匹配
-  const refAliases = refLower.split('/').map((s) => s.trim()).filter(Boolean)
-  for (const character of characters) {
-    const charAliases = character.name.toLowerCase().split('/').map((s) => s.trim()).filter(Boolean)
-    const hasOverlap = refAliases.some((refAlias) => charAliases.includes(refAlias))
-    if (hasOverlap) return character
-  }
-
-  return undefined
+function formatPanelReferenceIssue(issues: PanelReferenceImageDiagnostic[]) {
+  return issues
+    .map((issue) => {
+      const subject = issue.kind === 'character'
+        ? `${issue.name || issue.characterId || 'unknown'}:${issue.appearance || issue.appearanceId || 'appearance'}`
+        : issue.name || issue.kind
+      return `${issue.kind}:${subject}:${issue.issue || 'invalid'}`
+    })
+    .join('; ')
 }
 
-export async function collectPanelReferenceImages(projectData: NovelProjectData, panel: PanelLike) {
-  const refs: string[] = []
+function pushIssue(
+  collection: PanelReferenceImageCollection,
+  issue: PanelReferenceImageDiagnostic,
+) {
+  collection.diagnostics.push(issue)
+  collection.issues.push(issue)
+}
+
+export async function collectPanelReferenceImagesWithDiagnostics(
+  projectData: NovelProjectData,
+  panel: PanelLike,
+  options: { strict?: boolean } = {},
+): Promise<PanelReferenceImageCollection> {
+  const collection: PanelReferenceImageCollection = {
+    refs: [],
+    diagnostics: [],
+    issues: [],
+    expectedCharacterReferenceCount: 0,
+  }
+
+  const pushRef = (diagnostic: PanelReferenceImageDiagnostic, signedUrl: string) => {
+    collection.refs.push(signedUrl)
+    collection.diagnostics.push({
+      ...diagnostic,
+      inputIndex: collection.refs.length - 1,
+      signedUrl,
+      issue: null,
+    })
+  }
 
   const sketch = toSignedUrlIfCos(panel.sketchImageUrl, 3600)
-  if (sketch) refs.push(sketch)
+  if (sketch) pushRef({ kind: 'sketch', inputIndex: null, sourceUrl: panel.sketchImageUrl || null }, sketch)
 
   const panelCharacters = parsePanelCharacterReferences(panel.characters)
   for (const item of panelCharacters) {
-    const character = findCharacterByName(projectData.characters || [], item.name)
-    if (!character) continue
-
-    const appearances = character.appearances || []
-    let appearance = appearances[0]
-    if (item.appearance) {
-      const matched = appearances.find((a) => (a.changeReason || '').toLowerCase() === item.appearance!.toLowerCase())
-      if (matched) appearance = matched
+    collection.expectedCharacterReferenceCount += 1
+    const character = findCharacterForStoryboardReference(
+      projectData.characters || [],
+      item as StoryboardPanelCharacterReference,
+    )
+    if (!character) {
+      pushIssue(collection, {
+        kind: 'character',
+        inputIndex: null,
+        name: item.name,
+        characterId: item.characterId || null,
+        appearance: item.appearance || null,
+        appearanceId: item.appearanceId || null,
+        issue: 'character_not_found',
+      })
+      continue
     }
 
-    if (!appearance) continue
+    const appearances = character.appearances || []
+    const appearance = findAppearanceForStoryboardReference(
+      appearances,
+      item as StoryboardPanelCharacterReference,
+    )
+    if (!appearance) {
+      pushIssue(collection, {
+        kind: 'character',
+        inputIndex: null,
+        name: character.name,
+        characterId: character.id || item.characterId || null,
+        appearance: item.appearance || null,
+        appearanceId: item.appearanceId || null,
+        issue: 'appearance_not_found',
+      })
+      continue
+    }
 
     const imageUrls = parseImageUrls(appearance.imageUrls, 'characterAppearance.imageUrls')
     const selectedIndex = appearance.selectedIndex
     const selectedUrl = selectedIndex !== null && selectedIndex !== undefined ? imageUrls[selectedIndex] : null
-    const key = selectedUrl || imageUrls[0] || appearance.imageUrl
+    const key = selectedIndex !== null && selectedIndex !== undefined
+      ? selectedUrl
+      : imageUrls[0] || appearance.imageUrl
+    if (!key) {
+      pushIssue(collection, {
+        kind: 'character',
+        inputIndex: null,
+        name: character.name,
+        characterId: character.id || item.characterId || null,
+        appearance: appearance.changeReason || item.appearance || null,
+        appearanceId: appearance.id || item.appearanceId || null,
+        selectedIndex,
+        issue: 'reference_image_missing',
+      })
+      continue
+    }
     const signed = toSignedUrlIfCos(key, 3600)
-    if (signed) refs.push(signed)
+    if (!signed) {
+      pushIssue(collection, {
+        kind: 'character',
+        inputIndex: null,
+        name: character.name,
+        characterId: character.id || item.characterId || null,
+        appearance: appearance.changeReason || item.appearance || null,
+        appearanceId: appearance.id || item.appearanceId || null,
+        selectedIndex,
+        sourceUrl: key,
+        issue: 'reference_url_not_signable',
+      })
+      continue
+    }
+    pushRef({
+      kind: 'character',
+      inputIndex: null,
+      name: character.name,
+      characterId: character.id || item.characterId || null,
+      appearance: appearance.changeReason || item.appearance || null,
+      appearanceId: appearance.id || item.appearanceId || null,
+      selectedIndex,
+      sourceUrl: key,
+    }, signed)
   }
 
   if (panel.location) {
@@ -267,9 +353,24 @@ export async function collectPanelReferenceImages(projectData: NovelProjectData,
       const images = location.images || []
       const selected = images.find((img) => img.isSelected) || images[0]
       const signed = toSignedUrlIfCos(selected?.imageUrl, 3600)
-      if (signed) refs.push(signed)
+      if (signed) {
+        pushRef({
+          kind: 'location',
+          inputIndex: null,
+          name: location.name,
+          sourceUrl: selected?.imageUrl || null,
+        }, signed)
+      }
     }
   }
 
-  return refs
+  if (options.strict && collection.issues.some((issue) => issue.kind === 'character')) {
+    throw new Error(`PANEL_CHARACTER_REFERENCE_INVALID:${formatPanelReferenceIssue(collection.issues)}`)
+  }
+
+  return collection
+}
+
+export async function collectPanelReferenceImages(projectData: NovelProjectData, panel: PanelLike) {
+  return (await collectPanelReferenceImagesWithDiagnostics(projectData, panel)).refs
 }

@@ -36,9 +36,12 @@ const sharedMock = vi.hoisted(() => ({
       video: { cameraMotion: '慢推', motionSpeed: '缓慢', subjectMotion: '克制', rhythm: '停顿', stability: '稳定', transition: '暗部转场', avoid: '避免甩镜' },
     },
     characters: [{
+      id: 'char-hero',
       name: 'Hero',
       introduction: '主角',
       appearances: [{
+        id: 'app-hero-default',
+        appearanceIndex: 0,
         changeReason: 'default',
         imageUrls: JSON.stringify(['cos/hero-default.png']),
         imageUrl: 'cos/hero-default.png',
@@ -132,7 +135,13 @@ describe('worker panel-variant-task-handler behavior', () => {
           storyboardId: 'storyboard-1',
           imageUrl: null,
           location: 'Old Town',
-          characters: JSON.stringify([{ name: 'Hero', appearance: 'default', slot: '街道左侧靠墙的留白位置' }]),
+          characters: JSON.stringify([{
+            characterId: 'char-hero',
+            name: 'Hero',
+            appearanceId: 'app-hero-default',
+            appearance: 'default',
+            slot: '街道左侧靠墙的留白位置',
+          }]),
         }
       }
       if (args.where.id === 'panel-source') {
@@ -144,7 +153,7 @@ describe('worker panel-variant-task-handler behavior', () => {
           shotType: 'medium',
           cameraMove: 'pan',
           location: 'Old Town',
-          characters: JSON.stringify([{ name: 'Hero' }]),
+          characters: JSON.stringify([{ characterId: 'char-hero', name: 'Hero', appearanceId: 'app-hero-default', appearance: 'default' }]),
         }
       }
       return null

@@ -37,6 +37,7 @@ import { handleReferenceToCharacterTask } from './handlers/reference-to-characte
 import { handleShotAITask } from './handlers/shot-ai-tasks'
 import { handleCharacterProfileTask } from './handlers/character-profile'
 import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
+import { canonicalizeStoryboardPanels } from '@/lib/storyboard-character-bindings'
 
 function readAssetKind(value: Record<string, unknown>): string {
   return typeof value.assetKind === 'string' ? value.assetKind : 'location'
@@ -305,7 +306,7 @@ async function runStoryboardPhasesForClip(params: {
   const photographyRules: PhotographyRule[] = phase2.photographyRules || []
   const actingDirections: ActingDirection[] = phase2Acting.actingDirections || []
 
-  const finalPanels = (phase3.finalPanels || []).map((panel, index) => {
+  const finalPanels = canonicalizeStoryboardPanels((phase3.finalPanels || []).map((panel, index) => {
     const rules = photographyRules.find((r) => r.panel_number === panel.panel_number) || photographyRules[index]
     const acting = actingDirections.find((a) => a.panel_number === panel.panel_number) || actingDirections[index]
 
@@ -324,7 +325,7 @@ async function runStoryboardPhasesForClip(params: {
         : {}),
       ...(acting?.characters ? { actingNotes: acting.characters } : {}),
     }
-  })
+  }), params.projectData.characters || [], `legacy:${params.clip.id || 'clip'}:final`)
 
   return finalPanels
 }

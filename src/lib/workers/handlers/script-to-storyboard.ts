@@ -33,6 +33,7 @@ import {
 } from './script-to-storyboard-atomic-retry'
 import { persistStoryboardWorkflowOutputs } from '@/lib/domain/storyboard/service'
 import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
+import { canonicalizeStoryboardPanels } from '@/lib/storyboard-character-bindings'
 
 type AnyObj = Record<string, unknown>
 
@@ -71,6 +72,18 @@ function resolveStoryboardStepScopeRef(stepId: string, episodeId: string): strin
   return `episode:${episodeId}`
 }
 
+function canonicalizeStoryboardPanelMap(
+  panelsByClipId: Record<string, import('@/lib/storyboard-phases').StoryboardPanel[]> | undefined,
+  characters: Parameters<typeof canonicalizeStoryboardPanels>[1],
+  context: string,
+) {
+  const next: Record<string, import('@/lib/storyboard-phases').StoryboardPanel[]> = {}
+  for (const [clipId, panels] of Object.entries(panelsByClipId || {})) {
+    next[clipId] = canonicalizeStoryboardPanels(panels, characters, `${context}:${clipId}`)
+  }
+  return next
+}
+
 export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   const payload = (job.data.payload || {}) as AnyObj
   const projectId = job.data.projectId
@@ -106,7 +119,7 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
   const projectWorkflow = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
-      characters: true,
+      characters: { include: { appearances: { orderBy: { appearanceIndex: 'asc' } } } },
       locations: true,
     },
   })
@@ -381,6 +394,26 @@ export async function handleScriptToStoryboardTask(job: Job<TaskJobData>) {
           await callbacks.flush()
         }
       })()
+
+      const canonicalClipPanels = (orchestratorResult.clipPanels || []).map((clipEntry) => ({
+        ...clipEntry,
+        finalPanels: canonicalizeStoryboardPanels(
+          clipEntry.finalPanels || [],
+          projectWorkflow.characters || [],
+          `workflow:${clipEntry.clipId}:final`,
+        ),
+      }))
+      orchestratorResult.clipPanels = canonicalClipPanels
+      orchestratorResult.phase1PanelsByClipId = canonicalizeStoryboardPanelMap(
+        orchestratorResult.phase1PanelsByClipId,
+        projectWorkflow.characters || [],
+        'workflow:phase1',
+      )
+      orchestratorResult.phase3PanelsByClipId = canonicalizeStoryboardPanelMap(
+        orchestratorResult.phase3PanelsByClipId,
+        projectWorkflow.characters || [],
+        'workflow:phase3',
+      )
 
       const phase1Map = orchestratorResult.phase1PanelsByClipId || {}
       const phase2CinematographyMap = orchestratorResult.phase2CinematographyByClipId || {}

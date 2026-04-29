@@ -17,12 +17,16 @@ import {
 } from '@/lib/location-available-slots'
 import {
   AnyObj,
-  findCharacterByName,
   parseImageUrls,
   parsePanelCharacterReferences,
   pickFirstString,
   resolveNovelData,
 } from './image-task-handler-shared'
+import {
+  findAppearanceForStoryboardReference,
+  findCharacterForStoryboardReference,
+  type StoryboardPanelCharacterReference,
+} from '@/lib/storyboard-character-bindings'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS } from '@/lib/ai-prompts'
 
 interface VariantPromptParams {
@@ -70,13 +74,16 @@ function buildVariantPrompt(params: VariantPromptParams): string {
 
 function buildCharactersInfo(
   panel: { characters: string | null },
-  projectData: { characters?: Array<{ name: string; introduction?: string | null; appearances?: Array<{ changeReason?: string | null }> }> },
+  projectData: { characters?: Array<{ id?: string; name: string; introduction?: string | null; appearances?: Array<{ id?: string; appearanceIndex?: number | null; changeReason?: string | null }> }> },
 ): string {
   const panelCharacters = parsePanelCharacterReferences(panel.characters)
   if (panelCharacters.length === 0) return '无角色'
 
   return panelCharacters.map(item => {
-    const character = findCharacterByName(projectData.characters || [], item.name)
+    const character = findCharacterForStoryboardReference(
+      projectData.characters || [],
+      item as StoryboardPanelCharacterReference,
+    )
     const intro = character?.introduction || ''
     const appearance = item.appearance || '默认形象'
     const slotText = item.slot ? `，固定位置：${item.slot}` : ''
@@ -86,14 +93,17 @@ function buildCharactersInfo(
 
 function buildCharacterAssetsDescription(
   panel: { characters: string | null },
-  projectData: { characters?: Array<{ name: string; appearances?: Array<{ changeReason?: string | null; imageUrl?: string | null }> }> },
+  projectData: { characters?: Array<{ id?: string; name: string; appearances?: Array<{ id?: string; appearanceIndex?: number | null; changeReason?: string | null; imageUrl?: string | null }> }> },
 ): string {
   const panelCharacters = parsePanelCharacterReferences(panel.characters)
   if (panelCharacters.length === 0) return '无角色参考图'
 
   return panelCharacters.map(item => {
-    const character = findCharacterByName(projectData.characters || [], item.name)
-    if (!character) return `- ${item.name}：无参考图`
+    const character = findCharacterForStoryboardReference(
+      projectData.characters || [],
+      item as StoryboardPanelCharacterReference,
+    )
+    if (!character) return `- ${item.name}：角色未绑定资产`
     const hasAppearance = (character.appearances || []).length > 0
     return `- ${item.name}：${hasAppearance ? '已提供参考图' : '无参考图'}`
   }).join('\n')
@@ -146,25 +156,32 @@ function buildVariantReferenceImages(params: {
   if (params.includeCharacterAssets) {
     const panelCharacters = parsePanelCharacterReferences(params.newPanel.characters)
     for (const item of panelCharacters) {
-      const character = findCharacterByName(params.projectData.characters || [], item.name)
-      if (!character) continue
-
-      const appearances = character.appearances || []
-      let appearance = appearances[0]
-      if (item.appearance) {
-        const matched = appearances.find((candidate) => (candidate.changeReason || '').toLowerCase() === item.appearance!.toLowerCase())
-        if (matched) appearance = matched
+      const character = findCharacterForStoryboardReference(
+        params.projectData.characters || [],
+        item as StoryboardPanelCharacterReference,
+      )
+      if (!character) {
+        throw new Error(`PANEL_VARIANT_CHARACTER_REFERENCE_INVALID:${item.name || item.characterId || 'unknown'}:character_not_bound`)
       }
 
-      if (!appearance) continue
+      const appearances = character.appearances || []
+      const appearance = findAppearanceForStoryboardReference(
+        appearances,
+        item as StoryboardPanelCharacterReference,
+      )
+      if (!appearance) {
+        throw new Error(`PANEL_VARIANT_CHARACTER_REFERENCE_INVALID:${character.name}:appearance_not_bound`)
+      }
       const imageUrls = parseImageUrls((appearance as { imageUrls?: string | null }).imageUrls || null, 'characterAppearance.imageUrls')
       const selectedIndex = typeof (appearance as { selectedIndex?: number | null }).selectedIndex === 'number'
         ? (appearance as { selectedIndex?: number | null }).selectedIndex
         : null
-      const selectedUrl = (selectedIndex !== null && selectedIndex !== undefined ? imageUrls[selectedIndex] : null)
-        || imageUrls[0]
-        || appearance.imageUrl
-        || null
+      const selectedUrl = selectedIndex !== null && selectedIndex !== undefined
+        ? imageUrls[selectedIndex]
+        : imageUrls[0] || appearance.imageUrl || null
+      if (!selectedUrl) {
+        throw new Error(`PANEL_VARIANT_CHARACTER_REFERENCE_INVALID:${character.name}:reference_image_missing`)
+      }
       const signed = toSignedUrlIfCos(selectedUrl, 3600)
       if (signed) refs.push(signed)
     }

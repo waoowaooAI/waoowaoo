@@ -16,11 +16,25 @@ const utilsMock = vi.hoisted(() => ({
   assertTaskActive: vi.fn(async () => undefined),
   getProjectModels: vi.fn(async () => ({ storyboardModel: 'storyboard-model-1', artStyle: 'realistic' })),
   resolveImageSourceFromGeneration: vi.fn(),
+  toSignedUrlIfCos: vi.fn((url: string | null | undefined) => url || null),
   uploadImageSourceToCos: vi.fn(),
 }))
 
 const sharedMock = vi.hoisted(() => ({
   collectPanelReferenceImages: vi.fn(async () => ['https://signed.example/ref-1.png']),
+  collectPanelReferenceImagesWithDiagnostics: vi.fn(async () => ({
+    refs: ['https://signed.example/ref-1.png'],
+    diagnostics: [{
+      kind: 'character',
+      inputIndex: 0,
+      name: 'Hero',
+      appearance: 'default',
+      signedUrl: 'https://signed.example/ref-1.png',
+      issue: null,
+    }],
+    issues: [],
+    expectedCharacterReferenceCount: 1,
+  })),
   resolveNovelData: vi.fn(async () => ({
     videoRatio: '16:9',
     directorStyleDoc: {
@@ -53,7 +67,10 @@ const sharedMock = vi.hoisted(() => ({
 }))
 
 const outboundMock = vi.hoisted(() => ({
-  normalizeOptionalReferenceImagesForGeneration: vi.fn(async () => ['normalized-ref-1']),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async (
+    _refs: string[],
+    _options?: { onIssue?: (issue: { index: number; input: string; code: string; stage: string; message: string }) => void },
+  ) => ['normalized-ref-1']),
 }))
 
 const promptMock = vi.hoisted(() => ({
@@ -82,6 +99,7 @@ vi.mock('@/lib/workers/handlers/image-task-handler-shared', async () => {
   return {
     ...actual,
     collectPanelReferenceImages: sharedMock.collectPanelReferenceImages,
+    collectPanelReferenceImagesWithDiagnostics: sharedMock.collectPanelReferenceImagesWithDiagnostics,
     resolveNovelData: sharedMock.resolveNovelData,
   }
 })
@@ -199,6 +217,42 @@ describe('worker panel-image-task-handler behavior', () => {
     })
   })
 
+  it('includes selected previous panel images as generation references', async () => {
+    outboundMock.normalizeOptionalReferenceImagesForGeneration.mockImplementationOnce(async (inputs: string[]) =>
+      inputs.map((input) => `normalized:${input}`),
+    )
+
+    const job = buildJob({
+      candidateCount: 1,
+      referencePanelImageUrls: ['images/previous-panel.png'],
+      extraImageUrls: ['https://example.com/manual-ref.png'],
+    })
+    await handlePanelImageTask(job)
+
+    expect(outboundMock.normalizeOptionalReferenceImagesForGeneration).toHaveBeenCalledWith(
+      [
+        'https://signed.example/ref-1.png',
+        'images/previous-panel.png',
+        'https://example.com/manual-ref.png',
+      ],
+      expect.objectContaining({
+        context: { taskType: TASK_TYPE.IMAGE_PANEL, scope: 'panel-image.refs' },
+      }),
+    )
+    expect(utilsMock.resolveImageSourceFromGeneration).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        options: expect.objectContaining({
+          referenceImages: [
+            'normalized:https://signed.example/ref-1.png',
+            'normalized:images/previous-panel.png',
+            'normalized:https://example.com/manual-ref.png',
+          ],
+        }),
+      }),
+    )
+  })
+
   it('regeneration branch -> keeps old image in previousImageUrl and stores candidates only', async () => {
     utilsMock.resolveImageSourceFromGeneration.mockReset()
     utilsMock.uploadImageSourceToCos.mockReset()
@@ -240,5 +294,23 @@ describe('worker panel-image-task-handler behavior', () => {
         candidateImages: JSON.stringify(['cos/panel-regenerated.png']),
       },
     })
+  })
+
+  it('fails when a character reference image cannot be normalized', async () => {
+    outboundMock.normalizeOptionalReferenceImagesForGeneration.mockImplementationOnce(async (_refs, options) => {
+      options?.onIssue?.({
+        index: 0,
+        input: 'https://signed.example/ref-1.png',
+        code: 'OUTBOUND_IMAGE_FETCH_EXCEPTION',
+        stage: 'fetch',
+        message: 'fetch failed',
+      })
+      return []
+    })
+
+    await expect(handlePanelImageTask(buildJob({ candidateCount: 1 })))
+      .rejects
+      .toThrow('PANEL_CHARACTER_REFERENCE_NORMALIZE_FAILED:Hero:default')
+    expect(utilsMock.resolveImageSourceFromGeneration).not.toHaveBeenCalled()
   })
 })

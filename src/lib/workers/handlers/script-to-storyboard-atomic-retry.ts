@@ -19,6 +19,7 @@ import {
   type PhotographyRule,
   type StoryboardPanel,
 } from '@/lib/storyboard-phases'
+import { canonicalizeStoryboardPanels } from '@/lib/storyboard-character-bindings'
 import type { ClipPanelsResult, JsonRecord } from './script-to-storyboard-helpers'
 import {
   buildPromptAssetContext,
@@ -452,7 +453,11 @@ export async function runScriptToStoryboardAtomicRetry(params: {
         if (panels.length === 0) {
           throw new Error(`Phase 1 returned empty panels for clip ${formatClipId(params.clip)}`)
         }
-        return panels
+        return canonicalizeStoryboardPanels(
+          panels,
+          params.projectData.characters || [],
+          `phase1:${formatClipId(params.clip)}`,
+        )
       },
       retryStepAttempt: params.retryStepAttempt,
     })
@@ -530,7 +535,11 @@ export async function runScriptToStoryboardAtomicRetry(params: {
         if (filtered.length === 0) {
           throw new Error(`Phase 3 returned empty valid panels for clip ${formatClipId(params.clip)}`)
         }
-        return filtered
+        return canonicalizeStoryboardPanels(
+          filtered,
+          params.projectData.characters || [],
+          `phase3:${formatClipId(params.clip)}`,
+        )
       },
       retryStepAttempt: params.retryStepAttempt,
     })
@@ -538,11 +547,15 @@ export async function runScriptToStoryboardAtomicRetry(params: {
   }
 
   if (params.retryTarget.phase !== 'phase1') {
-    const finalPanels = mergePanelsWithRules({
-      finalPanels: requireRows(phase3Panels, 'storyboard.clip.phase3'),
-      photographyRules: requireRows(phase2Cinematography, 'storyboard.clip.phase2.cine'),
-      actingDirections: requireRows(phase2Acting, 'storyboard.clip.phase2.acting'),
-    })
+    const finalPanels = canonicalizeStoryboardPanels(
+      mergePanelsWithRules({
+        finalPanels: requireRows(phase3Panels, 'storyboard.clip.phase3'),
+        photographyRules: requireRows(phase2Cinematography, 'storyboard.clip.phase2.cine'),
+        actingDirections: requireRows(phase2Acting, 'storyboard.clip.phase2.acting'),
+      }),
+      params.projectData.characters || [],
+      `final:${formatClipId(params.clip)}`,
+    )
     clipPanels.push({
       clipId: params.clip.id,
       clipIndex: params.clipIndex + 1,

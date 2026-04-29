@@ -9,6 +9,8 @@ type PromptLocale = 'zh' | 'en'
 export type ClipCharacterRef = string | { name?: string | null }
 
 export type PromptCharacterAppearance = {
+  id?: string
+  appearanceIndex?: number | null
   changeReason?: string | null
   descriptions?: string[] | string | null
   selectedIndex?: number | null
@@ -16,6 +18,7 @@ export type PromptCharacterAppearance = {
 }
 
 export type PromptCharacterAsset = {
+  id?: string
   name: string
   appearances?: PromptCharacterAppearance[]
   introduction?: string | null
@@ -117,8 +120,13 @@ export function buildPromptAssetContext(input: PromptAssetContextInput): PromptA
       if (appearances.length === 0) {
         return `${character.name}: ["初始形象"]`
       }
-      const labels = appearances.map((appearance) => appearance.changeReason || '初始形象')
-      return `${character.name}: [${labels.map((label) => `"${label}"`).join(', ')}]`
+      const labels = appearances.map((appearance) => ({
+        appearance: appearance.changeReason || '初始形象',
+        ...(character.id ? { characterId: character.id } : {}),
+        ...(appearance.id ? { appearanceId: appearance.id } : {}),
+        ...(typeof appearance.appearanceIndex === 'number' ? { appearanceIndex: appearance.appearanceIndex } : {}),
+      }))
+      return `${character.name}${character.id ? ` (characterId: ${character.id})` : ''}: ${JSON.stringify(labels)}`
     }).join('\n') || '无'
 
   const fullDescriptionText = subjectNames.length === 0
