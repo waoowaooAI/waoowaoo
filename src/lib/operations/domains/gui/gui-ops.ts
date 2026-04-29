@@ -533,6 +533,7 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
 	        confirmed: z.boolean().optional(),
 	        characterId: z.string().min(1),
 	        appearanceId: z.string().min(1),
+	        selectedIndex: z.number().int().min(0).optional(),
       }),
       outputSchema: z.unknown(),
       execute: async (ctx, input) => {
@@ -544,17 +545,20 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
         if (appearance.characterId !== input.characterId) throw new ApiError('INVALID_PARAMS')
         if (appearance.character.projectId !== ctx.projectId) throw new ApiError('INVALID_PARAMS')
 
-        if (appearance.selectedIndex === null || appearance.selectedIndex === undefined) {
+        const imageUrls = decodeImageUrlsFromDb(appearance.imageUrls, 'characterAppearance.imageUrls')
+        const selectedIndex = input.selectedIndex ?? appearance.selectedIndex
+        if (selectedIndex === null || selectedIndex === undefined) {
           throw new ApiError('INVALID_PARAMS')
         }
-
-        const imageUrls = decodeImageUrlsFromDb(appearance.imageUrls, 'characterAppearance.imageUrls')
-        if (imageUrls.length <= 1) {
-          return { success: true, message: '已确认选择', deletedCount: 0 }
-        }
-        const selectedIndex = appearance.selectedIndex
         const selectedImageUrl = imageUrls[selectedIndex]
         if (!selectedImageUrl) throw new ApiError('NOT_FOUND')
+        if (imageUrls.length <= 1) {
+          await prisma.characterAppearance.update({
+            where: { id: appearance.id },
+            data: { imageUrl: selectedImageUrl, selectedIndex: 0 },
+          })
+          return { success: true, message: '已确认选择', deletedCount: 0 }
+        }
 
         let deletedCount = 0
         for (let i = 0; i < imageUrls.length; i++) {
@@ -828,6 +832,7 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
 	      inputSchema: z.object({
 	        confirmed: z.boolean().optional(),
 	        locationId: z.string().min(1),
+	        selectedIndex: z.number().int().min(0).optional(),
 	      }),
       outputSchema: z.unknown(),
       execute: async (ctx, input) => {
@@ -842,10 +847,13 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
           return { success: true, message: '已确认选择', deletedCount: 0 }
         }
 
-        const selectedImage = location.selectedImageId
-          ? images.find((img) => img.id === location.selectedImageId)
-          : images.find((img) => img.isSelected)
+        const selectedImage = input.selectedIndex !== undefined
+          ? images.find((img) => img.imageIndex === input.selectedIndex)
+          : location.selectedImageId
+            ? images.find((img) => img.id === location.selectedImageId)
+            : images.find((img) => img.isSelected)
         if (!selectedImage) throw new ApiError('INVALID_PARAMS')
+        if (!selectedImage.imageUrl) throw new ApiError('INVALID_PARAMS')
 
         const imagesToDelete = images.filter((img) => img.id !== selectedImage.id)
         let deletedCount = 0
@@ -869,7 +877,7 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
           })
           await tx.locationImage.update({
             where: { id: selectedImage.id },
-            data: { imageIndex: 0 },
+            data: { imageIndex: 0, isSelected: true },
           })
           await tx.projectLocation.update({
             where: { id: input.locationId },

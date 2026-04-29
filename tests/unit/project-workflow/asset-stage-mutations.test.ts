@@ -113,7 +113,7 @@ import {
 import ProjectInputStage from '@/features/project-workspace/components/ProjectInputStage'
 
 interface ConfirmLocationSelectionMutation {
-  mutationFn: (variables: { locationId: string }) => Promise<unknown>
+  mutationFn: (variables: { locationId: string; imageIndex: number }) => Promise<unknown>
 }
 
 interface AnalyzeGlobalMutation {
@@ -187,7 +187,7 @@ describe('project location-backed confirm mutations', () => {
   it('routes prop confirmation to the unified asset select-render endpoint', async () => {
     const mutation = useConfirmProjectLocationSelection('project-1', 'prop') as unknown as ConfirmLocationSelectionMutation
 
-    await mutation.mutationFn({ locationId: 'prop-1' })
+    await mutation.mutationFn({ locationId: 'prop-1', imageIndex: 1 })
 
     expect(requestJsonWithErrorMock).toHaveBeenCalledTimes(1)
     expect(requestJsonWithErrorMock).toHaveBeenCalledWith(
@@ -200,6 +200,7 @@ describe('project location-backed confirm mutations', () => {
           kind: 'prop',
           projectId: 'project-1',
           confirm: true,
+          imageIndex: 1,
         }),
       },
       '确认选择失败',

@@ -2,7 +2,7 @@
 import { logInfo as _ulogInfo } from '@/lib/logging/core'
 import { resolveErrorDisplay } from '@/lib/errors/display'
 
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import {
     useGenerateCharacterImage,
@@ -91,9 +91,15 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
     }
 
     const imageUrls = appearance?.imageUrls || []
+    const imageUrlsSignature = useMemo(() => imageUrls.join('\u0000'), [imageUrls])
     const generatedImageCount = imageUrls.filter(u => isValidUrl(u)).length
     const hasMultipleImages = generatedImageCount > 1
-    const effectiveSelectedIndex: number | null = appearance?.selectedIndex ?? null
+    const persistedSelectedIndex: number | null = appearance?.selectedIndex ?? null
+    const [draftSelectedIndex, setDraftSelectedIndex] = useState<number | null>(persistedSelectedIndex)
+    useEffect(() => {
+        setDraftSelectedIndex(persistedSelectedIndex)
+    }, [appearance?.id, persistedSelectedIndex, imageUrlsSignature])
+    const effectiveSelectedIndex: number | null = draftSelectedIndex
     const currentImageUrl = appearance?.imageUrl || (effectiveSelectedIndex !== null ? imageUrls[effectiveSelectedIndex] : null) || imageUrls.find(u => u) || null
     const hasPreviousVersion = !!(appearance?.previousImageUrl || (appearance?.previousImageUrls && appearance.previousImageUrls.length > 0))
 
@@ -134,22 +140,9 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
         )
     }
 
-    // 选择图片（依赖 query 缓存乐观更新）
+    // 选择图片：只更新本地草稿，确认时才写后端
     const handleSelectImage = (imageIndex: number | null) => {
-        if (imageIndex === effectiveSelectedIndex) return
-        const requestId = latestSelectRequestRef.current + 1
-        latestSelectRequestRef.current = requestId
-        selectImage.mutate({
-            characterId: character.id,
-            appearanceIndex: appearance.appearanceIndex,
-            imageIndex,
-            confirm: false
-        }, {
-            onError: (error) => {
-                if (latestSelectRequestRef.current !== requestId) return
-                alert(error.message || t('selectFailed'))
-            }
-        })
+        setDraftSelectedIndex(imageIndex)
     }
 
     // 确认选择

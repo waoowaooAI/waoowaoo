@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
  * 布局：上面名字+描述，下面三张图片
  */
 
-import { useState, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Location } from '@/types/project'
 import { shouldShowError } from '@/lib/error-utils'
 import { useUploadProjectLocationImage } from '@/lib/query/mutations'
@@ -33,13 +33,12 @@ interface LocationCardProps {
   onGenerate: (count?: number) => void
   onUndo?: () => void  // 撤回到上一版本
   onImageClick: (imageUrl: string) => void
-  onSelectImage?: (locationId: string, imageIndex: number | null) => void
   onImageEdit?: (locationId: string, imageIndex: number) => void  // 新增：图片编辑
   onCopyFromGlobal?: () => void
   activeTaskKeys?: Set<string>
   onClearTaskKey?: (key: string) => void
   projectId: string
-  onConfirmSelection?: (locationId: string) => Promise<void> | void
+  onConfirmSelection?: (locationId: string, imageIndex: number) => Promise<void> | void
 }
 
 export default function LocationCard({
@@ -51,7 +50,6 @@ export default function LocationCard({
   onGenerate,
   onUndo,
   onImageClick,
-  onSelectImage,
   onImageEdit,
   onCopyFromGlobal,
   activeTaskKeys = new Set(),
@@ -114,7 +112,16 @@ export default function LocationCard({
   const selectedImage = location.selectedImageId
     ? orderedImages.find((img) => img.id === location.selectedImageId)
     : orderedImages.find((img) => img.isSelected)
-  const selectedIndex = selectedImage?.imageIndex ?? null
+  const persistedSelectedIndex = selectedImage?.imageIndex ?? null
+  const [draftSelectedIndex, setDraftSelectedIndex] = useState<number | null>(persistedSelectedIndex)
+  const imageSignature = useMemo(
+    () => orderedImages.map((image) => `${image.id}:${image.imageIndex}:${image.imageUrl ?? ''}`).join('\u0000'),
+    [orderedImages],
+  )
+  useEffect(() => {
+    setDraftSelectedIndex(persistedSelectedIndex)
+  }, [location.id, persistedSelectedIndex, imageSignature])
+  const selectedIndex = draftSelectedIndex
 
   // 当前显示的图片及其 imageIndex
   const currentImageUrl = selectedImage?.imageUrl || imagesWithUrl[0]?.imageUrl || null
@@ -254,16 +261,16 @@ export default function LocationCard({
 
         <LocationImageList
           mode="selection"
-          locationId={location.id}
           locationName={location.name}
           images={displaySelectionImages}
-          selectedImageId={location.selectedImageId}
           selectedIndex={selectedIndex}
           isGroupTaskRunning={isGroupTaskRunning}
           isImageTaskRunning={isImageTaskRunning}
           displayTaskPresentation={displayTaskPresentation}
           onImageClick={onImageClick}
-          onSelectImage={onSelectImage}
+          onSelectImage={(imageIndex) => setDraftSelectedIndex((current) => (
+            current === imageIndex ? null : imageIndex
+          ))}
         />
 
         <LocationCardActions
@@ -274,7 +281,7 @@ export default function LocationCard({
           onConfirmSelection={selectedIndex !== null && onConfirmSelection
             ? () => {
               setIsConfirmingSelection(true)
-              void Promise.resolve(onConfirmSelection(location.id)).finally(() => {
+              void Promise.resolve(onConfirmSelection(location.id, selectedIndex)).finally(() => {
                 setIsConfirmingSelection(false)
               })
             }

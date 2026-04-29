@@ -110,7 +110,6 @@ describe('CharacterSection actions', () => {
         onDeleteAppearance: () => undefined,
         onEditAppearance: () => undefined,
         handleGenerateImage: async () => undefined,
-        onSelectImage: () => undefined,
         onConfirmSelection: () => undefined,
         onRegenerateSingle: async () => undefined,
         onRegenerateGroup: async () => undefined,

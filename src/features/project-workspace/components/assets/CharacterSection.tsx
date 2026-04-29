@@ -38,8 +38,7 @@ interface CharacterSectionProps {
     onEditAppearance: (characterId: string, characterName: string, appearance: CharacterAppearance, introduction?: string | null) => void
     // 🔥 V6.6 重构：重命名为 handleGenerateImage
     handleGenerateImage: (type: 'character' | 'location', id: string, appearanceId?: string, count?: number) => Promise<void>
-    onSelectImage: (characterId: string, appearanceId: string, imageIndex: number | null) => void
-    onConfirmSelection: (characterId: string, appearanceId: string) => void
+    onConfirmSelection: (characterId: string, appearanceId: string, imageIndex: number) => Promise<void> | void
     onRegenerateSingle: (characterId: string, appearanceId: string, imageIndex: number) => Promise<void>
     onRegenerateGroup: (characterId: string, appearanceId: string, count?: number) => Promise<void>
     onUndo: (characterId: string, appearanceId: string) => void
@@ -80,7 +79,6 @@ export default function CharacterSection({
     onDeleteAppearance,
     onEditAppearance,
     handleGenerateImage,
-    onSelectImage,
     onConfirmSelection,
     onRegenerateSingle,
     onRegenerateGroup,
@@ -368,7 +366,6 @@ export default function CharacterSection({
                                             onImageClick={onImageClick}
                                             showDeleteButton={true}
                                             appearanceCount={sortedAppearances.length}
-                                            onSelectImage={onSelectImage}
                                             activeTaskKeys={activeTaskKeys}
                                             onClearTaskKey={onClearTaskKey}
                                             onImageEdit={(charId, _appearanceId, imageIndex) => onImageEdit(charId, appearance.id, imageIndex, character.name)}

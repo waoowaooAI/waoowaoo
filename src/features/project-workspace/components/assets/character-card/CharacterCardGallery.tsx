@@ -12,8 +12,6 @@ import '../AssetImageOverlays.css'
 type CharacterCardGalleryProps =
   | {
     mode: 'selection'
-    characterId: string
-    appearanceId: string
     characterName: string
     imageUrlsWithIndex: Array<{ url: string; originalIndex: number }>
     selectedIndex: number | null
@@ -21,7 +19,7 @@ type CharacterCardGalleryProps =
     isImageTaskRunning: (imageIndex: number) => boolean
     displayTaskPresentation: TaskPresentationState | null
     onImageClick: (imageUrl: string) => void
-    onSelectImage?: (characterId: string, appearanceId: string, imageIndex: number | null) => void
+    onSelectImage?: (imageIndex: number) => void
   }
   | {
     mode: 'single'
@@ -81,7 +79,7 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
                   onClick={(e) => {
                     e.stopPropagation()
                     if (!isThisTaskRunning) {
-                      props.onSelectImage?.(props.characterId, props.appearanceId, isThisSelected ? null : originalIndex)
+                      props.onSelectImage?.(originalIndex)
                     }
                   }}
                   disabled={isThisTaskRunning}

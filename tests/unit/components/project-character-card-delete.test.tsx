@@ -154,7 +154,6 @@ describe('project CharacterCard delete controls', () => {
         onImageClick: () => undefined,
         showDeleteButton: true,
         appearanceCount: 2,
-        onSelectImage: () => undefined,
         activeTaskKeys: new Set<string>(),
         onClearTaskKey: () => undefined,
         onImageEdit: () => undefined,

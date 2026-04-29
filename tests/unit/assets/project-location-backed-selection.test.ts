@@ -124,4 +124,44 @@ describe('project location-backed selection service', () => {
     expect(prismaMock.locationImage.deleteMany).not.toHaveBeenCalled()
     expect(deleteObjectMock).not.toHaveBeenCalled()
   })
+
+  it('confirms the explicit draft index without requiring a persisted selection', async () => {
+    prismaMock.projectLocation.findUnique.mockResolvedValue({
+      id: 'prop-1',
+      selectedImageId: null,
+      images: [
+        {
+          id: 'prop-image-1',
+          imageIndex: 0,
+          imageUrl: 'https://example.com/prop-1.png',
+          isSelected: false,
+        },
+        {
+          id: 'prop-image-2',
+          imageIndex: 1,
+          imageUrl: 'https://example.com/prop-2.png',
+          isSelected: false,
+        },
+      ],
+    })
+
+    const mod = await import('@/lib/assets/services/project-location-backed-selection')
+
+    const result = await mod.confirmProjectLocationBackedSelection('prop-1', 1)
+
+    expect(result).toEqual({ success: true })
+    expect(prismaMock.locationImage.deleteMany).toHaveBeenCalledWith({
+      where: {
+        locationId: 'prop-1',
+        id: { not: 'prop-image-2' },
+      },
+    })
+    expect(prismaMock.locationImage.update).toHaveBeenCalledWith({
+      where: { id: 'prop-image-2' },
+      data: {
+        imageIndex: 0,
+        isSelected: true,
+      },
+    })
+  })
 })

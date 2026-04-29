@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl'
  * 布局：上面名字+描述，下面三张图片（每张图片有独立的编辑和重新生成按钮）
  */
 
-import { useState, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Character, CharacterAppearance } from '@/types/project'
 import { shouldShowError } from '@/lib/error-utils'
 import VoiceSettings from './VoiceSettings'
@@ -36,14 +36,13 @@ interface CharacterCardProps {
   onImageClick: (imageUrl: string) => void
   showDeleteButton: boolean
   appearanceCount?: number  // 该角色的形象数量
-  onSelectImage?: (characterId: string, appearanceId: string, imageIndex: number | null) => void
   activeTaskKeys?: Set<string>
   onClearTaskKey?: (key: string) => void
   onImageEdit?: (characterId: string, appearanceId: string, imageIndex: number) => void
   isPrimaryAppearance?: boolean
   primaryAppearanceSelected?: boolean
   projectId: string
-  onConfirmSelection?: (characterId: string, appearanceId: string) => void  // 确认选择
+  onConfirmSelection?: (characterId: string, appearanceId: string, imageIndex: number) => Promise<void> | void  // 确认选择
   // 音色相关
   onVoiceChange?: (characterId: string, customVoiceUrl?: string) => void
   onVoiceDesign?: (characterId: string, characterName: string) => void  // AI 声音设计
@@ -62,7 +61,6 @@ export default function CharacterCard({
   onImageClick,
   showDeleteButton,
   appearanceCount = 1,
-  onSelectImage,
   activeTaskKeys = new Set(),
   onImageEdit,
   isPrimaryAppearance = false,
@@ -81,6 +79,7 @@ export default function CharacterCard({
   const [pendingUploadIndex, setPendingUploadIndex] = useState<number | undefined>(undefined)
   const [showDeleteMenu, setShowDeleteMenu] = useState(false)
   const [isConfirmingSelection, setIsConfirmingSelection] = useState(false)
+  const [draftSelectedIndex, setDraftSelectedIndex] = useState<number | null>(appearance.selectedIndex ?? null)
 
   // 处理删除按钮点击
   const handleDeleteClick = () => {
@@ -137,13 +136,18 @@ export default function CharacterCard({
 
   // 获取图片数组（已经是数组，不需要 JSON 解析）
   const rawImageUrls = appearance.imageUrls || []
+  const imageUrlsSignature = useMemo(() => rawImageUrls.join('\u0000'), [rawImageUrls])
+  useEffect(() => {
+    setDraftSelectedIndex(appearance.selectedIndex ?? null)
+  }, [appearance.id, appearance.selectedIndex, imageUrlsSignature])
+
   const imageUrlsWithIndex = rawImageUrls
     .map((url, idx) => ({ url, originalIndex: idx }))
     .filter((item) => !!item.url) as { url: string; originalIndex: number }[]
   const generatedImageCount = imageUrlsWithIndex.length
 
   const hasMultipleImages = imageUrlsWithIndex.length > 1
-  const selectedIndex = appearance.selectedIndex ?? null
+  const selectedIndex = draftSelectedIndex
 
   // 🔥 统一图片URL优先级：imageUrl > imageUrls[selectedIndex] > imageUrls[0]
   // 这样确保编辑后的新图片能正确显示
@@ -324,8 +328,6 @@ export default function CharacterCard({
 
         <CharacterCardGallery
           mode="selection"
-          characterId={character.id}
-          appearanceId={appearance.id}
           characterName={character.name}
           imageUrlsWithIndex={imageUrlsWithIndex}
           selectedIndex={selectedIndex}
@@ -333,7 +335,9 @@ export default function CharacterCard({
           isImageTaskRunning={isImageTaskRunning}
           displayTaskPresentation={displayTaskPresentation}
           onImageClick={onImageClick}
-          onSelectImage={onSelectImage}
+          onSelectImage={(imageIndex) => setDraftSelectedIndex((current) => (
+            current === imageIndex ? null : imageIndex
+          ))}
         />
 
         <CharacterCardActions
@@ -341,9 +345,11 @@ export default function CharacterCard({
           selectedIndex={selectedIndex}
           isConfirmingSelection={isConfirmingSelection}
           confirmSelectionState={confirmSelectionState}
-          onConfirmSelection={() => {
+          onConfirmSelection={selectedIndex === null ? undefined : () => {
             setIsConfirmingSelection(true)
-            onConfirmSelection?.(character.id, appearance.id)
+            void Promise.resolve(onConfirmSelection?.(character.id, appearance.id, selectedIndex)).finally(() => {
+              setIsConfirmingSelection(false)
+            })
           }}
           isPrimaryAppearance={isPrimaryAppearance}
           voiceSettings={selectionVoiceSettings}

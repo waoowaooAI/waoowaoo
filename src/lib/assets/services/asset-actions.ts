@@ -639,11 +639,11 @@ async function selectProjectAssetRender(input: AssetSelectInput) {
     })
     return { success: true }
   }
+  const selectedIndex = toNumber(input.body.selectedIndex ?? input.body.imageIndex)
   const confirm = input.body.confirm === true
   if (confirm) {
-    return confirmProjectLocationBackedSelection(input.assetId)
+    return confirmProjectLocationBackedSelection(input.assetId, selectedIndex)
   }
-  const selectedIndex = toNumber(input.body.selectedIndex ?? input.body.imageIndex)
   const location = await prisma.projectLocation.findUnique({
     where: { id: input.assetId },
     include: { images: { orderBy: { imageIndex: 'asc' } } },

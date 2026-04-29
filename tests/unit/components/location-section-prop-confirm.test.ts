@@ -96,7 +96,6 @@ describe('LocationSection prop confirm wiring', () => {
         onDeleteLocation: () => undefined,
         onEditLocation: () => undefined,
         handleGenerateImage: async () => undefined,
-        onSelectImage: () => undefined,
         onConfirmSelection: () => undefined,
         onRegenerateSingle: async () => undefined,
         onRegenerateGroup: async () => undefined,

@@ -26,16 +26,14 @@ type SelectionImage = {
 type LocationImageListProps =
   | {
     mode: 'selection'
-    locationId: string
     locationName: string
     images: SelectionImage[]
-    selectedImageId?: string | null
     selectedIndex: number | null
     isGroupTaskRunning: boolean
     isImageTaskRunning: (imageIndex: number) => boolean
     displayTaskPresentation: TaskPresentationState | null
     onImageClick: (imageUrl: string) => void
-    onSelectImage?: (locationId: string, imageIndex: number | null) => void
+    onSelectImage?: (imageIndex: number) => void
   }
   | {
     mode: 'single'
@@ -61,9 +59,7 @@ export default function LocationImageList(props: LocationImageListProps) {
     return (
       <div className="asset-selection-image-grid grid gap-3">
         {props.images.map((img) => {
-          const isThisSelected = props.selectedImageId
-            ? img.id === props.selectedImageId
-            : img.isSelected
+          const isThisSelected = props.selectedIndex === img.imageIndex
           const slotTaskRunning =
             props.isImageTaskRunning(img.imageIndex) ||
             (props.isGroupTaskRunning && !img.imageUrl)
@@ -137,7 +133,7 @@ export default function LocationImageList(props: LocationImageListProps) {
                   onClick={(e) => {
                     e.stopPropagation()
                     if (phase !== 'generating' && phase !== 'regenerating' && img.imageUrl) {
-                      props.onSelectImage?.(props.locationId, isThisSelected ? null : img.imageIndex)
+                      props.onSelectImage?.(img.imageIndex)
                     }
                   }}
                   disabled={phase === 'generating' || phase === 'regenerating' || !img.imageUrl}

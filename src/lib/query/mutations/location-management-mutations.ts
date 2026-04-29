@@ -300,7 +300,13 @@ export function useConfirmProjectLocationSelection(
     const invalidateProjectAssets = () =>
         invalidateQueryTemplates(queryClient, [queryKeys.projectAssets.all(projectId)])
     return useMutation({
-        mutationFn: async ({ locationId }: { locationId: string }) =>
+        mutationFn: async ({
+            locationId,
+            imageIndex,
+        }: {
+            locationId: string
+            imageIndex: number
+        }) =>
             await requestJsonWithError(
                 `/api/assets/${locationId}/select-render`,
                 {
@@ -311,6 +317,7 @@ export function useConfirmProjectLocationSelection(
                         kind,
                         projectId,
                         confirm: true,
+                        imageIndex,
                     }),
                 },
                 '确认选择失败',
