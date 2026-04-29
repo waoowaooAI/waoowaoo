@@ -30,6 +30,165 @@ export const authState = {
 }
 
 export const submitTaskMock = vi.fn<(...args: unknown[]) => Promise<SubmitResult>>()
+export const executeProjectAgentOperationFromApiMock = vi.fn<
+  (params: {
+    operationId: string
+    projectId: string
+    userId: string
+    input: unknown
+  }) => Promise<Record<string, unknown>>
+>()
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function inferTaskContractFromOperation(params: {
+  operationId: string
+  projectId: string
+  input: unknown
+}): { type: TaskType; targetType: string; targetId: string } {
+  const input = isRecord(params.input) ? params.input : {}
+
+  switch (params.operationId) {
+    case 'api_asset_hub_generate_image':
+      return {
+        type: TASK_TYPE.ASSET_HUB_IMAGE,
+        targetType: input.type === 'location' ? 'GlobalLocation' : 'GlobalCharacter',
+        targetId: typeof input.id === 'string' ? input.id : 'global-asset-1',
+      }
+    case 'api_asset_hub_modify_image':
+      return {
+        type: TASK_TYPE.ASSET_HUB_MODIFY,
+        targetType: input.type === 'location' ? 'GlobalLocationImage' : 'GlobalCharacterAppearance',
+        targetId: typeof input.id === 'string' ? input.id : 'global-asset-1',
+      }
+    case 'api_assets_generate':
+      return input.scope === 'project'
+        ? {
+          type: input.kind === 'location' ? TASK_TYPE.IMAGE_LOCATION : TASK_TYPE.IMAGE_CHARACTER,
+          targetType: input.kind === 'location' ? 'ProjectLocation' : 'CharacterAppearance',
+          targetId: typeof input.assetId === 'string' ? input.assetId : 'asset-1',
+        }
+        : {
+          type: TASK_TYPE.ASSET_HUB_IMAGE,
+          targetType: input.kind === 'location' ? 'GlobalLocation' : 'GlobalCharacter',
+          targetId: typeof input.assetId === 'string' ? input.assetId : 'asset-1',
+        }
+    case 'api_assets_modify_render':
+      return input.scope === 'project'
+        ? {
+          type: TASK_TYPE.MODIFY_ASSET_IMAGE,
+          targetType: input.kind === 'location' ? 'ProjectLocation' : 'CharacterAppearance',
+          targetId: typeof input.assetId === 'string' ? input.assetId : 'asset-1',
+        }
+        : {
+          type: TASK_TYPE.ASSET_HUB_MODIFY,
+          targetType: input.kind === 'location' ? 'GlobalLocationImage' : 'GlobalCharacterAppearance',
+          targetId: typeof input.assetId === 'string' ? input.assetId : 'asset-1',
+        }
+    case 'generate_character_image':
+      return {
+        type: TASK_TYPE.IMAGE_CHARACTER,
+        targetType: 'CharacterAppearance',
+        targetId: typeof input.characterId === 'string' ? input.characterId : 'character-1',
+      }
+    case 'generate_location_image':
+      return {
+        type: TASK_TYPE.IMAGE_LOCATION,
+        targetType: 'ProjectLocation',
+        targetId: typeof input.locationId === 'string' ? input.locationId : 'location-1',
+      }
+    case 'generate_panel_video':
+    case 'generate_episode_videos':
+      return {
+        type: TASK_TYPE.VIDEO_PANEL,
+        targetType: 'ProjectPanel',
+        targetId: typeof input.panelId === 'string' ? input.panelId : 'panel-1',
+      }
+    case 'lip_sync':
+      return {
+        type: TASK_TYPE.LIP_SYNC,
+        targetType: 'ProjectPanel',
+        targetId: 'panel-1',
+      }
+    case 'modify_character_image':
+      return {
+        type: TASK_TYPE.MODIFY_ASSET_IMAGE,
+        targetType: 'CharacterAppearance',
+        targetId: typeof input.characterId === 'string' ? input.characterId : 'character-1',
+      }
+    case 'modify_location_image':
+      return {
+        type: TASK_TYPE.MODIFY_ASSET_IMAGE,
+        targetType: 'ProjectLocation',
+        targetId: typeof input.locationId === 'string' ? input.locationId : 'location-1',
+      }
+    case 'modify_storyboard_image':
+      return {
+        type: TASK_TYPE.MODIFY_ASSET_IMAGE,
+        targetType: 'ProjectPanel',
+        targetId: 'panel-1',
+      }
+    case 'regenerate_group':
+      return {
+        type: TASK_TYPE.REGENERATE_GROUP,
+        targetType: input.type === 'location' ? 'ProjectLocation' : 'CharacterAppearance',
+        targetId: typeof input.id === 'string' ? input.id : 'asset-1',
+      }
+    case 'regenerate_panel_image':
+      return {
+        type: TASK_TYPE.IMAGE_PANEL,
+        targetType: 'ProjectPanel',
+        targetId: typeof input.panelId === 'string' ? input.panelId : 'panel-1',
+      }
+    case 'regenerate_single_image':
+      return {
+        type: input.type === 'location' ? TASK_TYPE.IMAGE_LOCATION : TASK_TYPE.IMAGE_CHARACTER,
+        targetType: input.type === 'location' ? 'ProjectLocation' : 'CharacterAppearance',
+        targetId: typeof input.id === 'string' ? input.id : 'asset-1',
+      }
+    case 'asset_hub_voice_design':
+      return {
+        type: TASK_TYPE.ASSET_HUB_VOICE_DESIGN,
+        targetType: 'GlobalAssetHubVoiceDesign',
+        targetId: 'global-asset-hub',
+      }
+    case 'voice_design':
+      return {
+        type: TASK_TYPE.VOICE_DESIGN,
+        targetType: 'Project',
+        targetId: params.projectId,
+      }
+    case 'generate_voice_line_audio':
+    case 'generate_episode_voice_audio':
+      return {
+        type: TASK_TYPE.VOICE_LINE,
+        targetType: 'ProjectVoiceLine',
+        targetId: typeof input.lineId === 'string' ? input.lineId : 'line-1',
+      }
+    case 'regenerate_storyboard_text':
+      return {
+        type: TASK_TYPE.REGENERATE_STORYBOARD_TEXT,
+        targetType: 'ProjectStoryboard',
+        targetId: typeof input.storyboardId === 'string' ? input.storyboardId : 'storyboard-1',
+      }
+    case 'insert_storyboard_panel':
+      return {
+        type: TASK_TYPE.INSERT_PANEL,
+        targetType: 'ProjectStoryboard',
+        targetId: typeof input.storyboardId === 'string' ? input.storyboardId : 'storyboard-1',
+      }
+    case 'panel_variant':
+      return {
+        type: TASK_TYPE.PANEL_VARIANT,
+        targetType: 'ProjectStoryboard',
+        targetId: typeof input.storyboardId === 'string' ? input.storyboardId : 'storyboard-1',
+      }
+    default:
+      throw new Error(`UNMOCKED_OPERATION:${params.operationId}`)
+  }
+}
 
 export const configServiceMock = {
   getUserModelConfig: vi.fn(async () => ({
@@ -216,6 +375,34 @@ export function resetDirectSubmitMocks() {
     runId: null,
     deduped: false,
   }))
+  executeProjectAgentOperationFromApiMock.mockImplementation(async (params) => {
+    const contract = inferTaskContractFromOperation({
+      operationId: params.operationId,
+      projectId: params.projectId,
+      input: params.input,
+    })
+    const task = await submitTaskMock({
+      userId: params.userId,
+      projectId: params.projectId,
+      type: contract.type,
+      targetType: contract.targetType,
+      targetId: contract.targetId,
+      payload: params.input,
+    })
+
+    if (params.operationId === 'lip_sync') {
+      return {
+        ...task,
+        panelId: contract.targetId,
+        lipSyncModel: typeof (params.input as { lipSyncModel?: unknown })?.lipSyncModel === 'string'
+          ? (params.input as { lipSyncModel: string }).lipSyncModel
+          : 'fal::lipsync-model',
+        mutationBatchId: 'mutation-batch-1',
+      }
+    }
+
+    return task
+  })
 }
 
 function toApiPath(routeFile: string, params?: Record<string, string>): string {

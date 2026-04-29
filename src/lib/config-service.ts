@@ -10,11 +10,13 @@ import { prisma } from '@/lib/prisma'
 import {
   type CapabilitySelections,
   type CapabilityValue,
+} from '@/lib/ai-registry/types'
+import {
   composeModelKey as composeStrictModelKey,
   parseModelKeyStrict,
-} from '@/lib/model-config-contract'
-import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
-import { resolveGenerationOptionsForModel } from '@/lib/model-capabilities/lookup'
+} from '@/lib/ai-registry/selection'
+import { findBuiltinCapabilities, resolveGenerationOptionsForModel } from '@/lib/ai-registry/capabilities-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import {
   type WorkflowConcurrencyConfig,
   normalizeWorkflowConcurrencyConfig,
@@ -343,3 +345,4 @@ export function buildImageBillingPayloadFromUserConfig(input: {
     ...(Object.keys(capabilityOptions).length > 0 ? { generationOptions: capabilityOptions } : {}),
   }
 }
+ensureAiCatalogsRegistered()

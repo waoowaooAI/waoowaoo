@@ -1,8 +1,7 @@
-export { ensureBailianCatalogRegistered, listBailianCatalogModels } from './catalog'
-export { completeBailianLlm } from './llm'
-export { generateBailianImage } from './image'
-export { generateBailianVideo } from './video'
-export { generateBailianAudio } from './audio'
+export { completeBailianLlm, runBailianLlmCompletion, runBailianLlmStream, runBailianVisionCompletion } from './llm'
+export { generateBailianImage, executeBailianImageGeneration } from './image'
+export { generateBailianVideo, executeBailianVideoGeneration } from './video'
+export { generateBailianAudio, executeBailianAudioGeneration } from './audio'
 export { BAILIAN_TTS_MODEL_ID, synthesizeWithBailianTTS } from './tts'
 export {
   collectBailianManagedVoiceIds,

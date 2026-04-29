@@ -33,7 +33,7 @@ export default function PromptEditorPanel({ runtime }: PromptEditorPanelProps) {
             onChange={(e) => setAppendContent(e.target.value)}
             placeholder={tStoryboard('panelActions.pasteSrtPlaceholder')}
             disabled={isAppending}
-            className="w-full h-48 p-4 border border-[var(--glass-stroke-strong)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] disabled:bg-[var(--glass-bg-muted)] disabled:cursor-not-allowed font-mono text-sm"
+            className="w-full h-48 p-4 border border-[var(--glass-stroke-strong)] rounded-lg resize-none focus:border-[var(--glass-stroke-focus)] disabled:bg-[var(--glass-bg-muted)] disabled:cursor-not-allowed font-mono text-sm"
           />
           <div className="flex justify-end mt-4">
             <button

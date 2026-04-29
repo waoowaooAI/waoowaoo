@@ -171,7 +171,7 @@ export default function InsertPanelModal({
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
                             placeholder={t('insertModal.placeholder')}
-                            className="w-full h-16 px-3 py-2 border border-[var(--glass-stroke-base)] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] text-sm"
+                            className="w-full h-16 px-3 py-2 border border-[var(--glass-stroke-base)] rounded-lg resize-none focus:outline-none focus:border-[var(--glass-stroke-focus)] text-sm"
                             disabled={isInserting}
                         />
                     </div>

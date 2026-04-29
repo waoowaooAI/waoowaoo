@@ -31,8 +31,8 @@ const textState = vi.hoisted(() => ({
   orchestratorClipId: 'clip-seed',
 }))
 
-vi.mock('@/lib/ai-runtime', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/ai-runtime')>('@/lib/ai-runtime')
+vi.mock('@/lib/ai-exec/engine', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/ai-exec/engine')>('@/lib/ai-exec/engine')
   return {
     ...actual,
     executeAiTextStep: vi.fn(async () => {

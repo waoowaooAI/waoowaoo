@@ -262,7 +262,7 @@ export function EpisodeSelector({
                                                     setEditingId(null)
                                                 }
                                             }}
-                                            className="flex-1 px-2 py-1 text-sm border border-[var(--glass-stroke-focus)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--glass-focus-ring-strong)]"
+                                            className="flex-1 px-2 py-1 text-sm border border-[var(--glass-stroke-focus)] rounded-lg focus:outline-none"
                                             autoFocus
                                         />
                                         <button

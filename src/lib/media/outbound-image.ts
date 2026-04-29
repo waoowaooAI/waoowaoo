@@ -187,44 +187,32 @@ function isLikelyInternalHostname(hostname: string): boolean {
   return false
 }
 
-function toHostnameFromUrlLike(value: string | null | undefined): string | null {
-  if (typeof value !== 'string' || value.trim().length === 0) return null
-  try {
-    return new URL(value.trim()).hostname.toLowerCase()
-  } catch {
-    return null
-  }
-}
-
 function isLoopbackHostname(hostname: string): boolean {
   const lower = hostname.toLowerCase()
   return lower === 'localhost' || lower === '127.0.0.1' || lower === '::1'
 }
 
-function isTrustedInternalHostname(hostname: string): boolean {
-  const normalized = hostname.toLowerCase()
-  const configuredHosts = new Set<string>()
+function readHostnameFromUrl(value: string): string | null {
+  const raw = typeof value === 'string' ? value.trim() : ''
+  if (!raw) return null
+  try {
+    return new URL(raw).hostname.toLowerCase()
+  } catch {
+    return null
+  }
+}
 
-  const candidates = [
-    process.env.INTERNAL_APP_URL,
-    process.env.INTERNAL_TASK_API_BASE_URL,
-    process.env.NEXTAUTH_URL,
+function getAllowedInternalHostnames(): Set<string> {
+  const candidates: string[] = [
     getInternalBaseUrl(),
+    process.env.INTERNAL_APP_URL || '',
+    process.env.INTERNAL_TASK_API_BASE_URL || '',
+    process.env.NEXTAUTH_URL || '',
   ]
-
-  for (const candidate of candidates) {
-    const host = toHostnameFromUrlLike(candidate)
-    if (host) configuredHosts.add(host)
-  }
-
-  if (configuredHosts.has(normalized)) return true
-  if (isLoopbackHostname(normalized)) {
-    for (const host of configuredHosts) {
-      if (isLoopbackHostname(host)) return true
-    }
-  }
-
-  return false
+  const hostnames = candidates
+    .map(readHostnameFromUrl)
+    .filter((item): item is string => Boolean(item))
+  return new Set(hostnames)
 }
 
 async function assertSafeOutboundHttpUrl(input: string, stage: OutboundImageNormalizeStage): Promise<void> {
@@ -250,7 +238,9 @@ async function assertSafeOutboundHttpUrl(input: string, stage: OutboundImageNorm
   }
 
   const hostname = url.hostname.toLowerCase()
-  if (isTrustedInternalHostname(hostname)) return
+  const allowedInternalHosts = getAllowedInternalHostnames()
+  if (allowedInternalHosts.has(hostname)) return
+  if (isLoopbackHostname(hostname) && [...allowedInternalHosts].some(isLoopbackHostname)) return
 
   if (isLikelyInternalHostname(hostname)) {
     throw new OutboundImageNormalizeError({
@@ -715,6 +705,11 @@ export async function normalizeReferenceImagesForGeneration(
   return normalized
 }
 
+/**
+ * 可选参考图归一化（fail-open）：
+ * - 仅当“候选非空但全部归一化失败”时（OUTBOUND_IMAGE_REFERENCE_ALL_FAILED）返回 [] 并告警
+ * - 其他异常照抛（保持显式失败）
+ */
 export async function normalizeOptionalReferenceImagesForGeneration(
   inputs: string[],
   options: {
@@ -722,17 +717,17 @@ export async function normalizeOptionalReferenceImagesForGeneration(
     context?: Record<string, unknown>
   } = {},
 ): Promise<string[]> {
-  if (!Array.isArray(inputs) || inputs.length === 0) return []
-
   try {
     return await normalizeReferenceImagesForGeneration(inputs, options)
   } catch (error) {
     if (error instanceof OutboundImageNormalizeError && error.code === 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED') {
       logger.warn({
-        message: 'optional reference images all failed to normalize, continue without references',
+        message: 'optional reference images all failed to normalize (fail-open)',
         details: {
+          code: error.code,
+          stage: error.stage,
+          input: error.input,
           context: options.context || null,
-          inputCount: inputs.length,
         },
       })
       return []

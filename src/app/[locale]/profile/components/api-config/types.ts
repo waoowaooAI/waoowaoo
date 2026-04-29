@@ -2,16 +2,15 @@
  * API 配置类型定义和预设常量
  */
 import {
-    composeModelKey,
-    parseModelKeyStrict,
     type CapabilitySelections,
     type ModelCapabilities,
     type UnifiedModelType,
-} from '@/lib/model-config-contract'
+} from '@/lib/ai-registry/types'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import type {
     OpenAICompatMediaTemplate,
     OpenAICompatMediaTemplateSource,
-} from '@/lib/openai-compat-media-template'
+} from '@/lib/ai-registry/openai-compatible-template'
 
 export interface ApiConfigCatalogProvider {
     id: string
@@ -303,4 +302,4 @@ export function getProviderTutorial(providerId: string): ProviderTutorial | unde
  * 用于 gemini-compatible 新增时自动预设模型。
  * 排除 batch 模型（Google 特有的异步批量处理）。
  */
-export { getGoogleCompatibleApiConfigPresetModels as getGoogleCompatiblePresetModels } from '@/lib/user-api/api-config-catalog'
+export { getGoogleCompatibleApiConfigPresetModels as getGoogleCompatiblePresetModels } from '@/lib/ai-registry/api-config-catalog'

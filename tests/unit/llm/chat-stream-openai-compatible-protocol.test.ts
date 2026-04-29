@@ -4,7 +4,7 @@ type MockRuntimeModel = {
   provider: string
   modelId: string
   modelKey: string
-  llmProtocol: 'responses' | 'chat-completions' | undefined
+  variantData?: { llmProtocol?: 'responses' | 'chat-completions' }
 }
 
 const resolveLlmRuntimeModelMock = vi.hoisted(() =>
@@ -12,29 +12,7 @@ const resolveLlmRuntimeModelMock = vi.hoisted(() =>
     provider: 'openai-compatible:node-1',
     modelId: 'gpt-4.1-mini',
     modelKey: 'openai-compatible:node-1::gpt-4.1-mini',
-    llmProtocol: 'responses',
-  })),
-)
-
-const runOpenAICompatResponsesCompletionMock = vi.hoisted(() =>
-  vi.fn(async () => ({
-    id: 'chatcmpl_responses_1',
-    object: 'chat.completion',
-    created: 1,
-    model: 'gpt-4.1-mini',
-    choices: [{ index: 0, message: { role: 'assistant', content: 'responses-stream' }, finish_reason: 'stop' }],
-    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
-  })),
-)
-
-const runOpenAICompatChatCompletionMock = vi.hoisted(() =>
-  vi.fn(async () => ({
-    id: 'chatcmpl_chat_1',
-    object: 'chat.completion',
-    created: 1,
-    model: 'gpt-4.1-mini',
-    choices: [{ index: 0, message: { role: 'assistant', content: 'chat-stream' }, finish_reason: 'stop' }],
-    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    variantData: { llmProtocol: 'responses' },
   })),
 )
 
@@ -53,30 +31,31 @@ const logLlmRawInputMock = vi.hoisted(() => vi.fn())
 const logLlmRawOutputMock = vi.hoisted(() => vi.fn())
 const recordCompletionUsageMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/ai-providers/adapters/openai-compatible/index', () => ({
-  resolveModelGatewayRoute: vi.fn(() => 'openai-compat'),
-  runOpenAICompatChatCompletion: runOpenAICompatChatCompletionMock,
-  runOpenAICompatResponsesCompletion: runOpenAICompatResponsesCompletionMock,
-}))
-
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
-  getProviderKey: vi.fn((providerId: string) => providerId.split(':')[0] || providerId),
 }))
 
-vi.mock('@/lib/ai-providers/bailian', () => ({
-  completeBailianLlm: vi.fn(async () => {
-    throw new Error('bailian should not be called')
-  }),
-}))
+vi.mock('@/lib/ai-providers/bailian', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/bailian')>()
+  return {
+    ...actual,
+    completeBailianLlm: vi.fn(async () => {
+      throw new Error('bailian should not be called')
+    }),
+  }
+})
 
-vi.mock('@/lib/ai-providers/siliconflow', () => ({
-  completeSiliconFlowLlm: vi.fn(async () => {
-    throw new Error('siliconflow should not be called')
-  }),
-}))
+vi.mock('@/lib/ai-providers/siliconflow', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ai-providers/siliconflow')>()
+  return {
+    ...actual,
+    completeSiliconFlowLlm: vi.fn(async () => {
+      throw new Error('siliconflow should not be called')
+    }),
+  }
+})
 
-vi.mock('@/lib/llm/runtime-shared', () => ({
+vi.mock('@/lib/ai-exec/llm-runtime', () => ({
   completionUsageSummary: vi.fn(() => ({ promptTokens: 1, completionTokens: 1 })),
   llmLogger: {
     info: vi.fn(),
@@ -96,6 +75,18 @@ describe('llm chatCompletionStream openai-compatible protocol routing', () => {
   })
 
   it('uses responses executor when llmProtocol=responses', async () => {
+    const fetchMock = vi.fn(async (input: unknown) => {
+      const url = String(input)
+      if (url.endsWith('/responses')) {
+        return new Response(JSON.stringify({
+          output_text: 'responses-stream',
+          usage: { input_tokens: 1, output_tokens: 1 },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      }
+      return new Response('unexpected', { status: 500 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
     const onChunk = vi.fn()
     const completion = await chatCompletionStream(
       'user-1',
@@ -105,10 +96,9 @@ describe('llm chatCompletionStream openai-compatible protocol routing', () => {
       { onChunk },
     )
 
-    expect(runOpenAICompatResponsesCompletionMock).toHaveBeenCalledTimes(1)
-    expect(runOpenAICompatChatCompletionMock).not.toHaveBeenCalled()
     expect(completion.choices[0]?.message?.content).toBe('responses-stream')
     expect(onChunk).toHaveBeenCalled()
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toContain('https://compat.example.com/v1/responses')
   })
 
   it('uses chat-completions executor when llmProtocol=chat-completions', async () => {
@@ -116,8 +106,24 @@ describe('llm chatCompletionStream openai-compatible protocol routing', () => {
       provider: 'openai-compatible:node-1',
       modelId: 'gpt-4.1-mini',
       modelKey: 'openai-compatible:node-1::gpt-4.1-mini',
-      llmProtocol: 'chat-completions',
+      variantData: { llmProtocol: 'chat-completions' },
     })
+
+    const fetchMock = vi.fn(async (input: unknown) => {
+      const url = String(input)
+      if (url.endsWith('/chat/completions')) {
+        return new Response(JSON.stringify({
+          id: 'chatcmpl_chat_1',
+          object: 'chat.completion',
+          created: 1,
+          model: 'gpt-4.1-mini',
+          choices: [{ index: 0, message: { role: 'assistant', content: 'chat-stream' }, finish_reason: 'stop' }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      }
+      return new Response('unexpected', { status: 500 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const completion = await chatCompletionStream(
       'user-1',
@@ -127,9 +133,8 @@ describe('llm chatCompletionStream openai-compatible protocol routing', () => {
       undefined,
     )
 
-    expect(runOpenAICompatChatCompletionMock).toHaveBeenCalledTimes(1)
-    expect(runOpenAICompatResponsesCompletionMock).not.toHaveBeenCalled()
     expect(completion.choices[0]?.message?.content).toBe('chat-stream')
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toContain('https://compat.example.com/v1/chat/completions')
   })
 
   it('fails fast when llmProtocol is missing for openai-compatible model', async () => {
@@ -137,7 +142,6 @@ describe('llm chatCompletionStream openai-compatible protocol routing', () => {
       provider: 'openai-compatible:node-1',
       modelId: 'gpt-4.1-mini',
       modelKey: 'openai-compatible:node-1::gpt-4.1-mini',
-      llmProtocol: undefined,
     })
 
     await expect(
@@ -149,8 +153,5 @@ describe('llm chatCompletionStream openai-compatible protocol routing', () => {
         undefined,
       ),
     ).rejects.toThrow('MODEL_LLM_PROTOCOL_REQUIRED')
-
-    expect(runOpenAICompatChatCompletionMock).not.toHaveBeenCalled()
-    expect(runOpenAICompatResponsesCompletionMock).not.toHaveBeenCalled()
   })
 })

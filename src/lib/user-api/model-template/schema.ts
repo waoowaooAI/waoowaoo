@@ -4,8 +4,8 @@ import type {
   TemplateEndpoint,
   TemplatePollingConfig,
   TemplateResponseMap,
-} from '@/lib/openai-compat-media-template'
-import { TEMPLATE_PLACEHOLDER_ALLOWLIST } from '@/lib/openai-compat-media-template'
+} from '@/lib/ai-registry/openai-compatible-template'
+import { TEMPLATE_PLACEHOLDER_ALLOWLIST } from '@/lib/ai-registry/openai-compatible-template'
 
 type ValidationCode =
   | 'MODEL_TEMPLATE_INVALID'

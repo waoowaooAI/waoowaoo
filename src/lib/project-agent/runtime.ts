@@ -29,6 +29,8 @@ import { resolveProjectAgentLanguageModel } from './model'
 import type { ProjectAgentInteractionMode } from './types'
 import { resolveProjectAgentExecutionMode } from './execution-mode'
 
+type UnknownObject = { [key: string]: unknown }
+
 const projectAgentLogger = createScopedLogger({
   module: 'project-agent.runtime',
 })
@@ -54,7 +56,7 @@ function normalizeInteractionMode(value: unknown): ProjectAgentInteractionMode |
 
 function normalizeProjectAgentContext(raw: unknown): ProjectAgentContext {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
-  const record = raw as Record<string, unknown>
+  const record = raw as UnknownObject
   const locale = typeof record.locale === 'string' ? record.locale.trim() : ''
   const episodeId = typeof record.episodeId === 'string' ? record.episodeId.trim() : ''
   const currentStage = typeof record.currentStage === 'string' ? record.currentStage.trim() : ''

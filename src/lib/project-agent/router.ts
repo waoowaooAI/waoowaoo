@@ -4,6 +4,8 @@ import type { ProjectPhaseSnapshot } from './project-phase'
 import type { ProjectAgentContext } from './types'
 import { normalizeProjectAgentLocale, type ProjectAgentLocale } from './locale'
 
+type UnknownObject = { [key: string]: unknown }
+
 export type ProjectAgentIntent = 'query' | 'plan' | 'act'
 
 export type ProjectAgentDomain =
@@ -105,7 +107,7 @@ function filterRequestedGroups(params: {
   return output
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is UnknownObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 

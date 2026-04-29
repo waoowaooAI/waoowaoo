@@ -1,5 +1,6 @@
 import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { buildDirectorStyleDoc } from '@/lib/director-style'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
@@ -46,7 +47,7 @@ const workflowLeaseMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => ({
+vi.mock('@/lib/ai-exec/llm-helpers', () => ({
   chatCompletion: vi.fn(),
   getCompletionParts: vi.fn(() => ({ text: '', reasoning: '' })),
   getCompletionContent: vi.fn(() => ''),
@@ -132,17 +133,7 @@ describe('worker story-to-script behavior', () => {
       id: 'project-1',
       name: 'Project One',
       analysisModel: 'llm::analysis-1',
-      directorStyleDoc: JSON.stringify({
-        character: { intent: '角色风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        location: { intent: '场景风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        prop: { intent: '道具风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        storyboardPlan: { intent: '分镜风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        cinematography: { intent: '摄影风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        acting: { intent: '表演风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        storyboardDetail: { intent: '细化风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        image: { intent: '图片风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-        video: { intent: '视频风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      }),
+      directorStyleDoc: JSON.stringify(buildDirectorStyleDoc('horror-suspense')),
       characters: [{ id: 'char-1', name: 'Hero', introduction: 'hero intro' }],
       locations: [{ id: 'loc-1', name: 'Old Town', summary: 'town', assetKind: 'location' }],
     })
@@ -218,7 +209,7 @@ describe('worker story-to-script behavior', () => {
     expect(workflowMock.runStoryToScriptSkillWorkflow).toHaveBeenCalledWith(expect.objectContaining({
       directorStyleDoc: expect.objectContaining({
         character: expect.objectContaining({
-          intent: '角色风格',
+          temperament: expect.stringContaining('警觉'),
         }),
       }),
     }))

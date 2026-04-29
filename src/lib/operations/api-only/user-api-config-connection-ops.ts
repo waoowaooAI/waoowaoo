@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { testLlmConnection } from '@/lib/user-api/llm-test-connection'
-import { testProviderConnection } from '@/lib/user-api/provider-test'
+import { testLlmConnection } from '@/lib/ai-exec/llm-test-connection'
+import { testProviderConnection } from '@/lib/ai-exec/provider-test'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 
 export function createUserApiConfigConnectionDiagnosticOperations(): ProjectAgentOperationRegistryDraft {

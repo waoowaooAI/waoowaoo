@@ -1,10 +1,12 @@
 import type { UIMessage } from 'ai'
 
+type UnknownObject = { [key: string]: unknown }
+
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is UnknownObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
@@ -19,4 +21,3 @@ export function isPersistableUIMessages(messages: unknown): messages is UIMessag
     return true
   })
 }
-

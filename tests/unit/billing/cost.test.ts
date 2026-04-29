@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import '@/lib/ai-providers'
 import {
   USD_TO_CNY,
   calcImage,
@@ -14,6 +15,12 @@ describe('billing/cost', () => {
   it('calculates text cost by known model price table', () => {
     const cost = calcText('anthropic/claude-sonnet-4', 1_000_000, 1_000_000)
     expect(cost).toBeCloseTo((3 + 15) * USD_TO_CNY, 8)
+  })
+
+  it('prices Google Gemini 3.1 Flash-Lite Preview text usage', () => {
+    const cost = calcText('google::gemini-3.1-flash-lite-preview', 1_000_000, 1_000_000)
+
+    expect(cost).toBeCloseTo((0.25 + 1.5) * USD_TO_CNY, 8)
   })
 
   it('throws when text model pricing is unknown', () => {

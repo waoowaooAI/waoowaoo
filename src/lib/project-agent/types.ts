@@ -5,6 +5,8 @@ import type { ProjectContextSnapshot } from '@/lib/project-context/types'
 import type { ProjectPhase, ProjectPhaseSnapshot } from './project-phase'
 import type { WorkflowPackageId, WorkflowSkillId } from '@/lib/skill-system/types'
 
+export type UnknownObject = { [key: string]: unknown }
+
 export type ProjectAssistantId = 'workspace-command'
 
 export type ProjectAgentInteractionMode = 'auto' | 'plan' | 'fast'
@@ -99,7 +101,7 @@ export interface AgentDebugPartData {
 export interface ConfirmationRequestPartData {
   operationId: string
   summary: string
-  argsHint?: Record<string, unknown> | null
+  argsHint?: UnknownObject | null
   budget?: {
     key?: string
     estimatedCostUnits?: number

@@ -1,6 +1,6 @@
 import { type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { getArtStylePrompt } from '@/lib/constants'
+import { resolveProjectVisualStylePreset } from '@/lib/style-preset'
 import { createScopedLogger } from '@/lib/logging/core'
 import { type TaskJobData } from '@/lib/task/types'
 import { reportTaskProgress } from '../shared'
@@ -170,7 +170,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
 
   if (!panel) throw new Error('Panel not found')
 
-  const projectData = await resolveNovelData(job.data.projectId)
+  const projectData = await resolveNovelData(job.data.projectId, job.data.userId)
   const modelConfig = await getProjectModels(job.data.projectId, job.data.userId)
   const modelKey = modelConfig.storyboardModel
   if (!modelKey) throw new Error('Storyboard model not configured')
@@ -178,11 +178,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
   const candidateCount = clampCount(payload.candidateCount ?? payload.count, 1, 4, 1)
   const refs = await collectPanelReferenceImages(projectData, panel)
   const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
-    context: {
-      taskType: 'image_panel',
-      panelId,
-      targetId: job.data.targetId,
-    },
+    context: { taskType: String(job.data.type), scope: 'panel-image.refs' },
   })
 
   const logger = createScopedLogger({
@@ -209,7 +205,11 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
     },
   })
 
-  const artStyle = getArtStylePrompt(modelConfig.artStyle, job.data.locale)
+  const artStyle = (await resolveProjectVisualStylePreset({
+    projectId: job.data.projectId,
+    userId: job.data.userId,
+    locale: job.data.locale,
+  })).prompt
   if (!projectData.videoRatio) throw new Error('Project videoRatio not configured')
   const aspectRatio = projectData.videoRatio
   const promptContext = buildPanelPromptContext({

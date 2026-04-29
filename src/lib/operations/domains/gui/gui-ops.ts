@@ -4,7 +4,8 @@ import { createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { ApiError } from '@/lib/api-errors'
 import { logError } from '@/lib/logging/core'
-import { getProviderKey, resolveModelSelectionOrSingle } from '@/lib/api-config'
+import { resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import { getProjectModelConfig, getUserModelConfig } from '@/lib/config-service'
 import { resolveTaskLocale, resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
 import { submitTask } from '@/lib/task/submitter'
@@ -25,18 +26,18 @@ import { revertAssetRender } from '@/lib/assets/services/asset-actions'
 import {
   collectBailianManagedVoiceIds,
   cleanupUnreferencedBailianVoices,
-} from '@/lib/ai-providers/bailian'
+} from '@/lib/ai-exec/voice-cleanup'
 import {
   parseSpeakerVoiceMap,
   type SpeakerVoiceEntry,
   type SpeakerVoiceMap,
-} from '@/lib/voice/provider-voice-binding'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
-import { resolveBuiltinPricing } from '@/lib/model-pricing/lookup'
-import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/model-capabilities/lookup'
-import { composeModelKey, parseModelKeyStrict } from '@/lib/model-config-contract'
+} from '@/lib/ai-exec/voice-line'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-exec/voice-design'
+import { resolveBuiltinPricing } from '@/lib/ai-registry/pricing-resolution'
+import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabilities-catalog'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
 import { resolveProjectModelCapabilityGenerationOptions } from '@/lib/config-service'
-import { resolveBuiltinCapabilitiesByModelKey as _resolveCaps } from '@/lib/model-capabilities/lookup'
+import { resolveBuiltinCapabilitiesByModelKey as _resolveCaps } from '@/lib/ai-registry/capabilities-catalog'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 

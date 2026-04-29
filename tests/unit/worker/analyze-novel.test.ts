@@ -25,8 +25,8 @@ const workerMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => llmMock)
-vi.mock('@/lib/ai-runtime', () => ({
+vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
+vi.mock('@/lib/ai-exec/engine', () => ({
   executeAiTextStep: vi.fn(async () => ({
     text: llmMock.getCompletionContent(),
     reasoning: '',
@@ -98,6 +98,8 @@ describe('worker analyze-novel behavior', () => {
       id: 'project-1',
       analysisModel: 'llm::analysis-1',
       artStyle: 'cinematic',
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
       globalAssetText: '全局设定文本',
       characters: [{ id: 'char-existing', name: '已有角色' }],
       locations: [{ id: 'loc-existing', name: '已有场景', summary: 'old' }],
@@ -144,6 +146,8 @@ describe('worker analyze-novel behavior', () => {
       id: 'project-1',
       analysisModel: 'llm::analysis-1',
       artStyle: 'cinematic',
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
       globalAssetText: '',
       characters: [],
       locations: [],

@@ -1,6 +1,6 @@
 import type OpenAI from 'openai'
 import { describe, expect, it } from 'vitest'
-import { getCompletionParts } from '@/lib/llm/completion-parts'
+import { getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 
 function buildCompletion(content: string): OpenAI.Chat.Completions.ChatCompletion {
   return {

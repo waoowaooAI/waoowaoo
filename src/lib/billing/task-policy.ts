@@ -7,7 +7,9 @@ import {
   calcVoiceDesign,
 } from './cost'
 import { BillingOperationError } from './errors'
-import { BUILTIN_PRICING_VERSION } from '@/lib/model-pricing/version'
+import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/pricing-resolution'
+import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import { TASK_TYPE, type TaskType } from '@/lib/task/types'
 import type { TaskBillingInfo } from './types'
 
@@ -208,7 +210,7 @@ function buildVoiceTaskInfo(taskType: TaskType, payload: AnyPayload): TaskBillin
     source: 'task',
     taskType,
     apiType: 'voice',
-    model: 'index-tts2',
+    model: DEFAULT_VOICE_MODEL_KEY,
     quantity: maxSeconds,
     unit: 'second',
     maxFrozenCost: calcVoice(maxSeconds),
@@ -225,7 +227,7 @@ function buildVoiceDesignTaskInfo(taskType: TaskType): TaskBillingInfo {
     source: 'task',
     taskType,
     apiType: 'voice-design',
-    model: 'bailian-voice-design',
+    model: DEFAULT_VOICE_DESIGN_MODEL_KEY,
     quantity: 1,
     unit: 'call',
     maxFrozenCost: calcVoiceDesign(),
@@ -254,7 +256,7 @@ export function buildDefaultTaskBillingInfo(taskType: TaskType, payload: AnyPayl
     case TASK_TYPE.VIDEO_PANEL:
       return buildVideoTaskInfo(taskType, payload)
     case TASK_TYPE.LIP_SYNC: {
-      const lipSyncModel = pickFirstString([payload?.lipSyncModel]) || 'kling'
+      const lipSyncModel = pickFirstString([payload?.lipSyncModel]) || DEFAULT_LIPSYNC_MODEL_KEY
       return {
         billable: true,
         source: 'task',
@@ -308,3 +310,4 @@ export function buildDefaultTaskBillingInfo(taskType: TaskType, payload: AnyPayl
       return null
   }
 }
+ensureAiCatalogsRegistered()

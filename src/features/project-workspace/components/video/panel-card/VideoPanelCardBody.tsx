@@ -100,7 +100,7 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
                   value={promptEditor.editingPrompt}
                   onChange={(event) => promptEditor.setEditingPrompt(event.target.value)}
                   autoFocus
-                  className="w-full text-xs p-2 pr-16 border border-[var(--glass-stroke-focus)] rounded-lg bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--glass-tone-info-fg)] resize-none"
+                  className="w-full text-xs p-2 pr-16 border border-[var(--glass-stroke-focus)] rounded-lg bg-[var(--glass-bg-surface)] text-[var(--glass-text-secondary)] focus:outline-none resize-none"
                   rows={3}
                   placeholder={t('promptModal.placeholder')}
                 />

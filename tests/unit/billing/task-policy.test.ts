@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import '@/lib/ai-providers'
 import { TASK_TYPE } from '@/lib/task/types'
 import { buildDefaultTaskBillingInfo, isBillableTaskType } from '@/lib/billing/task-policy'
 import type { TaskBillingInfo } from '@/lib/task/types'
@@ -15,7 +16,7 @@ function expectBillableInfo(info: TaskBillingInfo | null): Extract<TaskBillingIn
 describe('billing/task-policy', () => {
   const billingPayload = {
     analysisModel: 'anthropic/claude-sonnet-4',
-    imageModel: 'seedream',
+    imageModel: 'ark::doubao-seedream-4-5-251128',
     videoModel: 'doubao-seedance-1-5-pro-251215',
   } as const
 
@@ -52,11 +53,11 @@ describe('billing/task-policy', () => {
   it('honors candidateCount/count for image tasks', () => {
     const info = expectBillableInfo(buildDefaultTaskBillingInfo(TASK_TYPE.IMAGE_PANEL, {
       candidateCount: 4,
-      imageModel: 'seedream4',
+      imageModel: 'ark::doubao-seedream-4-0-250828',
     }))
     expect(info.apiType).toBe('image')
     expect(info.quantity).toBe(4)
-    expect(info.model).toBe('seedream4')
+    expect(info.model).toBe('ark::doubao-seedream-4-0-250828')
   })
 
   it('builds video billing info from firstLastFrame.flModel', () => {

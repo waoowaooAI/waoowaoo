@@ -159,7 +159,7 @@ export default function AddLocationModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t('modal.namePlaceholder')}
-                className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)]"
+                className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg text-sm focus:border-[var(--glass-stroke-focus)]"
               />
             </div>
 
@@ -197,7 +197,7 @@ export default function AddLocationModal({
                   value={aiInstruction}
                   onChange={(e) => setAiInstruction(e.target.value)}
                   placeholder={t('modal.aiDesignPlaceholderLocation')}
-                  className="flex-1 px-3 py-2 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-focus)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)]"
+                  className="flex-1 px-3 py-2 bg-[var(--glass-bg-surface)] border border-[var(--glass-stroke-focus)] rounded-lg text-sm focus:border-[var(--glass-stroke-focus)]"
                   disabled={isAiDesigning}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -235,7 +235,7 @@ export default function AddLocationModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t('modal.descPlaceholder')}
-                className="w-full h-36 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] resize-none"
+                className="w-full h-36 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg text-sm focus:border-[var(--glass-stroke-focus)] resize-none"
                 disabled={isAiDesigning}
               />
             </div>

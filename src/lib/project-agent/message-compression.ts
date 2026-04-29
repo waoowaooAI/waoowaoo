@@ -7,13 +7,15 @@ const MAX_ESTIMATED_TOKENS = 12000
 const TOKEN_THRESHOLD_RATIO = 0.8
 const KEEP_RECENT_MESSAGES = 20
 
+type UnknownObject = { [key: string]: unknown }
+
 function normalizeText(value: string): string {
   return value.replace(/\s+/g, ' ').trim()
 }
 
 function readMessagePartText(part: unknown): string | null {
   if (!part || typeof part !== 'object') return null
-  const record = part as Record<string, unknown>
+  const record = part as UnknownObject
   if (record.type === 'text' && typeof record.text === 'string') {
     const text = normalizeText(record.text)
     return text || null
@@ -31,13 +33,13 @@ function extractMessageText(message: UIMessage): string {
   return chunks.join(' ').trim()
 }
 
-function readCustomMetadata(message: UIMessage): Record<string, unknown> | null {
+function readCustomMetadata(message: UIMessage): UnknownObject | null {
   const metadata = message.metadata
   if (!metadata || typeof metadata !== 'object') return null
-  const record = metadata as Record<string, unknown>
+  const record = metadata as UnknownObject
   const custom = record.custom
   return custom && typeof custom === 'object' && !Array.isArray(custom)
-    ? custom as Record<string, unknown>
+    ? custom as UnknownObject
     : null
 }
 

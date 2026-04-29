@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import '@/lib/ai-providers'
 import { calcText, calcVideo, calcVoice } from '@/lib/billing/cost'
 import type { TaskBillingInfo } from '@/lib/task/types'
 
@@ -16,8 +17,17 @@ const modeMock = vi.hoisted(() => ({
   getBillingMode: vi.fn(),
 }))
 
+const prismaMock = vi.hoisted(() => ({
+  userPreference: {
+    findUnique: vi.fn(),
+  },
+}))
+
 vi.mock('@/lib/billing/ledger', () => ledgerMock)
 vi.mock('@/lib/billing/mode', () => modeMock)
+vi.mock('@/lib/prisma', () => ({
+  prisma: prismaMock,
+}))
 
 import { BillingOperationError, InsufficientBalanceError } from '@/lib/billing/errors'
 import {
@@ -39,6 +49,7 @@ describe('billing/service', () => {
     ledgerMock.increasePendingFreezeAmount.mockResolvedValue(true)
     ledgerMock.recordShadowUsage.mockResolvedValue(true)
     ledgerMock.rollbackFreeze.mockResolvedValue(true)
+    prismaMock.userPreference.findUnique.mockResolvedValue(null)
   })
 
   it('returns raw execution result in OFF mode', async () => {
@@ -56,6 +67,24 @@ describe('billing/service', () => {
     expect(result).toEqual({ ok: true })
     expect(ledgerMock.freezeBalance).not.toHaveBeenCalled()
     expect(ledgerMock.confirmChargeWithRecord).not.toHaveBeenCalled()
+  })
+
+  it('does not resolve text pricing in OFF mode', async () => {
+    modeMock.getBillingMode.mockResolvedValue('OFF')
+
+    const result = await withTextBilling(
+      'u1',
+      'uncatalogued::missing-text-model',
+      1000,
+      1000,
+      { projectId: 'p1', action: 'a1' },
+      async () => ({ ok: true }),
+    )
+
+    expect(result).toEqual({ ok: true })
+    expect(prismaMock.userPreference.findUnique).not.toHaveBeenCalled()
+    expect(ledgerMock.freezeBalance).not.toHaveBeenCalled()
+    expect(ledgerMock.recordShadowUsage).not.toHaveBeenCalled()
   })
 
   it('records shadow usage in SHADOW mode without freezing', async () => {
@@ -220,7 +249,7 @@ describe('billing/service', () => {
         source: 'task',
         taskType: 'voice_line',
         apiType: 'voice',
-        model: 'index-tts2',
+        model: 'fal::fal-ai/index-tts-2/text-to-speech',
         quantity: 5,
         unit: 'second',
         maxFrozenCost: calcVoice(5),

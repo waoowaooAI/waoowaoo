@@ -1,6 +1,6 @@
 import type { CustomModel, PricingDisplayItem, PricingDisplayMap, Provider } from './types'
 import { encodeModelKey, getProviderKey, isPresetComingSoonModelKey } from './types'
-import type { CapabilitySelections, CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilitySelections, CapabilityValue } from '@/lib/ai-registry/types'
 import {
   DEFAULT_ANALYSIS_WORKFLOW_CONCURRENCY,
   DEFAULT_IMAGE_WORKFLOW_CONCURRENCY,

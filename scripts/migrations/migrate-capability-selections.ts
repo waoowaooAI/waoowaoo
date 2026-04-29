@@ -1,10 +1,10 @@
 import { prisma } from '@/lib/prisma'
-import {
-  parseModelKeyStrict,
-  type CapabilitySelections,
-  type CapabilityValue,
-} from '@/lib/model-config-contract'
-import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { findBuiltinCapabilities } from '@/lib/ai-registry/capabilities-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import type { CapabilitySelections, CapabilityValue } from '@/lib/ai-registry/types'
+
+ensureAiCatalogsRegistered()
 
 const APPLY = process.argv.includes('--apply')
 

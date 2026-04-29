@@ -206,6 +206,21 @@ describe('api specific - user api-config normalization', () => {
             modelId: 'gpt-image-1',
             modelKey: 'openai-compatible:oa-1::gpt-image-1',
             name: 'Image Model',
+            compatMediaTemplate: {
+              version: 1,
+              mediaType: 'image',
+              mode: 'sync',
+              create: {
+                method: 'POST',
+                path: '/images/generations',
+                contentType: 'application/json',
+                bodyTemplate: {
+                  model: '{{model}}',
+                  prompt: '{{prompt}}',
+                },
+              },
+              response: { outputUrlPath: '$.data[0].url' },
+            },
           },
           {
             type: 'video',
@@ -213,6 +228,32 @@ describe('api specific - user api-config normalization', () => {
             modelId: 'sora-2',
             modelKey: 'openai-compatible:oa-1::sora-2',
             name: 'Video Model',
+            compatMediaTemplate: {
+              version: 1,
+              mediaType: 'video',
+              mode: 'async',
+              create: {
+                method: 'POST',
+                path: '/videos',
+                contentType: 'application/json',
+                bodyTemplate: {
+                  model: '{{model}}',
+                  prompt: '{{prompt}}',
+                },
+              },
+              status: { method: 'GET', path: '/videos/{{task_id}}' },
+              response: {
+                taskIdPath: '$.id',
+                statusPath: '$.status',
+                outputUrlPath: '$.video_url',
+              },
+              polling: {
+                intervalMs: 3000,
+                timeoutMs: 180000,
+                doneStates: ['succeeded'],
+                failStates: ['failed'],
+              },
+            },
           },
         ],
       },
@@ -384,7 +425,7 @@ describe('api specific - user api-config normalization', () => {
     expect(savedProviders[0]?.gatewayRoute).toBe('official')
   })
 
-  it('backfills default compatMediaTemplate for openai-compatible image model when missing', async () => {
+  it('rejects openai-compatible image model when compatMediaTemplate is missing', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')
     const route = await import('@/app/api/user/api-config/route')
@@ -409,20 +450,11 @@ describe('api specific - user api-config normalization', () => {
     })
 
     const res = await route.PUT(req, routeContext)
-    expect(res.status).toBe(200)
-    const savedModels = readSavedModelsFromUpsert()
-    const savedModel = savedModels.find((item) => item.modelKey === 'openai-compatible:oa-1::gpt-image-1')
-    expect(savedModel?.compatMediaTemplate).toMatchObject({
-      version: 1,
-      mediaType: 'image',
-      mode: 'sync',
-      create: {
-        path: '/images/generations',
-      },
-    })
+    expect(res.status).toBe(400)
+    expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
   })
 
-  it('backfills default compatMediaTemplate for openai-compatible video model when missing', async () => {
+  it('rejects openai-compatible video model when compatMediaTemplate is missing', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')
     const route = await import('@/app/api/user/api-config/route')
@@ -447,14 +479,8 @@ describe('api specific - user api-config normalization', () => {
     })
 
     const res = await route.PUT(req, routeContext)
-    expect(res.status).toBe(200)
-    const savedModels = readSavedModelsFromUpsert()
-    const savedModel = savedModels.find((item) => item.modelKey === 'openai-compatible:oa-1::veo-2')
-    expect(savedModel?.compatMediaTemplate).toMatchObject({
-      version: 1,
-      mediaType: 'video',
-      mode: 'async',
-    })
+    expect(res.status).toBe(400)
+    expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
   })
 
   it('keeps explicit compatMediaTemplate for openai-compatible video model', async () => {

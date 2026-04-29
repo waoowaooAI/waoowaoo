@@ -2,16 +2,16 @@ import sharp from 'sharp'
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { generateImage } from '@/lib/ai-exec/engine'
-import { queryFalStatus } from '@/lib/async-submit'
-import { fetchWithTimeoutAndRetry } from '@/lib/ark-api'
-import { getProviderConfig } from '@/lib/api-config'
-import { executeAiVisionStep } from '@/lib/ai-runtime'
+import { fetchGeneratedMediaWithRetry, queryFalGeneratedMediaStatus } from '@/lib/ai-exec/media-result'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
+import { executeAiVisionStep } from '@/lib/ai-exec/engine'
 import { getUserModelConfig } from '@/lib/config-service'
 import {
   CHARACTER_IMAGE_BANANA_RATIO,
   addCharacterPromptSuffix,
   getArtStylePrompt,
 } from '@/lib/constants'
+import { resolveProjectVisualStylePreset } from '@/lib/style-preset'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { generateUniqueKey, getSignedUrl, uploadObject } from '@/lib/storage'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
@@ -79,7 +79,7 @@ async function generateReferenceImage(params: {
       for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt += 1) {
         await assertTaskActive(job, `reference_to_character_poll_${imageIndex + 1}_${attempt + 1}`)
         await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
-        const status = await queryFalStatus(endpoint, requestId, falApiKey)
+        const status = await queryFalGeneratedMediaStatus({ endpoint, requestId, apiKey: falApiKey })
         if (status.completed && status.resultUrl) {
           finalImageUrl = status.resultUrl
           break
@@ -94,7 +94,7 @@ async function generateReferenceImage(params: {
       return null
     }
 
-    const imgRes = await fetchWithTimeoutAndRetry(finalImageUrl, {
+    const imgRes = await fetchGeneratedMediaWithRetry(finalImageUrl, {
       logPrefix: `[reference-to-character:${imageIndex + 1}]`,
     })
     const buffer = Buffer.from(await imgRes.arrayBuffer())
@@ -204,7 +204,13 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     }
   }
 
-  const artStylePrompt = getArtStylePrompt(artStyle, job.data.locale)
+  const artStylePrompt = isProject && !artStyle
+    ? (await resolveProjectVisualStylePreset({
+        projectId: job.data.projectId,
+        userId: job.data.userId,
+        locale: job.data.locale,
+      })).prompt
+    : getArtStylePrompt(artStyle, job.data.locale)
 
   const basePrompt = customDescription || buildPrompt({
     promptId: PROMPT_IDS.CHARACTER_REFERENCE_TO_SHEET,

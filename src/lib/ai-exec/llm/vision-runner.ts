@@ -1,12 +1,11 @@
-import OpenAI from 'openai'
-import {
-  getProviderConfig,
-  getProviderKey,
-} from '@/lib/api-config'
+import type OpenAI from 'openai'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
+import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/ai-registry/types'
 import { getInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
-import type { ChatCompletionOptions, ChatCompletionStreamCallbacks } from '@/lib/llm/types'
-import { emitChunkedText } from '@/lib/llm/stream-helpers'
-import { getCompletionParts } from '@/lib/llm/completion-parts'
+import { emitChunkedText } from '@/lib/ai-providers/shared/llm-support'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import { getCompletionParts } from '@/lib/ai-exec/llm-helpers'
 import {
   _ulogError,
   _ulogInfo,
@@ -15,11 +14,15 @@ import {
   llmLogger,
   recordCompletionUsage,
   resolveLlmRuntimeModel,
-} from '@/lib/llm/runtime-shared'
+  completionUsageSummary,
+} from '@/lib/ai-exec/llm-runtime'
 import { waitForRetryDelay } from '@/lib/ai-exec/governance'
-import { executeVisionCompletionViaAdapter } from '@/lib/ai-providers/adapters/llm/execution'
-import { describeLlmVariantBase } from '@/lib/ai-providers/adapters/llm/descriptor'
+import { describeLlmVariantBase } from '@/lib/ai-exec/llm-descriptor'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
+import { resolveAiProviderAdapter } from '@/lib/ai-providers'
+import type { AiProviderVisionExecutionContext } from '@/lib/ai-providers/runtime-types'
+
+ensureAiCatalogsRegistered()
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && typeof error.message === 'string') return error.message
@@ -37,6 +40,18 @@ function getErrorBody(error: unknown): { message?: unknown; code?: unknown } {
     return root.error as { message?: unknown; code?: unknown }
   }
   return root
+}
+
+async function executeVisionCompletionViaAdapter(
+  input: AiProviderVisionExecutionContext,
+): Promise<{ completion: OpenAI.Chat.Completions.ChatCompletion; logProvider: string }> {
+  const provider = resolveAiProviderAdapter(input.selection.provider)
+  if (provider.completeVision) {
+    const result = await provider.completeVision(input)
+    return result
+  }
+
+  throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${input.selection.provider}:vision`)
 }
 
 export async function runChatCompletionWithVision(

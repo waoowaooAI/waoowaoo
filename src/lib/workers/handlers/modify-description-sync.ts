@@ -1,4 +1,4 @@
-import { executeAiTextStep, executeAiVisionStep } from '@/lib/ai-runtime'
+import { executeAiTextStep, executeAiVisionStep } from '@/lib/ai-exec/engine'
 import { removeCharacterPromptSuffix, removeLocationPromptSuffix, removePropPromptSuffix } from '@/lib/constants'
 import { safeParseJsonObject } from '@/lib/json-repair'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS, type AiPromptLocale as PromptLocale } from '@/lib/ai-prompts'

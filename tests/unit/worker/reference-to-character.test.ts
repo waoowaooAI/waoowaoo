@@ -27,6 +27,12 @@ const generatorApiMock = vi.hoisted(() => ({
     async: false,
   })),
   chatCompletionWithVision: vi.fn(async () => ({ output_text: 'AI_EXTRACTED_DESCRIPTION' })),
+  executeAiVisionStep: vi.fn(async () => ({
+    text: 'AI_EXTRACTED_DESCRIPTION',
+    reasoning: '',
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+    completion: { usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 } },
+  })),
 }))
 
 const asyncSubmitMock = vi.hoisted(() => ({
@@ -36,6 +42,10 @@ const asyncSubmitMock = vi.hoisted(() => ({
 const arkApiMock = vi.hoisted(() => ({
   fetchWithTimeoutAndRetry: vi.fn(async () => ({
     arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+  })),
+  executeArkImageGeneration: vi.fn(async () => ({
+    url: 'https://example.com/generated.jpg',
+    async: false,
   })),
 }))
 
@@ -90,6 +100,14 @@ const aiPromptMock = vi.hoisted(() => ({
 }))
 
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(async () => ({
+      id: 'project-1',
+      artStyle: 'realistic',
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
+    })),
+  },
   globalCharacterAppearance: {
     update: vi.fn<(input: { data?: Record<string, unknown>; where?: Record<string, unknown> }) => Promise<Record<string, never>>>(
       async () => ({}),
@@ -105,11 +123,11 @@ vi.mock('sharp', () => ({
 }))
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/ai-exec/engine', () => generatorApiMock)
-vi.mock('@/lib/async-submit', () => asyncSubmitMock)
-vi.mock('@/lib/ark-api', () => arkApiMock)
-vi.mock('@/lib/api-config', () => apiConfigMock)
+vi.mock('@/lib/ai-providers/fal/queue', () => asyncSubmitMock)
+vi.mock('@/lib/ai-providers/ark/image', () => arkApiMock)
+vi.mock('@/lib/user-api/runtime-config', () => apiConfigMock)
 vi.mock('@/lib/config-service', () => configServiceMock)
-vi.mock('@/lib/llm-client', () => llmClientMock)
+vi.mock('@/lib/ai-exec/llm-helpers', () => llmClientMock)
 vi.mock('@/lib/storage', () => cosMock)
 vi.mock('@/lib/fonts', () => fontsMock)
 vi.mock('@/lib/workers/shared', () => workersSharedMock)

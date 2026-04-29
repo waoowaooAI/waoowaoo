@@ -180,7 +180,7 @@ export default function StepMapping({
                   rows={16}
                   value={episodes[selectedEpisode].content}
                   onChange={(e) => onUpdateEpisodeContent(selectedEpisode, e.target.value)}
-                  className="w-full border border-[var(--glass-stroke-strong)] rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-[var(--glass-focus-ring-strong)] focus:border-[var(--glass-stroke-focus)] resize-none font-mono text-sm leading-relaxed"
+                  className="w-full border border-[var(--glass-stroke-strong)] rounded-xl p-4 focus:outline-none focus:border-[var(--glass-stroke-focus)] resize-none font-mono text-sm leading-relaxed"
                 />
               </div>
 

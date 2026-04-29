@@ -65,8 +65,8 @@ vi.mock('bullmq', () => ({
 
 vi.mock('@/lib/redis', () => ({ queueRedis: {} }))
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/llm-client', () => llmMock)
-vi.mock('@/lib/ai-runtime', () => ({
+vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
+vi.mock('@/lib/ai-exec/engine', () => ({
   executeAiTextStep: vi.fn(async () => ({
     text: llmMock.getCompletionContent(),
     reasoning: '',

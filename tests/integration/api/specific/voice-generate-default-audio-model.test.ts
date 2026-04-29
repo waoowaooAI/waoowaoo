@@ -64,7 +64,7 @@ const apiConfigMock = vi.hoisted(() => ({
 vi.mock('@/lib/api-auth', () => authMock)
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/task/submitter', () => ({ submitTask: submitTaskMock }))
-vi.mock('@/lib/api-config', () => apiConfigMock)
+vi.mock('@/lib/user-api/runtime-config', () => apiConfigMock)
 vi.mock('@/lib/task/resolve-locale', () => ({
   resolveRequiredTaskLocale: vi.fn(() => 'zh'),
 }))

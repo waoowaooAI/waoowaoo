@@ -2,6 +2,11 @@
   "workspace": "工作区",
   "assetHub": "资产中心",
   "profile": "设置中心",
+  "settingsMenu": {
+    "apiConfig": "API 配置",
+    "stylePresets": "我的风格",
+    "billingRecords": "扣费记录"
+  },
   "downloadLogs": "下载日志",
   "signin": "登录",
   "signup": "注册",

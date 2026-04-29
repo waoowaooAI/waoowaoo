@@ -1,7 +1,7 @@
 import { Worker, type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { queueRedis } from '@/lib/redis'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import { withInternalLLMStreamCallbacks, type InternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import type { LLMStreamKind } from '@/lib/llm-observe/types'
 import { QUEUE_NAME } from '@/lib/task/queues'
@@ -36,7 +36,7 @@ import { handleAssetHubAIModifyTask } from './handlers/asset-hub-ai-modify'
 import { handleReferenceToCharacterTask } from './handlers/reference-to-character'
 import { handleShotAITask } from './handlers/shot-ai-tasks'
 import { handleCharacterProfileTask } from './handlers/character-profile'
-import { parseDirectorStyleDoc } from '@/lib/director-style'
+import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
 
 function readAssetKind(value: Record<string, unknown>): string {
   return typeof value.assetKind === 'string' ? value.assetKind : 'location'
@@ -553,7 +553,10 @@ async function handleInsertPanelTask(job: Job<TaskJobData>) {
       locations_description: locationsDescription,
       props_description: propsDescription,
     },
-    directorStyleDoc: parseDirectorStyleDoc(projectData.directorStyleDoc),
+    directorStyleDoc: await resolveProjectDirectorStyleDoc({
+      projectId: job.data.projectId,
+      userId: job.data.userId,
+    }),
   })
 
   await reportTaskProgress(job, 40, { stage: 'insert_panel_generate_text' })

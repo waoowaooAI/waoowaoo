@@ -1,4 +1,5 @@
 import { readApiErrorMessage } from '@/lib/api/read-error-message'
+import type { StylePresetRef } from '@/lib/style-preset/types'
 
 interface ProjectCreationPayload {
   project?: {
@@ -30,6 +31,8 @@ export interface CreateHomeProjectLaunchParams {
   storyText: string
   videoRatio: string
   artStyle: string
+  visualStylePreset?: StylePresetRef
+  directorStylePreset?: StylePresetRef | null
   directorStylePresetId?: string
   episodeName: string
 }
@@ -89,6 +92,8 @@ export async function createHomeProjectLaunch({
   storyText,
   videoRatio,
   artStyle,
+  visualStylePreset,
+  directorStylePreset,
   directorStylePresetId,
   episodeName,
 }: CreateHomeProjectLaunchParams): Promise<CreateHomeProjectLaunchResult> {
@@ -97,7 +102,8 @@ export async function createHomeProjectLaunch({
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: projectName,
-      ...(directorStylePresetId ? { directorStylePresetId } : {}),
+      ...(directorStylePreset ? { directorStylePreset } : {}),
+      ...(!directorStylePreset && directorStylePresetId ? { directorStylePresetId } : {}),
     }),
   })
 
@@ -110,7 +116,11 @@ export async function createHomeProjectLaunch({
   const configResponse = await apiFetch(`/api/projects/${projectId}/config`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ videoRatio, artStyle }),
+    body: JSON.stringify({
+      videoRatio,
+      artStyle,
+      ...(visualStylePreset ? { visualStylePreset } : {}),
+    }),
   })
 
   if (!configResponse.ok) {

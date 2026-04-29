@@ -2,15 +2,16 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { ApiError } from '@/lib/api-errors'
 import {
-  composeModelKey,
-  parseModelKeyStrict,
   type CapabilityValue,
   type ModelCapabilities,
   type UnifiedModelType,
-} from '@/lib/model-config-contract'
-import { findBuiltinCapabilities } from '@/lib/model-capabilities/catalog'
-import { findBuiltinPricingCatalogEntry } from '@/lib/model-pricing/catalog'
-import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
+} from '@/lib/ai-registry/types'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { DEFAULT_VOICE_DESIGN_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import { findBuiltinCapabilities } from '@/lib/ai-registry/capabilities-catalog'
+import { findBuiltinPricingCatalogEntry } from '@/lib/ai-registry/pricing-catalog'
+import { type VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 
 type StoredModelType = UnifiedModelType | string
@@ -46,8 +47,13 @@ interface UserModelsPayload {
   lipsync: UserModelOption[]
 }
 
+const DEFAULT_VOICE_DESIGN_MODEL_ID = parseModelKeyStrict(DEFAULT_VOICE_DESIGN_MODEL_KEY)?.modelId
+if (!DEFAULT_VOICE_DESIGN_MODEL_ID) {
+  throw new Error('DEFAULT_VOICE_DESIGN_MODEL_KEY_INVALID')
+}
+
 const AUDIO_MODEL_EXCLUDED_IDS = new Set([
-  'qwen-voice-design',
+  DEFAULT_VOICE_DESIGN_MODEL_ID,
 ])
 
 function isUnifiedModelType(type: unknown): type is UnifiedModelType {
@@ -248,3 +254,4 @@ export function createUserModelsOperations(): ProjectAgentOperationRegistryDraft
     },
   }
 }
+ensureAiCatalogsRegistered()

@@ -6,11 +6,11 @@ const resolveConfigMock = vi.hoisted(() => vi.fn(async () => ({
   apiKey: 'sk-test',
 })))
 
-vi.mock('@/lib/ai-providers/adapters/openai-compatible/common', () => ({
+vi.mock('@/lib/ai-providers/openai-compatible/errors', () => ({
   resolveOpenAICompatClientConfig: resolveConfigMock,
 }))
 
-import { generateImageViaOpenAICompatTemplate } from '@/lib/ai-providers/adapters/openai-compatible/template-image'
+import { generateImageViaOpenAICompatTemplate } from '@/lib/ai-providers/openai-compatible/user-template'
 
 describe('openai-compat template image output urls', () => {
   beforeEach(() => {

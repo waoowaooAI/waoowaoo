@@ -110,7 +110,7 @@ export default function ImageEditModal({
               value={editPrompt}
               onChange={(event) => setEditPrompt(event.target.value)}
               placeholder={t('imageEdit.promptPlaceholder')}
-              className="w-full h-24 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] resize-none"
+              className="w-full h-24 px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:border-[var(--glass-stroke-focus)] resize-none"
               autoFocus
             />
           </div>

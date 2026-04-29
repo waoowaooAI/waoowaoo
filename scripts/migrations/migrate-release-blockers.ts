@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
-import { composeModelKey, parseModelKeyStrict, type CapabilitySelections } from '@/lib/model-config-contract'
+import { composeModelKey, parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 
 type Mode = 'dry-run' | 'apply'
 

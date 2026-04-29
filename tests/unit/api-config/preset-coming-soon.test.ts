@@ -4,11 +4,14 @@ import {
   isPresetComingSoonModel,
   isPresetComingSoonModelKey,
 } from '@/app/[locale]/profile/components/api-config/types'
-import { API_CONFIG_CATALOG_MODELS } from '@/lib/user-api/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
+import { listApiConfigCatalogModels } from '@/lib/ai-registry/api-config-catalog'
+
+ensureAiCatalogsRegistered()
 
 describe('api-config preset coming soon', () => {
   it('registers Nano Banana 2 under Google AI Studio presets', () => {
-    const model = API_CONFIG_CATALOG_MODELS.find(
+    const model = listApiConfigCatalogModels().find(
       (entry) => entry.provider === 'google' && entry.modelId === 'gemini-3.1-flash-image-preview',
     )
     expect(model).toBeDefined()
@@ -16,7 +19,7 @@ describe('api-config preset coming soon', () => {
   })
 
   it('registers Seedance 2.0 and Seedance 2.0 Fast as preset video models', () => {
-    const modelIds = API_CONFIG_CATALOG_MODELS
+    const modelIds = listApiConfigCatalogModels()
       .filter((entry) => entry.provider === 'ark' && entry.type === 'video')
       .map((entry) => entry.modelId)
 
@@ -45,7 +48,7 @@ describe('api-config preset coming soon', () => {
   })
 
   it('registers Bailian Wan i2v preset models', () => {
-    const modelIds = API_CONFIG_CATALOG_MODELS
+    const modelIds = listApiConfigCatalogModels()
       .filter((entry) => entry.provider === 'bailian' && entry.type === 'video')
       .map((entry) => entry.modelId)
 

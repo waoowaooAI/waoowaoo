@@ -2,14 +2,11 @@ import sharp from 'sharp'
 import { type Job } from 'bullmq'
 import { createScopedLogger } from '@/lib/logging/core'
 import { withLogContext } from '@/lib/logging/context'
-import { generateImage, generateVideo } from '@/lib/ai-exec/engine'
-import { generateLipSync } from '@/lib/lipsync'
-import { pollAsyncTask } from '@/lib/async-poll'
+import { generateImage, generateLipSync, generateVideo } from '@/lib/ai-exec/engine'
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 import { getSignedUrl, toFetchableUrl } from '@/lib/storage'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { processMediaResult } from '@/lib/media-process'
-import { parseModelKeyStrict } from '@/lib/model-config-contract'
-import { getProviderKey } from '@/lib/api-config'
 import {
   getProjectModelConfig,
   getUserModelConfig,
@@ -23,6 +20,28 @@ import { prisma } from '@/lib/prisma'
 
 const DEFAULT_POLL_TIMEOUT_MS = Number.parseInt(process.env.WORKER_EXTERNAL_TIMEOUT_MS || String(20 * 60 * 1000), 10)
 const DEFAULT_POLL_INTERVAL_MS = Number.parseInt(process.env.WORKER_EXTERNAL_POLL_MS || '3000', 10)
+
+function summarizeImageGenerationOptions(options: Record<string, unknown> | undefined): Record<string, unknown> {
+  const value = options || {}
+  const referenceImagesValue = (value as { referenceImages?: unknown }).referenceImages
+  const referenceImageCount = Array.isArray(referenceImagesValue) ? referenceImagesValue.length : 0
+  return {
+    provider: typeof (value as { provider?: unknown }).provider === 'string' ? (value as { provider: string }).provider : undefined,
+    aspectRatio: typeof (value as { aspectRatio?: unknown }).aspectRatio === 'string' ? (value as { aspectRatio: string }).aspectRatio : undefined,
+    resolution: typeof (value as { resolution?: unknown }).resolution === 'string' ? (value as { resolution: string }).resolution : undefined,
+    size: typeof (value as { size?: unknown }).size === 'string' ? (value as { size: string }).size : undefined,
+    referenceImageCount,
+    optionKeys: Object.keys(value),
+  }
+}
+
+function jsonStringifySafe(value: unknown): string {
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return '"<unserializable>"'
+  }
+}
 
 /**
  * 查询 DB 中任务是否已有 externalId（服务重启后续接轮询用，避免重复提交外部 API）
@@ -183,7 +202,7 @@ export async function resolveImageSourceFromGeneration(
     allowTaskExternalIdResume?: boolean
     pollProgress?: { start?: number; end?: number }
   },
-	): Promise<string> {
+): Promise<string> {
   const logger = scopedWorkerUtilLogger(job, 'worker.image.generate_source')
   const startedAt = Date.now()
   const allowTaskExternalIdResume = params.allowTaskExternalIdResume !== false
@@ -235,56 +254,45 @@ export async function resolveImageSourceFromGeneration(
     },
   })
 
-  const parsed = parseModelKeyStrict(params.modelId)
-  const providerKey = parsed?.provider ? getProviderKey(parsed.provider).toLowerCase() : ''
-  const selectedModelId = parsed?.modelId || ''
-  const summarizedOptions: Record<string, unknown> = {}
-  for (const key of [
-    'aspectRatio',
-    'size',
-    'resolution',
-    'quality',
-    'outputFormat',
-    'responseFormat',
-    'keepOriginalAspectRatio',
-  ] as const) {
-    const value = (params.options as Record<string, unknown> | undefined)?.[key]
-    if (value !== undefined) summarizedOptions[key] = value
-  }
+  const finalOptions = {
+    ...(params.options || {}),
+    ...capabilityOptions,
+  } as Record<string, unknown>
 
   let result: Awaited<ReturnType<typeof generateImage>>
   try {
     result = await withLogContext(
       { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
-      () => generateImage(params.userId, params.modelId, params.prompt, {
-        ...params.options,
-        ...capabilityOptions,
-      }),
+      () => generateImage(params.userId, params.modelId, params.prompt, finalOptions),
     )
-  } catch (err) {
-    const cause = err instanceof Error ? err.message : String(err)
+  } catch (error) {
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
     throw new Error(
       [
         'IMAGE_GENERATION_THROWN',
         `modelKey=${params.modelId}`,
-        ...(providerKey ? [`providerKey=${providerKey}`] : []),
-        ...(selectedModelId ? [`modelId=${selectedModelId}`] : []),
-        `options=${JSON.stringify(summarizedOptions)}`,
-        `capabilityOptions=${JSON.stringify(capabilityOptions)}`,
-        `cause=${cause}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `cause=${error instanceof Error ? error.message : String(error)}`,
       ].join(' '),
+      { cause: error },
     )
   }
   if (!result.success) {
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
     throw new Error(
       [
         'IMAGE_GENERATION_FAILED',
         `modelKey=${params.modelId}`,
-        ...(providerKey ? [`providerKey=${providerKey}`] : []),
-        ...(selectedModelId ? [`modelId=${selectedModelId}`] : []),
-        `options=${JSON.stringify(summarizedOptions)}`,
-        `capabilityOptions=${JSON.stringify(capabilityOptions)}`,
-        `error=${result.error || 'Image generation failed'}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `error=${result.error || '<empty>'}`,
       ].join(' '),
     )
   }
@@ -352,7 +360,7 @@ export async function resolveImageSourcesFromGeneration(
     allowTaskExternalIdResume?: boolean
     pollProgress?: { start?: number; end?: number }
   },
-	): Promise<string[]> {
+): Promise<string[]> {
   const logger = scopedWorkerUtilLogger(job, 'worker.image.generate_sources')
   const startedAt = Date.now()
   const allowTaskExternalIdResume = params.allowTaskExternalIdResume !== false
@@ -392,48 +400,47 @@ export async function resolveImageSourcesFromGeneration(
     runtimeSelections,
   })
 
-  const parsed = parseModelKeyStrict(params.modelId)
-  const providerKey = parsed?.provider ? getProviderKey(parsed.provider).toLowerCase() : ''
-  const selectedModelId = parsed?.modelId || ''
-  const summarizedOptions: Record<string, unknown> = {}
-  for (const key of [
-    'aspectRatio',
-    'size',
-    'resolution',
-    'quality',
-    'outputFormat',
-    'responseFormat',
-    'keepOriginalAspectRatio',
-  ] as const) {
-    const value = (params.options as Record<string, unknown> | undefined)?.[key]
-    if (value !== undefined) summarizedOptions[key] = value
-  }
+  const finalOptions = {
+    ...(params.options || {}),
+    ...capabilityOptions,
+  } as Record<string, unknown>
 
   let result: Awaited<ReturnType<typeof generateImage>>
   try {
     result = await withLogContext(
       { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
-      () => generateImage(params.userId, params.modelId, params.prompt, {
-        ...params.options,
-        ...capabilityOptions,
-      }),
+      () => generateImage(params.userId, params.modelId, params.prompt, finalOptions),
     )
-  } catch (err) {
-    const cause = err instanceof Error ? err.message : String(err)
+  } catch (error) {
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
     throw new Error(
       [
         'IMAGE_GENERATION_THROWN',
         `modelKey=${params.modelId}`,
-        ...(providerKey ? [`providerKey=${providerKey}`] : []),
-        ...(selectedModelId ? [`modelId=${selectedModelId}`] : []),
-        `options=${JSON.stringify(summarizedOptions)}`,
-        `capabilityOptions=${JSON.stringify(capabilityOptions)}`,
-        `cause=${cause}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `cause=${error instanceof Error ? error.message : String(error)}`,
       ].join(' '),
+      { cause: error },
     )
   }
   if (!result.success) {
-    throw new Error(result.error || 'Image generation failed')
+    const providerKey = typeof (finalOptions as { provider?: unknown }).provider === 'string'
+      ? (finalOptions as { provider: string }).provider
+      : (params.options?.provider || '')
+    throw new Error(
+      [
+        'IMAGE_GENERATION_FAILED',
+        `modelKey=${params.modelId}`,
+        providerKey ? `providerKey=${providerKey}` : 'providerKey=<unset>',
+        `options=${jsonStringifySafe(summarizeImageGenerationOptions(finalOptions))}`,
+        `capabilityOptions=${jsonStringifySafe(capabilityOptions)}`,
+        `error=${result.error || '<empty>'}`,
+      ].join(' '),
+    )
   }
 
   // 优先使用多图列表

@@ -6,13 +6,7 @@ import type {
   VideoModelOption,
   VideoPanel,
 } from '@/features/project-workspace/components/video'
-import {
-  normalizeVideoGenerationSelections,
-  resolveEffectiveVideoCapabilityDefinitions,
-  resolveEffectiveVideoCapabilityFields,
-} from '@/lib/model-capabilities/video-effective'
-import { supportsFirstLastFrame } from '@/lib/model-capabilities/video-model-options'
-import { projectVideoPricingTiersByFixedSelections } from '@/lib/model-pricing/video-tier'
+import { normalizeVideoGenerationSelections, resolveEffectiveVideoCapabilityDefinitions, resolveEffectiveVideoCapabilityFields, supportsFirstLastFrame, projectVideoPricingTiersByFixedSelections } from '@/lib/ai-registry/video-capabilities'
 
 interface FirstLastFrameCapabilityField {
   field: string

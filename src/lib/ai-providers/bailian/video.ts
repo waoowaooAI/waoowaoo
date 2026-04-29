@@ -1,12 +1,9 @@
-import {
-  assertOfficialModelRegistered,
-  type OfficialModelModality,
-} from '@/lib/ai-providers/official/model-registry'
-import { getProviderConfig } from '@/lib/api-config'
-import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
+import type { AiProviderVideoExecutionContext } from '@/lib/ai-providers/runtime-types'
+import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { toFetchableUrl } from '@/lib/storage/utils'
-import { ensureBailianCatalogRegistered } from './catalog'
 import type { BailianGenerateRequestOptions } from './types'
+import { assertBailianOfficialModelSupported } from './models'
 
 export interface BailianVideoGenerateParams {
   userId: string
@@ -16,12 +13,7 @@ export interface BailianVideoGenerateParams {
 }
 
 function assertRegistered(modelId: string): void {
-  ensureBailianCatalogRegistered()
-  assertOfficialModelRegistered({
-    provider: 'bailian',
-    modality: 'video' satisfies OfficialModelModality,
-    modelId,
-  })
+  assertBailianOfficialModelSupported('video', modelId)
 }
 
 const BAILIAN_VIDEO_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis'
@@ -223,4 +215,18 @@ export async function generateBailianVideo(params: BailianVideoGenerateParams): 
     requestId: taskId,
     externalId: `BAILIAN:VIDEO:${taskId}`,
   }
+}
+
+export async function executeBailianVideoGeneration(input: AiProviderVideoExecutionContext): Promise<GenerateResult> {
+  return await generateBailianVideo({
+    userId: input.userId,
+    imageUrl: input.imageUrl,
+    prompt: input.options?.prompt,
+    options: {
+      ...(input.options || {}),
+      provider: input.selection.provider,
+      modelId: input.selection.modelId,
+      modelKey: input.selection.modelKey,
+    } as BailianGenerateRequestOptions,
+  })
 }

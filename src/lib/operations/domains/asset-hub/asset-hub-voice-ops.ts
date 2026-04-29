@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { createHash } from 'crypto'
 import { ApiError } from '@/lib/api-errors'
 import { TASK_TYPE } from '@/lib/task/types'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
-import { getProviderConfig } from '@/lib/api-config'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-exec/voice-design'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { submitOperationTask } from '@/lib/operations/submit-operation-task'
 
@@ -48,7 +48,6 @@ export function createAssetHubVoiceOperations(): ProjectAgentOperationRegistryDr
           throw new ApiError('INVALID_PARAMS')
         }
 
-        // Preflight Bailian credentials before enqueuing async work.
         await getProviderConfig(ctx.userId, 'bailian')
 
         const digest = createHash('sha1')

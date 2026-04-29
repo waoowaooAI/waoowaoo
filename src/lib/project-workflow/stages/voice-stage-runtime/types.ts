@@ -3,7 +3,7 @@
 import type {
   SpeakerVoiceEntry as ProviderSpeakerVoiceEntry,
   SpeakerVoicePatch,
-} from '@/lib/voice/provider-voice-binding'
+} from '@/lib/ai-registry/voice-line'
 
 export interface VoiceLine {
   id: string

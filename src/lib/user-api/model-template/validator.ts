@@ -1,4 +1,4 @@
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 import {
   parseOpenAICompatMediaTemplate,
   type ModelTemplateValidationIssue,
@@ -66,4 +66,3 @@ export function validateOpenAICompatMediaTemplate(raw: unknown): {
   }
   return { ok: true, template: parsed.template, issues: [] }
 }
-

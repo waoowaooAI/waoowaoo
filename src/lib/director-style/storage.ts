@@ -1,6 +1,11 @@
 import { buildDirectorStyleDoc, isDirectorStylePresetId } from './presets'
 import type { DirectorStylePresetId } from './ids'
-import type { DirectorStyleDoc, DirectorStyleGuidanceBlock } from './types'
+import {
+  DIRECTOR_STYLE_BLOCK_FIELD_KEYS,
+  DIRECTOR_STYLE_DOC_FIELDS,
+  type DirectorStyleDoc,
+  type DirectorStyleDocField,
+} from './types'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -10,32 +15,14 @@ function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string')
-}
-
-function isDirectorStyleGuidanceBlock(value: unknown): value is DirectorStyleGuidanceBlock {
-  return isRecord(value)
-    && typeof value.intent === 'string'
-    && isStringArray(value.priorities)
-    && isStringArray(value.avoid)
-    && isStringArray(value.allowWhenHelpful)
-    && typeof value.judgement === 'string'
+function isDirectorStyleBlock(field: DirectorStyleDocField, value: unknown): boolean {
+  if (!isRecord(value)) return false
+  return DIRECTOR_STYLE_BLOCK_FIELD_KEYS[field].every((key) => typeof value[key] === 'string')
 }
 
 function isDirectorStyleDoc(value: unknown): value is DirectorStyleDoc {
   if (!isRecord(value)) return false
-  return (
-    isDirectorStyleGuidanceBlock(value.character)
-    && isDirectorStyleGuidanceBlock(value.location)
-    && isDirectorStyleGuidanceBlock(value.prop)
-    && isDirectorStyleGuidanceBlock(value.storyboardPlan)
-    && isDirectorStyleGuidanceBlock(value.cinematography)
-    && isDirectorStyleGuidanceBlock(value.acting)
-    && isDirectorStyleGuidanceBlock(value.storyboardDetail)
-    && isDirectorStyleGuidanceBlock(value.image)
-    && isDirectorStyleGuidanceBlock(value.video)
-  )
+  return DIRECTOR_STYLE_DOC_FIELDS.every((field) => isDirectorStyleBlock(field, value[field]))
 }
 
 export function normalizeDirectorStylePresetId(value: unknown): DirectorStylePresetId | null {

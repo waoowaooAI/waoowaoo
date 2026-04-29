@@ -12,8 +12,8 @@ const voiceState = vi.hoisted(() => ({
   audioDuration: 1200,
 }))
 
-vi.mock('@/lib/api-config', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/api-config')>('@/lib/api-config')
+vi.mock('@/lib/user-api/runtime-config', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/user-api/runtime-config')>('@/lib/user-api/runtime-config')
   return {
     ...actual,
     resolveModelSelectionOrSingle: vi.fn(async () => ({
@@ -22,7 +22,6 @@ vi.mock('@/lib/api-config', async () => {
       modelKey: 'fal::audio-model',
       mediaType: 'audio',
     })),
-    getProviderKey: vi.fn((providerId: string) => providerId),
   }
 })
 

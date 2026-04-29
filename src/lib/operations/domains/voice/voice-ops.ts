@@ -8,9 +8,16 @@ import { TASK_TYPE } from '@/lib/task/types'
 import { buildDefaultTaskBillingInfo } from '@/lib/billing'
 import { withTaskUiPayload } from '@/lib/task/ui-payload'
 import { estimateVoiceLineMaxSeconds } from '@/lib/voice/generate-voice-line'
-import { getProviderConfig, getProviderKey, resolveModelSelectionOrSingle } from '@/lib/api-config'
-import { parseModelKeyStrict } from '@/lib/model-config-contract'
-import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-providers/bailian/voice-design'
+import { getProviderConfig, resolveModelSelectionOrSingle } from '@/lib/user-api/runtime-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { validatePreviewText, validateVoicePrompt } from '@/lib/ai-exec/voice-design'
+import {
+  hasAiVoiceLineBinding,
+  parseSpeakerVoiceMap,
+  type CharacterVoiceFields,
+  type SpeakerVoiceMap,
+} from '@/lib/ai-exec/voice-line'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
 import type {
   TaskBatchSubmittedPartData,
@@ -26,12 +33,6 @@ import {
   taskSubmitOperationOutputSchema,
   taskSubmitOperationOutputSchemaBase,
 } from '@/lib/operations/output-schemas'
-import {
-  hasVoiceBindingForProvider,
-  parseSpeakerVoiceMap,
-  type CharacterVoiceFields,
-  type SpeakerVoiceMap,
-} from '@/lib/voice/provider-voice-binding'
 import { hasVoiceLineAudioOutput } from '@/lib/task/has-output'
 
 function normalizeString(value: unknown): string {
@@ -67,8 +68,8 @@ function hasSpeakerVoiceForProvider(
 ): boolean {
   const character = matchCharacterBySpeaker(speaker, characters)
   const speakerVoice = speakerVoices[speaker]
-  return hasVoiceBindingForProvider({
-    providerKey,
+  return hasAiVoiceLineBinding({
+    providerId: providerKey,
     character,
     speakerVoice,
   })
@@ -82,7 +83,7 @@ function hasUploadedReferenceAudioForSpeaker(params: {
   const character = matchCharacterBySpeaker(params.speaker, params.characters)
   if (normalizeString(character?.customVoiceUrl)) return true
   const entry = params.speakerVoices[params.speaker]
-  if (entry?.provider === 'fal' && normalizeString(entry.audioUrl)) return true
+  if (entry && 'audioUrl' in entry && normalizeString(entry.audioUrl)) return true
   return false
 }
 
@@ -511,7 +512,6 @@ export function createVoiceOperations(): ProjectAgentOperationRegistryDraft {
           throw new Error('PROJECT_AGENT_VOICE_PREVIEW_TEXT_INVALID')
         }
 
-        // Preflight Bailian credentials before enqueuing async work.
         await getProviderConfig(ctx.userId, 'bailian')
 
         const digest = createHash('sha1')

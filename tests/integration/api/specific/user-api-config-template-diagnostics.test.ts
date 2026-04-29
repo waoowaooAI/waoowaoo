@@ -5,7 +5,7 @@ import {
   mockAuthenticated,
   resetAuthMockState,
 } from '../../../helpers/auth'
-import type { OpenAICompatMediaTemplate } from '@/lib/openai-compat-media-template'
+import type { OpenAICompatMediaTemplate } from '@/lib/ai-registry/openai-compatible-template'
 
 const validateTemplateMock = vi.hoisted(() => vi.fn())
 const probeMediaTemplateMock = vi.hoisted(() => vi.fn())
@@ -14,19 +14,19 @@ vi.mock('@/lib/user-api/model-template', () => ({
   validateOpenAICompatMediaTemplate: validateTemplateMock,
 }))
 
-vi.mock('@/lib/user-api/model-template/probe', () => ({
+vi.mock('@/lib/ai-exec/media-template-probe', () => ({
   probeMediaTemplate: probeMediaTemplateMock,
 }))
 
-vi.mock('@/lib/user-api/model-llm-protocol-probe', () => ({
+vi.mock('@/lib/ai-exec/llm-protocol-probe', () => ({
   probeModelLlmProtocol: vi.fn(),
 }))
 
-vi.mock('@/lib/user-api/llm-test-connection', () => ({
+vi.mock('@/lib/ai-exec/llm-test-connection', () => ({
   testLlmConnection: vi.fn(),
 }))
 
-vi.mock('@/lib/user-api/provider-test', () => ({
+vi.mock('@/lib/ai-exec/provider-test', () => ({
   testProviderConnection: vi.fn(),
 }))
 
@@ -153,4 +153,3 @@ describe('api specific - user api-config template diagnostics routes', () => {
     }))
   })
 })
-

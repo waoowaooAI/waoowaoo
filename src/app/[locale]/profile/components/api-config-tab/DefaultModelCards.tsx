@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react'
 import { AppIcon } from '@/components/ui/icons'
 import type { AppIconName } from '@/components/ui/icons'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
-import type { CapabilityValue, ModelCapabilities } from '@/lib/model-config-contract'
+import type { CapabilityValue, ModelCapabilities } from '@/lib/ai-registry/types'
 import {
     getDefaultModelEmptyStateText,
     type DefaultModelEmptyStateType,
@@ -218,7 +218,7 @@ function SmartSelector({
             <select
                 value={normalizedKey}
                 onChange={(event) => props.updateDefaultModel(field, event.target.value)}
-                className="glass-input-base w-full appearance-none px-3 py-2 text-[13px] rounded-xl outline-none transition-all text-[var(--glass-text-primary)]"
+                className="glass-input-base w-full cursor-pointer appearance-none px-3 py-2 text-[13px] rounded-xl outline-none transition-all text-[var(--glass-text-primary)]"
             >
                 <option value="">{placeholder}</option>
                 {options.map((option, index) => (
@@ -229,6 +229,63 @@ function SmartSelector({
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[var(--glass-text-tertiary)]">
                 <AppIcon name="chevronDown" className="h-4 w-4" />
+            </div>
+        </div>
+    )
+}
+
+function CompactConcurrencyControl({
+    value,
+    label,
+    description,
+    decreaseLabel,
+    increaseLabel,
+    onChange,
+}: {
+    value: number
+    label: string
+    description: string
+    decreaseLabel: string
+    increaseLabel: string
+    onChange: (rawValue: string) => void
+}) {
+    const updateByStep = useCallback((nextValue: number) => {
+        if (nextValue < 1) return
+        onChange(String(nextValue))
+    }, [onChange])
+
+    return (
+        <div className="flex shrink-0 items-center gap-1.5" title={description}>
+            <span className="text-[10px] font-medium text-[var(--glass-text-secondary)] whitespace-nowrap">
+                {label}
+            </span>
+            <div className="inline-flex h-7 items-center gap-0.5 rounded-lg bg-[var(--glass-bg-muted)] px-1 shadow-[inset_0_0_0_1px_var(--glass-stroke-base)] transition-shadow hover:shadow-[inset_0_0_0_1px_var(--glass-stroke-strong)]">
+                <button
+                    type="button"
+                    aria-label={`${decreaseLabel}: ${label}`}
+                    disabled={value <= 1}
+                    onClick={() => updateByStep(value - 1)}
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-[var(--glass-text-secondary)] transition-all hover:bg-[var(--glass-bg-hover)] hover:text-[var(--glass-text-primary)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                >
+                    <AppIcon name="minus" className="h-3 w-3" />
+                </button>
+                <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    aria-label={label}
+                    value={value}
+                    onChange={(event) => onChange(event.target.value)}
+                    className="h-5 w-6 bg-transparent p-0 text-center text-[11px] font-semibold text-[var(--glass-text-primary)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <button
+                    type="button"
+                    aria-label={`${increaseLabel}: ${label}`}
+                    onClick={() => updateByStep(value + 1)}
+                    className="flex h-5 w-5 cursor-pointer items-center justify-center rounded-md text-[var(--glass-text-secondary)] transition-all hover:bg-[var(--glass-bg-hover)] hover:text-[var(--glass-text-primary)] active:scale-95"
+                >
+                    <AppIcon name="plus" className="h-3 w-3" />
+                </button>
             </div>
         </div>
     )
@@ -335,24 +392,19 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                 </h3>
                 <div className="flex flex-col md:flex-row gap-4 mb-8">
                     {/* Text Model Card */}
-                    <div className="flex-1 glass-surface p-4 rounded-2xl border border-[var(--glass-stroke-base)] hover:border-blue-500/30 transition-colors shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
+                    <div className="flex-1 glass-surface glass-card-shadow-soft p-4 rounded-2xl border border-[var(--glass-stroke-base)] hover:border-blue-500/30 transition-colors bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
                         <div className="flex items-start justify-between mb-2">
                             <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
                                 <AppIcon name="fileText" className="w-4 h-4 text-blue-500" />
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-medium text-[var(--glass-text-secondary)] whitespace-nowrap">
-                                    {t('workflowConcurrency.analysis')}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    step={1}
-                                    value={workflowConcurrency.analysis}
-                                    onChange={(event) => handleWorkflowConcurrencyChange('analysis', event.target.value)}
-                                    className="glass-input-base h-6 w-12 px-1.5 py-0 text-[11px]"
-                                />
-                            </div>
+                            <CompactConcurrencyControl
+                                value={workflowConcurrency.analysis}
+                                label={t('workflowConcurrency.analysis')}
+                                description={t('workflowConcurrency.analysis')}
+                                decreaseLabel={t('workflowConcurrency.decrease')}
+                                increaseLabel={t('workflowConcurrency.increase')}
+                                onChange={(rawValue) => handleWorkflowConcurrencyChange('analysis', rawValue)}
+                            />
                         </div>
                         <h4 className="text-[14px] font-bold text-[var(--glass-text-primary)] mb-0.5">{t('defaultModelSection.coreTextTitle')}</h4>
                         <p className="text-[11px] text-[var(--glass-text-tertiary)] mb-3">{t('defaultModelDesc.analysisModel')}</p>
@@ -366,25 +418,20 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                     </div>
 
                     {/* Video Model Card */}
-                    <div className="flex-1 glass-surface p-4 rounded-2xl border border-[var(--glass-stroke-base)] hover:border-purple-500/30 transition-colors shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                            <AppIcon name="clapperboard" className="w-4 h-4 text-purple-500" />
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-medium text-[var(--glass-text-secondary)] whitespace-nowrap">
-                                {t('workflowConcurrency.video')}
-                            </span>
-                            <input
-                                type="number"
-                                min={1}
-                                step={1}
+                    <div className="flex-1 glass-surface glass-card-shadow-soft p-4 rounded-2xl border border-[var(--glass-stroke-base)] hover:border-purple-500/30 transition-colors bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
+                        <div className="flex items-start justify-between mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                <AppIcon name="clapperboard" className="w-4 h-4 text-purple-500" />
+                            </div>
+                            <CompactConcurrencyControl
                                 value={workflowConcurrency.video}
-                                onChange={(event) => handleWorkflowConcurrencyChange('video', event.target.value)}
-                                className="glass-input-base h-6 w-12 px-1.5 py-0 text-[11px]"
+                                label={t('workflowConcurrency.video')}
+                                description={t('workflowConcurrency.video')}
+                                decreaseLabel={t('workflowConcurrency.decrease')}
+                                increaseLabel={t('workflowConcurrency.increase')}
+                                onChange={(rawValue) => handleWorkflowConcurrencyChange('video', rawValue)}
                             />
                         </div>
-                    </div>
                         <h4 className="text-[14px] font-bold text-[var(--glass-text-primary)] mb-0.5">{t('defaultModelSection.coreVideoTitle')}</h4>
                         <p className="text-[11px] text-[var(--glass-text-tertiary)] mb-3">{t('defaultModelDesc.videoModel')}</p>
                         <SmartSelector
@@ -404,25 +451,8 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                         <AppIcon name="sparklesAlt" className="w-5 h-5 text-indigo-500" />
                         {t('defaultModelSection.creativePipeline')}
                     </h3>
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-medium text-[var(--glass-text-secondary)] whitespace-nowrap">
-                            {t('workflowConcurrency.image')}
-                        </span>
-                        <input
-                            type="number"
-                            min={1}
-                            step={1}
-                            value={workflowConcurrency.image}
-                            onChange={(event) => handleWorkflowConcurrencyChange('image', event.target.value)}
-                            className="glass-input-base h-6 w-12 px-1.5 py-0 text-[11px]"
-                        />
-                    </div>
                 </div>
-                <div className="glass-surface p-6 rounded-3xl border border-indigo-500/20 bg-indigo-500/[0.02] shadow-sm mb-8">
-                    <div className="flex items-start gap-2 mb-4 px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
-                        <AppIcon name="alert" className="w-4 h-4 shrink-0 mt-0.5" />
-                        <span className="text-[12px] leading-relaxed">{t('imageModelTip')}</span>
-                    </div>
+                <div className="glass-surface glass-card-shadow-soft p-6 rounded-3xl border border-indigo-500/20 bg-indigo-500/[0.02] mb-8">
                     {pipelineGlobalOptions.length === 0 ? (
                         <EmptyModelState
                             modelType="image"
@@ -437,24 +467,34 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                                     <div className="text-[14px] font-semibold text-[var(--glass-text-primary)]">{t('defaultModelSection.unifiedOverride')}</div>
                                     <div className="text-[12px] text-[var(--glass-text-tertiary)] mt-0.5">{t('defaultModelSection.unifiedOverrideHint')}</div>
                                 </div>
-                                <div className="w-full sm:w-[280px]">
-                                    <ModelCapabilityDropdown
-                                        models={pipelineGlobalOptions.map((opt) => ({
-                                            value: opt.modelKey,
-                                            label: opt.name,
-                                            provider: opt.provider,
-                                            providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
-                                        }))}
-                                        value={pipelineGlobalKey || undefined}
-                                        onModelChange={handlePipelineGlobalChange}
-                                        capabilityFields={pipelineGlobalCapFields.map((d) => ({
-                                            ...d,
-                                            label: allProps.toCapabilityFieldLabel(d.field),
-                                        }))}
-                                        capabilityOverrides={pipelineGlobalCapOverrides}
-                                        onCapabilityChange={handlePipelineGlobalCapChange}
-                                        placeholder={t('defaultModelSection.unifiedOverridePlaceholder')}
+                                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                                    <CompactConcurrencyControl
+                                        value={workflowConcurrency.image}
+                                        label={t('workflowConcurrency.image')}
+                                        description={t('workflowConcurrency.imageDescription')}
+                                        decreaseLabel={t('workflowConcurrency.decrease')}
+                                        increaseLabel={t('workflowConcurrency.increase')}
+                                        onChange={(rawValue) => handleWorkflowConcurrencyChange('image', rawValue)}
                                     />
+                                    <div className="min-w-0 flex-1 sm:w-[280px] sm:flex-none">
+                                        <ModelCapabilityDropdown
+                                            models={pipelineGlobalOptions.map((opt) => ({
+                                                value: opt.modelKey,
+                                                label: opt.name,
+                                                provider: opt.provider,
+                                                providerName: opt.providerName || getProviderDisplayName(opt.provider, locale),
+                                            }))}
+                                            value={pipelineGlobalKey || undefined}
+                                            onModelChange={handlePipelineGlobalChange}
+                                            capabilityFields={pipelineGlobalCapFields.map((d) => ({
+                                                ...d,
+                                                label: allProps.toCapabilityFieldLabel(d.field),
+                                            }))}
+                                            capabilityOverrides={pipelineGlobalCapOverrides}
+                                            onCapabilityChange={handlePipelineGlobalCapChange}
+                                            placeholder={t('defaultModelSection.unifiedOverridePlaceholder')}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -463,7 +503,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                                 {pipelineItems.map((item) => {
                                     const resolved = resolveModel(item.field, item.modelType, defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
                                     return (
-                                        <div key={item.field} className="glass-surface p-4 rounded-2xl shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent flex flex-col gap-3">
+                                        <div key={item.field} className="glass-surface glass-card-shadow-soft p-4 rounded-2xl bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent flex flex-col gap-3">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <AppIcon name={item.icon} className="w-4 h-4 text-[var(--glass-text-tertiary)]" />
                                                 <span className="text-[13px] font-semibold text-[var(--glass-text-secondary)]">{t(item.titleKey)}</span>
@@ -490,7 +530,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     {/* Lip Sync */}
-                    <div className="glass-surface p-5 rounded-2xl shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
+                    <div className="glass-surface glass-card-shadow-soft p-5 rounded-2xl bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
                         <h4 className="text-[13px] font-semibold text-[var(--glass-text-primary)] mb-4">{t('defaultModelSection.extLipSync')}</h4>
                         <SmartSelector
                             field="lipSyncModel" modelType="lipsync"
@@ -501,7 +541,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                         />
                     </div>
                     {/* TTS */}
-                    <div className="glass-surface p-5 rounded-2xl shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
+                    <div className="glass-surface glass-card-shadow-soft p-5 rounded-2xl bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
                         <h4 className="text-[13px] font-semibold text-[var(--glass-text-primary)] mb-4">{t('defaultModelSection.extTTS')}</h4>
                         <SmartSelector
                             field="audioModel" modelType="audio"
@@ -512,7 +552,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                         />
                     </div>
                     {/* Voice Design */}
-                    <div className="glass-surface p-5 rounded-2xl shadow-sm bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
+                    <div className="glass-surface glass-card-shadow-soft p-5 rounded-2xl bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
                         <h4 className="text-[13px] font-semibold text-[var(--glass-text-primary)] mb-4">{t('defaultModelSection.extVoiceDesign')}</h4>
                         <SmartSelector
                             field="voiceDesignModel" modelType="voicedesign"

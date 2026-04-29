@@ -124,11 +124,7 @@ export async function handleAssetHubModifyTask(job: Job<TaskJobData>) {
       }
     }
     const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
-      context: {
-        taskType: 'asset_hub_modify_character_image',
-        appearanceId: appearance.id,
-        targetId: job.data.targetId,
-      },
+      context: { taskType: String(job.data.type), scope: 'asset-hub-modify.extra' },
     })
     const referenceImages = Array.from(new Set([currentUrl, ...normalizedExtras]))
     const currentDescription = readIndexedDescription({
@@ -211,7 +207,6 @@ export async function handleAssetHubModifyTask(job: Job<TaskJobData>) {
     const currentUrl = toSignedUrlIfCos(locationImage.imageUrl, 3600)
     if (!currentUrl) throw new Error('No global location image to modify')
 
-    const isProp = payload.type === 'prop'
     const extraReferenceInputs: string[] = []
     if (Array.isArray(payload.extraImageUrls)) {
       for (const url of payload.extraImageUrls) {
@@ -221,14 +216,11 @@ export async function handleAssetHubModifyTask(job: Job<TaskJobData>) {
       }
     }
     const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
-      context: {
-        taskType: isProp ? 'asset_hub_modify_prop_image' : 'asset_hub_modify_location_image',
-        locationImageId: locationImage.id,
-        targetId: job.data.targetId,
-      },
+      context: { taskType: String(job.data.type), scope: 'asset-hub-modify.extra' },
     })
     const referenceImages = Array.from(new Set([currentUrl, ...normalizedExtras]))
 
+    const isProp = payload.type === 'prop'
     const prompt = isProp
       ? `请根据以下指令修改道具图片，保持道具主体、结构和关键材质一致：\n${modifyInstruction}`
       : `请根据以下指令修改场景图片，保持整体风格一致：\n${modifyInstruction}`

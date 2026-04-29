@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { executeAiTextStep } from '@/lib/ai-runtime'
+import { executeAiTextStep } from '@/lib/ai-exec/engine'
 import {
   getUserWorkflowConcurrencyConfig,
   resolveProjectModelCapabilityGenerationOptions,
@@ -32,7 +32,7 @@ import {
   persistRetryScreenplayResult,
   persistStoryToScriptWorkflowResults,
 } from '@/lib/domain/screenplay/service'
-import { parseDirectorStyleDoc } from '@/lib/director-style'
+import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
 
 type AnyObj = Record<string, unknown>
 
@@ -426,7 +426,10 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
                 name: item.name,
                 introduction: item.introduction || '',
               })),
-              directorStyleDoc: parseDirectorStyleDoc(projectWorkflow.directorStyleDoc),
+              directorStyleDoc: await resolveProjectDirectorStyleDoc({
+                projectId,
+                userId: job.data.userId,
+              }),
               runStep,
             }),
           )

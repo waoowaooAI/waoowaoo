@@ -1,12 +1,9 @@
-import {
-  assertOfficialModelRegistered,
-  type OfficialModelModality,
-} from '@/lib/ai-providers/official/model-registry'
-import { getProviderConfig } from '@/lib/api-config'
-import type { GenerateResult } from '@/lib/ai-providers/adapters/media/generators/base'
-import { ensureBailianCatalogRegistered } from './catalog'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
+import type { AiProviderAudioExecutionContext } from '@/lib/ai-providers/runtime-types'
+import type { GenerateResult } from '@/lib/ai-providers/runtime-types'
 import { synthesizeWithBailianTTS } from './tts'
 import type { BailianGenerateRequestOptions } from './types'
+import { assertBailianOfficialModelSupported } from './models'
 
 export interface BailianAudioGenerateParams {
   userId: string
@@ -17,12 +14,7 @@ export interface BailianAudioGenerateParams {
 }
 
 function assertRegistered(modelId: string): void {
-  ensureBailianCatalogRegistered()
-  assertOfficialModelRegistered({
-    provider: 'bailian',
-    modality: 'audio' satisfies OfficialModelModality,
-    modelId,
-  })
+  assertBailianOfficialModelSupported('audio', modelId)
 }
 
 function readTrimmedString(value: unknown): string {
@@ -57,4 +49,18 @@ export async function generateBailianAudio(params: BailianAudioGenerateParams): 
     audioUrl,
     requestId: result.requestId,
   }
+}
+
+export async function executeBailianAudioGeneration(input: AiProviderAudioExecutionContext): Promise<GenerateResult> {
+  return await generateBailianAudio({
+    userId: input.userId,
+    text: input.text,
+    voice: input.options?.voice,
+    rate: input.options?.rate,
+    options: {
+      provider: input.selection.provider,
+      modelId: input.selection.modelId,
+      modelKey: input.selection.modelKey,
+    } as BailianGenerateRequestOptions,
+  })
 }

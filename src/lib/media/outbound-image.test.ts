@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   OutboundImageNormalizeError,
+  normalizeOptionalReferenceImagesForGeneration,
   normalizeReferenceImagesForGeneration,
   normalizeToBase64ForGeneration,
   normalizeToOriginalMediaUrl,
@@ -207,6 +208,37 @@ describe('outbound-image normalization', () => {
       code: 'OUTBOUND_IMAGE_REFERENCE_ALL_FAILED',
       stage: 'normalize_reference',
     })
+    expect(issues).toHaveLength(1)
+    expect(issues[0]).toMatchObject({
+      code: 'OUTBOUND_IMAGE_FETCH_FAILED',
+      stage: 'normalize_base64',
+      input: 'images/bad.png',
+      index: 0,
+    })
+  })
+
+  it('fails open for optional references when all candidates fail', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      headers: new Headers(),
+      arrayBuffer: async () => new ArrayBuffer(0),
+    } as Response)
+
+    const issues: Array<{
+      code: string
+      stage: string
+      message: string
+      input: string
+      index: number
+    }> = []
+
+    await expect(
+      normalizeOptionalReferenceImagesForGeneration(['images/bad.png'], {
+        onIssue: (issue) => issues.push(issue),
+        context: { scope: 'test' },
+      }),
+    ).resolves.toEqual([])
     expect(issues).toHaveLength(1)
     expect(issues[0]).toMatchObject({
       code: 'OUTBOUND_IMAGE_FETCH_FAILED',

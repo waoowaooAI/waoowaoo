@@ -4,7 +4,7 @@ import { CapsuleNav, EpisodeSelector } from '@/components/ui/CapsuleNav'
 import { SettingsModal, WorldContextModal } from '@/components/ui/ConfigModals'
 import WorkspaceTopActions from './WorkspaceTopActions'
 import type { ProjectPanel } from '@/types/project'
-import type { CapabilitySelections, ModelCapabilities } from '@/lib/model-config-contract'
+import type { CapabilitySelections, ModelCapabilities } from '@/lib/ai-registry/types'
 import { resolveEpisodeStageArtifacts } from '@/lib/project-workflow/stage-readiness'
 
 interface EpisodeSummary {

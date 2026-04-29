@@ -12,7 +12,7 @@ import {
   getProjectModelConfig,
   resolveProjectModelCapabilityGenerationOptions,
 } from '@/lib/config-service'
-import { resolveModelSelection } from '@/lib/api-config'
+import { resolveModelSelection } from '@/lib/user-api/runtime-config'
 import { hasPanelImageOutput } from '@/lib/task/has-output'
 import { createMutationBatch } from '@/lib/mutation-batch/service'
 import type { TaskSubmittedPartData } from '@/lib/project-agent/types'

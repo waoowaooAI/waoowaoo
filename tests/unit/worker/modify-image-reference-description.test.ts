@@ -16,6 +16,7 @@ const utilsMock = vi.hoisted(() => ({
 
 const outboundImageMock = vi.hoisted(() => ({
   normalizeReferenceImagesForGeneration: vi.fn(async (input?: string[]) => input?.map((item) => item.trim()) || []),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async (input?: string[]) => input?.map((item) => item.trim()) || []),
   normalizeToBase64ForGeneration: vi.fn(async () => 'base64-reference'),
 }))
 
@@ -71,7 +72,7 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('@/lib/workers/utils', () => utilsMock)
 vi.mock('@/lib/media/outbound-image', () => outboundImageMock)
-vi.mock('@/lib/ai-runtime', () => aiRuntimeMock)
+vi.mock('@/lib/ai-exec/engine', () => aiRuntimeMock)
 vi.mock('@/lib/ai-prompts', () => promptMock)
 vi.mock('@/lib/logging/core', () => loggingMock)
 vi.mock('@/lib/prisma', () => ({

@@ -1,0 +1,29 @@
+你是影视导演风格设计师。根据用户需求，设计一个可复用的导演风格预设。
+这个预设会按环节注入生成流程，重点必须落到单张图片可见的镜头、构图、灯光、色彩、空间、人物姿态和画面质感上，不要输出抽象理念。
+
+用户需求：
+{instruction}
+
+只返回严格 JSON，禁止 markdown、解释或额外文本。JSON 必须符合以下结构：
+{
+  "name": "简短中文名称",
+  "summary": "一句话说明适用场景",
+  "config": {
+    "character": {"temperament": "", "expression": "", "pose": "", "wardrobeTexture": "", "cameraDistance": "", "imagePrompt": "", "avoid": ""},
+    "location": {"spaceMood": "", "composition": "", "lightSource": "", "materials": "", "colorTemperature": "", "depth": "", "imagePrompt": "", "avoid": ""},
+    "prop": {"shapeLanguage": "", "materialAging": "", "placement": "", "scale": "", "lighting": "", "imagePrompt": "", "avoid": ""},
+    "storyboardPlan": {"shotSelection": "", "revealOrder": "", "subjectContinuity": "", "sceneCoverage": "", "avoid": ""},
+    "cinematography": {"shotSize": "", "lens": "", "angle": "", "cameraHeight": "", "depthOfField": "", "composition": "", "lighting": "", "avoid": ""},
+    "acting": {"expression": "", "gaze": "", "posture": "", "gesture": "", "motionState": "", "interactionDistance": "", "avoid": ""},
+    "storyboardDetail": {"frameComposition": "", "cameraMovement": "", "focalPoint": "", "foregroundBackground": "", "transitionCue": "", "imagePrompt": "", "avoid": ""},
+    "image": {"prompt": "", "negativePrompt": "", "lighting": "", "color": "", "composition": "", "texture": "", "atmosphere": ""},
+    "video": {"cameraMotion": "", "motionSpeed": "", "subjectMotion": "", "rhythm": "", "stability": "", "transition": "", "avoid": ""}
+  }
+}
+
+要求：
+1. 每个字段都必须存在。
+2. 所有 config 内字段都必须是字符串，不要使用数组或对象。
+3. image.prompt、character.imagePrompt、location.imagePrompt、prop.imagePrompt、storyboardDetail.imagePrompt 必须可直接拼入图片生成提示词。
+4. image.negativePrompt 必须列出画面禁用项，不要复述正向提示词。
+5. 字段内容要具体可执行，避免“高级感、电影感、情绪张力”这类空泛词单独出现。

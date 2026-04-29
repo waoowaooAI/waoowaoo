@@ -1,11 +1,10 @@
 import type { Job } from 'bullmq'
 import {
-  createVoiceDesign,
+  createBailianVoiceDesignForUser,
   validatePreviewText,
   validateVoicePrompt,
   type VoiceDesignInput,
-} from '@/lib/ai-providers/bailian/voice-design'
-import { getProviderConfig } from '@/lib/api-config'
+} from '@/lib/ai-exec/voice-design'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
@@ -46,14 +45,16 @@ export async function handleVoiceDesignTask(job: Job<TaskJobData>) {
   })
   await assertTaskActive(job, 'voice_design_submit')
 
-  const { apiKey } = await getProviderConfig(job.data.userId, 'bailian')
   const input: VoiceDesignInput = {
     voicePrompt,
     previewText,
     preferredName,
     language,
   }
-  const designed = await createVoiceDesign(input, apiKey)
+  const designed = await createBailianVoiceDesignForUser({
+    userId: job.data.userId,
+    voiceDesign: input,
+  })
   if (!designed.success) {
     throw new Error(designed.error || '声音设计失败')
   }

@@ -13,13 +13,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
-import type { CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilityValue } from '@/lib/ai-registry/types'
 import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
 
 // ─── Types ────────────────────────────────────────────
 
 export interface ModelCapabilityOption {
-    /** Composite key e.g. "ark::doubao-seedance-1-0-pro-250528" */
+    /** Composite model key, e.g. "provider::model-id" */
     value: string
     /** Display name */
     label: string
@@ -246,7 +246,7 @@ export function ModelCapabilityDropdown({
                 type="button"
                 onClick={handleToggleOpen}
                 className={`glass-input-base w-full ${triggerPx} ${triggerPy} rounded-[14px] transition-all duration-200 cursor-pointer ${isOpen
-                    ? '!border-[var(--glass-tone-info-fg)] shadow-[0_0_0_3px_var(--glass-tone-info-bg)]'
+                    ? '!border-[var(--glass-tone-info-fg)]'
                     : 'hover:border-[var(--glass-stroke-active)]'
                     }`}
             >

@@ -1,5 +1,5 @@
 import type { VideoPanel, MatchedVoiceLine, VideoModelOption, FirstLastFrameParams, VideoGenerationOptions } from '../types'
-import type { CapabilitySelections, CapabilityValue } from '@/lib/model-config-contract'
+import type { CapabilitySelections, CapabilityValue } from '@/lib/ai-registry/types'
 
 export interface VideoPanelCardShellProps {
   panel: VideoPanel

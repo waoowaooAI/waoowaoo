@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server'
 import { logError as _ulogError } from '@/lib/logging/core'
 import { getLogContext } from '@/lib/logging/context'
 import { prisma } from '@/lib/prisma'
-import { parseModelKeyStrict } from '@/lib/model-config-contract'
+import { parseModelKeyStrict } from '@/lib/ai-registry/selection'
+import { DEFAULT_LIPSYNC_MODEL_KEY, DEFAULT_VOICE_DESIGN_MODEL_KEY, DEFAULT_VOICE_MODEL_KEY } from '@/lib/ai-registry/api-config-catalog'
+import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import {
   calcImage,
   calcLipSync,
@@ -32,7 +34,7 @@ import type {
   BillingRecordParams,
   TaskBillingInfo,
 } from './types'
-import { BUILTIN_PRICING_VERSION } from '@/lib/model-pricing/version'
+import { BUILTIN_PRICING_VERSION } from '@/lib/ai-registry/pricing-resolution'
 
 type CostInput = {
   apiType: ApiType
@@ -629,6 +631,11 @@ export async function withTextBilling<T>(
   recordParams: BillingRecordParams,
   generateFn: () => Promise<T>,
 ): Promise<T> {
+  const mode = await getBillingMode()
+  if (mode === 'OFF') {
+    return await generateFn()
+  }
+
   const customPricing = await loadUserCustomPricing(userId, model)
   const quotedCost = calcText(model, maxInputTokens, maxOutputTokens, customPricing)
   return await withSyncBillingCore(
@@ -716,7 +723,7 @@ export async function withVoiceBilling<T>(
       projectId: recordParams.projectId,
       action: recordParams.action,
       apiType: 'voice',
-      model: 'index-tts2',
+      model: DEFAULT_VOICE_MODEL_KEY,
       quantity: maxFreezeSeconds,
       unit: 'second',
       metadata: recordParams.metadata,
@@ -745,7 +752,7 @@ export async function withVoiceDesignBilling<T>(
       projectId: recordParams.projectId,
       action: recordParams.action,
       apiType: 'voice-design',
-      model: 'bailian',
+      model: DEFAULT_VOICE_DESIGN_MODEL_KEY,
       quantity: 1,
       unit: 'call',
       metadata: recordParams.metadata,
@@ -758,7 +765,7 @@ export async function withVoiceDesignBilling<T>(
 export async function withLipSyncBilling<T>(
   userId: string,
   recordParams: BillingRecordParams,
-  model = 'kling',
+  model = DEFAULT_LIPSYNC_MODEL_KEY,
   generateFn: () => Promise<T>,
 ): Promise<T> {
   return await withSyncBillingCore(
@@ -1078,3 +1085,4 @@ export async function rollbackTaskBilling(task: {
     } satisfies TaskBillingInfo
   }
 }
+ensureAiCatalogsRegistered()

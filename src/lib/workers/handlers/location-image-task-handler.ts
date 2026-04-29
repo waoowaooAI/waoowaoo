@@ -1,6 +1,7 @@
 import { type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { LOCATION_IMAGE_RATIO, PROP_IMAGE_RATIO, addLocationPromptSuffix, addPropPromptSuffix, getArtStylePrompt, isArtStyleValue, type ArtStyleValue } from '@/lib/constants'
+import { LOCATION_IMAGE_RATIO, PROP_IMAGE_RATIO, addLocationPromptSuffix, addPropPromptSuffix, isArtStyleValue, type ArtStyleValue } from '@/lib/constants'
+import { resolveProjectVisualStylePreset, resolveVisualStylePreset } from '@/lib/style-preset'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import { type TaskJobData } from '@/lib/task/types'
 import { reportTaskProgress } from '../shared'
@@ -67,7 +68,18 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
   const requestedCount = resolveRequestedLocationCount(payload)
 
   const payloadArtStyle = resolvePayloadArtStyle(payload)
-  const artStyle = getArtStylePrompt(payloadArtStyle ?? models.artStyle, job.data.locale)
+  const artStyle = payloadArtStyle
+    ? (await resolveVisualStylePreset({
+        userId,
+        presetSource: 'system',
+        presetId: payloadArtStyle,
+        locale: job.data.locale,
+      })).prompt
+    : (await resolveProjectVisualStylePreset({
+        projectId,
+        userId,
+        locale: job.data.locale,
+      })).prompt
   const assetType = payload.type === 'prop' ? 'prop' : 'location'
 
   // targetId may be locationId (group) or locationImageId (single)

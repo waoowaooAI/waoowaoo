@@ -1,4 +1,4 @@
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import type { LocationAvailableSlot } from '@/lib/location-available-slots'
 import type { DirectorStyleDoc } from '@/lib/director-style'
 
@@ -260,6 +260,9 @@ export interface ProjectWorkflowData {
   capabilityOverrides?: CapabilitySelections | string | null
   artStyle: string | null
   artStylePrompt: string | null
+  visualStylePresetSource: string | null
+  visualStylePresetId: string | null
+  directorStylePresetSource: string | null
   directorStylePresetId: string | null
   directorStyleDoc: DirectorStyleDoc | null
   videoResolution?: string | null

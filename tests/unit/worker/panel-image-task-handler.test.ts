@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(),
+  },
   projectPanel: {
     findUnique: vi.fn(),
     update: vi.fn(async () => ({})),
@@ -21,15 +24,15 @@ const sharedMock = vi.hoisted(() => ({
   resolveNovelData: vi.fn(async () => ({
     videoRatio: '16:9',
     directorStyleDoc: {
-      character: { intent: '角色风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      location: { intent: '场景风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      prop: { intent: '道具风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      storyboardPlan: { intent: '分镜风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      cinematography: { intent: '摄影风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      acting: { intent: '表演风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      storyboardDetail: { intent: '细化风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      image: { intent: '图片风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
-      video: { intent: '视频风格', priorities: [], avoid: [], allowWhenHelpful: [], judgement: '按需判断' },
+      character: { temperament: '角色气质', expression: '表情', pose: '姿态', wardrobeTexture: '服装材质', cameraDistance: '中近景', imagePrompt: 'character image style', avoid: '避免夸张' },
+      location: { spaceMood: '场景气质', composition: '构图', lightSource: '光源', materials: '材质', colorTemperature: '冷色', depth: '纵深', imagePrompt: 'location image style', avoid: '避免脏乱' },
+      prop: { shapeLanguage: '形体', materialAging: '旧化', placement: '摆放', scale: '尺度', lighting: '侧光', imagePrompt: 'prop image style', avoid: '避免超自然' },
+      storyboardPlan: { shotSelection: '镜头选择', revealOrder: '揭示顺序', subjectContinuity: '主体连续', sceneCoverage: '场景覆盖', avoid: '避免不可读' },
+      cinematography: { shotSize: '景别', lens: '35mm', angle: '平视', cameraHeight: '人眼高度', depthOfField: '中等景深', composition: '偏边构图', lighting: '低照度', avoid: '避免平光' },
+      acting: { expression: '克制表情', gaze: '视线回避', posture: '防备姿态', gesture: '手部迟疑', motionState: '慢动作', interactionDistance: '保持距离', avoid: '避免夸张' },
+      storyboardDetail: { frameComposition: '画框构图', cameraMovement: '慢推', focalPoint: '视觉焦点', foregroundBackground: '前景遮挡', transitionCue: '声音转场', imagePrompt: 'storyboard detail style', avoid: '避免堆信息' },
+      image: { prompt: '图片风格', negativePrompt: '不要平光', lighting: '低照度', color: '冷色', composition: '偏边', texture: '颗粒', atmosphere: '压迫' },
+      video: { cameraMotion: '慢推', motionSpeed: '缓慢', subjectMotion: '克制', rhythm: '停顿', stability: '稳定', transition: '暗部转场', avoid: '避免甩镜' },
     },
     characters: [],
     locations: [
@@ -50,7 +53,7 @@ const sharedMock = vi.hoisted(() => ({
 }))
 
 const outboundMock = vi.hoisted(() => ({
-  normalizeReferenceImagesForGeneration: vi.fn(async () => ['normalized-ref-1']),
+  normalizeOptionalReferenceImagesForGeneration: vi.fn(async () => ['normalized-ref-1']),
 }))
 
 const promptMock = vi.hoisted(() => ({
@@ -108,6 +111,12 @@ function buildJob(payload: Record<string, unknown>, targetId = 'panel-1'): Job<T
 describe('worker panel-image-task-handler behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+
+    prismaMock.project.findUnique.mockResolvedValue({
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
+      artStyle: 'realistic',
+    })
 
     prismaMock.projectPanel.findUnique.mockResolvedValue({
       id: 'panel-1',
@@ -176,7 +185,7 @@ describe('worker panel-image-task-handler behavior', () => {
     expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
       directorStyleDoc: expect.objectContaining({
         image: expect.objectContaining({
-          intent: '图片风格',
+          prompt: '图片风格',
         }),
       }),
     }))

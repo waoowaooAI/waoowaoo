@@ -105,5 +105,162 @@
         "voice-generate": "配音生成",
         "voice-design": "声音设计",
         "lip-sync": "口型同步"
+    },
+    "stylePresets": {
+        "title": "我的风格",
+        "subtitle": "创建账号级私有画风与导演风格，保存后会在下一次生成中实时生效。",
+        "newPreset": "新建",
+        "loading": "加载中",
+        "empty": "暂无预设",
+        "userEmpty": "还没有创建自己的风格",
+        "sectionCount": "{count} 个",
+        "emptyDescription": "点击加号创建画风或导演风格。具体提示词只会在进入编辑后显示。",
+        "noSummary": "暂无简介",
+        "createTitle": "新建风格",
+        "createDescription": "按资产创建弹窗的方式填写必要信息。",
+        "editTitle": "编辑风格",
+        "editDescription": "这里的修改会在下一次生成时实时应用到引用它的项目。",
+        "systemTitle": "系统内置风格",
+        "systemDescription": "系统风格可查看具体提示词，但不能直接修改。需要自定义时请新建我的风格。",
+        "loadFailed": "风格预设加载失败",
+        "designFailed": "AI 设计失败",
+        "saveFailed": "保存失败",
+        "deleteFailed": "删除失败",
+        "deleteConfirm": "确定要删除这个风格吗？删除后将不再显示。",
+        "directorConfigDetails": "导演风格配置",
+        "directorDesignRequired": "请先使用 AI 设计生成导演风格后再保存。",
+        "design": "AI 设计",
+        "designing": "设计中",
+        "save": "保存",
+        "saving": "保存中",
+        "delete": "删除",
+        "kind": {
+            "visual_style": "画风",
+            "director_style": "导演风格"
+        },
+        "kindDescription": {
+            "visual_style": "控制图片和视觉生成的画面语言",
+            "director_style": "控制角色、分镜、摄影和视频的导演要求"
+        },
+        "filters": {
+            "all": "全部"
+        },
+        "source": {
+            "system": "系统内置",
+            "user": "我的创建"
+        },
+        "fields": {
+            "name": "名称",
+            "summary": "简介",
+            "instruction": "设计需求",
+            "prompt": "提示词",
+            "negativePrompt": "禁用项",
+            "colorPalette": "色彩倾向",
+            "lineStyle": "线条风格",
+            "texture": "材质与笔触",
+            "lighting": "光影",
+            "composition": "构图",
+    "detailLevel": "细节等级"
+  },
+        "detailLevels": {
+            "low": "低",
+            "medium": "中",
+            "high": "高"
+        },
+  "directorFields": {
+    "character": "角色",
+    "location": "场景",
+            "prop": "道具",
+            "storyboardPlan": "分镜规划",
+            "cinematography": "摄影",
+            "acting": "表演",
+            "storyboardDetail": "分镜细节",
+    "image": "图片",
+    "video": "视频"
+  },
+  "directorBlockFields": {
+    "character": {
+      "temperament": "人物气质",
+      "expression": "表情",
+      "pose": "姿态",
+      "wardrobeTexture": "服装与材质",
+      "cameraDistance": "镜头距离",
+      "imagePrompt": "图片提示词",
+      "avoid": "避免事项"
+    },
+    "location": {
+      "spaceMood": "空间气质",
+      "composition": "构图方式",
+      "lightSource": "光源",
+      "materials": "材质",
+      "colorTemperature": "色温",
+      "depth": "空间纵深",
+      "imagePrompt": "图片提示词",
+      "avoid": "避免事项"
+    },
+    "prop": {
+      "shapeLanguage": "形体语言",
+      "materialAging": "材质老化",
+      "placement": "摆放方式",
+      "scale": "尺度关系",
+      "lighting": "光线",
+      "imagePrompt": "图片提示词",
+      "avoid": "避免事项"
+    },
+    "storyboardPlan": {
+      "shotSelection": "镜头选择",
+      "revealOrder": "揭示顺序",
+      "subjectContinuity": "主体连续性",
+      "sceneCoverage": "场景覆盖",
+      "avoid": "避免事项"
+    },
+    "cinematography": {
+      "shotSize": "景别",
+      "lens": "镜头焦段",
+      "angle": "拍摄角度",
+      "cameraHeight": "机位高度",
+      "depthOfField": "景深",
+      "composition": "构图",
+      "lighting": "灯光",
+      "avoid": "避免事项"
+    },
+    "acting": {
+      "expression": "表情",
+      "gaze": "视线",
+      "posture": "身体姿态",
+      "gesture": "手势动作",
+      "motionState": "运动状态",
+      "interactionDistance": "互动距离",
+      "avoid": "避免事项"
+    },
+    "storyboardDetail": {
+      "frameComposition": "画框构图",
+      "cameraMovement": "镜头运动",
+      "focalPoint": "视觉焦点",
+      "foregroundBackground": "前景与背景",
+      "transitionCue": "转场提示",
+      "imagePrompt": "图片提示词",
+      "avoid": "避免事项"
+    },
+    "image": {
+      "prompt": "图片提示词",
+      "negativePrompt": "负向提示词",
+      "lighting": "灯光",
+      "color": "色彩",
+      "composition": "构图",
+      "texture": "质感",
+      "atmosphere": "氛围"
+    },
+    "video": {
+      "cameraMotion": "镜头运动",
+      "motionSpeed": "运动速度",
+      "subjectMotion": "主体运动",
+      "rhythm": "节奏",
+      "stability": "稳定性",
+      "transition": "转场",
+      "avoid": "避免事项"
     }
+  },
+  "edit": "编辑"
+}
 }

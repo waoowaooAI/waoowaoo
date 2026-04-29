@@ -1,9 +1,6 @@
-import {
-  assertOfficialModelRegistered,
-  type OfficialModelModality,
-} from '@/lib/ai-providers/official/model-registry'
-import { ensureBailianCatalogRegistered } from './catalog'
+import type { AiProviderImageExecutionContext } from '@/lib/ai-providers/runtime-types'
 import type { BailianGenerateRequestOptions } from './types'
+import { assertBailianOfficialModelSupported } from './models'
 
 export interface BailianImageGenerateParams {
   userId: string
@@ -13,15 +10,24 @@ export interface BailianImageGenerateParams {
 }
 
 function assertRegistered(modelId: string): void {
-  ensureBailianCatalogRegistered()
-  assertOfficialModelRegistered({
-    provider: 'bailian',
-    modality: 'image' satisfies OfficialModelModality,
-    modelId,
-  })
+  assertBailianOfficialModelSupported('image', modelId)
 }
 
 export async function generateBailianImage(params: BailianImageGenerateParams): Promise<never> {
   assertRegistered(params.options.modelId)
   throw new Error('OFFICIAL_PROVIDER_NOT_IMPLEMENTED: bailian image')
+}
+
+export async function executeBailianImageGeneration(input: AiProviderImageExecutionContext) {
+  return await generateBailianImage({
+    userId: input.userId,
+    prompt: input.prompt,
+    referenceImages: input.options?.referenceImages,
+    options: {
+      ...(input.options || {}),
+      provider: input.selection.provider,
+      modelId: input.selection.modelId,
+      modelKey: input.selection.modelKey,
+    } as BailianGenerateRequestOptions,
+  })
 }

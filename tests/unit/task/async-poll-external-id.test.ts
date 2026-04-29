@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatExternalId, parseExternalId } from '@/lib/async-poll'
+import { formatExternalId, parseExternalId } from '@/lib/ai-exec/async-poll'
 
 describe('async poll externalId contract', () => {
   it('parses standard FAL externalId with endpoint', () => {

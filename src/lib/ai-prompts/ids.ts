@@ -28,6 +28,8 @@ export const AI_PROMPT_IDS = {
   SHOT_VARIANT_GENERATE: 'shot-variant-generate',
   PANEL_IMAGE_GENERATE: 'panel-image-generate',
   IMAGE_UPDATE_SHOT_PROMPT: 'image-update-shot-prompt',
+  DESIGN_VISUAL_STYLE_PRESET: 'design-visual-style-preset',
+  DESIGN_DIRECTOR_STYLE_PRESET: 'design-director-style-preset',
   VOICE_GENERATE_LINES: 'voice-generate-lines',
 } as const
 

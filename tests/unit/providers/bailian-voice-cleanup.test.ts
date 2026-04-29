@@ -25,7 +25,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: prismaMock,
 }))
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
 }))
 

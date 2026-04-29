@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import type { ProjectWorkspaceProps } from '../types'
-import type { CapabilitySelections } from '@/lib/model-config-contract'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
 
 function parseCapabilitySelections(raw: unknown): CapabilitySelections {
   if (!raw) return {}
@@ -44,6 +44,9 @@ export function useWorkspaceProjectSnapshot({
       videoRatio: project.videoRatio ?? undefined,
       capabilityOverrides,
       artStyle: project.artStyle ?? undefined,
+      visualStylePresetSource: project.visualStylePresetSource ?? undefined,
+      visualStylePresetId: project.visualStylePresetId ?? undefined,
+      directorStylePresetSource: project.directorStylePresetSource ?? undefined,
       directorStylePresetId: project.directorStylePresetId ?? undefined,
     }
   }, [episode?.novelText, episode?.storyboards, project, urlStage])

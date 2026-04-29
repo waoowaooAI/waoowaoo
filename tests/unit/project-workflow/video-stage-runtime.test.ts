@@ -57,11 +57,7 @@ vi.mock('@/lib/query/hooks', () => ({
   }),
 }))
 
-import {
-  filterNormalVideoModelOptions,
-  isFirstLastFrameOnlyModel,
-  supportsFirstLastFrame,
-} from '@/lib/model-capabilities/video-model-options'
+import { filterNormalVideoModelOptions, isFirstLastFrameOnlyModel, supportsFirstLastFrame } from '@/lib/ai-registry/video-capabilities'
 import { useVideoPanelsProjection } from '@/lib/project-workflow/stages/video-stage-runtime/useVideoPanelsProjection'
 import type { VideoModelOption } from '@/lib/project-workflow/stages/video-stage-runtime/types'
 import { useWorkspaceVideoActions } from '@/features/project-workspace/hooks/useWorkspaceVideoActions'

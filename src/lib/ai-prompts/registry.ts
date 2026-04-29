@@ -162,6 +162,14 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     pathStem: 'image/update-shot-prompt',
     variableKeys: ['prompt_input', 'user_input', 'video_prompt_input'],
   },
+  [AI_PROMPT_IDS.DESIGN_VISUAL_STYLE_PRESET]: {
+    pathStem: 'style-preset/design-visual-style',
+    variableKeys: ['instruction'],
+  },
+  [AI_PROMPT_IDS.DESIGN_DIRECTOR_STYLE_PRESET]: {
+    pathStem: 'style-preset/design-director-style',
+    variableKeys: ['instruction'],
+  },
   [AI_PROMPT_IDS.VOICE_GENERATE_LINES]: {
     pathStem: 'voice/generate-lines',
     variableKeys: ['input', 'characters_lib_name', 'characters_introduction', 'storyboard_json'],

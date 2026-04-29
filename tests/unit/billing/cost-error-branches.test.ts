@@ -2,11 +2,36 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const lookupMock = vi.hoisted(() => ({
   resolveBuiltinPricing: vi.fn(),
+  listBuiltinCapabilityCatalog: vi.fn(() => []),
+  findBuiltinCapabilities: vi.fn(() => undefined),
+  registerBuiltinCapabilityCatalogEntries: vi.fn(),
+  registerBuiltinPricingCatalogEntries: vi.fn(),
+  registerBuiltinApiConfigCatalog: vi.fn(),
+  validateCapabilitySelectionForModel: vi.fn(() => []),
 }))
 
-vi.mock('@/lib/model-pricing/lookup', () => ({
+vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
+  listBuiltinCapabilityCatalog: lookupMock.listBuiltinCapabilityCatalog,
+  findBuiltinCapabilities: lookupMock.findBuiltinCapabilities,
+  registerBuiltinCapabilityCatalogEntries: lookupMock.registerBuiltinCapabilityCatalogEntries,
+  validateCapabilitySelectionForModel: lookupMock.validateCapabilitySelectionForModel,
+}))
+
+vi.mock('@/lib/ai-registry/api-config-catalog', () => ({
+  DEFAULT_LIPSYNC_MODEL_KEY: 'test::lipsync',
+  DEFAULT_VOICE_DESIGN_MODEL_KEY: 'test::voice-design',
+  DEFAULT_VOICE_MODEL_KEY: 'test::voice',
+  registerBuiltinApiConfigCatalog: lookupMock.registerBuiltinApiConfigCatalog,
+}))
+
+vi.mock('@/lib/ai-registry/pricing-resolution', () => ({
   resolveBuiltinPricing: lookupMock.resolveBuiltinPricing,
 }))
+
+vi.mock('@/lib/ai-registry/pricing-catalog', () => ({
+  registerBuiltinPricingCatalogEntries: lookupMock.registerBuiltinPricingCatalogEntries,
+}))
+
 
 import { calcImage, calcText, calcVideo, calcVoice } from '@/lib/billing/cost'
 

@@ -10,11 +10,11 @@ import {
 const testLlmConnectionMock = vi.hoisted(() => vi.fn())
 const testProviderConnectionMock = vi.hoisted(() => vi.fn())
 
-vi.mock('@/lib/user-api/llm-test-connection', () => ({
+vi.mock('@/lib/ai-exec/llm-test-connection', () => ({
   testLlmConnection: testLlmConnectionMock,
 }))
 
-vi.mock('@/lib/user-api/provider-test', () => ({
+vi.mock('@/lib/ai-exec/provider-test', () => ({
   testProviderConnection: testProviderConnectionMock,
 }))
 
@@ -22,11 +22,11 @@ vi.mock('@/lib/user-api/model-template', () => ({
   validateOpenAICompatMediaTemplate: vi.fn(() => ({ ok: false, template: null, issues: [] })),
 }))
 
-vi.mock('@/lib/user-api/model-template/probe', () => ({
+vi.mock('@/lib/ai-exec/media-template-probe', () => ({
   probeMediaTemplate: vi.fn(),
 }))
 
-vi.mock('@/lib/user-api/model-llm-protocol-probe', () => ({
+vi.mock('@/lib/ai-exec/llm-protocol-probe', () => ({
   probeModelLlmProtocol: vi.fn(),
 }))
 

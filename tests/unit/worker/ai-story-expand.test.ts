@@ -14,7 +14,7 @@ const workerMock = vi.hoisted(() => ({
   assertTaskActive: vi.fn(async () => undefined),
 }))
 
-vi.mock('@/lib/ai-runtime', () => aiRuntimeMock)
+vi.mock('@/lib/ai-exec/engine', () => aiRuntimeMock)
 vi.mock('@/lib/llm-observe/internal-stream-context', () => ({
   getInternalLLMStreamCallbacks: vi.fn(() => null),
   withInternalLLMStreamCallbacks: vi.fn(async (_callbacks: unknown, fn: () => Promise<unknown>) => await fn()),

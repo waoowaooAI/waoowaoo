@@ -117,7 +117,7 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
                           <textarea
                             value={editValue}
                             onChange={(event) => handleEditValueChange(event.target.value)}
-                            className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] text-sm resize-none"
+                            className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:border-[var(--glass-stroke-focus)] text-sm resize-none"
                             rows={4}
                             autoFocus
                           />
@@ -133,7 +133,7 @@ export default function PromptListCardView({ runtime }: PromptListCardViewProps)
                               value={aiModifyInstruction}
                               onChange={(event) => handleModifyInstructionChange(event.target.value)}
                               placeholder={t('prompts.instructionPlaceholder')}
-                              className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:ring-2 focus:ring-[var(--glass-tone-info-fg)] focus:border-[var(--glass-stroke-focus)] text-sm resize-none"
+                              className="w-full px-3 py-2 border border-[var(--glass-stroke-strong)] rounded-lg focus:border-[var(--glass-stroke-focus)] text-sm resize-none"
                               rows={2}
                             />
 

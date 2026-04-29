@@ -94,7 +94,6 @@
     "voiceDesignTitle": "暂无可选音色设计模型",
     "voiceDesignDescription": "请先去下方厂商资源池配置音色设计模型并开启模型。"
   },
-  "imageModelTip": "推荐使用 Google Banana 系列模型，目前其他图像模型生成效果有限。",
   "customProviderTip": "项目目前为测试版，由于市面上各厂商自定义 API 格式差异较大，自定义 API 兼容性尚不完善，建议优先使用官方内置 API。后续版本将持续更新以兼容更多厂商。",
   "providerPool": "厂商资源池",
   "dragToSort": "拖拽排序",
@@ -170,8 +169,11 @@
   },
   "workflowConcurrency": {
     "analysis": "分析流程并发",
-    "image": "图像流程并发",
-    "video": "视频流程并发"
+    "image": "图片任务并发",
+    "imageDescription": "同时处理的图片生成/编辑任务数量",
+    "video": "视频流程并发",
+    "decrease": "减少",
+    "increase": "增加"
   },
   "viewTutorial": "查看教程",
   "tutorial": {

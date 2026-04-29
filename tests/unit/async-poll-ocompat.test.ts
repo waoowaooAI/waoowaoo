@@ -6,15 +6,15 @@ const getProviderConfigMock = vi.hoisted(() => vi.fn(async () => ({
   baseUrl: 'https://compat.example.com/v1',
 })))
 const getUserModelsMock = vi.hoisted(() =>
-  vi.fn<typeof import('@/lib/api-config').getUserModels>(async () => []),
+  vi.fn<typeof import('@/lib/user-api/runtime-config').getUserModels>(async () => []),
 )
 
-vi.mock('@/lib/api-config', () => ({
+vi.mock('@/lib/user-api/runtime-config', () => ({
   getProviderConfig: getProviderConfigMock,
   getUserModels: getUserModelsMock,
 }))
 
-import { pollAsyncTask } from '@/lib/async-poll'
+import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
 
 function encode(value: string): string {
   return Buffer.from(value, 'utf8').toString('base64url')

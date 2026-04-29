@@ -1,6 +1,6 @@
 // 视频阶段共享类型定义
-import type { ModelCapabilities } from '@/lib/model-config-contract'
-import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
+import type { ModelCapabilities } from '@/lib/ai-registry/types'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 
 // 用户视频模型选项
 export interface VideoModelOption {

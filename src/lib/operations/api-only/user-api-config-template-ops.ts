@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import { ApiError } from '@/lib/api-errors'
-import { getProviderKey } from '@/lib/api-config'
-import { probeModelLlmProtocol } from '@/lib/user-api/model-llm-protocol-probe'
+import { getProviderKey } from '@/lib/ai-registry/selection'
+import { probeModelLlmProtocol } from '@/lib/ai-exec/llm-protocol-probe'
 import { validateOpenAICompatMediaTemplate } from '@/lib/user-api/model-template'
-import { probeMediaTemplate } from '@/lib/user-api/model-template/probe'
+import { probeMediaTemplate } from '@/lib/ai-exec/media-template-probe'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 

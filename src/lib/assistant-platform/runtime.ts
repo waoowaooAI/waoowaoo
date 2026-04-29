@@ -1,9 +1,9 @@
 import { convertToModelMessages, safeValidateUIMessages, stepCountIs, streamText, type LanguageModel, type UIMessage } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { getProviderConfig, getProviderKey } from '@/lib/api-config'
+import { getProviderConfig } from '@/lib/user-api/runtime-config'
+import { getProviderKey } from '@/lib/ai-registry/selection'
 import { getUserModelConfig } from '@/lib/config-service'
-import { resolveLlmRuntimeModel } from '@/lib/llm/runtime-shared'
+import { resolveLlmRuntimeModel } from '@/lib/ai-exec/llm-runtime'
+import { createAiLanguageModel } from '@/lib/ai-exec/language-model'
 import { AssistantPlatformError } from './errors'
 import { getAssistantSkill } from './registry'
 import type {
@@ -13,9 +13,11 @@ import type {
   AssistantRuntimeContext,
 } from './types'
 
+type UnknownObject = { [key: string]: unknown }
+
 function normalizeAssistantContext(raw: unknown): AssistantContext {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
-  const record = raw as Record<string, unknown>
+  const record = raw as UnknownObject
   const providerId = typeof record.providerId === 'string' ? record.providerId.trim() : ''
   const locale = typeof record.locale === 'string' ? record.locale.trim() : ''
   const projectId = typeof record.projectId === 'string' ? record.projectId.trim() : ''
@@ -48,35 +50,17 @@ async function resolveAssistantLanguageModel(input: {
   const selection = await resolveLlmRuntimeModel(input.userId, input.analysisModelKey)
   const providerConfig = await getProviderConfig(input.userId, selection.provider)
   const providerKey = getProviderKey(selection.provider)
-
-  if (providerKey === 'google' || providerKey === 'gemini-compatible') {
-    const google = createGoogleGenerativeAI({
-      apiKey: providerConfig.apiKey,
-      ...(providerConfig.baseUrl ? { baseURL: providerConfig.baseUrl } : {}),
-      name: providerKey,
-    })
-    return {
-      resolvedModel: {
-        providerId: selection.provider,
-        providerKey,
-        modelId: selection.modelId,
-      },
-      languageModel: google.chat(selection.modelId),
-    }
-  }
-
-  const openai = createOpenAI({
-    apiKey: providerConfig.apiKey,
-    ...(providerConfig.baseUrl ? { baseURL: providerConfig.baseUrl } : {}),
-    name: providerKey,
-  })
   return {
     resolvedModel: {
       providerId: selection.provider,
       providerKey,
       modelId: selection.modelId,
     },
-    languageModel: openai.chat(selection.modelId),
+    languageModel: createAiLanguageModel({
+      providerKey,
+      selection,
+      providerConfig,
+    }),
   }
 }
 

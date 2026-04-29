@@ -4,6 +4,7 @@ import { type TaskJobData } from '@/lib/task/types'
 import { decodeImageUrlsFromDb } from '@/lib/contracts/image-urls-contract'
 import type { DirectorStyleDoc } from '@/lib/director-style'
 import { parseDirectorStyleDoc } from '@/lib/director-style'
+import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
 import {
   resolveImageSourceFromGeneration,
   toSignedUrlIfCos,
@@ -159,7 +160,7 @@ export async function generateProjectLabeledImageToStorage(params: {
   return await generateImageToStorage(params)
 }
 
-export async function resolveNovelData(projectId: string) {
+export async function resolveNovelData(projectId: string, userId?: string) {
   const db = prisma as unknown as ProjectDataDb
   const data = await db.project.findUnique({
     where: { id: projectId },
@@ -176,7 +177,9 @@ export async function resolveNovelData(projectId: string) {
   return data
     ? {
       ...data,
-      directorStyleDoc: parseDirectorStyleDoc((data as { directorStyleDoc?: string | null }).directorStyleDoc),
+      directorStyleDoc: userId
+        ? await resolveProjectDirectorStyleDoc({ projectId, userId })
+        : parseDirectorStyleDoc((data as { directorStyleDoc?: string | null }).directorStyleDoc),
     }
     : data
 }

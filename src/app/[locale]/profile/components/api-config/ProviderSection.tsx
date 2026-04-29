@@ -58,7 +58,7 @@ export function ProviderSection({
     }
 
     return (
-        <div className="glass-surface mb-5 rounded-2xl p-5">
+        <div className="glass-surface glass-card-shadow-soft mb-5 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--glass-text-primary)]">
                     {icon}

@@ -4,8 +4,8 @@ import type { UserModelsPayload } from './useWorkspaceUserModels'
 import type { WorkspaceStageRuntimeValue } from '../WorkspaceStageRuntimeContext'
 import type { TaskPresentationState } from '@/lib/task/presentation'
 import type { BatchVideoGenerationParams, VideoGenerationOptions } from '../components/video'
-import type { CapabilitySelections } from '@/lib/model-config-contract'
-import type { VideoPricingTier } from '@/lib/model-pricing/video-tier'
+import type { CapabilitySelections } from '@/lib/ai-registry/types'
+import { VideoPricingTier } from '@/lib/ai-registry/video-capabilities'
 import type {
   useScriptToStoryboardRunStream,
   useStoryToScriptRunStream,
@@ -30,6 +30,9 @@ interface ProjectSnapshotInput {
   videoRatio: string | undefined
   capabilityOverrides: CapabilitySelections
   artStyle: string | undefined
+  visualStylePresetSource: string | undefined
+  visualStylePresetId: string | undefined
+  directorStylePresetSource: string | undefined
   directorStylePresetId: string | undefined
 }
 
@@ -91,10 +94,6 @@ interface BuildWorkspaceControllerViewModelParams {
     isStartingStoryToScript: boolean
     isStartingScriptToStoryboard: boolean
     transitionProgress: { step?: string; total?: number; current?: number }
-    storyToScriptConsoleMinimized: boolean
-    setStoryToScriptConsoleMinimized: (minimized: boolean) => void
-    scriptToStoryboardConsoleMinimized: boolean
-    setScriptToStoryboardConsoleMinimized: (minimized: boolean) => void
     storyToScriptStream: StoryToScriptStreamState
     scriptToStoryboardStream: ScriptToStoryboardStreamState
     handleGenerateTTS: () => Promise<void>
