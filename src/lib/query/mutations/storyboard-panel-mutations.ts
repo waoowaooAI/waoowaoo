@@ -201,6 +201,30 @@ export function useDeleteProjectPanel(projectId: string, episodeId?: string | nu
 }
 
 /**
+ * 复制 panel
+ */
+
+export function useCopyProjectPanel(projectId: string, episodeId?: string | null) {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: async (payload: {
+            sourcePanelId: string
+            insertAfterPanelId?: string
+            includeImages?: boolean
+        }) => {
+            return await requestJsonWithError(`/api/projects/${projectId}/panel/copy`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            }, '复制失败')
+        },
+        onSettled: () => {
+            return invalidateStoryboardMutationCaches(queryClient, projectId, episodeId)
+        },
+    })
+}
+
+/**
  * 删除 storyboard group
  */
 

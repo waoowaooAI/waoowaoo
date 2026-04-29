@@ -121,6 +121,7 @@ export {
     useUpdateProjectPanel,
     useCreateProjectPanel,
     useDeleteProjectPanel,
+    useCopyProjectPanel,
     useDeleteProjectStoryboardGroup,
     useRegenerateProjectStoryboardText,
     useCreateProjectStoryboardGroup,

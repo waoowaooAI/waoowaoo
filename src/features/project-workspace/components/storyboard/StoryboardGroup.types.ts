@@ -20,6 +20,7 @@ export interface StoryboardGroupProps {
   failedError: string | null
   savingPanels: Set<string>
   deletingPanelIds: Set<string>
+  copyingPanelIds: Set<string>
   saveStateByPanel: Record<string, PanelSaveState>
   hasUnsavedByPanel: Set<string>
   modifyingPanels: Set<string>
@@ -37,6 +38,7 @@ export interface StoryboardGroupProps {
   onCloseError: () => void
   getPanelEditData: (panel: StoryboardPanel) => PanelEditData
   onPanelUpdate: (panelId: string, panel: StoryboardPanel, updates: Partial<PanelEditData>) => void
+  onPanelCopy: (panelId: string) => void
   onPanelDelete: (panelId: string) => void
   onOpenCharacterPicker: (panelId: string) => void
   onOpenLocationPicker: (panelId: string) => void
@@ -48,7 +50,7 @@ export interface StoryboardGroupProps {
     label: string
     imageUrl: string
   }>
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
   onOpenEditModal: (panelIndex: number) => void
   onOpenAIDataModal: (panelIndex: number) => void
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null

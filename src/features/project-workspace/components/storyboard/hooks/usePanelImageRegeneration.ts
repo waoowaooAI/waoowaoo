@@ -46,6 +46,7 @@ export function usePanelImageRegeneration({
       count: number = 1,
       force: boolean = false,
       referencePanelIds: string[] = [],
+      extraImageUrls: string[] = [],
     ) => {
       if (!force && submittingPanelImageIds.has(panelId)) return
 
@@ -57,6 +58,7 @@ export function usePanelImageRegeneration({
           panelId,
           count,
           ...(referencePanelIds.length > 0 ? { referencePanelIds } : {}),
+          ...(extraImageUrls.length > 0 ? { extraImageUrls } : {}),
         })
         const result = (data || {}) as StoryboardImageMutationResult
 

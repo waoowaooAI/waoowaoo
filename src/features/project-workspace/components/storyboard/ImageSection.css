@@ -72,6 +72,10 @@
         display: none;
     }
 
+    .storyboard-image-reference-count {
+        display: none;
+    }
+
     .storyboard-image-action-button {
         min-width: 1.625rem;
         justify-content: center;

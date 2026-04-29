@@ -34,6 +34,7 @@ export default function StoryboardGroup({
   failedError,
   savingPanels,
   deletingPanelIds,
+  copyingPanelIds,
   saveStateByPanel,
   hasUnsavedByPanel,
   modifyingPanels,
@@ -50,6 +51,7 @@ export default function StoryboardGroup({
   onCloseError,
   getPanelEditData,
   onPanelUpdate,
+  onPanelCopy,
   onPanelDelete,
   onOpenCharacterPicker,
   onOpenLocationPicker,
@@ -140,9 +142,9 @@ export default function StoryboardGroup({
   }, [hasAnyImage, isSelectingCandidate, isSubmittingStoryboardTask])
 
   const handleRegeneratePanelImage = useCallback(
-    (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => {
+    (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => {
       clearPanelTaskError(panelId)
-      onRegeneratePanelImage(panelId, count, force, referencePanelIds)
+      onRegeneratePanelImage(panelId, count, force, referencePanelIds, extraImageUrls)
     },
     [clearPanelTaskError, onRegeneratePanelImage],
   )
@@ -227,6 +229,7 @@ export default function StoryboardGroup({
           isSubmittingStoryboardTextTask={isSubmittingStoryboardTextTask}
           savingPanels={savingPanels}
           deletingPanelIds={deletingPanelIds}
+          copyingPanelIds={copyingPanelIds}
           saveStateByPanel={saveStateByPanel}
           hasUnsavedByPanel={hasUnsavedByPanel}
           modifyingPanels={modifyingPanels}
@@ -236,6 +239,7 @@ export default function StoryboardGroup({
           getPanelCandidates={getPanelCandidates}
           getReferencePanelOptions={getReferencePanelOptions}
           onPanelUpdate={onPanelUpdate}
+          onPanelCopy={onPanelCopy}
           onPanelDelete={onPanelDelete}
           onOpenCharacterPicker={onOpenCharacterPicker}
           onOpenLocationPicker={onOpenLocationPicker}
@@ -255,6 +259,7 @@ export default function StoryboardGroup({
           isInsertDisabled={(panelId) =>
             isSubmittingStoryboardTextTask ||
             insertingAfterPanelId === panelId ||
+            copyingPanelIds.has(panelId) ||
             submittingVariantPanelId === panelId
           }
           gridStyle={panelGrid.gridStyle}

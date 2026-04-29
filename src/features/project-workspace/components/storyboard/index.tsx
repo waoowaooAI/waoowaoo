@@ -56,6 +56,7 @@ export default function StoryboardStage({
 
     savingPanels,
     deletingPanelIds,
+    copyingPanelIds,
     saveStateByPanel,
     hasUnsavedByPanel,
     submittingStoryboardTextIds,
@@ -65,6 +66,7 @@ export default function StoryboardStage({
     insertingAfterPanelId,
     savePanelWithData,
     addPanel,
+    copyPanel,
     deletePanel,
     deleteStoryboard,
     regenerateStoryboardText,
@@ -175,6 +177,7 @@ export default function StoryboardStage({
           submittingStoryboardTextIds={submittingStoryboardTextIds}
           savingPanels={savingPanels}
           deletingPanelIds={deletingPanelIds}
+          copyingPanelIds={copyingPanelIds}
           saveStateByPanel={saveStateByPanel}
           hasUnsavedByPanel={hasUnsavedByPanel}
           modifyingPanels={modifyingPanels}
@@ -201,6 +204,7 @@ export default function StoryboardStage({
           onPreviewImage={setPreviewImage}
           onCloseStoryboardError={clearStoryboardError}
           onPanelUpdate={handlePanelUpdate}
+          onPanelCopy={copyPanel}
           onPanelDelete={deletePanel}
           onOpenCharacterPicker={(panelId) => setAssetPickerPanel({ panelId, type: 'character' })}
           onOpenLocationPicker={(panelId) => setAssetPickerPanel({ panelId, type: 'location' })}

@@ -83,6 +83,7 @@ export function useStoryboardStageController({
   const {
     savingPanels,
     deletingPanelIds,
+    copyingPanelIds,
     saveStateByPanel,
     hasUnsavedByPanel,
     submittingStoryboardTextIds,
@@ -94,6 +95,7 @@ export function useStoryboardStageController({
     debouncedSave,
     retrySave,
     addPanel,
+    copyPanel,
     deletePanel,
     deleteStoryboard,
     regenerateStoryboardText,
@@ -196,8 +198,8 @@ export function useStoryboardStageController({
   return {
     localStoryboards, setLocalStoryboards, sortedStoryboards, expandedClips, toggleExpandedClip,
     getClipInfo, getTextPanels, getPanelEditData, updatePanelEdit, formatClipTitle, totalPanels, storyboardStartIndex,
-    savingPanels, deletingPanelIds, saveStateByPanel, hasUnsavedByPanel, submittingStoryboardTextIds, addingStoryboardGroup, copyingStoryboardId, movingClipId, insertingAfterPanelId,
-    savePanelWithData, addPanel, deletePanel, deleteStoryboard, regenerateStoryboardText, addStoryboardGroup, copyStoryboardGroup, moveStoryboardGroup, insertPanel,
+    savingPanels, deletingPanelIds, copyingPanelIds, saveStateByPanel, hasUnsavedByPanel, submittingStoryboardTextIds, addingStoryboardGroup, copyingStoryboardId, movingClipId, insertingAfterPanelId,
+    savePanelWithData, addPanel, copyPanel, deletePanel, deleteStoryboard, regenerateStoryboardText, addStoryboardGroup, copyStoryboardGroup, moveStoryboardGroup, insertPanel,
     submittingVariantPanelId, generatePanelVariant,
     submittingStoryboardIds, submittingPanelImageIds, selectingCandidateIds,
     editingPanel, setEditingPanel, modifyingPanels, isDownloadingImages, previewImage, setPreviewImage,

@@ -1250,6 +1250,111 @@ export function createGuiOperations(): ProjectAgentOperationRegistryDraft {
         return { success: true, ...result }
       },
     }),
+    copy_storyboard_panel: defineOperation({
+      id: 'copy_storyboard_panel',
+      summary: 'Copy a storyboard panel into the same storyboard after the source panel or a specified panel.',
+      intent: 'act',
+      effects: EFFECTS_WRITE,
+      inputSchema: z.object({
+        sourcePanelId: z.string().min(1),
+        insertAfterPanelId: z.string().min(1).optional(),
+        includeImages: z.boolean().optional(),
+      }),
+      outputSchema: z.unknown(),
+      execute: async (ctx, input) => {
+        const sourcePanel = await prisma.projectPanel.findFirst({
+          where: {
+            id: input.sourcePanelId,
+            storyboard: {
+              episode: {
+                projectId: ctx.projectId,
+              },
+            },
+          },
+        })
+        if (!sourcePanel) throw new ApiError('NOT_FOUND')
+
+        const insertAfter = input.insertAfterPanelId && input.insertAfterPanelId !== sourcePanel.id
+          ? await prisma.projectPanel.findFirst({
+            where: {
+              id: input.insertAfterPanelId,
+              storyboardId: sourcePanel.storyboardId,
+            },
+          })
+          : sourcePanel
+        if (!insertAfter) throw new ApiError('NOT_FOUND')
+
+        const includeImages = input.includeImages !== false
+        const createdPanel = await prisma.$transaction(async (tx) => {
+          const affectedPanels = await tx.projectPanel.findMany({
+            where: { storyboardId: sourcePanel.storyboardId, panelIndex: { gt: insertAfter.panelIndex } },
+            select: { id: true, panelIndex: true },
+            orderBy: { panelIndex: 'asc' },
+          })
+
+          for (const panel of affectedPanels) {
+            await tx.projectPanel.update({
+              where: { id: panel.id },
+              data: { panelIndex: -(panel.panelIndex + 1) },
+            })
+          }
+
+          for (const panel of affectedPanels) {
+            await tx.projectPanel.update({
+              where: { id: panel.id },
+              data: {
+                panelIndex: panel.panelIndex + 1,
+                panelNumber: panel.panelIndex + 2,
+              },
+            })
+          }
+
+          const panel = await tx.projectPanel.create({
+            data: {
+              storyboardId: sourcePanel.storyboardId,
+              panelIndex: insertAfter.panelIndex + 1,
+              panelNumber: insertAfter.panelIndex + 2,
+              shotType: sourcePanel.shotType,
+              cameraMove: sourcePanel.cameraMove,
+              description: sourcePanel.description,
+              location: sourcePanel.location,
+              characters: sourcePanel.characters,
+              props: sourcePanel.props,
+              srtSegment: sourcePanel.srtSegment,
+              srtStart: sourcePanel.srtStart,
+              srtEnd: sourcePanel.srtEnd,
+              duration: sourcePanel.duration,
+              imagePrompt: sourcePanel.imagePrompt,
+              imageUrl: includeImages ? sourcePanel.imageUrl : null,
+              imageMediaId: includeImages ? sourcePanel.imageMediaId : null,
+              imageHistory: includeImages ? sourcePanel.imageHistory : null,
+              videoPrompt: sourcePanel.videoPrompt,
+              firstLastFramePrompt: sourcePanel.firstLastFramePrompt,
+              sceneType: sourcePanel.sceneType,
+              linkedToNextPanel: false,
+              sketchImageUrl: includeImages ? sourcePanel.sketchImageUrl : null,
+              sketchImageMediaId: includeImages ? sourcePanel.sketchImageMediaId : null,
+              photographyRules: sourcePanel.photographyRules,
+              actingNotes: sourcePanel.actingNotes,
+              previousImageUrl: includeImages ? sourcePanel.previousImageUrl : null,
+              previousImageMediaId: includeImages ? sourcePanel.previousImageMediaId : null,
+            },
+          })
+
+          const panelCount = await tx.projectPanel.count({
+            where: { storyboardId: sourcePanel.storyboardId },
+          })
+          await tx.projectStoryboard.update({
+            where: { id: sourcePanel.storyboardId },
+            data: { panelCount },
+          })
+
+          return panel
+        })
+
+        return { success: true, panel: createdPanel }
+      },
+    }),
     move_storyboard_group: defineOperation({
       id: 'move_storyboard_group',
       summary: 'Move storyboard group up/down by swapping clip createdAt ordering.',

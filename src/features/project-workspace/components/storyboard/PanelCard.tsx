@@ -24,6 +24,7 @@ interface PanelCardProps {
   hasUnsavedChanges?: boolean
   saveErrorMessage?: string | null
   isDeleting: boolean
+  isCopying: boolean
   isModifying: boolean
   isSubmittingPanelImageTask: boolean
   failedError: string | null
@@ -35,13 +36,14 @@ interface PanelCardProps {
     imageUrl: string
   }>
   onUpdate: (updates: Partial<PanelEditData>) => void
+  onCopy: () => void
   onDelete: () => void
   onOpenCharacterPicker: () => void
   onOpenLocationPicker: () => void
   onRetrySave?: () => void
   onRemoveCharacter: (index: number) => void
   onRemoveLocation: () => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
   onOpenEditModal: () => void
   onOpenAIDataModal: () => void
   onSelectCandidateIndex: (panelId: string, index: number) => void
@@ -66,6 +68,7 @@ export default function PanelCard({
   hasUnsavedChanges = false,
   saveErrorMessage = null,
   isDeleting,
+  isCopying,
   isModifying,
   isSubmittingPanelImageTask,
   failedError,
@@ -73,6 +76,7 @@ export default function PanelCard({
   previousImageUrl,
   referencePanelOptions,
   onUpdate,
+  onCopy,
   onDelete,
   onOpenCharacterPicker,
   onOpenLocationPicker,
@@ -141,8 +145,10 @@ export default function PanelCard({
           <div className="storyboard-panel-side-actions absolute -right-[22px] top-1/2 z-50 -translate-y-1/2">
             <PanelActionButtons
               onInsertPanel={onInsertAfter || (() => { })}
+              onCopyPanel={onCopy}
               onVariant={onVariant || (() => { })}
               disabled={isInsertDisabled}
+              isCopying={isCopying}
               hasImage={!!imageUrl}
             />
           </div>

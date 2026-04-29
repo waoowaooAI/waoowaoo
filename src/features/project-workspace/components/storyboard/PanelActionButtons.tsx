@@ -11,15 +11,19 @@ import { AppIcon } from '@/components/ui/icons'
 
 interface PanelActionButtonsProps {
     onInsertPanel: () => void
+    onCopyPanel: () => void
     onVariant: () => void
     disabled?: boolean
+    isCopying?: boolean
     hasImage: boolean // 原镜头是否有图片（没图片不能做变体）
 }
 
 export default function PanelActionButtons({
     onInsertPanel,
+    onCopyPanel,
     onVariant,
     disabled,
+    isCopying = false,
     hasImage
 }: PanelActionButtonsProps) {
     const t = useTranslations('storyboard')
@@ -62,6 +66,31 @@ export default function PanelActionButtons({
                     ${disabled ? 'hidden' : ''}
                 `}>
                     {t('panelActions.insertPanel')}
+                </span>
+            </button>
+
+            {/* 复制分镜按钮 */}
+            <button
+                onClick={onCopyPanel}
+                disabled={disabled || isCopying}
+                className={`
+                    ${baseButtonClass}
+                    ${disabled || isCopying ? disabledButtonClass : enabledButtonClass}
+                `}
+                title={isCopying ? t('panelActions.copyingPanel') : t('panelActions.copyPanel')}
+            >
+                <AppIcon name={isCopying ? 'refresh' : 'copy'} className={`w-3.5 h-3.5 ${isCopying ? 'animate-spin' : ''}`} />
+
+                {/* Hover 时显示提示 */}
+                <span className={`
+                    absolute -top-8 left-1/2 -translate-x-1/2
+                    px-2 py-1 text-xs text-white bg-[var(--glass-overlay)] rounded
+                    opacity-0 group-hover:opacity-100
+                    transition-opacity duration-200
+                    whitespace-nowrap pointer-events-none
+                    ${disabled ? 'hidden' : ''}
+                `}>
+                    {isCopying ? t('panelActions.copyingPanel') : t('panelActions.copyPanel')}
                 </span>
             </button>
 

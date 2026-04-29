@@ -16,6 +16,7 @@ interface StoryboardPanelListProps {
   isSubmittingStoryboardTextTask: boolean
   savingPanels: Set<string>
   deletingPanelIds: Set<string>
+  copyingPanelIds: Set<string>
   saveStateByPanel: Record<string, PanelSaveState>
   hasUnsavedByPanel: Set<string>
   modifyingPanels: Set<string>
@@ -29,13 +30,14 @@ interface StoryboardPanelListProps {
     imageUrl: string
   }>
   onPanelUpdate: (panelId: string, panel: StoryboardPanel, updates: Partial<PanelEditData>) => void
+  onPanelCopy: (panelId: string) => void
   onPanelDelete: (panelId: string) => void
   onOpenCharacterPicker: (panelId: string) => void
   onOpenLocationPicker: (panelId: string) => void
   onRemoveCharacter: (panel: StoryboardPanel, index: number) => void
   onRemoveLocation: (panel: StoryboardPanel) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
   onOpenEditModal: (panelIndex: number) => void
   onOpenAIDataModal: (panelIndex: number) => void
   onSelectPanelCandidateIndex: (panelId: string, index: number) => void
@@ -57,6 +59,7 @@ export default function StoryboardPanelList({
   isSubmittingStoryboardTextTask,
   savingPanels,
   deletingPanelIds,
+  copyingPanelIds,
   saveStateByPanel,
   hasUnsavedByPanel,
   modifyingPanels,
@@ -66,6 +69,7 @@ export default function StoryboardPanelList({
   getPanelCandidates,
   getReferencePanelOptions,
   onPanelUpdate,
+  onPanelCopy,
   onPanelDelete,
   onOpenCharacterPicker,
   onOpenLocationPicker,
@@ -104,6 +108,7 @@ export default function StoryboardPanelList({
               (panel as StoryboardPanel & { imageTaskIntent?: string }).imageTaskIntent === 'modify',
             )
           const isPanelDeleting = deletingPanelIds.has(panel.id)
+          const isPanelCopying = copyingPanelIds.has(panel.id)
           const panelSaveState = saveStateByPanel[panel.id]
           const isPanelSaving = savingPanels.has(panel.id) || panelSaveState?.status === 'saving'
           const hasUnsavedChanges = hasUnsavedByPanel.has(panel.id) || panelSaveState?.status === 'error'
@@ -132,12 +137,14 @@ export default function StoryboardPanelList({
                 hasUnsavedChanges={hasUnsavedChanges}
                 saveErrorMessage={panelSaveError}
                 isDeleting={isPanelDeleting}
+                isCopying={isPanelCopying}
                 isModifying={isPanelModifying}
                 isSubmittingPanelImageTask={panelTaskRunning}
                 failedError={panelFailedError}
                 candidateData={panelCandidateData}
                 referencePanelOptions={referencePanelOptions}
                 onUpdate={(updates) => onPanelUpdate(panel.id, panel, updates)}
+                onCopy={() => onPanelCopy(panel.id)}
                 onDelete={() => onPanelDelete(panel.id)}
                 onOpenCharacterPicker={() => onOpenCharacterPicker(panel.id)}
                 onOpenLocationPicker={() => onOpenLocationPicker(panel.id)}

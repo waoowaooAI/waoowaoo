@@ -56,6 +56,7 @@ export function usePanelOperations({
   return {
     savingPanels: panelCrud.savingPanels,
     deletingPanelIds: panelCrud.deletingPanelIds,
+    copyingPanelIds: panelCrud.copyingPanelIds,
     saveStateByPanel: panelCrud.saveStateByPanel,
     hasUnsavedByPanel: panelCrud.hasUnsavedByPanel,
     submittingStoryboardTextIds: groupActions.submittingStoryboardTextIds,
@@ -69,6 +70,7 @@ export function usePanelOperations({
     debouncedSave: panelCrud.debouncedSave,
     retrySave: panelCrud.retrySave,
     addPanel: panelCrud.addPanel,
+    copyPanel: panelCrud.copyPanel,
     deletePanel: panelCrud.deletePanel,
     deleteStoryboard: groupActions.deleteStoryboard,
     regenerateStoryboardText: groupActions.regenerateStoryboardText,

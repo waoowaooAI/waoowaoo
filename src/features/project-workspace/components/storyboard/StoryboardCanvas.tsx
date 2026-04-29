@@ -20,6 +20,7 @@ interface StoryboardCanvasProps {
   submittingStoryboardTextIds: Set<string>
   savingPanels: Set<string>
   deletingPanelIds: Set<string>
+  copyingPanelIds: Set<string>
   saveStateByPanel: Record<string, PanelSaveState>
   hasUnsavedByPanel: Set<string>
   modifyingPanels: Set<string>
@@ -45,6 +46,7 @@ interface StoryboardCanvasProps {
   onPreviewImage: (url: string) => void
   onCloseStoryboardError: (storyboardId: string) => void
   onPanelUpdate: (panelId: string, panel: StoryboardPanel, updates: Partial<PanelEditData>) => void
+  onPanelCopy: (panelId: string) => Promise<void>
   onPanelDelete: (
     panelId: string,
     storyboardId: string,
@@ -55,7 +57,7 @@ interface StoryboardCanvasProps {
   onRemoveCharacter: (panel: StoryboardPanel, index: number, storyboardId: string) => void
   onRemoveLocation: (panel: StoryboardPanel, storyboardId: string) => void
   onRetryPanelSave: (panelId: string) => void
-  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[]) => void
+  onRegeneratePanelImage: (panelId: string, count?: number, force?: boolean, referencePanelIds?: string[], extraImageUrls?: string[]) => void
   onOpenEditModal: (storyboardId: string, panelIndex: number) => void
   onOpenAIDataModal: (storyboardId: string, panelIndex: number) => void
   getPanelCandidates: (panel: ProjectPanel) => { candidates: string[]; selectedIndex: number } | null
@@ -84,6 +86,7 @@ export default function StoryboardCanvas({
   submittingStoryboardTextIds,
   savingPanels,
   deletingPanelIds,
+  copyingPanelIds,
   saveStateByPanel,
   hasUnsavedByPanel,
   modifyingPanels,
@@ -109,6 +112,7 @@ export default function StoryboardCanvas({
   onPreviewImage,
   onCloseStoryboardError,
   onPanelUpdate,
+  onPanelCopy,
   onPanelDelete,
   onOpenCharacterPicker,
   onOpenLocationPicker,
@@ -191,6 +195,7 @@ export default function StoryboardCanvas({
               failedError={failedError}
               savingPanels={savingPanels}
               deletingPanelIds={deletingPanelIds}
+              copyingPanelIds={copyingPanelIds}
               saveStateByPanel={saveStateByPanel}
               hasUnsavedByPanel={hasUnsavedByPanel}
               modifyingPanels={modifyingPanels}
@@ -206,6 +211,7 @@ export default function StoryboardCanvas({
               onCloseError={() => onCloseStoryboardError(storyboard.id)}
               getPanelEditData={getPanelEditData}
               onPanelUpdate={onPanelUpdate}
+              onPanelCopy={onPanelCopy}
               onPanelDelete={(panelId) => onPanelDelete(panelId, storyboard.id, setLocalStoryboards)}
               onOpenCharacterPicker={onOpenCharacterPicker}
               onOpenLocationPicker={onOpenLocationPicker}

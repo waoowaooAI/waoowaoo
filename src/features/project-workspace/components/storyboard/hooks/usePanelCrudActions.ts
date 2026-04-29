@@ -13,6 +13,7 @@ import {
 } from './panel-save-coordinator'
 import {
   useCreateProjectPanel,
+  useCopyProjectPanel,
   useDeleteProjectPanel,
   useUpdateProjectPanel,
 } from '@/lib/query/hooks'
@@ -41,12 +42,15 @@ export function usePanelCrudActions({
   const t = useTranslations('storyboard')
   const [savingPanels, setSavingPanels] = useState<Set<string>>(new Set())
   const [deletingPanelIds, setDeletingPanelIds] = useState<Set<string>>(new Set())
+  const [copyingPanelIds, setCopyingPanelIds] = useState<Set<string>>(new Set())
+  const copyingPanelIdsRef = useRef<Set<string>>(new Set())
   const [saveStateByPanel, setSaveStateByPanel] = useState<Record<string, PanelSaveState>>({})
   const saveTimeouts = useRef<Record<string, NodeJS.Timeout>>({})
   const panelSaveCoordinatorRef = useRef<PanelSaveCoordinator | null>(null)
 
   const savePanelMutation = useUpdateProjectPanel(projectId, episodeId)
   const createPanelMutation = useCreateProjectPanel(projectId, episodeId)
+  const copyPanelMutation = useCopyProjectPanel(projectId, episodeId)
   const deletePanelMutation = useDeleteProjectPanel(projectId, episodeId)
 
   const setPanelSaveState = useCallback((panelId: string, nextState: PanelSaveState) => {
@@ -271,6 +275,34 @@ export function usePanelCrudActions({
     }
   }, [deletePanelMutation, t])
 
+  const copyPanel = useCallback(async (panelId: string) => {
+    if (copyingPanelIdsRef.current.has(panelId)) return
+    copyingPanelIdsRef.current.add(panelId)
+    setCopyingPanelIds((previous) => new Set(previous).add(panelId))
+    try {
+      await copyPanelMutation.mutateAsync({
+        sourcePanelId: panelId,
+        insertAfterPanelId: panelId,
+        includeImages: true,
+      })
+      await onRefresh()
+    } catch (error: unknown) {
+      _ulogError('复制分镜失败:', error)
+      alert(
+        t('messages.copyPanelFailed', {
+          error: getErrorMessage(error, t('common.unknownError')),
+        }),
+      )
+    } finally {
+      copyingPanelIdsRef.current.delete(panelId)
+      setCopyingPanelIds((previous) => {
+        const next = new Set(previous)
+        next.delete(panelId)
+        return next
+      })
+    }
+  }, [copyPanelMutation, onRefresh, t])
+
   const addCharacterToPanel = useCallback((
     panel: StoryboardPanel,
     characterName: string,
@@ -332,6 +364,7 @@ export function usePanelCrudActions({
   return {
     savingPanels,
     deletingPanelIds,
+    copyingPanelIds,
     saveStateByPanel,
     hasUnsavedByPanel,
     savePanel,
@@ -339,6 +372,7 @@ export function usePanelCrudActions({
     debouncedSave,
     retrySave,
     addPanel,
+    copyPanel,
     deletePanel,
     addCharacterToPanel,
     removeCharacterFromPanel,
