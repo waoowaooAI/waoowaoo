@@ -384,7 +384,7 @@ export default function ProjectDetailPage() {
 
       {/* 主内容区 - 占满全部宽度 */}
       <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full px-4 py-8">
           {isGlobalAssetsView ? (
             // 全局资产视图（确保数据准备好）
             <div>

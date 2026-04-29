@@ -15,6 +15,8 @@ import StoryboardGroupFailedAlert from './StoryboardGroupFailedAlert'
 import StoryboardGroupDialogs from './StoryboardGroupDialogs'
 import type { StoryboardGroupProps } from './StoryboardGroup.types'
 import { AppIcon } from '@/components/ui/icons'
+import { getAspectRatioConfig } from '@/lib/constants'
+import { useAdaptiveCardGrid } from '../layout/useAdaptiveCardGrid'
 
 export default function StoryboardGroup({
   storyboard,
@@ -70,6 +72,12 @@ export default function StoryboardGroup({
   submittingVariantPanelId,
 }: StoryboardGroupProps) {
   const t = useTranslations('storyboard')
+  const isVerticalRatio = getAspectRatioConfig(videoRatio).isVertical
+  const panelGrid = useAdaptiveCardGrid({
+    itemCount: textPanels.length,
+    minCardWidth: isVerticalRatio ? 190 : 248,
+    maxCardWidth: isVerticalRatio ? 260 : 360,
+  })
 
   const {
     insertModalOpen,
@@ -136,122 +144,128 @@ export default function StoryboardGroup({
   )
 
   return (
-    <div className={`glass-surface-elevated p-6 relative ${failedError ? 'border-2 border-[var(--glass-stroke-danger)] bg-[var(--glass-danger-ring)]' : ''}`}>
-      {failedError && (
-        <StoryboardGroupFailedAlert
-          failedError={failedError}
-          title={`警告 ${t('group.failed')}`}
-          closeTitle={t('common.cancel')}
-          onClose={onCloseError}
-        />
-      )}
+    <div ref={panelGrid.containerRef} className="w-full">
+      <div
+        className={`glass-surface-elevated relative p-6 ${failedError ? 'border-2 border-[var(--glass-stroke-danger)] bg-[var(--glass-danger-ring)]' : ''}`}
+        style={panelGrid.contentStyle}
+      >
+        {failedError && (
+          <StoryboardGroupFailedAlert
+            failedError={failedError}
+            title={`警告 ${t('group.failed')}`}
+            closeTitle={t('common.cancel')}
+            onClose={onCloseError}
+          />
+        )}
 
-      {(isSubmittingStoryboardTask || isSelectingCandidate) && (
-        <TaskStatusOverlay
-          state={groupOverlayState}
-          className="z-10 rounded-lg bg-[var(--glass-bg-surface-modal)]/90"
-        />
-      )}
+        {(isSubmittingStoryboardTask || isSelectingCandidate) && (
+          <TaskStatusOverlay
+            state={groupOverlayState}
+            className="z-10 rounded-lg bg-[var(--glass-bg-surface-modal)]/90"
+          />
+        )}
 
-      <div className="mb-4 pb-2 flex items-start justify-between">
-        <StoryboardGroupHeader
-          clip={clip}
-          sbIndex={sbIndex}
-          totalStoryboards={totalStoryboards}
-          movingClipId={movingClipId}
-          storyboardClipId={storyboard.clipId}
-          formatClipTitle={formatClipTitle}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-        />
-        <StoryboardGroupActions
-          hasAnyImage={hasAnyImage}
-          isSubmittingStoryboardTask={isSubmittingStoryboardTask}
+        <div className="mb-4 pb-2 flex items-start justify-between">
+          <StoryboardGroupHeader
+            clip={clip}
+            sbIndex={sbIndex}
+            totalStoryboards={totalStoryboards}
+            movingClipId={movingClipId}
+            storyboardClipId={storyboard.clipId}
+            formatClipTitle={formatClipTitle}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+          />
+          <StoryboardGroupActions
+            hasAnyImage={hasAnyImage}
+            isSubmittingStoryboardTask={isSubmittingStoryboardTask}
+            isSubmittingStoryboardTextTask={isSubmittingStoryboardTextTask}
+            currentRunningCount={currentRunningCount}
+            pendingCount={pendingCount}
+            onRegenerateText={onRegenerateText}
+            onGenerateAllIndividually={onGenerateAllIndividually}
+            onAddPanel={onAddPanel}
+            onDeleteStoryboard={onDeleteStoryboard}
+          />
+        </div>
+
+        {clip && (
+          <div className="mb-4">
+            <button
+              onClick={onToggleExpand}
+              className="glass-btn-base glass-btn-soft rounded-xl px-3 py-2 text-sm"
+            >
+              <AppIcon name="chevronRightMd" className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+              <span>{clip.screenplay ? t('panel.stylePrompt') : t('panel.sourceText')}</span>
+            </button>
+            {isExpanded && (
+              <div className="mt-2 glass-surface-soft p-2">
+                {clip.screenplay ? (
+                  <ScreenplayDisplay screenplay={clip.screenplay} originalContent={clip.content} />
+                ) : (
+                  <div className="whitespace-pre-wrap p-3 text-sm text-[var(--glass-text-secondary)]">
+                    {clip.content}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <StoryboardPanelList
+          storyboardId={storyboard.id}
+          textPanels={textPanels}
+          storyboardStartIndex={storyboardStartIndex}
+          videoRatio={videoRatio}
           isSubmittingStoryboardTextTask={isSubmittingStoryboardTextTask}
-          currentRunningCount={currentRunningCount}
-          pendingCount={pendingCount}
-          onRegenerateText={onRegenerateText}
-          onGenerateAllIndividually={onGenerateAllIndividually}
-          onAddPanel={onAddPanel}
-          onDeleteStoryboard={onDeleteStoryboard}
+          savingPanels={savingPanels}
+          deletingPanelIds={deletingPanelIds}
+          saveStateByPanel={saveStateByPanel}
+          hasUnsavedByPanel={hasUnsavedByPanel}
+          modifyingPanels={modifyingPanels}
+          panelTaskErrorMap={panelTaskErrorMap}
+          isPanelTaskRunning={isPanelTaskRunning}
+          getPanelEditData={getPanelEditData}
+          getPanelCandidates={getPanelCandidates}
+          onPanelUpdate={onPanelUpdate}
+          onPanelDelete={onPanelDelete}
+          onOpenCharacterPicker={onOpenCharacterPicker}
+          onOpenLocationPicker={onOpenLocationPicker}
+          onRemoveCharacter={onRemoveCharacter}
+          onRemoveLocation={onRemoveLocation}
+          onRetryPanelSave={onRetryPanelSave}
+          onRegeneratePanelImage={handleRegeneratePanelImage}
+          onOpenEditModal={onOpenEditModal}
+          onOpenAIDataModal={onOpenAIDataModal}
+          onSelectPanelCandidateIndex={onSelectPanelCandidateIndex}
+          onConfirmPanelCandidate={onConfirmPanelCandidate}
+          onCancelPanelCandidate={onCancelPanelCandidate}
+          onClearPanelTaskError={clearPanelTaskError}
+          onPreviewImage={onPreviewImage}
+          onInsertAfter={handleOpenInsertModal}
+          onVariant={handleOpenVariantModal}
+          isInsertDisabled={(panelId) =>
+            isSubmittingStoryboardTextTask ||
+            insertingAfterPanelId === panelId ||
+            submittingVariantPanelId === panelId
+          }
+          gridStyle={panelGrid.gridStyle}
+        />
+
+        <StoryboardGroupDialogs
+          insertAfterPanel={insertAfterPanel}
+          nextPanelForInsert={nextPanelForInsert}
+          insertModalOpen={insertModalOpen}
+          insertingAfterPanelId={insertingAfterPanelId}
+          onCloseInsertModal={handleCloseInsertModal}
+          onInsert={handleInsert}
+          variantModalPanel={variantModalPanel}
+          projectId={projectId}
+          submittingVariantPanelId={submittingVariantPanelId}
+          onCloseVariantModal={handleCloseVariantModal}
+          onVariant={handleVariant}
         />
       </div>
-
-      {clip && (
-        <div className="mb-4">
-          <button
-            onClick={onToggleExpand}
-            className="glass-btn-base glass-btn-soft rounded-xl px-3 py-2 text-sm"
-          >
-            <AppIcon name="chevronRightMd" className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-            <span>{clip.screenplay ? t('panel.stylePrompt') : t('panel.sourceText')}</span>
-          </button>
-          {isExpanded && (
-            <div className="mt-2 glass-surface-soft p-2">
-              {clip.screenplay ? (
-                <ScreenplayDisplay screenplay={clip.screenplay} originalContent={clip.content} />
-              ) : (
-                <div className="whitespace-pre-wrap p-3 text-sm text-[var(--glass-text-secondary)]">
-                  {clip.content}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      <StoryboardPanelList
-        storyboardId={storyboard.id}
-        textPanels={textPanels}
-        storyboardStartIndex={storyboardStartIndex}
-        videoRatio={videoRatio}
-        isSubmittingStoryboardTextTask={isSubmittingStoryboardTextTask}
-        savingPanels={savingPanels}
-        deletingPanelIds={deletingPanelIds}
-        saveStateByPanel={saveStateByPanel}
-        hasUnsavedByPanel={hasUnsavedByPanel}
-        modifyingPanels={modifyingPanels}
-        panelTaskErrorMap={panelTaskErrorMap}
-        isPanelTaskRunning={isPanelTaskRunning}
-        getPanelEditData={getPanelEditData}
-        getPanelCandidates={getPanelCandidates}
-        onPanelUpdate={onPanelUpdate}
-        onPanelDelete={onPanelDelete}
-        onOpenCharacterPicker={onOpenCharacterPicker}
-        onOpenLocationPicker={onOpenLocationPicker}
-        onRemoveCharacter={onRemoveCharacter}
-        onRemoveLocation={onRemoveLocation}
-        onRetryPanelSave={onRetryPanelSave}
-        onRegeneratePanelImage={handleRegeneratePanelImage}
-        onOpenEditModal={onOpenEditModal}
-        onOpenAIDataModal={onOpenAIDataModal}
-        onSelectPanelCandidateIndex={onSelectPanelCandidateIndex}
-        onConfirmPanelCandidate={onConfirmPanelCandidate}
-        onCancelPanelCandidate={onCancelPanelCandidate}
-        onClearPanelTaskError={clearPanelTaskError}
-        onPreviewImage={onPreviewImage}
-        onInsertAfter={handleOpenInsertModal}
-        onVariant={handleOpenVariantModal}
-        isInsertDisabled={(panelId) =>
-          isSubmittingStoryboardTextTask ||
-          insertingAfterPanelId === panelId ||
-          submittingVariantPanelId === panelId
-        }
-      />
-
-      <StoryboardGroupDialogs
-        insertAfterPanel={insertAfterPanel}
-        nextPanelForInsert={nextPanelForInsert}
-        insertModalOpen={insertModalOpen}
-        insertingAfterPanelId={insertingAfterPanelId}
-        onCloseInsertModal={handleCloseInsertModal}
-        onInsert={handleInsert}
-        variantModalPanel={variantModalPanel}
-        projectId={projectId}
-        submittingVariantPanelId={submittingVariantPanelId}
-        onCloseVariantModal={handleCloseVariantModal}
-        onVariant={handleVariant}
-      />
     </div>
   )
 }

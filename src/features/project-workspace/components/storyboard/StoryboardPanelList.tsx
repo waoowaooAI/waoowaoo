@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { ProjectPanel } from '@/types/project'
 import { StoryboardPanel } from './hooks/useStoryboardState'
 import { PanelEditData } from '../PanelEditForm'
@@ -41,6 +41,7 @@ interface StoryboardPanelListProps {
   onInsertAfter: (panelIndex: number) => void
   onVariant: (panelIndex: number) => void
   isInsertDisabled: (panelId: string) => boolean
+  gridStyle?: CSSProperties
 }
 
 export default function StoryboardPanelList({
@@ -76,75 +77,81 @@ export default function StoryboardPanelList({
   onInsertAfter,
   onVariant,
   isInsertDisabled,
+  gridStyle,
 }: StoryboardPanelListProps) {
   const displayImages = useMemo(() => textPanels.map((panel) => panel.imageUrl || null), [textPanels])
   const isVertical = ASPECT_RATIO_CONFIGS[videoRatio]?.isVertical ?? false
 
   return (
-    <div className={`grid gap-4 ${isVertical ? 'grid-cols-5' : 'grid-cols-3'} ${isSubmittingStoryboardTextTask ? 'opacity-50 pointer-events-none' : ''}`}>
-      {textPanels.map((panel, index) => {
-        const imageUrl = displayImages[index]
-        const globalPanelNumber = storyboardStartIndex + index + 1
-        const isPanelModifying =
-          modifyingPanels.has(panel.id) ||
-          Boolean(
-            (panel as StoryboardPanel & { imageTaskRunning?: boolean; imageTaskIntent?: string }).imageTaskRunning &&
-            (panel as StoryboardPanel & { imageTaskIntent?: string }).imageTaskIntent === 'modify',
-          )
-        const isPanelDeleting = deletingPanelIds.has(panel.id)
-        const panelSaveState = saveStateByPanel[panel.id]
-        const isPanelSaving = savingPanels.has(panel.id) || panelSaveState?.status === 'saving'
-        const hasUnsavedChanges = hasUnsavedByPanel.has(panel.id) || panelSaveState?.status === 'error'
-        const panelSaveError = panelSaveState?.errorMessage || null
-        const panelTaskRunning = isPanelTaskRunning(panel)
-        const taskError = panelTaskErrorMap.get(panel.id)
-        const panelFailedError = taskError?.message || null
-        const panelData = getPanelEditData(panel)
-        const panelCandidateData = getPanelCandidates(panel as unknown as ProjectPanel)
+    <div className="storyboard-panel-list-container">
+      <div
+        className={`storyboard-panel-list-grid storyboard-panel-list-grid--${isVertical ? 'vertical' : 'horizontal'} grid gap-4 ${isSubmittingStoryboardTextTask ? 'opacity-50 pointer-events-none' : ''}`}
+        style={gridStyle}
+      >
+        {textPanels.map((panel, index) => {
+          const imageUrl = displayImages[index]
+          const globalPanelNumber = storyboardStartIndex + index + 1
+          const isPanelModifying =
+            modifyingPanels.has(panel.id) ||
+            Boolean(
+              (panel as StoryboardPanel & { imageTaskRunning?: boolean; imageTaskIntent?: string }).imageTaskRunning &&
+              (panel as StoryboardPanel & { imageTaskIntent?: string }).imageTaskIntent === 'modify',
+            )
+          const isPanelDeleting = deletingPanelIds.has(panel.id)
+          const panelSaveState = saveStateByPanel[panel.id]
+          const isPanelSaving = savingPanels.has(panel.id) || panelSaveState?.status === 'saving'
+          const hasUnsavedChanges = hasUnsavedByPanel.has(panel.id) || panelSaveState?.status === 'error'
+          const panelSaveError = panelSaveState?.errorMessage || null
+          const panelTaskRunning = isPanelTaskRunning(panel)
+          const taskError = panelTaskErrorMap.get(panel.id)
+          const panelFailedError = taskError?.message || null
+          const panelData = getPanelEditData(panel)
+          const panelCandidateData = getPanelCandidates(panel as unknown as ProjectPanel)
 
-        return (
-          <div
-            key={panel.id || index}
-            className="relative group/panel h-full"
-            style={{ zIndex: textPanels.length - index }}
-          >
-            <PanelCard
-              panel={panel}
-              panelData={panelData}
-              imageUrl={imageUrl}
-              globalPanelNumber={globalPanelNumber}
-              storyboardId={storyboardId}
-              videoRatio={videoRatio}
-              isSaving={isPanelSaving}
-              hasUnsavedChanges={hasUnsavedChanges}
-              saveErrorMessage={panelSaveError}
-              isDeleting={isPanelDeleting}
-              isModifying={isPanelModifying}
-              isSubmittingPanelImageTask={panelTaskRunning}
-              failedError={panelFailedError}
-              candidateData={panelCandidateData}
-              onUpdate={(updates) => onPanelUpdate(panel.id, panel, updates)}
-              onDelete={() => onPanelDelete(panel.id)}
-              onOpenCharacterPicker={() => onOpenCharacterPicker(panel.id)}
-              onOpenLocationPicker={() => onOpenLocationPicker(panel.id)}
-              onRetrySave={() => onRetryPanelSave(panel.id)}
-              onRemoveCharacter={(characterIndex) => onRemoveCharacter(panel, characterIndex)}
-              onRemoveLocation={() => onRemoveLocation(panel)}
-              onRegeneratePanelImage={onRegeneratePanelImage}
-              onOpenEditModal={() => onOpenEditModal(index)}
-              onOpenAIDataModal={() => onOpenAIDataModal(index)}
-              onSelectCandidateIndex={onSelectPanelCandidateIndex}
-              onConfirmCandidate={onConfirmPanelCandidate}
-              onCancelCandidate={onCancelPanelCandidate}
-              onClearError={() => onClearPanelTaskError(panel.id)}
-              onPreviewImage={onPreviewImage}
-              onInsertAfter={() => onInsertAfter(index)}
-              onVariant={() => onVariant(index)}
-              isInsertDisabled={isInsertDisabled(panel.id)}
-            />
-          </div>
-        )
-      })}
+          return (
+            <div
+              key={panel.id || index}
+              className="relative group/panel h-full"
+              style={{ zIndex: textPanels.length - index }}
+            >
+              <PanelCard
+                panel={panel}
+                panelData={panelData}
+                imageUrl={imageUrl}
+                globalPanelNumber={globalPanelNumber}
+                storyboardId={storyboardId}
+                videoRatio={videoRatio}
+                isSaving={isPanelSaving}
+                hasUnsavedChanges={hasUnsavedChanges}
+                saveErrorMessage={panelSaveError}
+                isDeleting={isPanelDeleting}
+                isModifying={isPanelModifying}
+                isSubmittingPanelImageTask={panelTaskRunning}
+                failedError={panelFailedError}
+                candidateData={panelCandidateData}
+                onUpdate={(updates) => onPanelUpdate(panel.id, panel, updates)}
+                onDelete={() => onPanelDelete(panel.id)}
+                onOpenCharacterPicker={() => onOpenCharacterPicker(panel.id)}
+                onOpenLocationPicker={() => onOpenLocationPicker(panel.id)}
+                onRetrySave={() => onRetryPanelSave(panel.id)}
+                onRemoveCharacter={(characterIndex) => onRemoveCharacter(panel, characterIndex)}
+                onRemoveLocation={() => onRemoveLocation(panel)}
+                onRegeneratePanelImage={onRegeneratePanelImage}
+                onOpenEditModal={() => onOpenEditModal(index)}
+                onOpenAIDataModal={() => onOpenAIDataModal(index)}
+                onSelectCandidateIndex={onSelectPanelCandidateIndex}
+                onConfirmCandidate={onConfirmPanelCandidate}
+                onCancelCandidate={onCancelPanelCandidate}
+                onClearError={() => onClearPanelTaskError(panel.id)}
+                onPreviewImage={onPreviewImage}
+                onInsertAfter={() => onInsertAfter(index)}
+                onVariant={() => onVariant(index)}
+                isInsertDisabled={isInsertDisabled(panel.id)}
+              />
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import type { MutableRefObject } from 'react'
 import type { CapabilitySelections, CapabilityValue } from '@/lib/ai-registry/types'
 import { VideoPanelCard, type VideoPanel, type VideoModelOption, type MatchedVoiceLine, type FirstLastFrameParams, type VideoGenerationOptions } from '../video'
 import type { PromptField } from '@/lib/project-workflow/stages/video-stage-runtime/useVideoPromptState'
+import { useAdaptiveCardGrid } from '../layout/useAdaptiveCardGrid'
 
 interface VideoRenderPanelProps {
   allPanels: VideoPanel[]
@@ -110,12 +111,19 @@ export default function VideoRenderPanel({
   updateLocalPrompt,
   savePrompt,
 }: VideoRenderPanelProps) {
+  const isVerticalRatio = getAspectRatioConfig(videoRatio).isVertical
+  const videoGrid = useAdaptiveCardGrid({
+    itemCount: allPanels.length,
+    minCardWidth: isVerticalRatio ? 220 : 300,
+    maxCardWidth: isVerticalRatio ? 300 : 420,
+  })
+
   return (
-    <>
-      <div className={`grid gap-4 ${getAspectRatioConfig(videoRatio).isVertical
-        ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-        : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-      }`}>
+    <div ref={videoGrid.containerRef} className="w-full">
+      <div
+        className="grid gap-4"
+        style={{ ...videoGrid.contentStyle, ...videoGrid.gridStyle }}
+      >
         {allPanels.map((panel, idx) => {
           const panelKey = `${panel.storyboardId}-${panel.panelIndex}`
           const isLinked = linkedPanels.get(panelKey) || false
@@ -193,6 +201,6 @@ export default function VideoRenderPanel({
           )
         })}
       </div>
-    </>
+    </div>
   )
 }

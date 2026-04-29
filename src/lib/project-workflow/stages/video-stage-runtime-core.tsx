@@ -501,7 +501,7 @@ export function useVideoStageRuntime({
   ])
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="w-full space-y-6 pb-20">
       <VideoToolbar
         totalPanels={projectedPanels.length}
         runningCount={runningCount}
