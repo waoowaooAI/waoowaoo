@@ -35,7 +35,7 @@
 - [x] Ark Seedance 2 token 估算/模型判断已从 `billing/cost.ts` 下沉到 `ai-providers/ark/video-token-pricing.ts`，billing 只依赖 provider token-pricing contract。
 - [x] provider builtin catalog 聚合已从 `ai-registry/builtin-catalog.ts` 移到 `ai-providers/builtin-catalog.ts`，旧路径物理删除且不留 re-export。
 - [x] `ai-providers/index.ts` 已删除独立 media adapter 注册表，只保留 composition-root 绑定。
-- [x] `assistant-platform/runtime.ts` 与 `project-agent/model.ts` 已移除 Google/OpenAI SDK 分支，LanguageModel 创建迁入 provider runtime registry。
+- [x] `project-agent/model.ts` 已移除 Google/OpenAI SDK 分支，LanguageModel 创建迁入 provider runtime registry。
 
 ## Step 进度
 

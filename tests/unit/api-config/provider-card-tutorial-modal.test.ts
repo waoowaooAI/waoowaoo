@@ -88,24 +88,6 @@ function createState(tutorial: ProviderTutorial): UseProviderCardStateResult {
     handleTestOnly: () => undefined,
     handleDismissTest: () => undefined,
     isModelSavePending: false,
-    assistantEnabled: false,
-    isAssistantOpen: false,
-    assistantSavedEvent: null,
-    assistantChat: {
-      messages: [],
-      input: '',
-      status: 'ready',
-      pending: false,
-      error: undefined,
-      setInput: () => undefined,
-      send: async () => undefined,
-      replaceMessages: () => undefined,
-      appendMessages: () => undefined,
-      clear: () => undefined,
-    },
-    openAssistant: () => undefined,
-    closeAssistant: () => undefined,
-    handleAssistantSend: () => Promise.resolve(),
   }
 }
 

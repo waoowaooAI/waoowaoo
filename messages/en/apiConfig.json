@@ -195,24 +195,5 @@
       "bailian_step1": "Go to Alibaba Cloud Bailian console and get an API Key",
       "siliconflow_step1": "Go to SiliconFlow console and create an API Key"
     }
-  },
-  "assistantOpen": "AI Assistant",
-  "assistantTitle": "AI Config Assistant",
-  "assistantSubtitle": "Convert third-party docs into executable image/video templates and auto-save the model.",
-  "assistantWelcome": "Describe your API docs (endpoint, request body, response fields). I will ask follow-up questions and auto-save once valid.",
-  "assistantInputPlaceholder": "Paste docs or describe endpoint details...",
-  "assistantSend": "Send",
-  "assistantDisabledHint": "Save API key and Base URL first",
-  "assistantRequestFailed": "Assistant request failed. Please try again later.",
-  "assistantResponseInvalid": "Assistant response format is invalid. Please retry.",
-  "assistantMissingTitle": "Missing fields",
-  "assistantWarningsTitle": "Warnings",
-  "assistantDraftTitle": "Current draft model",
-  "assistantReasoningTitle": "Reasoning",
-  "assistantReasoningExpand": "Show",
-  "assistantReasoningCollapse": "Hide",
-  "assistantCompletedTitle": "Template Saved",
-  "assistantCompletedMessage": "Model {model} has been added to this provider.\nClick close to finish this chat.",
-  "you": "You",
-  "thinking": "Thinking..."
+  }
 }
