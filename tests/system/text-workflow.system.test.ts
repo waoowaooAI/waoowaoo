@@ -29,6 +29,8 @@ const textState = vi.hoisted(() => ({
   voiceLineResults: [] as FakeVoiceLineRow[],
   parseFailureCount: 0,
   orchestratorClipId: 'clip-seed',
+  orchestratorCharacterId: 'character-seed',
+  orchestratorAppearanceId: 'appearance-seed',
 }))
 
 vi.mock('@/lib/ai-exec/engine', async () => {
@@ -70,7 +72,12 @@ vi.mock('@/lib/skill-system/executors/script-to-storyboard/preset', () => {
               description: 'system generated panel',
               video_prompt: 'system video prompt',
               location: 'Office',
-              characters: ['Narrator'],
+              characters: [{
+                characterId: textState.orchestratorCharacterId,
+                name: 'Narrator',
+                appearanceId: textState.orchestratorAppearanceId,
+                appearance: '初始形象',
+              }],
             },
           ],
         },
@@ -167,10 +174,21 @@ async function seedScriptToStoryboardState() {
       characters: JSON.stringify(['Narrator']),
     },
   })
-  await prisma.projectCharacter.create({
+  const character = await prisma.projectCharacter.create({
     data: {
       projectId: project.id,
       name: 'Narrator',
+    },
+  })
+  const appearance = await prisma.characterAppearance.create({
+    data: {
+      characterId: character.id,
+      appearanceIndex: 0,
+      changeReason: '初始形象',
+      description: 'Narrator appearance',
+      imageUrls: JSON.stringify(['images/narrator-system.jpg']),
+      imageUrl: 'images/narrator-system.jpg',
+      selectedIndex: 0,
     },
   })
   await prisma.projectLocation.create({
@@ -181,7 +199,9 @@ async function seedScriptToStoryboardState() {
     },
   })
   textState.orchestratorClipId = clip.id
-  return { user, project, novelProject, episode, clip }
+  textState.orchestratorCharacterId = character.id
+  textState.orchestratorAppearanceId = appearance.id
+  return { user, project, novelProject, episode, clip, character, appearance }
 }
 
 describe('system - text workflows', () => {
@@ -194,6 +214,8 @@ describe('system - text workflows', () => {
     textState.voiceLineResults = []
     textState.parseFailureCount = 0
     textState.orchestratorClipId = 'clip-seed'
+    textState.orchestratorCharacterId = 'character-seed'
+    textState.orchestratorAppearanceId = 'appearance-seed'
     await resetSystemState()
     installAuthMocks()
   })

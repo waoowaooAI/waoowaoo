@@ -24,6 +24,9 @@ export const POST = apiHandler(async (
 
   const body = await request.json()
   const { characterId, appearanceId } = body
+  const selectedIndex = typeof body?.selectedIndex === 'number'
+    ? body.selectedIndex
+    : (typeof body?.imageIndex === 'number' ? body.imageIndex : undefined)
 
   if (!characterId || !appearanceId) {
     throw new ApiError('INVALID_PARAMS')
@@ -37,6 +40,7 @@ export const POST = apiHandler(async (
     input: {
       characterId,
       appearanceId,
+      ...(selectedIndex !== undefined ? { selectedIndex } : {}),
     },
     source: 'project-ui',
   })

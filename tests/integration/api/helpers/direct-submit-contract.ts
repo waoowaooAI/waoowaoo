@@ -234,6 +234,9 @@ export const prismaMock = {
     findUnique: vi.fn(async () => ({
       id: 'project-1',
       audioModel: 'fal::audio-model',
+      artStyle: 'american-comic',
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'american-comic',
       characters: [
         {
           name: 'Narrator',

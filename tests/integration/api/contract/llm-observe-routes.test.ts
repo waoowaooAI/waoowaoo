@@ -72,7 +72,12 @@ const prismaMock = vi.hoisted(() => ({
   },
   project: {
     findFirst: vi.fn(async () => ({ id: 'project-1' })),
-    findUnique: vi.fn(async () => ({ id: 'project-1' })),
+    findUnique: vi.fn(async () => ({
+      id: 'project-1',
+      artStyle: 'american-comic',
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'american-comic',
+    })),
   },
   projectCharacter: {
     findFirst: vi.fn(async () => ({ id: 'character-1' })),

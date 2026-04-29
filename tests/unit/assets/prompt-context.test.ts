@@ -43,7 +43,7 @@ describe('asset prompt context', () => {
     })
 
     expect(compileAssetPromptFragments(context)).toEqual({
-      appearanceListText: '小雨/雨: ["初始形象"]',
+      appearanceListText: '小雨/雨: [{"appearance":"初始形象"}]',
       fullDescriptionText: '【小雨/雨 - 初始形象】黑色短发，校服，冷静表情',
       locationDescriptionText: '夜晚天台，冷风，霓虹远景\n\n可站位置：\n- 天台栏杆左侧靠近边缘的位置',
       propsDescriptionText: '【青铜匕首】古旧短刃，雕纹手柄',

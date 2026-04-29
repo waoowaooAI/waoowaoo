@@ -77,6 +77,7 @@ vi.mock('@/lib/ai-registry/capabilities-catalog', () => ({
   })),
 }))
 vi.mock('@/lib/user-api/runtime-config', () => ({
+  getProviderConfig: vi.fn(async () => ({ apiKey: 'provider-key' })),
   resolveModelSelection: vi.fn(async () => ({
     provider: 'ark',
     modelId: 'stub',
