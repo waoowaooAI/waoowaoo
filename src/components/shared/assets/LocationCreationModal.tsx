@@ -153,23 +153,23 @@ export function LocationCreationModal({
             const body: {
                 name: string
                 description: string
-                artStyle: string
+                artStyle?: string
                 folderId?: string | null
             } = {
                 name: name.trim(),
                 description: description.trim(),
-                artStyle
             }
 
             if (mode === 'asset-hub') {
                 body.folderId = folderId
+                body.artStyle = artStyle
             }
 
             if (mode === 'asset-hub') {
                 await createAssetHubLocation.mutateAsync({
                     name: body.name,
                     summary: body.description,
-                    artStyle: body.artStyle,
+                    artStyle,
                     folderId: body.folderId ?? null,
                     availableSlots,
                 })
@@ -177,7 +177,6 @@ export function LocationCreationModal({
                 await createProjectLocation.mutateAsync({
                     name: body.name,
                     description: body.description,
-                    artStyle: body.artStyle,
                     availableSlots,
                 })
             }
@@ -223,7 +222,6 @@ export function LocationCreationModal({
                 const result = await createProjectLocation.mutateAsync({
                     name: name.trim(),
                     description: description.trim(),
-                    artStyle,
                     count: locationGenerationCount,
                     availableSlots,
                 }) as CreatedLocationResponse
@@ -233,7 +231,6 @@ export function LocationCreationModal({
                 }
                 await generateProjectLocation.mutateAsync({
                     locationId: createdLocationId,
-                    artStyle,
                     count: locationGenerationCount,
                 })
             }

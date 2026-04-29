@@ -13,6 +13,8 @@ import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-ur
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 import { submitOperationTask } from '@/lib/operations/submit-operation-task'
+import { resolveRequiredTaskLocale } from '@/lib/task/resolve-locale'
+import { resolveProjectImageStyleSignatureForTask } from '@/lib/image-generation/style'
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
@@ -308,6 +310,14 @@ export function createExtraOperations(): ProjectAgentOperationRegistryDraft {
 
         const targetType = appearanceId ? 'CharacterAppearance' : 'Project'
         const targetId = appearanceId || characterId || ctx.projectId
+        const locale = resolveRequiredTaskLocale(ctx.request, body)
+        const styleSignature = await resolveProjectImageStyleSignatureForTask({
+          projectId: ctx.projectId,
+          userId: ctx.userId,
+          locale,
+          artStyleOverride: body.artStyle,
+          invalidOverrideMessage: 'Invalid artStyle in reference_to_character payload',
+        })
 
         return await submitOperationTask({
           request: ctx.request,
@@ -317,7 +327,7 @@ export function createExtraOperations(): ProjectAgentOperationRegistryDraft {
           targetType,
           targetId,
           payload: body,
-          dedupeKey: `reference_to_character:${targetId}:${count}`,
+          dedupeKey: `reference_to_character:${targetId}:${count}:${styleSignature}`,
         })
       },
     }),

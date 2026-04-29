@@ -1,7 +1,7 @@
 import { type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { CHARACTER_ASSET_IMAGE_RATIO, addCharacterPromptSuffix, isArtStyleValue, PRIMARY_APPEARANCE_INDEX, type ArtStyleValue } from '@/lib/constants'
-import { resolveProjectVisualStylePreset, resolveVisualStylePreset } from '@/lib/style-preset'
+import { CHARACTER_ASSET_IMAGE_RATIO, addCharacterPromptSuffix, PRIMARY_APPEARANCE_INDEX } from '@/lib/constants'
+import { resolveProjectImageStyleForTask } from '@/lib/image-generation/style'
 import { type TaskJobData } from '@/lib/task/types'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
@@ -19,15 +19,6 @@ import {
   parseJsonStringArray,
   pickFirstString,
 } from './image-task-handler-shared'
-
-function resolvePayloadArtStyle(payload: AnyObj): ArtStyleValue | undefined {
-  if (!Object.prototype.hasOwnProperty.call(payload, 'artStyle')) return undefined
-  const parsedArtStyle = typeof payload.artStyle === 'string' ? payload.artStyle.trim() : ''
-  if (!isArtStyleValue(parsedArtStyle)) {
-    throw new Error('Invalid artStyle in IMAGE_CHARACTER payload')
-  }
-  return parsedArtStyle
-}
 
 interface CharacterAppearanceRecord {
   id: string
@@ -108,19 +99,13 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
 
   if (!appearance) throw new Error('Character appearance not found')
 
-  const payloadArtStyle = resolvePayloadArtStyle(payload)
-  const artStyle = payloadArtStyle
-    ? (await resolveVisualStylePreset({
-        userId,
-        presetSource: 'system',
-        presetId: payloadArtStyle,
-        locale: job.data.locale,
-      })).prompt
-    : (await resolveProjectVisualStylePreset({
-        projectId,
-        userId,
-        locale: job.data.locale,
-      })).prompt
+  const artStyle = (await resolveProjectImageStyleForTask({
+    projectId,
+    userId,
+    locale: job.data.locale,
+    artStyleOverride: payload.artStyle,
+    invalidOverrideMessage: 'Invalid artStyle in IMAGE_CHARACTER payload',
+  })).prompt
   const descriptions = parseJsonStringArray(appearance.descriptions)
   const baseDescriptions = descriptions.length > 0 ? descriptions : [appearance.description || '']
 

@@ -1,5 +1,5 @@
 You are a storyboard image generation assistant.
-Generate one new variant image that keeps identity/style continuity while applying requested camera variation.
+Generate one new variant image that keeps identity and spatial continuity while applying the requested camera variation.
 
 Director style requirements:
 {style_requirements}
@@ -33,8 +33,9 @@ Style requirement:
 {style}
 
 Execution rules:
-1. Preserve character identity and outfit continuity unless variant asks otherwise.
-2. Preserve location continuity.
+1. Preserve character identity, face shape, hairstyle, outfit, body type, and primary appearance unless the variant asks otherwise.
+2. Preserve location continuity through spatial layout, key anchors, entrances/exits, relative object positions, and usable placement areas.
 3. Change framing/angle/composition according to target shot and camera move.
 4. If characters_info or location_asset includes fixed slots / available slots, keep every visible character anchored to the same fixed slot instead of drifting to another area.
 5. Keep one-frame output only, no text overlays.
+6. The final visual style must follow the project style requirement above. Do not inherit old art styles from reference images if they conflict with the current project visual style.

@@ -45,6 +45,13 @@ const locationSlotsMock = vi.hoisted(() => ({
 vi.mock('@/lib/image-generation/location-slots', () => locationSlotsMock)
 
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(async () => ({
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'realistic',
+      artStyle: 'realistic',
+    })),
+  },
   projectLocation: {
     findUnique: vi.fn(async () => ({ name: 'loc', summary: 'sum' })),
   },

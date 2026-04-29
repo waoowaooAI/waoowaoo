@@ -16,6 +16,7 @@ import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-ur
 import { deleteObject } from '@/lib/storage'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
 import { createProjectCharacterLabeledCopies, createProjectLocationLabeledCopies } from '@/lib/image-label'
+import { resolveProjectImageStyleSignatureForTask } from '@/lib/image-generation/style'
 import type { AssetKind, AssetScope } from '@/lib/assets/contracts'
 import {
   normalizeLocationAvailableSlots,
@@ -300,6 +301,13 @@ async function submitProjectAssetGenerateTask(input: AssetGenerateInput) {
   const payloadBase = artStyle
     ? { ...input.body, type: input.kind, id: input.assetId, artStyle, count }
     : { ...input.body, type: input.kind, id: input.assetId, count }
+  const styleSignature = await resolveProjectImageStyleSignatureForTask({
+    projectId,
+    userId: input.access.userId,
+    locale,
+    artStyleOverride: artStyle,
+    invalidOverrideMessage: 'Invalid artStyle in project asset image payload',
+  })
 
   let billingPayload: Record<string, unknown>
   try {
@@ -323,7 +331,7 @@ async function submitProjectAssetGenerateTask(input: AssetGenerateInput) {
     targetType,
     targetId,
     payload: withTaskUiPayload(billingPayload, { hasOutputAtStart }),
-    dedupeKey: `${taskType}:${targetId}:${imageIndex === null ? count : `single:${imageIndex}`}`,
+    dedupeKey: `${taskType}:${targetId}:${imageIndex === null ? count : `single:${imageIndex}`}:${styleSignature}`,
     billingInfo: buildDefaultTaskBillingInfo(taskType, billingPayload),
   })
 }

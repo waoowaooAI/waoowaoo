@@ -128,7 +128,7 @@ export function buildProjectLocationGenerateImageBody(input: {
         kind: 'location' as const,
         projectId: input.projectId,
         imageIndex: input.imageIndex,
-        artStyle: input.artStyle,
+        ...(input.artStyle ? { artStyle: input.artStyle } : {}),
         count: input.count,
     }
 }

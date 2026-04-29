@@ -1,6 +1,6 @@
 import type { Job } from 'bullmq'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CHARACTER_PROMPT_SUFFIX, CHARACTER_IMAGE_BANANA_RATIO } from '@/lib/constants'
+import { CHARACTER_PROMPT_SUFFIX, CHARACTER_IMAGE_BANANA_RATIO, getArtStylePrompt } from '@/lib/constants'
 import { TASK_TYPE, type TaskJobData, type TaskType } from '@/lib/task/types'
 
 const sharpMock = vi.hoisted(() =>
@@ -259,6 +259,40 @@ describe('worker reference-to-character', () => {
     const cosKeys = (result as { cosKeys?: string[] }).cosKeys
     expect(cosKeys).toHaveLength(5)
     expect(cosKeys?.every((item) => item.startsWith('cos/reference-key-'))).toBe(true)
+  })
+
+  it('uses project visual style when project reference generation has no override', async () => {
+    const job = buildJob(
+      {
+        referenceImageUrls: ['https://example.com/ref-a.png'],
+        characterName: 'Hero',
+        count: 1,
+      },
+      TASK_TYPE.REFERENCE_TO_CHARACTER,
+    )
+
+    await handleReferenceToCharacterTask(job)
+
+    const { prompt } = readGenerateCall(0)
+    expect(prompt).toContain(getArtStylePrompt('realistic', 'zh'))
+  })
+
+  it('uses explicit override instead of project visual style for project reference generation', async () => {
+    const job = buildJob(
+      {
+        referenceImageUrls: ['https://example.com/ref-a.png'],
+        characterName: 'Hero',
+        artStyle: 'japanese-anime',
+        count: 1,
+      },
+      TASK_TYPE.REFERENCE_TO_CHARACTER,
+    )
+
+    await handleReferenceToCharacterTask(job)
+
+    const { prompt } = readGenerateCall(0)
+    expect(prompt).toContain(getArtStylePrompt('japanese-anime', 'zh'))
+    expect(prompt).not.toContain(getArtStylePrompt('realistic', 'zh'))
   })
 
   it('adds project label bars only for project reference generation', async () => {

@@ -11,6 +11,7 @@ import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import { ensureProjectLocationImageSlots } from '@/lib/image-generation/location-slots'
 import { hasCharacterAppearanceOutput, hasLocationImageOutput, hasPanelImageOutput } from '@/lib/task/has-output'
 import { sanitizeImageInputsForTaskPayload } from '@/lib/media/outbound-image'
+import { resolveProjectImageStyleSignatureForTask } from '@/lib/image-generation/style'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 import { taskSubmitOperationOutputSchema } from '@/lib/operations/output-schemas'
@@ -117,9 +118,18 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
           throw new ApiError('INVALID_PARAMS', { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
         }
 
+        const locale = resolveRequiredTaskLocale(ctx.request, billingPayload)
+        const styleSignature = await resolveProjectImageStyleSignatureForTask({
+          projectId: ctx.projectId,
+          userId: ctx.userId,
+          locale,
+          artStyleOverride: toObject(input).artStyle,
+          invalidOverrideMessage: 'Invalid artStyle in regenerate_group payload',
+        })
+
         return await submitTask({
           userId: ctx.userId,
-          locale: resolveRequiredTaskLocale(ctx.request, billingPayload),
+          locale,
           requestId: getRequestId(ctx.request),
           projectId: ctx.projectId,
           type: TASK_TYPE.REGENERATE_GROUP,
@@ -129,7 +139,7 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
             intent: 'regenerate',
             hasOutputAtStart,
           }),
-          dedupeKey: `regenerate_group:${targetType}:${targetId}:${count}`,
+          dedupeKey: `regenerate_group:${targetType}:${targetId}:${count}:${styleSignature}`,
           billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.REGENERATE_GROUP, billingPayload),
         })
       },
@@ -203,9 +213,18 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
           throw new ApiError('INVALID_PARAMS', { code: 'IMAGE_MODEL_CAPABILITY_NOT_CONFIGURED', message })
         }
 
+        const locale = resolveRequiredTaskLocale(ctx.request, billingPayload)
+        const styleSignature = await resolveProjectImageStyleSignatureForTask({
+          projectId: ctx.projectId,
+          userId: ctx.userId,
+          locale,
+          artStyleOverride: toObject(input).artStyle,
+          invalidOverrideMessage: 'Invalid artStyle in regenerate_single_image payload',
+        })
+
         return await submitTask({
           userId: ctx.userId,
-          locale: resolveRequiredTaskLocale(ctx.request, billingPayload),
+          locale,
           requestId: getRequestId(ctx.request),
           projectId: ctx.projectId,
           type: taskType,
@@ -215,7 +234,7 @@ export function createMediaOperations(): ProjectAgentOperationRegistryDraft {
             intent: 'regenerate',
             hasOutputAtStart,
           }),
-          dedupeKey: `${taskType}:${targetId}:single:${parsedImageIndex}`,
+          dedupeKey: `${taskType}:${targetId}:single:${parsedImageIndex}:${styleSignature}`,
           billingInfo: buildDefaultTaskBillingInfo(taskType, billingPayload),
         })
       },

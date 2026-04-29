@@ -4,6 +4,9 @@ Generate one scene prompt for image generation.
 User request:
 {user_input}
 
+Fidelity requirement:
+Treat the user request as high-priority source material. Preserve and concretize the core scene identity, key objects, materials, era cues, and spatial relationships. Do not rewrite a specific requested scene into an unrelated scene type.
+
 Rules:
 1. Output in English only.
 2. Start with scene name in this format: "[Scene Name] ..."

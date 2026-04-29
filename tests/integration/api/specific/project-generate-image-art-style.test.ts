@@ -51,7 +51,18 @@ const billingMock = vi.hoisted(() => ({
   buildDefaultTaskBillingInfo: vi.fn(() => ({ billable: false })),
 }))
 
+const mutationBatchMock = vi.hoisted(() => ({
+  createMutationBatch: vi.fn(async () => ({ id: 'mutation-batch-1' })),
+}))
+
 const prismaMock = vi.hoisted(() => ({
+  project: {
+    findUnique: vi.fn(async () => ({
+      visualStylePresetSource: 'system',
+      visualStylePresetId: 'japanese-anime',
+      artStyle: 'japanese-anime',
+    })),
+  },
   characterAppearance: {
     findUnique: vi.fn(async () => ({
       id: 'appearance-1',
@@ -68,6 +79,7 @@ vi.mock('@/lib/task/submitter', () => ({ submitTask: submitTaskMock }))
 vi.mock('@/lib/config-service', () => configServiceMock)
 vi.mock('@/lib/task/has-output', () => hasOutputMock)
 vi.mock('@/lib/billing', () => billingMock)
+vi.mock('@/lib/mutation-batch/service', () => mutationBatchMock)
 vi.mock('@/lib/task/resolve-locale', () => ({
   resolveRequiredTaskLocale: vi.fn(() => 'zh'),
 }))
@@ -95,6 +107,25 @@ describe('api specific - novel promotion generate image art style', () => {
 
     const submitArg = submitTaskMock.mock.calls[0]?.[0] as { payload?: Record<string, unknown> } | undefined
     expect(submitArg?.payload?.artStyle).toBe('realistic')
+  })
+
+  it('does not inject american-comic when artStyle is omitted', async () => {
+    const mod = await import('@/app/api/projects/[projectId]/generate-image/route')
+    const req = buildMockRequest({
+      path: '/api/projects/project-1/generate-image',
+      method: 'POST',
+      body: {
+        type: 'character',
+        id: 'character-1',
+        appearanceId: 'appearance-1',
+      },
+    })
+
+    const res = await mod.POST(req, { params: Promise.resolve({ projectId: 'project-1' }) })
+    expect(res.status).toBe(200)
+
+    const submitArg = submitTaskMock.mock.calls[0]?.[0] as { payload?: Record<string, unknown> } | undefined
+    expect(submitArg?.payload).not.toHaveProperty('artStyle')
   })
 
   it('rejects invalid artStyle with invalid params', async () => {
@@ -138,6 +169,6 @@ describe('api specific - novel promotion generate image art style', () => {
       dedupeKey?: string
     } | undefined
     expect(submitArg?.payload?.count).toBe(6)
-    expect(submitArg?.dedupeKey).toBe('image_character:appearance-1:6')
+    expect(submitArg?.dedupeKey).toBe('image_character:appearance-1:6:project:system:japanese-anime')
   })
 })

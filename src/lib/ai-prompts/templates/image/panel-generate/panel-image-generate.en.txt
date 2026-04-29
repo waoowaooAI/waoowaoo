@@ -27,7 +27,8 @@ Execution rules:
 2. If storyboard data contains `slot`, treat it as a preferred placement anchor for consistency, not as an absolute restriction.
 3. If location data contains `available_slots`, treat them as typical anchor references rather than a complete map of all valid positions.
 4. When the panel description, source text, action flow, or scene nature implies movement, entry/exit, path traversal, transition space, temporary space, empty space, or abstract/non-literal space, do not force the character to remain inside an existing slot.
-5. Use reference images for style/identity consistency only.
-6. Repaint the background according to shot type and angle.
-7. If storyboard conflicts with source text, keep narrative logic from source text.
-8. Keep final visual style consistent with provided references.
+5. Use character reference images for identity, face shape, hairstyle, outfit, body type, and primary appearance consistency. Do not replace the main appearance of asset-library characters.
+6. Use location reference images for spatial layout, key anchors, entrances/exits, relative object positions, and usable placement areas.
+7. Repaint the background according to shot type and angle.
+8. If storyboard conflicts with source text, keep narrative logic from source text.
+9. The final visual style must follow the project style requirement above. Do not let old styles from reference images override the current project visual style.

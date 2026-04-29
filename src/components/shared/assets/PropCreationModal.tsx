@@ -65,7 +65,7 @@ export function PropCreationModal({
         summary: summary.trim(),
         description: description.trim(),
         folderId,
-        artStyle,
+        ...(mode === 'asset-hub' ? { artStyle } : {}),
       }) as { assetId?: string }
       if (generateAfterCreate) {
         if (!result.assetId) {
@@ -73,7 +73,7 @@ export function PropCreationModal({
         }
         await actions.generate({
           id: result.assetId,
-          artStyle,
+          ...(mode === 'asset-hub' ? { artStyle } : {}),
           count,
         })
       }

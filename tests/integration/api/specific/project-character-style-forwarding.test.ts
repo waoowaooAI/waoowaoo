@@ -62,6 +62,59 @@ describe('api specific - novel promotion character style forwarding', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('does not inject default artStyle when creating from reference without override', async () => {
+    const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
+      async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const mod = await import('@/app/api/projects/[projectId]/character/route')
+    const req = buildMockRequest({
+      path: '/api/projects/project-1/character',
+      method: 'POST',
+      headers: {
+        'accept-language': 'zh-CN,zh;q=0.9',
+      },
+      body: {
+        name: 'Hero',
+        description: '主角设定',
+        referenceImageUrl: 'https://example.com/ref.png',
+        generateFromReference: true,
+        count: 4,
+      },
+    })
+
+    const res = await mod.POST(req, { params: Promise.resolve({ projectId: 'project-1' }) })
+    expect(res.status).toBe(200)
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body || '{}')) as Record<string, unknown>
+    expect(body).not.toHaveProperty('artStyle')
+  })
+
+  it('forwards explicit artStyle override when creating from reference', async () => {
+    const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
+      async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const mod = await import('@/app/api/projects/[projectId]/character/route')
+    const req = buildMockRequest({
+      path: '/api/projects/project-1/character',
+      method: 'POST',
+      body: {
+        name: 'Hero',
+        description: '主角设定',
+        referenceImageUrl: 'https://example.com/ref.png',
+        generateFromReference: true,
+        artStyle: 'realistic',
+      },
+    })
+
+    const res = await mod.POST(req, { params: Promise.resolve({ projectId: 'project-1' }) })
+    expect(res.status).toBe(200)
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body || '{}')) as Record<string, unknown>
+    expect(body.artStyle).toBe('realistic')
+  })
+
   it('rejects invalid artStyle before creating character', async () => {
     const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
       async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),

@@ -9,9 +9,8 @@ import { getUserModelConfig } from '@/lib/config-service'
 import {
   CHARACTER_IMAGE_BANANA_RATIO,
   addCharacterPromptSuffix,
-  getArtStylePrompt,
 } from '@/lib/constants'
-import { resolveProjectVisualStylePreset } from '@/lib/style-preset'
+import { resolveProjectImageStyleForTask, resolveSystemImageStylePrompt } from '@/lib/image-generation/style'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { generateUniqueKey, getSignedUrl, uploadObject } from '@/lib/storage'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
@@ -204,13 +203,19 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     }
   }
 
-  const artStylePrompt = isProject && !artStyle
-    ? (await resolveProjectVisualStylePreset({
+  const artStylePrompt = isProject
+    ? (await resolveProjectImageStyleForTask({
         projectId: job.data.projectId,
         userId: job.data.userId,
         locale: job.data.locale,
+        artStyleOverride: artStyle,
+        invalidOverrideMessage: 'Invalid artStyle in REFERENCE_TO_CHARACTER payload',
       })).prompt
-    : getArtStylePrompt(artStyle, job.data.locale)
+    : resolveSystemImageStylePrompt({
+        artStyle,
+        locale: job.data.locale,
+        errorMessage: 'Invalid artStyle in ASSET_HUB_REFERENCE_TO_CHARACTER payload',
+      })
 
   const basePrompt = customDescription || buildPrompt({
     promptId: PROMPT_IDS.CHARACTER_REFERENCE_TO_SHEET,

@@ -17,4 +17,18 @@ describe('buildProjectLocationGenerateImageBody', () => {
       artStyle: 'japanese-anime',
     })
   })
+
+  it('omits artStyle when project generation uses project visual style', () => {
+    expect(buildProjectLocationGenerateImageBody({
+      projectId: 'project-1',
+      locationId: 'location-1',
+      count: 1,
+    })).toEqual({
+      scope: 'project',
+      kind: 'location',
+      projectId: 'project-1',
+      imageIndex: undefined,
+      count: 1,
+    })
+  })
 })

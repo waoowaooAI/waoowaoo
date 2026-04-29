@@ -119,7 +119,7 @@ describe('worker location-image-task-handler behavior', () => {
     )
     expect(sharedMock.generateProjectLabeledImageToStorage).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining('可站位置：'),
+        prompt: expect.stringContaining('自然保留这些落位区域对应的锚物和周边空白'),
       }),
     )
     expect(sharedMock.generateProjectLabeledImageToStorage).toHaveBeenCalledWith(
@@ -132,10 +132,16 @@ describe('worker location-image-task-handler behavior', () => {
         prompt: expect.stringContaining('必须使用宽广完整的场景全景构图'),
       }),
     )
+    expect(sharedMock.generateProjectLabeledImageToStorage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining('不要添加非场景内的叠加元素'),
+      }),
+    )
     const generationCall = sharedMock.generateProjectLabeledImageToStorage.mock.calls[0] as unknown as [{ prompt: string }] | undefined
     expect(generationCall).toBeTruthy()
     if (!generationCall) throw new Error('expected generateProjectLabeledImageToStorage call')
     const generationInput = generationCall[0]
+    expect(generationInput.prompt).not.toContain('可站位置：')
     expect(generationInput.prompt.split(animeStylePrompt).length - 1).toBe(1)
 
     expect(prismaMock.locationImage.update).toHaveBeenCalledWith({

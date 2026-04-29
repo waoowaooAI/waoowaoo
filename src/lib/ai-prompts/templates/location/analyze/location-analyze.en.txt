@@ -23,6 +23,8 @@ Each description should:
 - define at least 3 stable anchor objects or anchor areas that can support later character placement
 - make the usable open space around those anchors visually clear
 - remain environment-only (no named protagonist actions)
+- preserve and concretize the source text's core scene identity, key objects, materials, era cues, and spatial relationships
+- avoid rewriting a specific source scene into an unrelated scene type
 - use concise, production-ready English
 
 If the source location is generic, such as 「classroom」, 「office」, or 「living room」, you must proactively make it specific enough for controllable image generation:

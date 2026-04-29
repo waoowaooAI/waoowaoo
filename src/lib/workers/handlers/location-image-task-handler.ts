@@ -1,7 +1,7 @@
 import { type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
-import { LOCATION_IMAGE_RATIO, PROP_IMAGE_RATIO, addLocationPromptSuffix, addPropPromptSuffix, isArtStyleValue, type ArtStyleValue } from '@/lib/constants'
-import { resolveProjectVisualStylePreset, resolveVisualStylePreset } from '@/lib/style-preset'
+import { LOCATION_IMAGE_RATIO, PROP_IMAGE_RATIO, addLocationPromptSuffix, addPropPromptSuffix } from '@/lib/constants'
+import { resolveProjectImageStyleForTask } from '@/lib/image-generation/style'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import { type TaskJobData } from '@/lib/task/types'
 import { reportTaskProgress } from '../shared'
@@ -16,15 +16,6 @@ import {
 } from './image-task-handler-shared'
 import { buildLocationImagePromptCore } from '@/lib/location-image-prompt'
 import { buildPropImagePromptCore } from '@/lib/prop-image-prompt'
-
-function resolvePayloadArtStyle(payload: AnyObj): ArtStyleValue | undefined {
-  if (!Object.prototype.hasOwnProperty.call(payload, 'artStyle')) return undefined
-  const parsedArtStyle = typeof payload.artStyle === 'string' ? payload.artStyle.trim() : ''
-  if (!isArtStyleValue(parsedArtStyle)) {
-    throw new Error('Invalid artStyle in IMAGE_LOCATION payload')
-  }
-  return parsedArtStyle
-}
 
 interface LocationImageRecord {
   id: string
@@ -67,19 +58,13 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
   if (!modelId) throw new Error('Location model not configured')
   const requestedCount = resolveRequestedLocationCount(payload)
 
-  const payloadArtStyle = resolvePayloadArtStyle(payload)
-  const artStyle = payloadArtStyle
-    ? (await resolveVisualStylePreset({
-        userId,
-        presetSource: 'system',
-        presetId: payloadArtStyle,
-        locale: job.data.locale,
-      })).prompt
-    : (await resolveProjectVisualStylePreset({
-        projectId,
-        userId,
-        locale: job.data.locale,
-      })).prompt
+  const artStyle = (await resolveProjectImageStyleForTask({
+    projectId,
+    userId,
+    locale: job.data.locale,
+    artStyleOverride: payload.artStyle,
+    invalidOverrideMessage: 'Invalid artStyle in IMAGE_LOCATION payload',
+  })).prompt
   const assetType = payload.type === 'prop' ? 'prop' : 'location'
 
   // targetId may be locationId (group) or locationImageId (single)
