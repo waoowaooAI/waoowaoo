@@ -188,8 +188,6 @@ export default function LocationCard({
   const hasPreviousVersion = location.images?.some(img => img.previousImageUrl) || false
 
   const showSelectionMode = displaySlotCount > 1
-  const singleImageAspectClassName = assetType === 'prop' ? 'aspect-[3/2]' : 'aspect-square'
-
   // 选择模式：显示名字在上，三张图片在下
   if (showSelectionMode) {
     const selectionStatusText = isTaskRunning || generatedImageCount < displaySlotCount
@@ -387,7 +385,6 @@ export default function LocationCard({
         <LocationImageList
           mode="single"
           locationName={location.name}
-          aspectClassName={singleImageAspectClassName}
           currentImageUrl={currentImageUrl}
           selectedIndex={selectedIndex}
           hasMultipleImages={hasMultipleImages}

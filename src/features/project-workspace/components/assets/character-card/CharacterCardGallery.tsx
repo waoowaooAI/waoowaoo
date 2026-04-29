@@ -25,7 +25,6 @@ type CharacterCardGalleryProps =
     mode: 'single'
     characterName: string
     changeReason: string
-    aspectClassName: string
     currentImageUrl: string | null | undefined
     selectedIndex: number | null
     hasMultipleImages: boolean
@@ -105,14 +104,14 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
   })
 
   return (
-    <div className={`asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)] ${props.aspectClassName}`}>
+    <div className="asset-image-frame relative overflow-hidden rounded-lg border-2 border-[var(--glass-stroke-base)]">
       {props.currentImageUrl ? (
-        <div className="relative flex h-full w-full items-center justify-center bg-[var(--glass-bg-muted)]">
+        <div className="relative w-full">
           <MediaImageWithLoading
             src={props.currentImageUrl}
             alt={`${props.characterName} - ${props.changeReason}`}
-            containerClassName="h-full w-full"
-            className="h-full w-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
+            containerClassName="w-full min-h-[120px]"
+            className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
             onClick={() => props.onImageClick(props.currentImageUrl!)}
           />
           {props.selectedIndex !== null && props.hasMultipleImages && (
@@ -122,7 +121,7 @@ export default function CharacterCardGallery(props: CharacterCardGalleryProps) {
           )}
         </div>
       ) : (
-        <div className="flex h-full w-full items-center justify-center bg-[var(--glass-bg-muted)]">
+        <div className="flex min-h-[120px] w-full items-center justify-center bg-[var(--glass-bg-muted)]">
           {appearanceErrorDisplay && !props.isAppearanceTaskRunning ? (
             <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
               <AppIcon name="alert" className="w-8 h-8 text-[var(--glass-tone-danger-fg)] mb-2" />

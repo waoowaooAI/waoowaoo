@@ -136,10 +136,10 @@ describe('LocationCard AI edit button', () => {
       expect(html).toContain(token)
     }
     const firstCall = locationImageListMock.mock.calls[0]?.[0] as { aspectClassName?: string } | undefined
-    expect(firstCall?.aspectClassName).toBe('aspect-[3/2]')
+    expect(firstCall?.aspectClassName).toBeUndefined()
   })
 
-  it('passes a square image slot to project location cards', async () => {
+  it('does not force a square image slot for project location cards', async () => {
     locationImageListMock.mockClear()
     Reflect.set(globalThis, 'React', React)
     const { default: LocationCard } = await import('@/features/project-workspace/components/assets/LocationCard')
@@ -182,6 +182,6 @@ describe('LocationCard AI edit button', () => {
     )
 
     const firstCall = locationImageListMock.mock.calls[0]?.[0] as { aspectClassName?: string } | undefined
-    expect(firstCall?.aspectClassName).toBe('aspect-square')
+    expect(firstCall?.aspectClassName).toBeUndefined()
   })
 })
