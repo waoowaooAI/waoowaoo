@@ -6,28 +6,35 @@ import { validateProfileData, stringifyProfileData } from '@/types/character-pro
 import { withInternalLLMStreamCallbacks } from '@/lib/llm-observe/internal-stream-context'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive } from '@/lib/workers/utils'
-import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
+import type { TaskJobData } from '@/lib/task/types'
 import {
   type AnyObj,
   parseVisualResponse,
-  readRequiredString,
   readText,
   resolveProjectModel,
-} from './character-profile-helpers'
+} from './character-visual-profile-helpers'
 import { createWorkerLLMStreamCallbacks, createWorkerLLMStreamContext } from './llm-stream'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS } from '@/lib/ai-prompts'
 
-type ConfirmProfileOptions = {
+type GenerateCharacterVisualProfileInput = {
+  characterId: string
+  profileData?: unknown
+}
+
+type GenerateCharacterVisualProfileOptions = {
   suppressProgress?: boolean
 }
 
-async function handleConfirmProfile(
+export async function generateCharacterVisualProfile(
   job: Job<TaskJobData>,
-  payload: AnyObj,
-  options: ConfirmProfileOptions = {},
+  input: GenerateCharacterVisualProfileInput,
+  options: GenerateCharacterVisualProfileOptions = {},
 ) {
   const suppressProgress = options.suppressProgress === true
-  const characterId = readRequiredString(payload.characterId, 'characterId')
+  const characterId = input.characterId.trim()
+  if (!characterId) {
+    throw new Error('characterId is required')
+  }
   const project = await resolveProjectModel(job.data.projectId)
 
   const character = await prisma.projectCharacter.findFirst({
@@ -41,12 +48,12 @@ async function handleConfirmProfile(
   }
 
   let finalProfileData = character.profileData
-  if (payload.profileData) {
-    if (!validateProfileData(payload.profileData)) {
+  if (input.profileData) {
+    if (!validateProfileData(input.profileData)) {
       throw new Error('档案数据格式错误')
     }
-    finalProfileData = stringifyProfileData(payload.profileData)
-    await assertTaskActive(job, 'character_profile_confirm_update_profile')
+    finalProfileData = stringifyProfileData(input.profileData)
+    await assertTaskActive(job, 'character_visual_profile_update_profile')
     await prisma.projectCharacter.update({
       where: { id: characterId },
       data: { profileData: finalProfileData },
@@ -77,14 +84,14 @@ async function handleConfirmProfile(
 
   if (!suppressProgress) {
     await reportTaskProgress(job, 20, {
-      stage: 'character_profile_confirm_prepare',
-      stageLabel: '准备角色档案确认参数',
+      stage: 'character_visual_profile_prepare',
+      stageLabel: '准备角色视觉档案参数',
       displayMode: 'detail',
     })
   }
-  await assertTaskActive(job, 'character_profile_confirm_prepare')
+  await assertTaskActive(job, 'character_visual_profile_prepare')
 
-  const streamContext = createWorkerLLMStreamContext(job, 'character_profile_confirm')
+  const streamContext = createWorkerLLMStreamContext(job, 'character_visual_profile')
   const streamCallbacks = createWorkerLLMStreamCallbacks(job, streamContext)
   const completion = await withInternalLLMStreamCallbacks(
     streamCallbacks,
@@ -97,15 +104,15 @@ async function handleConfirmProfile(
         projectId: job.data.projectId,
         action: 'generate_character_visual',
         meta: {
-          stepId: 'character_profile_confirm',
-          stepTitle: '角色档案确认',
+          stepId: 'character_visual_profile',
+          stepTitle: '角色视觉档案生成',
           stepIndex: 1,
           stepTotal: 1,
         },
       }),
   )
   await streamCallbacks.flush()
-  await assertTaskActive(job, 'character_profile_confirm_parse')
+  await assertTaskActive(job, 'character_visual_profile_parse')
 
   const responseText = completion.text
   const visualData = parseVisualResponse(responseText)
@@ -114,7 +121,7 @@ async function handleConfirmProfile(
     : []
   const firstCharacter = visualCharacters[0]
   const appearances = Array.isArray(firstCharacter?.appearances)
-    ? (firstCharacter!.appearances as Array<AnyObj>)
+    ? (firstCharacter.appearances as Array<AnyObj>)
     : []
   if (appearances.length === 0) {
     throw new Error('AI返回格式错误: 缺少 appearances')
@@ -122,12 +129,12 @@ async function handleConfirmProfile(
 
   if (!suppressProgress) {
     await reportTaskProgress(job, 78, {
-      stage: 'character_profile_confirm_persist',
-      stageLabel: '保存角色档案确认结果',
+      stage: 'character_visual_profile_persist',
+      stageLabel: '保存角色视觉档案结果',
       displayMode: 'detail',
     })
   }
-  await assertTaskActive(job, 'character_profile_confirm_persist')
+  await assertTaskActive(job, 'character_visual_profile_persist')
 
   const appearanceRows: Array<{
     characterId: string
@@ -139,9 +146,9 @@ async function handleConfirmProfile(
     previousImageUrls: string
   }> = []
 
-  for (let appIndex = 0; appIndex < appearances.length; appIndex++) {
+  for (let appIndex = 0; appIndex < appearances.length; appIndex += 1) {
     const app = appearances[appIndex]
-    await assertTaskActive(job, 'character_profile_confirm_create_appearance')
+    await assertTaskActive(job, 'character_visual_profile_create_appearance')
     const descriptions = Array.isArray(app.descriptions) ? app.descriptions : []
     const normalizedDescriptions = descriptions.map((item) => readText(item)).filter(Boolean)
     appearanceRows.push({
@@ -177,8 +184,8 @@ async function handleConfirmProfile(
 
   if (!suppressProgress) {
     await reportTaskProgress(job, 96, {
-      stage: 'character_profile_confirm_done',
-      stageLabel: '角色档案确认完成',
+      stage: 'character_visual_profile_done',
+      stageLabel: '角色视觉档案生成完成',
       displayMode: 'detail',
       meta: { characterId },
     })
@@ -194,72 +201,17 @@ async function handleConfirmProfile(
   }
 }
 
-async function handleBatchConfirmProfile(job: Job<TaskJobData>) {
-  const project = await resolveProjectModel(job.data.projectId)
-
-  const unconfirmedCharacters = await prisma.projectCharacter.findMany({
-    where: {
-      projectId: project.projectId,
-      profileConfirmed: false,
-      profileData: { not: null },
-    },
-  })
-
-  if (unconfirmedCharacters.length === 0) {
-    return {
-      success: true,
-      count: 0,
-      message: '没有待确认的角色',
-    }
-  }
-
-  await reportTaskProgress(job, 18, {
-    stage: 'character_profile_batch_prepare',
-    stageLabel: '准备批量角色档案确认参数',
-    displayMode: 'detail',
-    message: `共 ${unconfirmedCharacters.length} 个角色`,
-  })
-  await assertTaskActive(job, 'character_profile_batch_prepare')
-
-  let successCount = 0
-  const totalCount = unconfirmedCharacters.length
-
-  for (let index = 0; index < unconfirmedCharacters.length; index++) {
-    const character = unconfirmedCharacters[index]
-    await assertTaskActive(job, 'character_profile_batch_loop_character')
-    const progress = 18 + Math.floor(((index + 1) / totalCount) * 78)
-    await reportTaskProgress(job, progress, {
-      stage: 'character_profile_batch_loop_character',
-      stageLabel: '批量角色档案确认中',
-      displayMode: 'detail',
-      message: `${index + 1}/${totalCount} ${character.name}`,
-      meta: { characterId: character.id, index: index + 1, total: totalCount },
+export async function generateCreatedCharacterVisualProfile(
+  job: Job<TaskJobData>,
+  characterId: string,
+  options: GenerateCharacterVisualProfileOptions = {},
+) {
+  try {
+    return await generateCharacterVisualProfile(job, { characterId }, options)
+  } catch (error) {
+    await prisma.projectCharacter.delete({
+      where: { id: characterId },
     })
-    await handleConfirmProfile(job, { characterId: character.id }, { suppressProgress: true })
-    successCount += 1
-  }
-
-  await reportTaskProgress(job, 96, {
-    stage: 'character_profile_batch_done',
-    stageLabel: '批量角色档案确认完成',
-    displayMode: 'detail',
-    meta: { count: successCount },
-  })
-
-  return {
-    success: true,
-    count: successCount,
-  }
-}
-
-export async function handleCharacterProfileTask(job: Job<TaskJobData>) {
-  const payload = (job.data.payload || {}) as AnyObj
-  switch (job.data.type) {
-    case TASK_TYPE.CHARACTER_PROFILE_CONFIRM:
-      return await handleConfirmProfile(job, payload)
-    case TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM:
-      return await handleBatchConfirmProfile(job)
-    default:
-      throw new Error(`Unsupported character profile task type: ${job.data.type}`)
+    throw error
   }
 }

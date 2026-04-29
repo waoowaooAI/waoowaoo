@@ -32,8 +32,6 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   [TASK_TYPE.AI_CREATE_CHARACTER]: 'progress.taskType.aiCreateCharacter',
   [TASK_TYPE.AI_CREATE_LOCATION]: 'progress.taskType.aiCreateLocation',
   [TASK_TYPE.REFERENCE_TO_CHARACTER]: 'progress.taskType.referenceToCharacter',
-  [TASK_TYPE.CHARACTER_PROFILE_CONFIRM]: 'progress.taskType.characterProfileConfirm',
-  [TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM]: 'progress.taskType.characterProfileBatchConfirm',
   [TASK_TYPE.EPISODE_SPLIT_LLM]: 'progress.taskType.episodeSplitLlm',
   [TASK_TYPE.ASSET_HUB_AI_DESIGN_CHARACTER]: 'progress.taskType.assetHubAiDesignCharacter',
   [TASK_TYPE.ASSET_HUB_AI_DESIGN_LOCATION]: 'progress.taskType.assetHubAiDesignLocation',

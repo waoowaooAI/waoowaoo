@@ -35,7 +35,6 @@ import { handleAnalyzeGlobalTask } from './handlers/analyze-global'
 import { handleAssetHubAIModifyTask } from './handlers/asset-hub-ai-modify'
 import { handleReferenceToCharacterTask } from './handlers/reference-to-character'
 import { handleShotAITask } from './handlers/shot-ai-tasks'
-import { handleCharacterProfileTask } from './handlers/character-profile'
 import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
 
 function readAssetKind(value: Record<string, unknown>): string {
@@ -692,9 +691,6 @@ async function processTextTask(job: Job<TaskJobData>) {
     case TASK_TYPE.AI_MODIFY_SHOT_PROMPT:
     case TASK_TYPE.ANALYZE_SHOT_VARIANTS:
       return await handleShotAITask(job)
-    case TASK_TYPE.CHARACTER_PROFILE_CONFIRM:
-    case TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM:
-      return await handleCharacterProfileTask(job)
     case TASK_TYPE.REFERENCE_TO_CHARACTER:
     case TASK_TYPE.ASSET_HUB_REFERENCE_TO_CHARACTER:
       return await handleReferenceToCharacterTask(job)

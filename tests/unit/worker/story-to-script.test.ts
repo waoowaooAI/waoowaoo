@@ -46,6 +46,12 @@ const workflowLeaseMock = vi.hoisted(() => ({
   })),
 }))
 
+const visualProfileMock = vi.hoisted(() => ({
+  generateCreatedCharacterVisualProfile: vi.fn(async () => ({
+    success: true,
+  })),
+}))
+
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/ai-exec/llm-helpers', () => ({
   chatCompletion: vi.fn(),
@@ -93,6 +99,7 @@ vi.mock('@/lib/workers/handlers/story-to-script-helpers', () => ({
 }))
 vi.mock('@/lib/run-runtime/workflow-lease', () => workflowLeaseMock)
 vi.mock('@/lib/domain/screenplay/service', () => domainMock)
+vi.mock('@/lib/workers/handlers/character-visual-profile', () => visualProfileMock)
 
 import { handleStoryToScriptTask } from '@/lib/workers/handlers/story-to-script'
 
@@ -206,6 +213,11 @@ describe('worker story-to-script behavior', () => {
         taskId: 'task-story-to-script-1',
       }),
     }))
+    expect(visualProfileMock.generateCreatedCharacterVisualProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ projectId: 'project-1' }) }),
+      'character-new-1',
+      { suppressProgress: true },
+    )
     expect(workflowMock.runStoryToScriptSkillWorkflow).toHaveBeenCalledWith(expect.objectContaining({
       directorStyleDoc: expect.objectContaining({
         character: expect.objectContaining({

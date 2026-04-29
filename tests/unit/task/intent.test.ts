@@ -16,6 +16,11 @@ describe('resolveTaskIntent', () => {
     expect(resolveTaskIntent(TASK_TYPE.MODIFY_ASSET_IMAGE)).toBe('modify')
   })
 
+  it('does not expose removed character profile confirmation task types', () => {
+    expect(Object.values(TASK_TYPE)).not.toContain('character_profile_confirm')
+    expect(Object.values(TASK_TYPE)).not.toContain('character_profile_batch_confirm')
+  })
+
   it('falls back to process for unknown types', () => {
     expect(resolveTaskIntent('unknown_type')).toBe('process')
     expect(resolveTaskIntent(null)).toBe('process')

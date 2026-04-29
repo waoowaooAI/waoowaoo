@@ -3,7 +3,6 @@
 import ImagePreviewModal from '@/components/ui/ImagePreviewModal'
 import ImageEditModal from './ImageEditModal'
 import VoiceDesignDialog from '../voice/VoiceDesignDialog'
-import CharacterProfileDialog from './CharacterProfileDialog'
 import {
   CharacterCreationModal,
   CharacterEditModal,
@@ -13,7 +12,6 @@ import {
   PropEditModal,
 } from '@/components/shared/assets'
 import GlobalAssetPicker from '@/components/shared/assets/GlobalAssetPicker'
-import type { CharacterProfileData } from '@/types/character-profile'
 import type { GlobalCopyTarget } from './hooks/useAssetsCopyFromHub'
 
 interface EditingAppearanceState {
@@ -53,12 +51,6 @@ interface VoiceDesignCharacterState {
   hasExistingVoice: boolean
 }
 
-interface EditingProfileState {
-  characterId: string
-  characterName: string
-  profileData: CharacterProfileData
-}
-
 interface AssetsStageModalsProps {
   projectId: string
   onRefresh: () => void
@@ -72,7 +64,6 @@ interface AssetsStageModalsProps {
   handleVoiceDesignSave: (voiceId: string, audioBase64: string) => Promise<void>
   handleCloseCopyPicker: () => void
   handleConfirmCopyFromGlobal: (globalAssetId: string) => Promise<void>
-  handleConfirmProfile: (characterId: string, updatedProfileData?: CharacterProfileData) => Promise<void>
   closeEditingAppearance: () => void
   closeEditingLocation: () => void
   closeEditingProp: () => void
@@ -81,8 +72,6 @@ interface AssetsStageModalsProps {
   closeAddProp: () => void
   closeImageEditModal: () => void
   closeCharacterImageEditModal: () => void
-  isConfirmingCharacter: (characterId: string) => boolean
-  setEditingProfile: (value: EditingProfileState | null) => void
   previewImage: string | null
   imageEditModal: LocationImageEditModalState | null
   characterImageEditModal: CharacterImageEditModalState | null
@@ -93,7 +82,6 @@ interface AssetsStageModalsProps {
   showAddLocation: boolean
   showAddProp: boolean
   voiceDesignCharacter: VoiceDesignCharacterState | null
-  editingProfile: EditingProfileState | null
   copyFromGlobalTarget: GlobalCopyTarget | null
   isGlobalCopyInFlight: boolean
 }
@@ -111,7 +99,6 @@ export default function AssetsStageModals({
   handleVoiceDesignSave,
   handleCloseCopyPicker,
   handleConfirmCopyFromGlobal,
-  handleConfirmProfile,
   closeEditingAppearance,
   closeEditingLocation,
   closeEditingProp,
@@ -120,8 +107,6 @@ export default function AssetsStageModals({
   closeAddProp,
   closeImageEditModal,
   closeCharacterImageEditModal,
-  isConfirmingCharacter,
-  setEditingProfile,
   previewImage,
   imageEditModal,
   characterImageEditModal,
@@ -132,7 +117,6 @@ export default function AssetsStageModals({
   showAddLocation,
   showAddProp,
   voiceDesignCharacter,
-  editingProfile,
   copyFromGlobalTarget,
   isGlobalCopyInFlight,
 }: AssetsStageModalsProps) {
@@ -245,17 +229,6 @@ export default function AssetsStageModals({
           projectId={projectId}
           onClose={closeEditingProp}
           onRefresh={onRefresh}
-        />
-      )}
-
-      {editingProfile && (
-        <CharacterProfileDialog
-          isOpen={!!editingProfile}
-          characterName={editingProfile.characterName}
-          profileData={editingProfile.profileData}
-          onClose={() => setEditingProfile(null)}
-          onSave={(profileData) => handleConfirmProfile(editingProfile.characterId, profileData)}
-          isSaving={isConfirmingCharacter(editingProfile.characterId)}
         />
       )}
 

@@ -81,8 +81,6 @@
         "ai_create_character": "AI Create Character",
         "ai_create_location": "AI Create Location",
         "reference_to_character": "Reference to Character",
-        "character_profile_confirm": "Confirm Character Profile",
-        "character_profile_batch_confirm": "Batch Confirm Character Profiles",
         "episode_split_llm": "Episode Split",
         "asset_hub_ai_design_character": "Asset Hub AI Design Character",
         "asset_hub_ai_design_location": "Asset Hub AI Design Location",

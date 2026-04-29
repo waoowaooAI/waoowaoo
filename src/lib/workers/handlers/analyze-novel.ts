@@ -14,6 +14,7 @@ import { resolveAnalysisModel } from './resolve-analysis-model'
 import { seedProjectLocationBackedImageSlots } from '@/lib/assets/services/location-backed-assets'
 import { normalizeLocationAvailableSlots } from '@/lib/location-available-slots'
 import { resolvePropVisualDescription } from '@/lib/assets/prop-description'
+import { generateCreatedCharacterVisualProfile } from './character-visual-profile'
 
 function readAssetKind(value: Record<string, unknown>): string {
   return typeof value.assetKind === 'string' ? value.assetKind : 'location'
@@ -291,6 +292,11 @@ export async function handleAnalyzeNovelTask(job: Job<TaskJobData>) {
       select: { id: true },
     })
     createdCharacters.push(created)
+    await generateCreatedCharacterVisualProfile(
+      job,
+      created.id,
+      { suppressProgress: true },
+    )
   }
 
   const createdLocations: Array<{ id: string }> = []

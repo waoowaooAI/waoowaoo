@@ -78,8 +78,6 @@ const ROUTE_FILES = [
   'src/app/api/projects/[projectId]/analyze-shot-variants/route.ts',
   'src/app/api/projects/[projectId]/analyze/route.ts',
   'src/app/api/projects/[projectId]/assets/route.ts',
-  'src/app/api/projects/[projectId]/character-profile/batch-confirm/route.ts',
-  'src/app/api/projects/[projectId]/character-profile/confirm/route.ts',
   'src/app/api/projects/[projectId]/character-voice/route.ts',
   'src/app/api/projects/[projectId]/character/appearance/route.ts',
   'src/app/api/projects/[projectId]/character/confirm-selection/route.ts',
@@ -201,7 +199,6 @@ function resolveContractGroup(routeFile: string): RouteContractGroup {
     || routeFile.includes('/script-to-storyboard-stream/')
     || routeFile.includes('/screenplay-conversion/')
     || routeFile.includes('/reference-to-character/')
-    || routeFile.includes('/character-profile/')
     || routeFile.endsWith('/clips/route.ts')
     || routeFile.endsWith('/episodes/split/route.ts')
     || routeFile.endsWith('/voice-analyze/route.ts')

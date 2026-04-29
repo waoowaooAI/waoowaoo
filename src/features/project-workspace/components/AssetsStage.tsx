@@ -10,14 +10,12 @@ import { useTranslations } from 'next-intl'
  * - 批量生成逻辑已提取到 hooks/useBatchGeneration
  * - TTS/音色逻辑已提取到 hooks/useTTSGeneration
  * - 弹窗状态已提取到 hooks/useAssetModals
- * - 档案管理已提取到 hooks/useProfileManagement
  * - UI已拆分为 CharacterSection, LocationSection, AssetToolbar, AssetModals 组件
  */
 
 import { useState, useCallback, useMemo } from 'react'
 // 移除了 useRouter 导入，因为不再需要在组件中操作 URL
 import { Character, CharacterAppearance, ProjectClip } from '@/types/project'
-import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import {
   useAssetActions,
   useGenerateProjectCharacterImage,
@@ -38,7 +36,6 @@ import { useLocationActions } from './assets/hooks/useLocationActions'
 import { useBatchGeneration } from './assets/hooks/useBatchGeneration'
 import { useTTSGeneration } from './assets/hooks/useTTSGeneration'
 import { useAssetModals } from './assets/hooks/useAssetModals'
-import { useProfileManagement } from './assets/hooks/useProfileManagement'
 import { useAssetsCopyFromHub } from './assets/hooks/useAssetsCopyFromHub'
 import { useAssetsGlobalActions } from './assets/hooks/useAssetsGlobalActions'
 import { useAssetsImageEdit } from './assets/hooks/useAssetsImageEdit'
@@ -318,31 +315,6 @@ export default function AssetsStage({
   } = useAssetModals({
     projectId
   })
-  // 档案管理
-  const {
-    unconfirmedCharacters,
-    isConfirmingCharacter,
-    deletingCharacterId,
-    batchConfirming,
-    editingProfile,
-    handleEditProfile,
-    handleConfirmProfile,
-    handleBatchConfirm,
-    handleDeleteProfile,
-    setEditingProfile
-  } = useProfileManagement({
-    projectId,
-    showToast
-  })
-  const batchConfirmingState = batchConfirming
-    ? resolveTaskPresentationState({
-      phase: 'processing',
-      intent: 'modify',
-      resource: 'image',
-      hasOutput: false,
-    })
-    : null
-
   const {
     handleUndoCharacter,
     handleUndoLocation,
@@ -433,17 +405,6 @@ export default function AssetsStage({
             onCopyFromGlobal={handleCopyFromGlobal}
             getAppearances={getAppearances}
             filterIds={episodeAssetIds?.charIds ?? null}
-            // 🔥 V7：待确认角色档案内嵌到 CharacterSection
-            unconfirmedCharacters={unconfirmedCharacters}
-            isConfirmingCharacter={isConfirmingCharacter}
-            deletingCharacterId={deletingCharacterId}
-            batchConfirming={batchConfirming}
-            batchConfirmingState={batchConfirmingState}
-            onBatchConfirm={handleBatchConfirm}
-            onEditProfile={handleEditProfile}
-            onConfirmProfile={handleConfirmProfile}
-            onUseExistingProfile={handleCopyFromGlobal}
-            onDeleteProfile={handleDeleteProfile}
           />
       )}
       {(kindFilter === 'all' || kindFilter === 'location') && (
@@ -507,7 +468,6 @@ export default function AssetsStage({
         handleVoiceDesignSave={handleVoiceDesignSave}
         handleCloseCopyPicker={handleCloseCopyPicker}
         handleConfirmCopyFromGlobal={handleConfirmCopyFromGlobal}
-        handleConfirmProfile={handleConfirmProfile}
         closeEditingAppearance={closeEditingAppearance}
         closeEditingLocation={closeEditingLocation}
         closeEditingProp={closeEditingProp}
@@ -516,8 +476,6 @@ export default function AssetsStage({
         closeAddProp={closeAddProp}
         closeImageEditModal={closeImageEditModal}
         closeCharacterImageEditModal={closeCharacterImageEditModal}
-        isConfirmingCharacter={isConfirmingCharacter}
-        setEditingProfile={setEditingProfile}
         previewImage={previewImage}
         imageEditModal={imageEditModal}
         characterImageEditModal={characterImageEditModal}
@@ -528,7 +486,6 @@ export default function AssetsStage({
         showAddLocation={showAddLocation}
         showAddProp={showAddProp}
         voiceDesignCharacter={voiceDesignCharacter}
-        editingProfile={editingProfile}
         copyFromGlobalTarget={copyFromGlobalTarget}
         isGlobalCopyInFlight={isGlobalCopyInFlight}
       />

@@ -51,6 +51,8 @@ export async function persistAnalyzeGlobalChunk(params: {
   existingPropNames: string[]
   stats: AnalyzeGlobalStats
 }) {
+  const createdCharacters: Array<{ id: string }> = []
+
   for (const char of params.charactersData.new_characters || []) {
     const name = readText(char.name).trim()
     const aliases = toStringArray(char.aliases)
@@ -103,6 +105,7 @@ export async function persistAnalyzeGlobalChunk(params: {
       })
       params.existingCharacterNames.push(name, ...aliases)
       params.stats.newCharacters += 1
+      createdCharacters.push(created)
     } catch {
       params.stats.skippedCharacters += 1
     }
@@ -235,5 +238,9 @@ export async function persistAnalyzeGlobalChunk(params: {
     } catch {
       params.stats.skippedProps += 1
     }
+  }
+
+  return {
+    createdCharacters,
   }
 }

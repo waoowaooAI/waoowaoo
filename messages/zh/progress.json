@@ -74,8 +74,6 @@
     "aiCreateCharacter": "项目角色设计",
     "aiCreateLocation": "项目场景设计",
     "referenceToCharacter": "参考图转角色",
-    "characterProfileConfirm": "角色档案确认",
-    "characterProfileBatchConfirm": "批量角色档案确认",
     "episodeSplitLlm": "智能分集",
     "assetHubAiDesignCharacter": "资产库角色设计",
     "assetHubAiDesignLocation": "资产库场景设计",

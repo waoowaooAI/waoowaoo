@@ -89,8 +89,6 @@ describe('GlobalAssetPicker preview mapping', () => {
         introduction: null,
         profileData: null,
         profileConfirmed: null,
-        profileTaskRefs: [],
-        profileTaskState: { isRunning: false, lastError: null },
         voice: {
           voiceType: null,
           voiceId: null,

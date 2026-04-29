@@ -33,6 +33,7 @@ import {
   persistStoryToScriptWorkflowResults,
 } from '@/lib/domain/screenplay/service'
 import { resolveProjectDirectorStyleDoc } from '@/lib/style-preset'
+import { generateCreatedCharacterVisualProfile } from './character-visual-profile'
 
 type AnyObj = Record<string, unknown>
 
@@ -546,6 +547,15 @@ export async function handleStoryToScriptTask(job: Job<TaskJobData>) {
         screenplayResults: result.screenplayResults,
         mutation: mutationContext,
       })
+
+      for (const createdCharacter of persistedResult.createdCharacters) {
+        await assertRunActive(`story_to_script_character_visual:${createdCharacter.id}`)
+        await generateCreatedCharacterVisualProfile(
+          job,
+          createdCharacter.id,
+          { suppressProgress: true },
+        )
+      }
 
       await reportTaskProgress(job, 96, {
         stage: 'story_to_script_persist_done',

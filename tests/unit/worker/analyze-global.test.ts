@@ -40,7 +40,14 @@ const persistMock = vi.hoisted(() => ({
     args.stats.newCharacters += 1
     args.stats.newLocations += 1
     args.stats.newProps += 1
+    return { createdCharacters: [{ id: `char-new-${args.stats.newCharacters}` }] }
   }),
+}))
+
+const visualProfileMock = vi.hoisted(() => ({
+  generateCreatedCharacterVisualProfile: vi.fn(async () => ({
+    success: true,
+  })),
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
@@ -90,6 +97,7 @@ vi.mock('@/lib/workers/handlers/analyze-global-persist', () => ({
   createAnalyzeGlobalStats: persistMock.createAnalyzeGlobalStats,
   persistAnalyzeGlobalChunk: persistMock.persistAnalyzeGlobalChunk,
 }))
+vi.mock('@/lib/workers/handlers/character-visual-profile', () => visualProfileMock)
 
 import { handleAnalyzeGlobalTask } from '@/lib/workers/handlers/analyze-global'
 
@@ -142,6 +150,13 @@ describe('worker analyze-global behavior', () => {
 
     expect(parseMock.chunkContent).toHaveBeenCalled()
     expect(persistMock.persistAnalyzeGlobalChunk).toHaveBeenCalledTimes(2)
+    expect(visualProfileMock.generateCreatedCharacterVisualProfile).toHaveBeenCalledTimes(2)
+    expect(visualProfileMock.generateCreatedCharacterVisualProfile).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ data: expect.objectContaining({ projectId: 'project-1' }) }),
+      'char-new-1',
+      { suppressProgress: true },
+    )
 
     expect(result).toEqual({
       success: true,

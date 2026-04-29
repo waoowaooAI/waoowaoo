@@ -1,6 +1,6 @@
 /**
  * 角色档案数据结构
- * 用于两阶段角色生成系统
+ * 用于角色视觉档案生成
  */
 
 export type RoleLevel = 'S' | 'A' | 'B' | 'C' | 'D'
@@ -43,18 +43,6 @@ export interface CharacterProfileData {
 
     /** 年龄段描述 */
     age_range: string
-}
-
-/**
- * 从JSON字符串解析角色档案
- */
-export function parseProfileData(profileDataJson: string | null): CharacterProfileData | null {
-    if (!profileDataJson) return null
-    try {
-        return JSON.parse(profileDataJson) as CharacterProfileData
-    } catch {
-        return null
-    }
 }
 
 /**

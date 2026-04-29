@@ -217,14 +217,6 @@ export function mapProjectCharacterToAsset(character: ProjectCharacterRecord): C
     introduction: character.introduction ?? null,
     profileData: character.profileData ?? null,
     profileConfirmed: character.profileConfirmed ?? null,
-    profileTaskRefs: [
-      {
-        targetType: 'ProjectCharacter',
-        targetId: character.id,
-        types: ['character_profile_confirm', 'character_profile_batch_confirm'],
-      },
-    ],
-    profileTaskState: createIdleTaskState(),
     voice: {
       voiceType: normalizedVoiceType,
       voiceId: character.voiceId ?? null,
@@ -294,8 +286,6 @@ export function mapGlobalCharacterToAsset(character: GlobalCharacterRecord): Cha
     introduction: null,
     profileData: null,
     profileConfirmed: null,
-    profileTaskRefs: [],
-    profileTaskState: createIdleTaskState(),
     voice: {
       voiceType: null,
       voiceId: null,

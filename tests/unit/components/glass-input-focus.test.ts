@@ -14,7 +14,6 @@ describe('glass input focus style', () => {
       'src/components/shared/assets/AiModifyDescriptionField.tsx',
       'src/components/ui/config-modals/ModelCapabilityDropdown.tsx',
       'src/features/project-workspace/components/assets/AddLocationModal.tsx',
-      'src/features/project-workspace/components/assets/CharacterProfileDialog.tsx',
       'src/features/project-workspace/components/assets/ImageEditModal.tsx',
       'src/features/project-workspace/components/prompts-stage/PromptEditorPanel.tsx',
       'src/features/project-workspace/components/prompts-stage/PromptListCardView.tsx',

@@ -74,8 +74,6 @@
     "aiCreateCharacter": "Project character design",
     "aiCreateLocation": "Project location design",
     "referenceToCharacter": "Reference to character",
-    "characterProfileConfirm": "Character profile confirm",
-    "characterProfileBatchConfirm": "Character profile batch confirm",
     "episodeSplitLlm": "Smart episode split",
     "assetHubAiDesignCharacter": "Asset hub character design",
     "assetHubAiDesignLocation": "Asset hub location design",

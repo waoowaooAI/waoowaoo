@@ -14,10 +14,6 @@ import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
 import { submitOperationTask } from '@/lib/operations/submit-operation-task'
 
-function normalizeString(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
 function parseReferenceImages(body: Record<string, unknown>): string[] {
   const list = Array.isArray(body.referenceImageUrls)
     ? body.referenceImageUrls.map((item: unknown) => (typeof item === 'string' ? item.trim() : '')).filter(Boolean)
@@ -168,57 +164,6 @@ export function createExtraOperations(): ProjectAgentOperationRegistryDraft {
           dedupeKey: `ai_modify_location:${input.locationId}:${imageIndex}`,
         })
       },
-    }),
-    character_profile_confirm: defineOperation({
-      id: 'character_profile_confirm',
-      summary: 'Submit character profile confirm task.',
-      intent: 'act',
-      effects: EFFECTS_BILLABLE_LONG_RUNNING,
-      confirmation: {
-        required: true,
-        summary: '将确认角色档案并生成视觉描述（可能计费）。确认继续后请重新调用并传入 confirmed=true。',
-      },
-      inputSchema: z.object({
-        confirmed: z.boolean().optional(),
-        characterId: z.string().min(1),
-      }).passthrough(),
-      outputSchema: z.unknown(),
-      execute: async (ctx, input) =>
-        submitOperationTask({
-          request: ctx.request,
-          userId: ctx.userId,
-          projectId: ctx.projectId,
-          type: TASK_TYPE.CHARACTER_PROFILE_CONFIRM,
-          targetType: 'ProjectCharacter',
-          targetId: input.characterId,
-          payload: input as unknown as Record<string, unknown>,
-          dedupeKey: `character_profile_confirm:${input.characterId}`,
-        }),
-    }),
-    character_profile_batch_confirm: defineOperation({
-      id: 'character_profile_batch_confirm',
-      summary: 'Submit character profile batch confirm task.',
-      intent: 'act',
-      effects: EFFECTS_BILLABLE_LONG_RUNNING,
-      confirmation: {
-        required: true,
-        summary: '将批量确认角色档案（可能计费）。确认继续后请重新调用并传入 confirmed=true。',
-      },
-      inputSchema: z.object({
-        confirmed: z.boolean().optional(),
-      }).passthrough(),
-      outputSchema: z.unknown(),
-      execute: async (ctx, input) =>
-        submitOperationTask({
-          request: ctx.request,
-          userId: ctx.userId,
-          projectId: ctx.projectId,
-          type: TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM,
-          targetType: 'Project',
-          targetId: ctx.projectId,
-          payload: input as unknown as Record<string, unknown>,
-          dedupeKey: `character_profile_batch_confirm:${ctx.projectId}`,
-        }),
     }),
     clips_build: defineOperation({
       id: 'clips_build',

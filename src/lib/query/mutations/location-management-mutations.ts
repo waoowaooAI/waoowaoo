@@ -320,7 +320,7 @@ export function useConfirmProjectLocationSelection(
 }
 
 /**
- * 确认角色档案并触发描述生成
+ * 批量生成项目场景图片
  */
 
 export function useBatchGenerateLocationImages(projectId: string) {

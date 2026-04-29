@@ -81,8 +81,6 @@
         "ai_create_character": "AI 创建角色",
         "ai_create_location": "AI 创建场景",
         "reference_to_character": "参考图转角色",
-        "character_profile_confirm": "确认角色档案",
-        "character_profile_batch_confirm": "批量确认角色档案",
         "episode_split_llm": "章节拆分",
         "asset_hub_ai_design_character": "素材库 AI 设计角色",
         "asset_hub_ai_design_location": "素材库 AI 设计场景",
