@@ -52,7 +52,6 @@ function mapCharacterAssetToProjectCharacter(asset: AssetGroupMap['character'][n
         media: asset.voice.media,
         profileData: asset.profileData,
         profileConfirmed: asset.profileConfirmed ?? undefined,
-        profileConfirmTaskRunning: asset.profileTaskState.isRunning,
     }
 }
 

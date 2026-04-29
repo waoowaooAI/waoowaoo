@@ -74,8 +74,6 @@ export const TASK_TYPE = {
   AI_CREATE_CHARACTER: 'ai_create_character',
   AI_CREATE_LOCATION: 'ai_create_location',
   REFERENCE_TO_CHARACTER: 'reference_to_character',
-  CHARACTER_PROFILE_CONFIRM: 'character_profile_confirm',
-  CHARACTER_PROFILE_BATCH_CONFIRM: 'character_profile_batch_confirm',
   EPISODE_SPLIT_LLM: 'episode_split_llm',
   ASSET_HUB_AI_DESIGN_CHARACTER: 'asset_hub_ai_design_character',
   ASSET_HUB_AI_DESIGN_LOCATION: 'asset_hub_ai_design_location',

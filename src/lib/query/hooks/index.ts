@@ -130,8 +130,6 @@ export {
     useInsertProjectPanel,
     useConfirmProjectCharacterSelection,
     useConfirmProjectLocationSelection,
-    useConfirmProjectCharacterProfile,
-    useBatchConfirmProjectCharacterProfiles,
     useUpdateProjectCharacterVoiceSettings,
     useSaveProjectDesignedVoice,
     useUpdateProjectClip,

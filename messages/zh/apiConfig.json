@@ -195,24 +195,5 @@
       "bailian_step1": "进入阿里云百炼平台，获取 API Key",
       "siliconflow_step1": "进入硅基流动控制台，创建 API Key"
     }
-  },
-  "assistantOpen": "AI配置助手",
-  "assistantTitle": "AI 配置助手",
-  "assistantSubtitle": "通过对话把第三方文档转换为可执行图像/视频模板，并自动保存",
-  "assistantWelcome": "请描述你的接口文档（端点、请求体、返回字段）。我会追问缺失信息并自动保存模型。",
-  "assistantInputPlaceholder": "粘贴文档或描述接口细节...",
-  "assistantSend": "发送",
-  "assistantDisabledHint": "请先配置并保存 API Key 与 Base URL",
-  "assistantRequestFailed": "助手请求失败，请稍后重试",
-  "assistantResponseInvalid": "助手返回格式无效，请重试",
-  "assistantMissingTitle": "待补充字段",
-  "assistantWarningsTitle": "风险提示",
-  "assistantDraftTitle": "当前草稿模型",
-  "assistantReasoningTitle": "思考过程",
-  "assistantReasoningExpand": "点击展开",
-  "assistantReasoningCollapse": "点击收起",
-  "assistantCompletedTitle": "模型模板已保存",
-  "assistantCompletedMessage": "模型 {model} 已自动加入当前服务商。\n请点击关闭结束本次对话。",
-  "you": "你",
-  "thinking": "思考中..."
+  }
 }

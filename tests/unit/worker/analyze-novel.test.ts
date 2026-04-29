@@ -24,6 +24,12 @@ const workerMock = vi.hoisted(() => ({
   assertTaskActive: vi.fn(async () => undefined),
 }))
 
+const visualProfileMock = vi.hoisted(() => ({
+  generateCreatedCharacterVisualProfile: vi.fn(async () => ({
+    success: true,
+  })),
+}))
+
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
 vi.mock('@/lib/ai-exec/engine', () => ({
@@ -67,6 +73,7 @@ vi.mock('@/lib/ai-prompts', () => ({
   },
   buildAiPrompt: vi.fn(() => 'analysis-prompt'),
 }))
+vi.mock('@/lib/workers/handlers/character-visual-profile', () => visualProfileMock)
 
 import { handleAnalyzeNovelTask } from '@/lib/workers/handlers/analyze-novel'
 
@@ -178,6 +185,11 @@ describe('worker analyze-novel behavior', () => {
           aliases: JSON.stringify(['别名A']),
         }),
       }),
+    )
+    expect(visualProfileMock.generateCreatedCharacterVisualProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ projectId: 'project-1' }) }),
+      'char-new-1',
+      { suppressProgress: true },
     )
 
     expect(prismaMock.projectLocation.create).toHaveBeenCalledWith(

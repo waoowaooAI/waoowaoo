@@ -6,8 +6,8 @@ const prismaMock = vi.hoisted(() => ({
   $transaction: vi.fn(),
   projectCharacter: {
     findFirst: vi.fn(),
-    findMany: vi.fn(),
     update: vi.fn(async () => ({})),
+    delete: vi.fn(async () => ({})),
   },
   characterAppearance: {
     create: vi.fn(async () => ({})),
@@ -16,7 +16,6 @@ const prismaMock = vi.hoisted(() => ({
 }))
 
 const llmMock = vi.hoisted(() => ({
-  chatCompletion: vi.fn(async () => ({ id: 'completion-1' })),
   getCompletionContent: vi.fn(),
 }))
 
@@ -34,7 +33,6 @@ const workerMock = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
-vi.mock('@/lib/ai-exec/llm-helpers', () => llmMock)
 vi.mock('@/lib/ai-exec/engine', () => ({
   executeAiTextStep: vi.fn(async () => ({
     text: llmMock.getCompletionContent(),
@@ -63,9 +61,9 @@ vi.mock('@/lib/workers/handlers/llm-stream', () => ({
     flush: vi.fn(async () => undefined),
   })),
 }))
-vi.mock('@/lib/workers/handlers/character-profile-helpers', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/workers/handlers/character-profile-helpers')>(
-    '@/lib/workers/handlers/character-profile-helpers',
+vi.mock('@/lib/workers/handlers/character-visual-profile-helpers', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/workers/handlers/character-visual-profile-helpers')>(
+    '@/lib/workers/handlers/character-visual-profile-helpers',
   )
   return {
     ...actual,
@@ -77,25 +75,28 @@ vi.mock('@/lib/ai-prompts', () => ({
   buildAiPrompt: vi.fn(() => 'character-visual-prompt'),
 }))
 
-import { handleCharacterProfileTask } from '@/lib/workers/handlers/character-profile'
+import {
+  generateCharacterVisualProfile,
+  generateCreatedCharacterVisualProfile,
+} from '@/lib/workers/handlers/character-visual-profile'
 
-function buildJob(type: TaskJobData['type'], payload: Record<string, unknown>): Job<TaskJobData> {
+function buildJob(): Job<TaskJobData> {
   return {
     data: {
-      taskId: 'task-character-profile-1',
-      type,
+      taskId: 'task-analyze-global-1',
+      type: TASK_TYPE.ANALYZE_GLOBAL,
       locale: 'zh',
       projectId: 'project-1',
       episodeId: null,
-      targetType: 'ProjectCharacter',
-      targetId: 'character-1',
-      payload,
+      targetType: 'Project',
+      targetId: 'project-1',
+      payload: {},
       userId: 'user-1',
     },
   } as unknown as Job<TaskJobData>
 }
 
-describe('worker character-profile behavior', () => {
+describe('worker character visual profile behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     prismaMock.$transaction.mockImplementation(async (callback: (tx: typeof prismaMock) => Promise<unknown>) => {
@@ -119,36 +120,15 @@ describe('worker character-profile behavior', () => {
 
     prismaMock.projectCharacter.findFirst.mockImplementation(async (args: { where: { id: string } }) => ({
       id: args.where.id,
-      name: args.where.id === 'character-2' ? 'Villain' : 'Hero',
+      name: 'Hero',
       profileData: JSON.stringify({ archetype: 'lead' }),
       profileConfirmed: false,
       projectId: 'project-1',
     }))
-
-    prismaMock.projectCharacter.findMany.mockResolvedValue([
-      {
-        id: 'character-1',
-        name: 'Hero',
-        profileData: JSON.stringify({ archetype: 'lead' }),
-        profileConfirmed: false,
-      },
-      {
-        id: 'character-2',
-        name: 'Villain',
-        profileData: JSON.stringify({ archetype: 'antagonist' }),
-        profileConfirmed: false,
-      },
-    ])
   })
 
-  it('unsupported task type -> explicit error', async () => {
-    const job = buildJob(TASK_TYPE.AI_CREATE_CHARACTER, {})
-    await expect(handleCharacterProfileTask(job)).rejects.toThrow('Unsupported character profile task type')
-  })
-
-  it('confirm profile success -> rebuilds appearances and marks profileConfirmed', async () => {
-    const job = buildJob(TASK_TYPE.CHARACTER_PROFILE_CONFIRM, { characterId: 'character-1' })
-    const result = await handleCharacterProfileTask(job)
+  it('generates visual profile -> rebuilds appearances and marks profileConfirmed', async () => {
+    const result = await generateCharacterVisualProfile(buildJob(), { characterId: 'character-1' })
 
     expect(prismaMock.characterAppearance.deleteMany).toHaveBeenCalledWith({
       where: { characterId: 'character-1' },
@@ -179,28 +159,17 @@ describe('worker character-profile behavior', () => {
     }))
   })
 
-  it('batch confirm -> loops through all unconfirmed characters and returns count', async () => {
-    const job = buildJob(TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM, {})
-    const result = await handleCharacterProfileTask(job)
+  it('newly created character visual profile failure -> deletes the created character before rethrowing', async () => {
+    llmMock.getCompletionContent.mockReturnValue(JSON.stringify({ characters: [{ appearances: [] }] }))
 
-    expect(result).toEqual({
-      success: true,
-      count: 2,
+    await expect(generateCreatedCharacterVisualProfile(
+      buildJob(),
+      'character-1',
+      { suppressProgress: true },
+    )).rejects.toThrow('AI返回格式错误: 缺少 appearances')
+
+    expect(prismaMock.projectCharacter.delete).toHaveBeenCalledWith({
+      where: { id: 'character-1' },
     })
-    expect(prismaMock.characterAppearance.create).toHaveBeenCalledTimes(2)
-  })
-
-  it('reconfirm with existing appearances -> replaces old rows instead of colliding on unique index', async () => {
-    const job = buildJob(TASK_TYPE.CHARACTER_PROFILE_CONFIRM, { characterId: 'character-1' })
-
-    await expect(handleCharacterProfileTask(job)).resolves.toEqual(expect.objectContaining({
-      success: true,
-    }))
-
-    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1)
-    expect(prismaMock.characterAppearance.deleteMany).toHaveBeenCalledWith({
-      where: { characterId: 'character-1' },
-    })
-    expect(prismaMock.characterAppearance.create).toHaveBeenCalledTimes(1)
   })
 })

@@ -17,12 +17,6 @@ import type {
 import { VERIFIABLE_PROVIDER_KEYS } from '../types'
 import type { CustomModel } from '../../types'
 import { apiFetch } from '@/lib/api-fetch'
-import {
-  useAssistantChat,
-  type AssistantDraftModel,
-  type AssistantSavedEvent,
-  type UseAssistantChatResult,
-} from '@/components/assistant/useAssistantChat'
 
 type KeyTestStepStatus = 'pass' | 'fail' | 'skip'
 interface KeyTestStep {
@@ -347,21 +341,6 @@ export interface UseProviderCardStateResult {
   handleTestOnly: () => void
   handleDismissTest: () => void
   isModelSavePending: boolean
-  assistantEnabled: boolean
-  isAssistantOpen: boolean
-  assistantSavedEvent: AssistantSavedEvent | null
-  assistantChat: UseAssistantChatResult
-  openAssistant: () => void
-  closeAssistant: () => void
-  handleAssistantSend: (content?: string) => Promise<void>
-}
-
-export function getAssistantSavedModelLabel(event: AssistantSavedEvent): string {
-  const draftName = event.draftModel?.name?.trim()
-  if (draftName) return draftName
-  const tail = event.savedModelKey.split('::').pop()
-  const modelId = typeof tail === 'string' ? tail.trim() : ''
-  return modelId || event.savedModelKey
 }
 
 export function useProviderCardState({
@@ -390,11 +369,8 @@ export function useProviderCardState({
   const [keyTestStatus, setKeyTestStatus] = useState<KeyTestStatus>('idle')
   const [keyTestSteps, setKeyTestSteps] = useState<KeyTestStep[]>([])
   const [isModelSavePending, setIsModelSavePending] = useState(false)
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
-  const [assistantSavedEvent, setAssistantSavedEvent] = useState<AssistantSavedEvent | null>(null)
 
   const providerKey = getProviderKey(provider.id)
-  const assistantEnabled = providerKey === 'openai-compatible'
   const isPresetProvider = !provider.id.includes(':')
   const showBaseUrlEdit =
     ['gemini-compatible', 'openai-compatible'].includes(providerKey) &&
@@ -704,77 +680,6 @@ export function useProviderCardState({
     setBatchMode(false)
   }
 
-  const upsertModelFromAssistantDraft = useCallback((draft: AssistantDraftModel) => {
-    const modelKey = encodeModelKey(draft.provider, draft.modelId)
-    const checkedAt = new Date().toISOString()
-    const currentModels = allModels || models
-    const existed = currentModels.find((item) => item.modelKey === modelKey)
-    if (existed) {
-      onUpdateModel?.(modelKey, {
-        name: draft.name,
-        modelId: draft.modelId,
-        provider: draft.provider,
-        compatMediaTemplate: draft.compatMediaTemplate,
-        compatMediaTemplateCheckedAt: checkedAt,
-        compatMediaTemplateSource: 'ai',
-      })
-      return
-    }
-    onAddModel({
-      modelId: draft.modelId,
-      modelKey,
-      name: draft.name,
-      type: draft.type,
-      provider: draft.provider,
-      price: 0,
-      compatMediaTemplate: draft.compatMediaTemplate,
-      compatMediaTemplateCheckedAt: checkedAt,
-      compatMediaTemplateSource: 'ai',
-    })
-  }, [allModels, models, onAddModel, onUpdateModel])
-
-  const handleAssistantSaved = useCallback((event: AssistantSavedEvent) => {
-    setAssistantSavedEvent(event)
-    if (event.draftModel) {
-      upsertModelFromAssistantDraft(event.draftModel)
-      return
-    }
-    onUpdateModel?.(event.savedModelKey, {
-      compatMediaTemplateSource: 'ai',
-    })
-  }, [onUpdateModel, upsertModelFromAssistantDraft])
-
-  const assistantChat = useAssistantChat({
-    assistantId: 'api-config-template',
-    context: { providerId: provider.id },
-    enabled: assistantEnabled,
-    onSaved: handleAssistantSaved,
-  })
-
-  const openAssistant = useCallback(() => {
-    if (!assistantEnabled) return
-    setAssistantSavedEvent(null)
-    setIsAssistantOpen(true)
-  }, [assistantEnabled])
-
-  const closeAssistant = useCallback(() => {
-    setIsAssistantOpen(false)
-    setAssistantSavedEvent(null)
-    assistantChat.clear()
-  }, [assistantChat])
-
-  const handleAssistantSend = useCallback(async (content?: string): Promise<void> => {
-    if (!assistantEnabled || assistantChat.pending || assistantSavedEvent !== null) return
-    const flushed = await flushConfigBeforeProbe()
-    if (!flushed) return
-    await assistantChat.send(content)
-  }, [
-    assistantEnabled,
-    assistantChat,
-    assistantSavedEvent,
-    flushConfigBeforeProbe,
-  ])
-
   const maskedKey = (() => {
     const key = provider.apiKey || ''
     if (key.length <= 8) return '•'.repeat(key.length)
@@ -828,12 +733,5 @@ export function useProviderCardState({
     handleTestOnly,
     handleDismissTest,
     isModelSavePending,
-    assistantEnabled,
-    isAssistantOpen,
-    assistantSavedEvent,
-    assistantChat,
-    openAssistant,
-    closeAssistant,
-    handleAssistantSend,
   }
 }

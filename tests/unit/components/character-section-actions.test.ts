@@ -19,15 +19,6 @@ vi.mock('@/features/project-workspace/components/assets/CharacterCard', () => ({
   default: (props: unknown) => characterCardMock(props),
 }))
 
-vi.mock('@/features/project-workspace/components/assets/CharacterProfileCard', () => ({
-  __esModule: true,
-  default: () => null,
-}))
-
-vi.mock('@/types/character-profile', () => ({
-  parseProfileData: () => null,
-}))
-
 vi.mock('@/components/task/TaskStatusInline', () => ({
   __esModule: true,
   default: () => null,
@@ -47,9 +38,6 @@ const messages = {
     stage: {
       characterAssets: '角色资产',
       counts: '{characterCount} 个角色，{appearanceCount} 个形象',
-      pendingProfilesBanner: '待确认角色',
-      pendingProfilesHint: '确认角色设定',
-      confirmAll: '全部确认',
     },
     character: {
       add: '新建角色',
@@ -122,16 +110,6 @@ describe('CharacterSection actions', () => {
         onVoiceSelectFromHub: () => undefined,
         onCopyFromGlobal: () => undefined,
         getAppearances: (character) => character.appearances,
-        unconfirmedCharacters: [],
-        isConfirmingCharacter: () => false,
-        deletingCharacterId: null,
-        batchConfirming: false,
-        batchConfirmingState: null,
-        onBatchConfirm: () => undefined,
-        onEditProfile: () => undefined,
-        onConfirmProfile: () => undefined,
-        onUseExistingProfile: () => undefined,
-        onDeleteProfile: () => undefined,
       }),
     )
 

@@ -33,9 +33,6 @@ function flattenTaskRefs(assets: AssetSummary[]): AssetTaskRef[] {
     if (asset.kind === 'voice') {
       continue
     }
-    if (asset.kind === 'character') {
-      refs.push(...asset.profileTaskRefs)
-    }
     for (const variant of asset.variants) {
       refs.push(...variant.taskRefs)
       for (const render of variant.renders) {
@@ -99,7 +96,6 @@ function withTaskStateAsset(asset: AssetSummary, byKey: Map<string, { phase: str
       ...asset,
       variants,
       taskState: resolveTaskState(asset.taskRefs, byKey),
-      profileTaskState: resolveTaskState(asset.profileTaskRefs, byKey),
     }
     return characterAsset
   }

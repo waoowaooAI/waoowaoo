@@ -19,6 +19,7 @@ import {
 import { buildAnalyzeGlobalPrompts, loadAnalyzeGlobalPromptTemplates } from './analyze-global-prompt'
 import { createAnalyzeGlobalStats, persistAnalyzeGlobalChunk } from './analyze-global-persist'
 import { resolveAnalysisModel } from './resolve-analysis-model'
+import { generateCreatedCharacterVisualProfile } from './character-visual-profile'
 
 function readAssetKind(value: Record<string, unknown>): string {
   return typeof value.assetKind === 'string' ? value.assetKind : 'location'
@@ -185,7 +186,7 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
       const locationsData = safeParseLocationsResponse(locationResponse)
       const propsData = safeParsePropsResponse(propResponse)
 
-      await persistAnalyzeGlobalChunk({
+      const persistResult = await persistAnalyzeGlobalChunk({
         projectId,
         charactersData,
         locationsData,
@@ -197,6 +198,15 @@ export async function handleAnalyzeGlobalTask(job: Job<TaskJobData>) {
         existingPropNames,
         stats,
       })
+
+      for (const createdCharacter of persistResult.createdCharacters) {
+        await assertTaskActive(job, `analyze_global_character_visual:${createdCharacter.id}`)
+        await generateCreatedCharacterVisualProfile(
+          job,
+          createdCharacter.id,
+          { suppressProgress: true },
+        )
+      }
 
       stats.processedChunks += 1
     }

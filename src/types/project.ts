@@ -68,11 +68,9 @@ export interface Character {
   voiceId?: string | null                 // 音色 ID 或业务标识
   customVoiceUrl?: string | null          // 自定义上传的参考音频URL
   media?: MediaRef | null
-  // 角色档案（两阶段生成）
+  // 角色档案
   profileData?: string | null             // JSON格式的角色档案
-  profileConfirmed?: boolean             // 档案是否已确认
-  // 任务态字段（由 tasks + hook 派生，不再依赖数据库持久化）
-  profileConfirmTaskRunning?: boolean     // 档案确认任务是否正在运行
+  profileConfirmed?: boolean             // 视觉档案是否已生成
 }
 
 // 场景图片（独立表）

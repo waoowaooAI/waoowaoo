@@ -4,7 +4,6 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
-import type { TaskPresentationState } from '@/lib/task/presentation'
 import { PRIMARY_APPEARANCE_INDEX } from '@/lib/constants'
 
 /**
@@ -12,14 +11,11 @@ import { PRIMARY_APPEARANCE_INDEX } from '@/lib/constants'
  * 从 AssetsStage.tsx 提取，负责角色列表的展示和操作
  * 
  * 🔥 V6.5 重构：内部直接订阅 useProjectAssets，消除 props drilling
- * 🔥 V7 重构：待确认角色档案内嵌显示，不再使用独立 Section
  */
 
 import { Character, CharacterAppearance } from '@/types/project'
 import { useProjectAssets } from '@/lib/query/hooks/useProjectAssets'
 import CharacterCard from './CharacterCard'
-import CharacterProfileCard from './CharacterProfileCard'
-import { parseProfileData } from '@/types/character-profile'
 import { AppIcon } from '@/components/ui/icons'
 
 interface CharacterSectionProps {
@@ -53,17 +49,6 @@ interface CharacterSectionProps {
     getAppearances: (character: Character) => CharacterAppearance[]
     /** 分集筛选：仅显示指定 ID 的角色，null 表示显示全部 */
     filterIds?: Set<string> | null
-    // 🔥 V7：待确认角色档案（内嵌到 CharacterSection）
-    unconfirmedCharacters: Character[]
-    isConfirmingCharacter: (characterId: string) => boolean
-    deletingCharacterId: string | null
-    batchConfirming: boolean
-    batchConfirmingState: TaskPresentationState | null
-    onBatchConfirm: () => void
-    onEditProfile: (characterId: string, characterName: string) => void
-    onConfirmProfile: (characterId: string) => void
-    onUseExistingProfile: (characterId: string) => void
-    onDeleteProfile: (characterId: string) => void
 }
 
 export default function CharacterSection({
@@ -93,17 +78,6 @@ export default function CharacterSection({
     onCopyFromGlobal,
     getAppearances,
     filterIds = null,
-    // 🔥 V7：待确认角色
-    unconfirmedCharacters,
-    isConfirmingCharacter,
-    deletingCharacterId,
-    batchConfirming,
-    batchConfirmingState,
-    onBatchConfirm,
-    onEditProfile,
-    onConfirmProfile,
-    onUseExistingProfile,
-    onDeleteProfile,
 }: CharacterSectionProps) {
     const t = useTranslations('assets')
     const analyzingAssetsState = isAnalyzingAssets
@@ -117,17 +91,9 @@ export default function CharacterSection({
 
     const { data: assets } = useProjectAssets(projectId)
     const allCharacters: Character[] = useMemo(() => assets?.characters ?? [], [assets?.characters])
-    // 🔥 V7：排除待确认角色，避免同一角色在待确认区与已确认网格中重复出现
-    const unconfirmedIds = useMemo(
-        () => new Set(unconfirmedCharacters.map((c) => c.id)),
-        [unconfirmedCharacters],
-    )
     const characters: Character[] = useMemo(
-        () => {
-            const base = filterIds ? allCharacters.filter((c) => filterIds.has(c.id)) : allCharacters
-            return base.filter((c) => !unconfirmedIds.has(c.id))
-        },
-        [allCharacters, filterIds, unconfirmedIds],
+        () => filterIds ? allCharacters.filter((c) => filterIds.has(c.id)) : allCharacters,
+        [allCharacters, filterIds],
     )
     const [highlightedCharacterId, setHighlightedCharacterId] = useState<string | null>(null)
     const scrollAnimationRef = useRef<number | null>(null)
@@ -212,54 +178,6 @@ export default function CharacterSection({
                     + {t("character.add")}
                 </button>
             </div>
-
-            {/* 🔥 V7：待确认角色档案 - 内嵌引导横幅 */}
-            {unconfirmedCharacters.length > 0 && (
-                <div className="mb-6">
-                    {/* 引导横幅 */}
-                    <div className="flex items-center justify-between mb-3 px-1">
-                        <div className="flex items-center gap-2">
-                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-[var(--glass-tone-info-bg)]">
-                                <AppIcon name="sparkles" className="h-3 w-3 text-[var(--glass-tone-info-fg)]" />
-                            </span>
-                            <span className="text-sm font-semibold text-[var(--glass-text-primary)]">{t('stage.pendingProfilesBanner')}</span>
-                            <span className="text-xs text-[var(--glass-text-tertiary)]">{t('stage.pendingProfilesHint')}</span>
-                        </div>
-                        <button
-                            onClick={onBatchConfirm}
-                            disabled={batchConfirming}
-                            className="glass-btn-base glass-btn-primary px-3 py-1.5 text-sm disabled:opacity-50 flex items-center gap-1.5"
-                        >
-                            {batchConfirming ? (
-                                <TaskStatusInline state={batchConfirmingState} className="text-white [&>span]:text-white [&_svg]:text-white" />
-                            ) : (
-                                t('stage.confirmAll', { count: unconfirmedCharacters.length })
-                            )}
-                        </button>
-                    </div>
-                    {/* 待确认卡片网格 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {unconfirmedCharacters.map((character) => {
-                            const profileData = parseProfileData(character.profileData!)
-                            if (!profileData) return null
-                            return (
-                                <CharacterProfileCard
-                                    key={character.id}
-                                    characterId={character.id}
-                                    name={character.name}
-                                    profileData={profileData}
-                                    onEdit={() => onEditProfile(character.id, character.name)}
-                                    onConfirm={() => onConfirmProfile(character.id)}
-                                    onUseExisting={() => onUseExistingProfile(character.id)}
-                                    onDelete={() => onDeleteProfile(character.id)}
-                                    isConfirming={isConfirmingCharacter(character.id)}
-                                    isDeleting={deletingCharacterId === character.id}
-                                />
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
 
             {/* 按角色分组显示：外层 grid 让多角色并排 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

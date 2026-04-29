@@ -320,22 +320,6 @@ const ROUTE_CASES: ReadonlyArray<LLMRouteCase> = [
     expectedProjectId: 'project-1',
   },
   {
-    routeFile: 'src/app/api/projects/[projectId]/character-profile/batch-confirm/route.ts',
-    body: { items: ['character-1', 'character-2'] },
-    params: { projectId: 'project-1' },
-    expectedTaskType: TASK_TYPE.CHARACTER_PROFILE_BATCH_CONFIRM,
-    expectedTargetType: 'Project',
-    expectedProjectId: 'project-1',
-  },
-  {
-    routeFile: 'src/app/api/projects/[projectId]/character-profile/confirm/route.ts',
-    body: { characterId: 'character-1' },
-    params: { projectId: 'project-1' },
-    expectedTaskType: TASK_TYPE.CHARACTER_PROFILE_CONFIRM,
-    expectedTargetType: 'ProjectCharacter',
-    expectedProjectId: 'project-1',
-  },
-  {
     routeFile: 'src/app/api/projects/[projectId]/clips/route.ts',
     body: { episodeId: 'episode-1' },
     params: { projectId: 'project-1' },
@@ -430,7 +414,7 @@ describe('api contract - llm observe routes (behavior)', () => {
   })
 
   it('keeps expected coverage size', () => {
-    expect(ROUTE_CASES.length).toBe(25)
+    expect(ROUTE_CASES.length).toBe(23)
   })
 
   it('marks asset-hub AI routes as force-dynamic to keep app-route build registration stable', async () => {

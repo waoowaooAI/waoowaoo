@@ -3,7 +3,7 @@ import { createEmptyAssetGroupMap } from '@/lib/assets/grouping'
 import { mapAssetGroupsToProjectAssetsData } from '@/lib/query/hooks/useProjectAssets'
 
 describe('useProjectAssets adapters', () => {
-  it('preserves profileData for unconfirmed character profiles', () => {
+  it('preserves profileData for character profiles', () => {
     const groups = createEmptyAssetGroupMap()
     groups.character.push({
       id: 'character-1',
@@ -29,12 +29,7 @@ describe('useProjectAssets adapters', () => {
       variants: [],
       introduction: '主角',
       profileData: JSON.stringify({ archetype: 'lead' }),
-      profileConfirmed: false,
-      profileTaskRefs: [],
-      profileTaskState: {
-        isRunning: false,
-        lastError: null,
-      },
+      profileConfirmed: true,
       voice: {
         voiceType: null,
         voiceId: null,
@@ -49,7 +44,7 @@ describe('useProjectAssets adapters', () => {
     expect(data.characters[0]).toEqual(expect.objectContaining({
       id: 'character-1',
       profileData: JSON.stringify({ archetype: 'lead' }),
-      profileConfirmed: false,
+      profileConfirmed: true,
     }))
   })
 })
