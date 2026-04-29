@@ -63,6 +63,20 @@ function assertAllowedOptions(options: Record<string, unknown>) {
   }
 }
 
+function normalizeGeminiImageSize(input: string | undefined): string | undefined {
+  if (!input) return undefined
+  const normalized = input.trim()
+  if (!normalized) return undefined
+  const lower = normalized.toLowerCase()
+  // Yunwu / Gemini: 0.5K must be sent as "512"
+  if (lower === '0.5k' || lower === '0_5k') return '512'
+  if (lower === '512' || lower === '512px' || lower === '512x512') return '512'
+  if (lower === '1k' || lower === '1024' || lower === '1024px' || lower === '1024x1024') return '1K'
+  if (lower === '2k' || lower === '2048' || lower === '2048px') return '2K'
+  if (lower === '4k' || lower === '4096' || lower === '4096px') return '4K'
+  return normalized
+}
+
 export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
   private readonly modelId?: string
   private readonly providerId?: string
@@ -89,6 +103,7 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
       httpOptions: { baseUrl: providerConfig.baseUrl },
     })
     const normalizedOptions = options as GeminiCompatibleOptions
+    const imageSize = normalizeGeminiImageSize(normalizedOptions.resolution)
     const parts: GeminiCompatibleContentPart[] = []
 
     for (const referenceImage of referenceImages.slice(0, 14)) {
@@ -111,11 +126,11 @@ export class GeminiCompatibleImageGenerator extends BaseImageGenerator {
           { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
           { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
         ],
-        ...(normalizedOptions.aspectRatio || normalizedOptions.resolution
+        ...(normalizedOptions.aspectRatio || imageSize
           ? {
             imageConfig: {
               ...(normalizedOptions.aspectRatio ? { aspectRatio: normalizedOptions.aspectRatio } : {}),
-              ...(normalizedOptions.resolution ? { imageSize: normalizedOptions.resolution } : {}),
+              ...(imageSize ? { imageSize } : {}),
             },
           }
           : {}),

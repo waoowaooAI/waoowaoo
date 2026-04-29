@@ -14,7 +14,7 @@ import {
   withLabelBar,
 } from '../utils'
 import {
-  normalizeReferenceImagesForGeneration,
+  normalizeOptionalReferenceImagesForGeneration,
   normalizeToBase64ForGeneration,
 } from '@/lib/media/outbound-image'
 import {
@@ -94,7 +94,13 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
         }
       }
     }
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: {
+        taskType: 'modify_character_image',
+        appearanceId,
+        targetId: job.data.targetId,
+      },
+    })
     const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
     const currentDescription = readIndexedDescription({
       descriptions: appearance.descriptions,
@@ -194,6 +200,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     if (!currentUrl) throw new Error('No location image url')
 
     const requiredReference = await stripLabelBar(currentUrl)
+    const isProp = type === 'prop'
     const extraReferenceInputs: string[] = []
     if (Array.isArray(payload.extraImageUrls)) {
       for (const url of payload.extraImageUrls) {
@@ -202,10 +209,15 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
         }
       }
     }
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: {
+        taskType: isProp ? 'modify_prop_image' : 'modify_location_image',
+        locationImageId,
+        targetId: job.data.targetId,
+      },
+    })
     const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
 
-    const isProp = type === 'prop'
     const prompt = isProp
       ? `请根据以下指令修改道具图片，保持道具主体、结构和关键材质一致：\n${modifyInstruction}`
       : `请根据以下指令修改场景图片，保持整体风格一致：\n${modifyInstruction}`
@@ -333,7 +345,13 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
       }
     }
 
-    const normalizedExtras = await normalizeReferenceImagesForGeneration(extraReferenceInputs)
+    const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
+      context: {
+        taskType: 'modify_panel_image',
+        panelId,
+        targetId: job.data.targetId,
+      },
+    })
     const uniqueReferences = Array.from(new Set([requiredReference, ...normalizedExtras]))
     const prompt = `请根据以下指令修改分镜图片，保持镜头语言和主体一致：\n${modifyPrompt}`
     const source = await resolveImageSourceFromGeneration(job, {

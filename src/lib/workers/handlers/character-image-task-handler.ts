@@ -1,6 +1,7 @@
 import { type Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { CHARACTER_ASSET_IMAGE_RATIO, addCharacterPromptSuffix, getArtStylePrompt, isArtStyleValue, PRIMARY_APPEARANCE_INDEX, type ArtStyleValue } from '@/lib/constants'
+import { createScopedLogger } from '@/lib/logging/core'
 import { type TaskJobData } from '@/lib/task/types'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
@@ -8,9 +9,8 @@ import { reportTaskProgress } from '../shared'
 import {
   assertTaskActive,
   getProjectModels,
-  toSignedUrlIfCos,
 } from '../utils'
-import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
+import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
   generateProjectLabeledImageToStorage,
@@ -55,6 +55,7 @@ interface CharacterRecord {
 interface PrimaryAppearanceRecord {
   imageUrl: string | null
   imageUrls: string | null
+  selectedIndex: number | null
 }
 
 interface CharacterImageDb {
@@ -66,6 +67,29 @@ interface CharacterImageDb {
   projectCharacter: {
     findUnique(args: Record<string, unknown>): Promise<CharacterRecord | null>
   }
+}
+
+const logger = createScopedLogger({ module: 'worker.character-image' })
+const STORAGE_KEY_PREFIXES = ['images/', 'video/', 'voice/'] as const
+
+function isStorageKeyLike(value: string): boolean {
+  return STORAGE_KEY_PREFIXES.some((prefix) => value.startsWith(prefix))
+}
+
+function resolvePrimaryReferenceInput(primaryAppearance: PrimaryAppearanceRecord): string | null {
+  const imageUrls = parseImageUrls(primaryAppearance.imageUrls, 'characterAppearance.imageUrls')
+  const selected = primaryAppearance.selectedIndex !== null
+    ? imageUrls[primaryAppearance.selectedIndex]
+    : ''
+  const firstInList = imageUrls.find((url) => typeof url === 'string' && url.trim().length > 0) || ''
+
+  const candidates = [selected, firstInList, primaryAppearance.imageUrl]
+    .filter((value): value is string => typeof value === 'string')
+    .map((value) => value.trim())
+    .filter(Boolean)
+
+  const storageKey = candidates.find((value) => isStorageKeyLike(value))
+  return storageKey || candidates[0] || null
 }
 
 export async function handleCharacterImageTask(job: Job<TaskJobData>) {
@@ -119,18 +143,32 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
         characterId: appearance.characterId,
         appearanceIndex: PRIMARY_APPEARANCE_INDEX,
       },
-      select: { imageUrl: true, imageUrls: true },
+      select: { imageUrl: true, imageUrls: true, selectedIndex: true },
     })
     if (primaryAppearance) {
-      const primaryMainUrl = primaryAppearance.imageUrl
-        ? toSignedUrlIfCos(primaryAppearance.imageUrl, 3600)
-        : null
-      if (primaryMainUrl) {
-        primaryReferenceInputs.push(primaryMainUrl)
+      const primaryReferenceInput = resolvePrimaryReferenceInput(primaryAppearance)
+      if (primaryReferenceInput) {
+        primaryReferenceInputs.push(primaryReferenceInput)
       }
     }
   }
-  const primaryReferenceImages = await normalizeReferenceImagesForGeneration(primaryReferenceInputs)
+  const primaryReferenceImages = await normalizeOptionalReferenceImagesForGeneration(primaryReferenceInputs, {
+    context: {
+      taskType: 'image_character',
+      appearanceId: appearance.id,
+      primaryAppearanceIndex: PRIMARY_APPEARANCE_INDEX,
+      targetId: job.data.targetId,
+    },
+    onIssue: (issue) => {
+      logger.warn({
+        message: 'primary reference normalize issue',
+        details: {
+          issue,
+          candidateCount: primaryReferenceInputs.length,
+        },
+      })
+    },
+  })
 
   const singleIndex = payload.imageIndex ?? payload.descriptionIndex
   const count = normalizeImageGenerationCount('character', payload.count)

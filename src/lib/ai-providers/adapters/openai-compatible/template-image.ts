@@ -12,6 +12,23 @@ import { resolveOpenAICompatClientConfig } from './common'
 
 const OPENAI_COMPAT_PROVIDER_PREFIX = 'openai-compatible:'
 const PROVIDER_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const BODY_PREVIEW_MAX_LEN = 800
+const DEFAULT_TEMPLATE_TIMEOUT_MS = 120_000
+
+function readOptionalInt(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.trunc(value)
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number.parseInt(value.trim(), 10)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+function resolveTemplateTimeoutMs(): number {
+  const fromEnv = readOptionalInt(process.env.OPENAI_COMPAT_IMAGE_TEMPLATE_TIMEOUT_MS)
+  if (fromEnv && fromEnv > 0) return fromEnv
+  return DEFAULT_TEMPLATE_TIMEOUT_MS
+}
 
 function encodeProviderToken(providerId: string): string {
   const value = providerId.trim()
@@ -53,6 +70,90 @@ function readTemplateOutputUrls(value: unknown): string[] {
   return urls
 }
 
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return String(error)
+  }
+}
+
+function describeError(error: unknown, maxDepth = 4): string {
+  const parts: string[] = []
+  const seen = new Set<unknown>()
+  let current: unknown = error
+
+  for (let depth = 0; depth < maxDepth && current && !seen.has(current); depth += 1) {
+    seen.add(current)
+
+    if (current instanceof Error) {
+      const anyErr = current as unknown as {
+        name?: unknown
+        code?: unknown
+        errno?: unknown
+        syscall?: unknown
+        cause?: unknown
+      }
+      const name = typeof anyErr.name === 'string' && anyErr.name.trim() ? anyErr.name.trim() : current.name
+      const code = typeof anyErr.code === 'string' && anyErr.code.trim() ? anyErr.code.trim() : ''
+      const errno = typeof anyErr.errno === 'string' && anyErr.errno.trim() ? anyErr.errno.trim() : ''
+      const syscall = typeof anyErr.syscall === 'string' && anyErr.syscall.trim() ? anyErr.syscall.trim() : ''
+      const meta = [code && `code=${code}`, errno && `errno=${errno}`, syscall && `syscall=${syscall}`]
+        .filter(Boolean)
+        .join(' ')
+      parts.push([name, current.message, meta].filter(Boolean).join(' ').trim())
+      current = anyErr.cause
+      continue
+    }
+
+    if (typeof current === 'object') {
+      const anyObj = current as Record<string, unknown>
+      const msg = typeof anyObj.message === 'string' ? anyObj.message : ''
+      const code = typeof anyObj.code === 'string' ? anyObj.code : ''
+      const name = typeof anyObj.name === 'string' ? anyObj.name : 'Object'
+      parts.push([name, msg, code && `code=${code}`].filter(Boolean).join(' ').trim())
+      current = anyObj.cause
+      continue
+    }
+
+    parts.push(String(current))
+    break
+  }
+
+  return parts.filter(Boolean).join(' <- ')
+}
+
+function sanitizeHeaders(headers: Record<string, string>): Record<string, string> {
+  const cleaned: Record<string, string> = {}
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === 'authorization') continue
+    cleaned[key] = value
+  }
+  return cleaned
+}
+
+function previewBody(body: BodyInit | null | undefined): string {
+  if (!body) return ''
+  if (typeof body === 'string') {
+    if (body.length <= BODY_PREVIEW_MAX_LEN) return body
+    return `${body.slice(0, BODY_PREVIEW_MAX_LEN)}...(truncated)`
+  }
+  if (body instanceof URLSearchParams) {
+    const text = body.toString()
+    if (text.length <= BODY_PREVIEW_MAX_LEN) return text
+    return `${text.slice(0, BODY_PREVIEW_MAX_LEN)}...(truncated)`
+  }
+  if (typeof ArrayBuffer !== 'undefined' && body instanceof ArrayBuffer) {
+    return `[ArrayBuffer byteLength=${body.byteLength}]`
+  }
+  if (typeof FormData !== 'undefined' && body instanceof FormData) {
+    return '[FormData]'
+  }
+  return `[BodyInit type=${Object.prototype.toString.call(body)}]`
+}
+
 export async function generateImageViaOpenAICompatTemplate(
   request: OpenAICompatImageRequest,
 ): Promise<GenerateResult> {
@@ -87,15 +188,70 @@ export async function generateImageViaOpenAICompatTemplate(
   if (['POST', 'PUT', 'PATCH'].includes(createRequest.method) && !createRequest.body) {
     throw new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_CREATE_BODY_REQUIRED')
   }
-  const response = await fetch(createRequest.endpointUrl, {
-    method: createRequest.method,
-    headers: createRequest.headers,
-    ...(createRequest.body ? { body: createRequest.body } : {}),
-  })
-  const rawText = await response.text().catch(() => '')
-  const payload = normalizeResponseJson(rawText)
+  let response: Response
+  let rawText = ''
+  let payload: unknown = null
+  try {
+    const controller = new AbortController()
+    const timeoutMs = resolveTemplateTimeoutMs()
+    const timeoutId = setTimeout(
+      () => controller.abort(new Error('OPENAI_COMPAT_IMAGE_TEMPLATE_TIMEOUT')),
+      timeoutMs,
+    )
+    try {
+      response = await fetch(createRequest.endpointUrl, {
+        method: createRequest.method,
+        headers: createRequest.headers,
+        signal: controller.signal,
+        ...(createRequest.body ? { body: createRequest.body } : {}),
+      })
+      rawText = await response.text().catch(() => '')
+      payload = normalizeResponseJson(rawText)
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  } catch (err) {
+    let modelRef = ''
+    try {
+      modelRef = resolveModelRef(request)
+    } catch (inner) {
+      modelRef = `resolve_failed:${toErrorMessage(inner)}`
+    }
+    const timeoutMs = resolveTemplateTimeoutMs()
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_REQUEST_FAILED',
+        `providerId=${request.providerId}`,
+        `baseUrl=${config.baseUrl}`,
+        `endpointUrl=${createRequest.endpointUrl}`,
+        `method=${createRequest.method}`,
+        `modelRef=${modelRef}`,
+        `headers=${JSON.stringify(sanitizeHeaders(createRequest.headers))}`,
+        ...(createRequest.body ? [`bodyPreview=${JSON.stringify(previewBody(createRequest.body))}`] : []),
+        `timeoutMs=${timeoutMs}`,
+        `cause=${toErrorMessage(err)}`,
+        `causeDetail=${describeError(err)}`,
+      ].join(' '),
+    )
+  }
   if (!response.ok) {
-    throw new Error(extractTemplateError(request.template, payload, response.status))
+    const extracted = extractTemplateError(request.template, payload, response.status)
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_TEMPLATE_HTTP_ERROR',
+        `providerId=${request.providerId}`,
+        `baseUrl=${config.baseUrl}`,
+        `endpointUrl=${createRequest.endpointUrl}`,
+        `method=${createRequest.method}`,
+        `status=${response.status}`,
+        `modelKey=${request.modelKey || ''}`,
+        `modelId=${request.modelId || ''}`,
+        `modelRef=${resolveModelRef(request)}`,
+        `headers=${JSON.stringify(sanitizeHeaders(createRequest.headers))}`,
+        ...(createRequest.body ? [`bodyPreview=${JSON.stringify(previewBody(createRequest.body))}`] : []),
+        `error=${extracted}`,
+      ].join(' '),
+    )
   }
 
   if (request.template.mode === 'sync') {

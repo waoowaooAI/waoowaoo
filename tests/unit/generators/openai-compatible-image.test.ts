@@ -100,7 +100,6 @@ describe('OpenAICompatibleImageGenerator', () => {
     expect(call[0]).toMatchObject({
       model: 'gpt-image-1',
       prompt: 'edit this image',
-      response_format: 'b64_json',
       quality: 'medium',
     })
     expect(Array.isArray((call[0] as { image?: unknown }).image)).toBe(true)

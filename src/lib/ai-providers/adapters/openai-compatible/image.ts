@@ -40,9 +40,12 @@ function assertAllowedOptions(options: Record<string, unknown>) {
   }
 }
 
-function normalizeResponseFormat(value: unknown): OpenAIImageResponseFormat {
+function normalizeResponseFormat(value: unknown): OpenAIImageResponseFormat | undefined {
   const normalized = readStringOption(value, 'responseFormat')
-  if (!normalized) return 'b64_json'
+  // For compatibility, do not force a default here.
+  // Some upstream OpenAI-compatible providers reject `response_format=b64_json`,
+  // while still returning usable URLs by default.
+  if (!normalized) return undefined
   if (normalized === 'url' || normalized === 'b64_json') return normalized
   throw new Error(`OPENAI_COMPAT_IMAGE_OPTION_UNSUPPORTED: responseFormat=${normalized}`)
 }
@@ -109,6 +112,16 @@ function toMimeFromOutputFormat(outputFormat: string | undefined): string {
   return 'image/png'
 }
 
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return String(error)
+  }
+}
+
 interface ImagePayloads {
   /** 第一张图的 base64（向后兼容） */
   b64Json: string | null
@@ -171,15 +184,32 @@ export async function generateImageViaOpenAICompat(request: OpenAICompatImageReq
   const size = normalizeOpenAIImageSize(rawSize)
 
   if (referenceImages.length > 0) {
-    const response = await client.images.edit({
-      model: normalizedModelId,
-      prompt,
-      image: await Promise.all(referenceImages.map((image, index) => toUploadFile(image, index))),
-      response_format: responseFormat,
-      ...(outputFormat ? { output_format: outputFormat } : {}),
-      ...(quality ? { quality } : {}),
-      ...(size ? { size } : {}),
-    } as unknown as Parameters<typeof client.images.edit>[0])
+    let response: unknown
+    try {
+      response = await client.images.edit({
+        model: normalizedModelId,
+        prompt,
+        image: await Promise.all(referenceImages.map((image, index) => toUploadFile(image, index))),
+        ...(responseFormat ? { response_format: responseFormat } : {}),
+        ...(outputFormat ? { output_format: outputFormat } : {}),
+        ...(quality ? { quality } : {}),
+        ...(size ? { size } : {}),
+      } as unknown as Parameters<typeof client.images.edit>[0])
+    } catch (err) {
+      throw new Error(
+        [
+          'OPENAI_COMPAT_IMAGE_REQUEST_FAILED',
+          `providerId=${providerId}`,
+          `model=${normalizedModelId}`,
+          `size=${size || '(default)'}`,
+          `response_format=${responseFormat || '(default)'}`,
+          `output_format=${outputFormat || '(default)'}`,
+          `quality=${quality || '(default)'}`,
+          `referenceImages=${referenceImages.length}`,
+          `cause=${toErrorMessage(err)}`,
+        ].join(' '),
+      )
+    }
 
     const imagePayload = readAllImagePayloads(response)
     const imageBase64 = imagePayload.b64Json
@@ -202,14 +232,31 @@ export async function generateImageViaOpenAICompat(request: OpenAICompatImageReq
     throw new Error('OPENAI_COMPAT_IMAGE_EMPTY_RESPONSE: no image data returned')
   }
 
-  const response = await client.images.generate({
-    model: normalizedModelId,
-    prompt,
-    response_format: responseFormat,
-    ...(outputFormat ? { output_format: outputFormat } : {}),
-    ...(quality ? { quality } : {}),
-    ...(size ? { size } : {}),
-  } as unknown as Parameters<typeof client.images.generate>[0])
+  let response: unknown
+  try {
+    response = await client.images.generate({
+      model: normalizedModelId,
+      prompt,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
+      ...(outputFormat ? { output_format: outputFormat } : {}),
+      ...(quality ? { quality } : {}),
+      ...(size ? { size } : {}),
+    } as unknown as Parameters<typeof client.images.generate>[0])
+  } catch (err) {
+    throw new Error(
+      [
+        'OPENAI_COMPAT_IMAGE_REQUEST_FAILED',
+        `providerId=${providerId}`,
+        `model=${normalizedModelId}`,
+        `size=${size || '(default)'}`,
+        `response_format=${responseFormat || '(default)'}`,
+        `output_format=${outputFormat || '(default)'}`,
+        `quality=${quality || '(default)'}`,
+        `referenceImages=${referenceImages.length}`,
+        `cause=${toErrorMessage(err)}`,
+      ].join(' '),
+    )
+  }
 
   const imagePayload = readAllImagePayloads(response)
   const imageBase64 = imagePayload.b64Json

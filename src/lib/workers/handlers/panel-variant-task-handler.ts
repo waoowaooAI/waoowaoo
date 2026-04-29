@@ -10,7 +10,7 @@ import {
   toSignedUrlIfCos,
   uploadImageSourceToCos,
 } from '../utils'
-import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
+import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   formatLocationAvailableSlotsText,
   parseLocationAvailableSlots,
@@ -234,7 +234,14 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
     sourcePanelImageUrl,
     projectData,
   })
-  const normalizedRefs = await normalizeReferenceImagesForGeneration(refs)
+  const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
+    context: {
+      taskType: 'image_panel_variant',
+      newPanelId,
+      sourcePanelId,
+      targetId: job.data.targetId,
+    },
+  })
 
   // 使用 agent_shot_variant_generate.txt 提示词模板
   const artStyle = getArtStylePrompt(modelConfig.artStyle, job.data.locale)

@@ -13,9 +13,17 @@ import { logInfo as _ulogInfo, logError as _ulogError } from '@/lib/logging/core
 
 const ARK_BASE_URL = 'https://ark.cn-beijing.volces.com/api/v3'
 
+function readPositiveIntEnv(name: string, fallback: number): number {
+    const raw = process.env[name]
+    if (!raw) return fallback
+    const parsed = Number.parseInt(raw, 10)
+    if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+    return parsed
+}
+
 // 超时配置
-const DEFAULT_TIMEOUT_MS = 60 * 1000  // 60秒
-const MAX_RETRIES = 3
+const DEFAULT_TIMEOUT_MS = readPositiveIntEnv('ARK_TIMEOUT_MS', 60 * 1000)  // 默认 60 秒，可通过 env 覆盖
+const MAX_RETRIES = readPositiveIntEnv('ARK_MAX_RETRIES', 3)
 const RETRY_DELAY_BASE_MS = 2000  // 2秒起始延迟
 
 function normalizeError(error: unknown): {
@@ -333,6 +341,12 @@ async function fetchWithTimeout(
             signal: controller.signal
         })
         return response
+    } catch (error: unknown) {
+        const normalized = normalizeError(error)
+        if (normalized.name === 'AbortError') {
+            throw new Error(`Ark API request timeout after ${timeoutMs}ms`)
+        }
+        throw error
     } finally {
         clearTimeout(timeoutId)
     }
@@ -387,6 +401,7 @@ async function fetchWithRetry(
             const errorDetails = {
                 attempt,
                 maxRetries,
+                timeoutMs,
                 errorName: normalized.name,
                 errorMessage: normalized.message,
                 errorCause: normalized.cause,

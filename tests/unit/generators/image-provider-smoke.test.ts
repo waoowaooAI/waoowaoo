@@ -261,4 +261,45 @@ describe('image provider smoke tests', () => {
     expect(content.contents[0].parts[1].text).toBe('restyle this portrait')
     expect(content.config.imageConfig).toEqual({ imageSize: '2K' })
   })
+
+  it('Gemini 兼容层 0.5K 会映射为 512（yunwu 要求）', async () => {
+    getProviderConfigMock.mockResolvedValueOnce({
+      id: 'gemini-compatible:gm-1',
+      apiKey: 'gm-key',
+      baseUrl: 'https://gm.test',
+    })
+    googleGenerateContentMock.mockResolvedValueOnce({
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'image/png',
+                  data: 'R01fMDVLPQ==',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+
+    const generator = new GeminiCompatibleImageGenerator('gemini-3.1-flash-image-preview', 'gemini-compatible:gm-1')
+    const result = await generator.generate({
+      userId: 'user-1',
+      prompt: 'draw a dog',
+      options: {
+        resolution: '0.5K',
+      },
+    })
+
+    expect(result.success).toBe(true)
+    expect(googleGenerateContentMock).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'gemini-3.1-flash-image-preview',
+      config: expect.objectContaining({
+        imageConfig: { imageSize: '512' },
+      }),
+    }))
+  })
 })

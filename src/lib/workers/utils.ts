@@ -8,6 +8,8 @@ import { pollAsyncTask } from '@/lib/async-poll'
 import { getSignedUrl, toFetchableUrl } from '@/lib/storage'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { processMediaResult } from '@/lib/media-process'
+import { parseModelKeyStrict } from '@/lib/model-config-contract'
+import { getProviderKey } from '@/lib/api-config'
 import {
   getProjectModelConfig,
   getUserModelConfig,
@@ -181,7 +183,7 @@ export async function resolveImageSourceFromGeneration(
     allowTaskExternalIdResume?: boolean
     pollProgress?: { start?: number; end?: number }
   },
-): Promise<string> {
+	): Promise<string> {
   const logger = scopedWorkerUtilLogger(job, 'worker.image.generate_source')
   const startedAt = Date.now()
   const allowTaskExternalIdResume = params.allowTaskExternalIdResume !== false
@@ -233,15 +235,58 @@ export async function resolveImageSourceFromGeneration(
     },
   })
 
-  const result = await withLogContext(
-    { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
-    () => generateImage(params.userId, params.modelId, params.prompt, {
-      ...params.options,
-      ...capabilityOptions,
-    }),
-  )
+  const parsed = parseModelKeyStrict(params.modelId)
+  const providerKey = parsed?.provider ? getProviderKey(parsed.provider).toLowerCase() : ''
+  const selectedModelId = parsed?.modelId || ''
+  const summarizedOptions: Record<string, unknown> = {}
+  for (const key of [
+    'aspectRatio',
+    'size',
+    'resolution',
+    'quality',
+    'outputFormat',
+    'responseFormat',
+    'keepOriginalAspectRatio',
+  ] as const) {
+    const value = (params.options as Record<string, unknown> | undefined)?.[key]
+    if (value !== undefined) summarizedOptions[key] = value
+  }
+
+  let result: Awaited<ReturnType<typeof generateImage>>
+  try {
+    result = await withLogContext(
+      { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
+      () => generateImage(params.userId, params.modelId, params.prompt, {
+        ...params.options,
+        ...capabilityOptions,
+      }),
+    )
+  } catch (err) {
+    const cause = err instanceof Error ? err.message : String(err)
+    throw new Error(
+      [
+        'IMAGE_GENERATION_THROWN',
+        `modelKey=${params.modelId}`,
+        ...(providerKey ? [`providerKey=${providerKey}`] : []),
+        ...(selectedModelId ? [`modelId=${selectedModelId}`] : []),
+        `options=${JSON.stringify(summarizedOptions)}`,
+        `capabilityOptions=${JSON.stringify(capabilityOptions)}`,
+        `cause=${cause}`,
+      ].join(' '),
+    )
+  }
   if (!result.success) {
-    throw new Error(result.error || 'Image generation failed')
+    throw new Error(
+      [
+        'IMAGE_GENERATION_FAILED',
+        `modelKey=${params.modelId}`,
+        ...(providerKey ? [`providerKey=${providerKey}`] : []),
+        ...(selectedModelId ? [`modelId=${selectedModelId}`] : []),
+        `options=${JSON.stringify(summarizedOptions)}`,
+        `capabilityOptions=${JSON.stringify(capabilityOptions)}`,
+        `error=${result.error || 'Image generation failed'}`,
+      ].join(' '),
+    )
   }
 
   if (result.imageUrl) {
@@ -307,7 +352,7 @@ export async function resolveImageSourcesFromGeneration(
     allowTaskExternalIdResume?: boolean
     pollProgress?: { start?: number; end?: number }
   },
-): Promise<string[]> {
+	): Promise<string[]> {
   const logger = scopedWorkerUtilLogger(job, 'worker.image.generate_sources')
   const startedAt = Date.now()
   const allowTaskExternalIdResume = params.allowTaskExternalIdResume !== false
@@ -347,13 +392,46 @@ export async function resolveImageSourcesFromGeneration(
     runtimeSelections,
   })
 
-  const result = await withLogContext(
-    { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
-    () => generateImage(params.userId, params.modelId, params.prompt, {
-      ...params.options,
-      ...capabilityOptions,
-    }),
-  )
+  const parsed = parseModelKeyStrict(params.modelId)
+  const providerKey = parsed?.provider ? getProviderKey(parsed.provider).toLowerCase() : ''
+  const selectedModelId = parsed?.modelId || ''
+  const summarizedOptions: Record<string, unknown> = {}
+  for (const key of [
+    'aspectRatio',
+    'size',
+    'resolution',
+    'quality',
+    'outputFormat',
+    'responseFormat',
+    'keepOriginalAspectRatio',
+  ] as const) {
+    const value = (params.options as Record<string, unknown> | undefined)?.[key]
+    if (value !== undefined) summarizedOptions[key] = value
+  }
+
+  let result: Awaited<ReturnType<typeof generateImage>>
+  try {
+    result = await withLogContext(
+      { projectId: job.data.projectId, taskId: job.data.taskId, userId: params.userId },
+      () => generateImage(params.userId, params.modelId, params.prompt, {
+        ...params.options,
+        ...capabilityOptions,
+      }),
+    )
+  } catch (err) {
+    const cause = err instanceof Error ? err.message : String(err)
+    throw new Error(
+      [
+        'IMAGE_GENERATION_THROWN',
+        `modelKey=${params.modelId}`,
+        ...(providerKey ? [`providerKey=${providerKey}`] : []),
+        ...(selectedModelId ? [`modelId=${selectedModelId}`] : []),
+        `options=${JSON.stringify(summarizedOptions)}`,
+        `capabilityOptions=${JSON.stringify(capabilityOptions)}`,
+        `cause=${cause}`,
+      ].join(' '),
+    )
+  }
   if (!result.success) {
     throw new Error(result.error || 'Image generation failed')
   }

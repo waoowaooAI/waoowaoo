@@ -10,7 +10,7 @@ import {
   resolveImageSourceFromGeneration,
   uploadImageSourceToCos,
 } from '../utils'
-import { normalizeReferenceImagesForGeneration } from '@/lib/media/outbound-image'
+import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
   clampCount,
@@ -177,7 +177,13 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
 
   const candidateCount = clampCount(payload.candidateCount ?? payload.count, 1, 4, 1)
   const refs = await collectPanelReferenceImages(projectData, panel)
-  const normalizedRefs = await normalizeReferenceImagesForGeneration(refs)
+  const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
+    context: {
+      taskType: 'image_panel',
+      panelId,
+      targetId: job.data.targetId,
+    },
+  })
 
   const logger = createScopedLogger({
     module: 'worker.panel-image',

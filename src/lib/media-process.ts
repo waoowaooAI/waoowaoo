@@ -1,4 +1,4 @@
-import { downloadAndUploadVideo, generateUniqueKey, toFetchableUrl, uploadObject } from '@/lib/storage'
+import { downloadAndUploadImage, downloadAndUploadVideo, generateUniqueKey, toFetchableUrl, uploadObject } from '@/lib/storage'
 
 export interface ProcessMediaOptions {
   source: string | Buffer
@@ -44,11 +44,21 @@ export async function processMediaResult(options: ProcessMediaOptions): Promise<
       return await uploadObject(buffer, key, undefined, contentType)
     }
 
+    if (type === 'image') {
+      // Normalize to JPEG and fail fast on non-2xx downloads to avoid storing broken images.
+      return await downloadAndUploadImage(source, key, 3)
+    }
+
     if (type === 'video') {
       return await downloadAndUploadVideo(source, key, 3, downloadHeaders)
     }
 
-    const response = await fetch(toFetchableUrl(source))
+    const response = await fetch(toFetchableUrl(source), {
+      headers: downloadHeaders,
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to download ${type}: ${response.status} ${response.statusText}`)
+    }
     const buffer = Buffer.from(await response.arrayBuffer()) as Buffer
     return await uploadObject(buffer, key, undefined, contentType)
   }
