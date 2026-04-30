@@ -5,6 +5,7 @@ import { falAdapter } from '@/lib/ai-providers/fal/adapter'
 import { minimaxAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { openAiAdapter } from '@/lib/ai-providers/openai/adapter'
 import { openAiCompatibleAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
+import { normalizeGeminiImageSize } from '@/lib/ai-providers/shared/google-image-helpers'
 import { viduAdapter } from '@/lib/ai-providers/vidu/adapter'
 import type { AiVariantDescriptor } from '@/lib/ai-registry/types'
 
@@ -42,6 +43,11 @@ function validateDescriptorOptions(input: {
 }
 
 describe('media adapter option schema', () => {
+  it('normalizes Gemini 3.1 0.5K image size to the provider 512 value', () => {
+    expect(normalizeGeminiImageSize('0.5K')).toBe('512')
+    expect(normalizeGeminiImageSize('1K')).toBe('1K')
+  })
+
   it('rejects Ark image requests before generator when aspect ratio or size is missing', () => {
     const descriptor = arkAdapter.image?.describe(mediaSelection({
       provider: 'ark',

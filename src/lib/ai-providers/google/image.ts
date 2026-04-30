@@ -151,6 +151,7 @@ async function executeGoogleImageGenerationInternal(input: AiProviderImageExecut
   }
 
   const contentParts: GoogleContentPart[] = []
+  const imageSize = normalizeGeminiImageSize(options.resolution)
   for (const imageSource of referenceImages.slice(0, 14)) {
     const inlineData = await toGoogleInlineData(imageSource)
     if (inlineData) contentParts.push({ inlineData })
@@ -174,7 +175,7 @@ async function executeGoogleImageGenerationInternal(input: AiProviderImageExecut
         ? {
           imageConfig: {
             ...(options.aspectRatio ? { aspectRatio: options.aspectRatio } : {}),
-            ...(options.resolution ? { imageSize: options.resolution } : {}),
+            ...(imageSize ? { imageSize } : {}),
           },
         }
         : {}),

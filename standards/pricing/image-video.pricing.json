@@ -407,6 +407,12 @@
       "tiers": [
         {
           "when": {
+            "resolution": "1K"
+          },
+          "amount": 0.9648
+        },
+        {
+          "when": {
             "resolution": "2K"
           },
           "amount": 0.9648
@@ -427,6 +433,12 @@
     "pricing": {
       "mode": "capability",
       "tiers": [
+        {
+          "when": {
+            "resolution": "1K"
+          },
+          "amount": 0.4824
+        },
         {
           "when": {
             "resolution": "2K"
@@ -480,6 +492,15 @@
     "apiType": "image",
     "provider": "google",
     "modelId": "gemini-2.5-flash-image",
+    "pricing": {
+      "mode": "flat",
+      "flatAmount": 0.2808
+    }
+  },
+  {
+    "apiType": "image",
+    "provider": "google",
+    "modelId": "gemini-2.5-flash-image-preview",
     "pricing": {
       "mode": "flat",
       "flatAmount": 0.2808

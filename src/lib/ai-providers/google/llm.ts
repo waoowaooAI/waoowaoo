@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 import { getInternalBaseUrl } from '@/lib/env'
+import { normalizeGeminiImageSize } from '@/lib/ai-providers/shared/google-image-helpers'
 import { buildAiProviderLlmResult } from '@/lib/ai-providers/shared/llm-result'
 import {
   buildReasoningAwareContent,
@@ -379,7 +380,8 @@ export async function submitGeminiBatch(
 
     const imageConfig: UnknownObject = {}
     if (options?.aspectRatio) imageConfig.aspectRatio = options.aspectRatio
-    if (options?.resolution) imageConfig.imageSize = options.resolution
+    const imageSize = normalizeGeminiImageSize(options?.resolution)
+    if (imageSize) imageConfig.imageSize = imageSize
 
     const inlinedRequests = [
       {

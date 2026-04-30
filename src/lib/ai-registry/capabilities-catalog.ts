@@ -487,6 +487,11 @@ export function resolveGenerationOptionsForModel(input: {
     const value = normalizedSelection[field]
     if (value !== undefined) {
       options[field] = value
+    } else if (input.modelType === 'image' && field === 'resolution') {
+      const defaultValue = optionFields[field]?.includes('1K') ? '1K' : optionFields[field]?.[0]
+      if (defaultValue !== undefined) {
+        options[field] = defaultValue
+      }
     }
   }
 

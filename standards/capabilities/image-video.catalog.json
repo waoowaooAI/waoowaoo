@@ -464,6 +464,7 @@
     "capabilities": {
       "image": {
         "resolutionOptions": [
+          "1K",
           "2K",
           "4K"
         ]
@@ -477,6 +478,7 @@
     "capabilities": {
       "image": {
         "resolutionOptions": [
+          "1K",
           "2K",
           "4K"
         ]
@@ -502,6 +504,18 @@
     "modelType": "image",
     "provider": "google",
     "modelId": "gemini-2.5-flash-image",
+    "capabilities": {
+      "image": {
+        "resolutionOptions": [
+          "1K"
+        ]
+      }
+    }
+  },
+  {
+    "modelType": "image",
+    "provider": "google",
+    "modelId": "gemini-2.5-flash-image-preview",
     "capabilities": {
       "image": {
         "resolutionOptions": [
