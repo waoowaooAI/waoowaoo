@@ -203,6 +203,7 @@ model ProjectPanel {
   firstLastFramePrompt String?
   videoUrl          String?
   videoGenerationMode String?                 // 视频生成方式：normal | firstlastframe
+  lastVideoGenerationOptions Json?
   videoMediaId      String?
   videoMedia        MediaObject?              @relation("ProjectPanelVideoMedia", fields: [videoMediaId], references: [id], onDelete: SetNull)
   createdAt         DateTime                  @default(now())

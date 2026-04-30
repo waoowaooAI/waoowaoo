@@ -225,6 +225,51 @@ describe('worker video processor behavior', () => {
     })
   })
 
+  it('VIDEO_PANEL: 成功生成后保存本次实际使用的 generationOptions', async () => {
+    const processor = workerState.processor
+    expect(processor).toBeTruthy()
+
+    const job = buildJob({
+      type: TASK_TYPE.VIDEO_PANEL,
+      payload: {
+        videoModel: 'ark::doubao-seedance-2-0-260128',
+        generationOptions: {
+          duration: 8,
+          resolution: '720p',
+          generateAudio: true,
+          aspectRatio: '9:16',
+        },
+      },
+    })
+
+    await processor!(job)
+
+    expect(utilsMock.resolveVideoSourceFromGeneration).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        options: expect.objectContaining({
+          aspectRatio: '16:9',
+          duration: 8,
+          resolution: '720p',
+          generateAudio: true,
+          generationMode: 'normal',
+        }),
+      }),
+    )
+    expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
+      where: { id: 'panel-1' },
+      data: {
+        videoUrl: 'cos/lip-sync/video.mp4',
+        videoGenerationMode: 'normal',
+        lastVideoGenerationOptions: {
+          duration: 8,
+          resolution: '720p',
+          generateAudio: true,
+        },
+      },
+    })
+  })
+
   it('LIP_SYNC: 缺少 panel 时显式失败', async () => {
     const processor = workerState.processor
     expect(processor).toBeTruthy()

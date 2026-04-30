@@ -63,6 +63,7 @@ import type { VideoModelOption } from '@/lib/project-workflow/stages/video-stage
 import { useWorkspaceVideoActions } from '@/features/project-workspace/hooks/useWorkspaceVideoActions'
 import VideoPanelCardBody from '@/features/project-workspace/components/video/panel-card/VideoPanelCardBody'
 import type { VideoPanelRuntime } from '@/features/project-workspace/components/video/panel-card/hooks/useVideoPanelActions'
+import { resolvePanelVideoGenerationDefaults } from '@/features/project-workspace/components/video/panel-card/runtime/hooks/usePanelVideoModel'
 
 function createRuntime(overrides: Partial<VideoPanelRuntime> = {}): VideoPanelRuntime {
   const translate = (key: string, values?: Record<string, unknown>) => {
@@ -270,6 +271,7 @@ describe('video panels projection error code', () => {
           id: 'panel-1',
           panelIndex: 0,
           description: 'panel',
+          lastVideoGenerationOptions: { resolution: '720p', duration: 8 },
         }],
       }],
       panelVideoStates: {
@@ -289,6 +291,30 @@ describe('video panels projection error code', () => {
     expect(result.allPanels).toHaveLength(1)
     expect(result.allPanels[0]?.videoErrorCode).toBe('EXTERNAL_ERROR')
     expect(result.allPanels[0]?.videoErrorMessage).toBe('upstream failed')
+    expect(result.allPanels[0]?.lastVideoGenerationOptions).toEqual({ resolution: '720p', duration: 8 })
+  })
+})
+
+describe('panel video generation defaults', () => {
+  it('uses last successful panel options over project defaults while preserving fallback fields', () => {
+    const result = resolvePanelVideoGenerationDefaults({
+      modelKey: 'provider::video-model',
+      capabilityOverrides: {
+        'provider::video-model': {
+          resolution: '480p',
+          duration: 5,
+          aspectRatio: '16:9',
+        },
+      },
+      lastVideoGenerationOptions: {
+        resolution: '720p',
+      },
+    })
+
+    expect(result).toEqual({
+      duration: 5,
+      resolution: '720p',
+    })
   })
 })
 

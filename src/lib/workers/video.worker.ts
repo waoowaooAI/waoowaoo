@@ -1,4 +1,5 @@
 import { Worker, type Job } from 'bullmq'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { queueRedis } from '@/lib/redis'
 import { QUEUE_NAME } from '@/lib/task/queues'
@@ -44,6 +45,15 @@ function extractGenerationOptions(payload: AnyObj): VideoOptionMap {
     }
   }
   return next
+}
+
+function toPersistedVideoGenerationOptions(options: VideoOptionMap): VideoOptionMap | typeof Prisma.DbNull {
+  const persisted: VideoOptionMap = {}
+  for (const [key, value] of Object.entries(options)) {
+    if (key === 'aspectRatio' || key === 'generationMode') continue
+    persisted[key] = value
+  }
+  return Object.keys(persisted).length > 0 ? persisted : Prisma.DbNull
 }
 
 async function fetchPanelByStoryboardIndex(storyboardId: string, panelIndex: number) {
@@ -211,6 +221,7 @@ async function handleVideoPanelTask(job: Job<TaskJobData>) {
     data: {
       videoUrl: cosKey,
       videoGenerationMode: generationMode,
+      lastVideoGenerationOptions: toPersistedVideoGenerationOptions(generationOptions),
     },
   })
 

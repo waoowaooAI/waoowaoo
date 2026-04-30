@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { revertAssetRender } from '@/lib/assets/services/asset-actions'
 
@@ -406,10 +407,19 @@ export async function revertMutationEntry(entry: {
       const previousVideoUrl = payload.previousVideoUrl === null || typeof payload.previousVideoUrl === 'string'
         ? payload.previousVideoUrl
         : null
+      const previousLastVideoGenerationOptions =
+        payload.previousLastVideoGenerationOptions === null
+          ? Prisma.DbNull
+          : (typeof payload.previousLastVideoGenerationOptions === 'object' && !Array.isArray(payload.previousLastVideoGenerationOptions))
+            ? payload.previousLastVideoGenerationOptions as Prisma.InputJsonObject
+            : undefined
       await prisma.projectPanel.update({
         where: { id: entry.targetId },
         data: {
           videoUrl: previousVideoUrl,
+          ...(previousLastVideoGenerationOptions !== undefined
+            ? { lastVideoGenerationOptions: previousLastVideoGenerationOptions ?? Prisma.DbNull }
+            : {}),
         },
       })
       return

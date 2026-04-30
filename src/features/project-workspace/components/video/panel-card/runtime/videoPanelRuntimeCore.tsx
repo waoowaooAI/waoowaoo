@@ -70,6 +70,7 @@ export function useVideoPanelActions({
   const videoModel = usePanelVideoModel({
     defaultVideoModel,
     capabilityOverrides,
+    lastVideoGenerationOptions: panel.lastVideoGenerationOptions,
     userVideoModels,
   })
 

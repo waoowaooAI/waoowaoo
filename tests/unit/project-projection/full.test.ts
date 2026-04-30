@@ -79,6 +79,7 @@ describe('assembleProjectProjectionFull', () => {
         candidateImages: '[]',
         videoPrompt: 'vp',
         videoUrl: 'https://vid',
+        lastVideoGenerationOptions: { resolution: '720p', duration: 8 },
         videoMediaId: 'vm1',
         createdAt: new Date('2026-04-20T00:00:00.000Z'),
         updatedAt: new Date('2026-04-20T00:00:00.000Z'),
@@ -122,6 +123,7 @@ describe('assembleProjectProjectionFull', () => {
         candidateImages: '[]',
         videoPrompt: 'vp',
         videoUrl: 'https://vid',
+        lastVideoGenerationOptions: { resolution: '720p', duration: 8 },
         videoMediaId: 'vm1',
       }),
     ])
@@ -216,6 +218,7 @@ describe('assembleProjectProjectionFull', () => {
         candidateImages: null,
         videoPrompt: null,
         videoUrl: null,
+        lastVideoGenerationOptions: null,
         videoMediaId: null,
         createdAt: new Date('2026-04-20T00:00:00.000Z'),
         updatedAt: new Date('2026-04-20T00:00:00.000Z'),

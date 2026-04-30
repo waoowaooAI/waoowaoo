@@ -47,6 +47,7 @@ export interface Panel {
   firstLastFramePrompt?: string | null
   videoUrl?: string | null
   videoGenerationMode?: VideoGenerationMode | null
+  lastVideoGenerationOptions?: VideoGenerationOptions | null
   videoModel?: string | null
   linkedToNextPanel?: boolean | null
   videoTaskRunning?: boolean | null
@@ -87,6 +88,7 @@ export interface VideoPanel {
   imageUrl?: string
   videoUrl?: string
   videoGenerationMode?: VideoGenerationMode
+  lastVideoGenerationOptions?: VideoGenerationOptions | null
   videoTaskRunning?: boolean
   videoErrorMessage?: string  // 视频生成错误消息
   videoErrorCode?: string

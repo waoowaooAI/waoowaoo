@@ -46,6 +46,7 @@ export interface ProjectProjectionPanelSnapshot {
   candidateImages: string | null
   videoPrompt: string | null
   videoUrl: string | null
+  lastVideoGenerationOptions: Record<string, string | number | boolean> | null
   videoMediaId: string | null
   createdAt: string
   updatedAt: string

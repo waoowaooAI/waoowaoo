@@ -2,6 +2,9 @@ import type { CapabilitySelections } from '@/lib/ai-registry/types'
 import type { LocationAvailableSlot } from '@/lib/location-available-slots'
 import type { DirectorStyleDoc } from '@/lib/director-style'
 
+export type ProjectVideoGenerationOptionValue = string | number | boolean
+export type ProjectVideoGenerationOptions = Record<string, ProjectVideoGenerationOptionValue>
+
 // ============================================
 // 基础项目类型
 // ============================================
@@ -177,6 +180,7 @@ export interface ProjectPanel {
   firstLastFramePrompt?: string | null
   videoUrl: string | null
   videoGenerationMode?: 'normal' | 'firstlastframe' | null
+  lastVideoGenerationOptions?: ProjectVideoGenerationOptions | null
   videoMedia?: MediaRef | null
   lipSyncVideoUrl?: string | null
   lipSyncVideoMedia?: MediaRef | null

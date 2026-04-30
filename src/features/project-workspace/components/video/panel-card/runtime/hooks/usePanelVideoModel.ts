@@ -6,6 +6,7 @@ import { normalizeVideoGenerationSelections, resolveEffectiveVideoCapabilityDefi
 interface UsePanelVideoModelParams {
   defaultVideoModel: string
   capabilityOverrides?: CapabilitySelections
+  lastVideoGenerationOptions?: VideoGenerationOptions | null
   userVideoModels?: VideoModelOption[]
 }
 
@@ -58,16 +59,43 @@ function readSelectionForModel(
   return selection
 }
 
+function readGenerationOptions(value: unknown): VideoGenerationOptions {
+  if (!isRecord(value)) return {}
+  const selection: VideoGenerationOptions = {}
+  for (const [field, optionValue] of Object.entries(value)) {
+    if (field === 'aspectRatio' || field === 'generationMode') continue
+    if (!isGenerationOptionValue(optionValue)) continue
+    selection[field] = optionValue
+  }
+  return selection
+}
+
+export function resolvePanelVideoGenerationDefaults(input: {
+  capabilityOverrides?: CapabilitySelections
+  modelKey: string
+  lastVideoGenerationOptions?: VideoGenerationOptions | null
+}): VideoGenerationOptions {
+  return {
+    ...readSelectionForModel(input.capabilityOverrides, input.modelKey),
+    ...readGenerationOptions(input.lastVideoGenerationOptions),
+  }
+}
+
 export function usePanelVideoModel({
   defaultVideoModel,
   capabilityOverrides,
+  lastVideoGenerationOptions,
   userVideoModels,
 }: UsePanelVideoModelParams) {
   const [selectedModel, setSelectedModel] = useState(defaultVideoModel || '')
   const [generationOptions, setGenerationOptions] = useState<VideoGenerationOptions>(() =>
-    readSelectionForModel(capabilityOverrides, defaultVideoModel || ''),
+    resolvePanelVideoGenerationDefaults({
+      capabilityOverrides,
+      modelKey: defaultVideoModel || '',
+      lastVideoGenerationOptions,
+    }),
   )
-  const videoModelOptions = userVideoModels ?? []
+  const videoModelOptions = useMemo(() => userVideoModels ?? [], [userVideoModels])
   const selectedOption = videoModelOptions.find((option) => option.value === selectedModel)
   const pricingTiers = useMemo(
     () => projectVideoPricingTiersByFixedSelections({
@@ -103,8 +131,12 @@ export function usePanelVideoModel({
   )
 
   const selectedModelOverrides = useMemo(
-    () => readSelectionForModel(capabilityOverrides, selectedModel),
-    [capabilityOverrides, selectedModel],
+    () => resolvePanelVideoGenerationDefaults({
+      capabilityOverrides,
+      modelKey: selectedModel,
+      lastVideoGenerationOptions,
+    }),
+    [capabilityOverrides, selectedModel, lastVideoGenerationOptions],
   )
   const selectedModelOverridesSignature = useMemo(
     () => JSON.stringify(selectedModelOverrides),

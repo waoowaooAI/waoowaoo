@@ -57,6 +57,18 @@ function toVideoRuntimeSelections(value: unknown): Record<string, CapabilityValu
   return selections
 }
 
+function mergeVideoRuntimeSelections(...sources: unknown[]): Record<string, CapabilityValue> {
+  const merged: Record<string, CapabilityValue> = {}
+  for (const source of sources) {
+    Object.assign(merged, toVideoRuntimeSelections(source))
+  }
+  return merged
+}
+
+function hasRuntimeSelections(value: unknown): boolean {
+  return Object.keys(toVideoRuntimeSelections(value)).length > 0
+}
+
 function resolveVideoGenerationMode(payload: unknown): 'normal' | 'firstlastframe' {
   if (!isRecord(payload)) return 'normal'
   return isRecord(payload.firstLastFrame) ? 'firstlastframe' : 'normal'
@@ -101,29 +113,46 @@ function validateFirstLastFrameModel(input: unknown) {
   }
 }
 
-async function validateVideoCapabilityCombination(input: {
+async function resolveVideoCapabilityOptions(input: {
   payload: unknown
   projectId: string
   userId: string
+  lastVideoGenerationOptions?: unknown
 }) {
   const payload = input.payload
-  if (!isRecord(payload)) return
+  if (!isRecord(payload)) return {}
   const modelKey = resolveVideoModelKeyFromPayload(payload)
-  if (!modelKey) return
+  if (!modelKey) return {}
 
   const builtinCaps = resolveBuiltinCapabilitiesByModelKey('video', modelKey)
-  if (!builtinCaps) return
+  if (!builtinCaps) return toVideoRuntimeSelections(payload.generationOptions)
 
-  const runtimeSelections = toVideoRuntimeSelections(payload.generationOptions)
+  const explicitRuntimeSelections = toVideoRuntimeSelections(payload.generationOptions)
+  const shouldApplyLastOptions = !hasRuntimeSelections(payload.generationOptions)
+  const runtimeSelections = mergeVideoRuntimeSelections(
+    shouldApplyLastOptions ? input.lastVideoGenerationOptions : undefined,
+    explicitRuntimeSelections,
+  )
   runtimeSelections.generationMode = resolveVideoGenerationMode(payload)
 
-  const resolvedOptions = await resolveProjectModelCapabilityGenerationOptions({
-    projectId: input.projectId,
-    userId: input.userId,
-    modelType: 'video',
-    modelKey,
-    runtimeSelections,
-  })
+  const resolveOptions = (selections: Record<string, CapabilityValue>) =>
+    resolveProjectModelCapabilityGenerationOptions({
+      projectId: input.projectId,
+      userId: input.userId,
+      modelType: 'video',
+      modelKey,
+      runtimeSelections: selections,
+    })
+
+  let resolvedOptions: Record<string, CapabilityValue>
+  try {
+    resolvedOptions = await resolveOptions(runtimeSelections)
+  } catch (error) {
+    if (!shouldApplyLastOptions) throw error
+    const fallbackSelections = { ...explicitRuntimeSelections }
+    fallbackSelections.generationMode = resolveVideoGenerationMode(payload)
+    resolvedOptions = await resolveOptions(fallbackSelections)
+  }
 
   const resolution = resolveBuiltinPricing({
       apiType: 'video',
@@ -136,6 +165,7 @@ async function validateVideoCapabilityCombination(input: {
   if (resolution.status === 'missing_capability_match') {
     throw new Error('PROJECT_AGENT_VIDEO_CAPABILITY_COMBINATION_UNSUPPORTED')
   }
+  return resolvedOptions
 }
 
 function buildVideoPanelBillingInfoOrThrow(payload: unknown) {
@@ -183,14 +213,17 @@ async function validateVideoTaskPayloadOrThrow(params: {
   payload: UnknownObject
   projectId: string
   userId: string
+  lastVideoGenerationOptions?: unknown
 }) {
   requireVideoModelKeyFromPayload(params.payload)
   validateFirstLastFrameModel(params.payload.firstLastFrame)
-  await validateVideoCapabilityCombination({
+  const resolvedOptions = await resolveVideoCapabilityOptions({
     payload: params.payload,
     projectId: params.projectId,
     userId: params.userId,
+    lastVideoGenerationOptions: params.lastVideoGenerationOptions,
   })
+  params.payload.generationOptions = resolvedOptions
 }
 
 async function executeGenerateEpisodeVideosOperation(params: {
@@ -220,7 +253,7 @@ async function executeGenerateEpisodeVideosOperation(params: {
         { videoUrl: '' },
       ],
     },
-    select: { id: true, videoUrl: true },
+    select: { id: true, videoUrl: true, lastVideoGenerationOptions: true },
     take: limit,
   })
 
@@ -270,6 +303,7 @@ async function executeGenerateEpisodeVideosOperation(params: {
       targetId: panel.id,
       payload: {
         previousVideoUrl: panel.videoUrl ?? null,
+        previousLastVideoGenerationOptions: panel.lastVideoGenerationOptions ?? null,
       },
     })),
   })
@@ -298,14 +332,9 @@ async function executeGeneratePanelVideoOperation(params: {
   operationId: string
 }) {
   const { payload, localeForTask } = buildVideoTaskPayload({ ctx: params.ctx, input: params.input })
-  await validateVideoTaskPayloadOrThrow({
-    payload,
-    projectId: params.ctx.projectId,
-    userId: params.ctx.userId,
-  })
-
   let panelId = normalizeString(payload.panelId)
   let previousVideoUrl: string | null = null
+  let previousLastVideoGenerationOptions: unknown = null
   let episodeId: string | null = null
   if (!panelId) {
     const storyboardId = normalizeString(payload.storyboardId)
@@ -315,10 +344,11 @@ async function executeGeneratePanelVideoOperation(params: {
     }
     const panel = await prisma.projectPanel.findFirst({
       where: { storyboardId, panelIndex: Number(panelIndex) },
-      select: { id: true, videoUrl: true, storyboard: { select: { episodeId: true } } },
+      select: { id: true, videoUrl: true, lastVideoGenerationOptions: true, storyboard: { select: { episodeId: true } } },
     })
     panelId = panel?.id || ''
     previousVideoUrl = panel?.videoUrl ?? null
+    previousLastVideoGenerationOptions = panel?.lastVideoGenerationOptions ?? null
     episodeId = panel?.storyboard.episodeId ?? null
   }
   if (!panelId) {
@@ -327,14 +357,22 @@ async function executeGeneratePanelVideoOperation(params: {
   if (normalizeString(payload.panelId)) {
     const panel = await prisma.projectPanel.findUnique({
       where: { id: panelId },
-      select: { videoUrl: true, storyboard: { select: { episodeId: true } } },
+      select: { videoUrl: true, lastVideoGenerationOptions: true, storyboard: { select: { episodeId: true } } },
     })
     if (!panel) {
       throw new Error('PROJECT_AGENT_PANEL_NOT_FOUND')
     }
     previousVideoUrl = panel.videoUrl ?? null
+    previousLastVideoGenerationOptions = panel.lastVideoGenerationOptions ?? null
     episodeId = panel.storyboard.episodeId
   }
+
+  await validateVideoTaskPayloadOrThrow({
+    payload,
+    projectId: params.ctx.projectId,
+    userId: params.ctx.userId,
+    lastVideoGenerationOptions: previousLastVideoGenerationOptions,
+  })
 
   const result = await submitTask({
     userId: params.ctx.userId,
@@ -365,6 +403,7 @@ async function executeGeneratePanelVideoOperation(params: {
         targetId: panelId,
         payload: {
           previousVideoUrl,
+          previousLastVideoGenerationOptions,
         },
       },
     ],

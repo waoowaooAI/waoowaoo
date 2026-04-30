@@ -7,6 +7,13 @@ function toIso(value: Date): string {
   return value.toISOString()
 }
 
+function isVideoGenerationOptions(value: unknown): value is Record<string, string | number | boolean> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  return Object.values(value).every((item) =>
+    typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean',
+  )
+}
+
 export async function assembleProjectProjectionFull(params: {
   projectId: string
   userId: string
@@ -82,6 +89,7 @@ export async function assembleProjectProjectionFull(params: {
         candidateImages: true,
         videoPrompt: true,
         videoUrl: true,
+        lastVideoGenerationOptions: true,
         videoMediaId: true,
         createdAt: true,
         updatedAt: true,
@@ -115,6 +123,9 @@ export async function assembleProjectProjectionFull(params: {
       candidateImages: panel.candidateImages ?? null,
       videoPrompt: panel.videoPrompt ?? null,
       videoUrl: panel.videoUrl ?? null,
+      lastVideoGenerationOptions: isVideoGenerationOptions(panel.lastVideoGenerationOptions)
+        ? panel.lastVideoGenerationOptions
+        : null,
       videoMediaId: panel.videoMediaId ?? null,
       createdAt: toIso(panel.createdAt),
       updatedAt: toIso(panel.updatedAt),

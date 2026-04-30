@@ -78,6 +78,7 @@ export function useVideoPanelsProjection({
           firstLastFramePrompt: panel.firstLastFramePrompt || undefined,
           videoUrl: panel.videoUrl || undefined,
           videoGenerationMode: panel.videoGenerationMode || undefined,
+          lastVideoGenerationOptions: panel.lastVideoGenerationOptions || null,
           videoTaskRunning: panelVideoState?.phase === 'queued' || panelVideoState?.phase === 'processing',
           videoErrorCode:
             panelVideoState?.phase === 'failed'

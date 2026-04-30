@@ -97,6 +97,10 @@ describe('system - generate video', () => {
         storyboardId: seeded.storyboard.id,
         panelIndex: 0,
         videoModel: 'fal::seedance/video',
+        generationOptions: {
+          duration: 5,
+          resolution: '720p',
+        },
       },
       { params: { projectId: seeded.project.id } },
     )
@@ -111,9 +115,13 @@ describe('system - generate video', () => {
 
     const panel = await prisma.projectPanel.findUnique({
       where: { id: seeded.panel.id },
-      select: { videoUrl: true },
+      select: { videoUrl: true, lastVideoGenerationOptions: true },
     })
     expect(panel?.videoUrl).toBe(videoState.uploadedCosKey)
+    expect(panel?.lastVideoGenerationOptions).toEqual({
+      duration: 5,
+      resolution: '720p',
+    })
 
     const eventTypes = await listTaskEventTypes(json.taskId)
     expectLifecycleEvents(eventTypes, 'completed')

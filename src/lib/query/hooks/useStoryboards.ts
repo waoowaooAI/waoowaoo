@@ -179,11 +179,15 @@ export function useGenerateVideo(projectId: string | null, episodeId: string | n
                     customPrompt?: string
                 }
                 videoModel: string
+                panelId?: string
                 generationOptions?: VideoGenerationOptions
             } = {
                 storyboardId: params.storyboardId,
                 panelIndex: params.panelIndex,
                 videoModel: params.videoModel,
+            }
+            if (params.panelId) {
+                requestBody.panelId = params.panelId
             }
 
             // 如果是首尾帧模式
