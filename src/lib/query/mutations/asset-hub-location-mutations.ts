@@ -6,6 +6,7 @@ import {
 } from '../task-target-overlay'
 import { queryKeys } from '../keys'
 import type { GlobalLocation } from '../hooks/useGlobalAssets'
+import type { AssetSummary } from '@/lib/assets/contracts'
 import {
   requestJsonWithError,
   requestVoidWithError,
@@ -20,6 +21,10 @@ interface SelectLocationImageContext {
     queryKey: readonly unknown[]
     data: GlobalLocation[] | undefined
   }>
+  previousUnifiedQueries: Array<{
+    queryKey: readonly unknown[]
+    data: AssetSummary[] | undefined
+  }>
   targetKey: string
   requestId: number
 }
@@ -28,6 +33,10 @@ interface DeleteLocationContext {
   previousQueries: Array<{
     queryKey: readonly unknown[]
     data: GlobalLocation[] | undefined
+  }>
+  previousUnifiedQueries: Array<{
+    queryKey: readonly unknown[]
+    data: AssetSummary[] | undefined
   }>
 }
 
@@ -58,9 +67,58 @@ function captureLocationQuerySnapshots(queryClient: ReturnType<typeof useQueryCl
     .map(([queryKey, data]) => ({ queryKey, data }))
 }
 
+function captureUnifiedQuerySnapshots(queryClient: ReturnType<typeof useQueryClient>) {
+  return queryClient
+    .getQueriesData<AssetSummary[]>({
+      queryKey: queryKeys.assets.all('global'),
+      exact: false,
+    })
+    .map(([queryKey, data]) => ({ queryKey, data }))
+}
+
+function applyUnifiedLocationSelection(
+  assets: AssetSummary[] | undefined,
+  locationId: string,
+  imageIndex: number | null,
+): AssetSummary[] | undefined {
+  if (!assets) return assets
+  return assets.map((asset) => {
+    if (asset.id !== locationId || asset.kind !== 'location') return asset
+    return {
+      ...asset,
+      selectedVariantId: imageIndex === null
+        ? null
+        : asset.variants.find((variant) => variant.index === imageIndex)?.id ?? asset.selectedVariantId,
+      variants: asset.variants.map((variant) => {
+        const isSelectedVariant = imageIndex !== null && variant.index === imageIndex
+        return {
+          ...variant,
+          selectionState: {
+            ...variant.selectionState,
+            selectedRenderIndex: isSelectedVariant ? 0 : null,
+          },
+          renders: variant.renders.map((render) => ({
+            ...render,
+            isSelected: isSelectedVariant && render.index === 0,
+          })),
+        }
+      }),
+    }
+  })
+}
+
 function restoreLocationQuerySnapshots(
   queryClient: ReturnType<typeof useQueryClient>,
   snapshots: Array<{ queryKey: readonly unknown[]; data: GlobalLocation[] | undefined }>,
+) {
+  snapshots.forEach((snapshot) => {
+    queryClient.setQueryData(snapshot.queryKey, snapshot.data)
+  })
+}
+
+function restoreUnifiedQuerySnapshots(
+  queryClient: ReturnType<typeof useQueryClient>,
+  snapshots: Array<{ queryKey: readonly unknown[]; data: AssetSummary[] | undefined }>,
 ) {
   snapshots.forEach((snapshot) => {
     queryClient.setQueryData(snapshot.queryKey, snapshot.data)
@@ -189,11 +247,20 @@ export function useSelectLocationImage() {
       const requestId = (latestRequestIdByTargetRef.current[targetKey] ?? 0) + 1
       latestRequestIdByTargetRef.current[targetKey] = requestId
 
+      if (variables.confirm) {
+        return { previousQueries: [], previousUnifiedQueries: [], targetKey, requestId }
+      }
+
       await queryClient.cancelQueries({
         queryKey: queryKeys.globalAssets.locations(),
         exact: false,
       })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.assets.all('global'),
+        exact: false,
+      })
       const previousQueries = captureLocationQuerySnapshots(queryClient)
+      const previousUnifiedQueries = captureUnifiedQuerySnapshots(queryClient)
 
       queryClient.setQueriesData<GlobalLocation[] | undefined>(
         {
@@ -203,8 +270,17 @@ export function useSelectLocationImage() {
         (previous) => applyLocationSelection(previous, variables.locationId, variables.imageIndex),
       )
 
+      queryClient.setQueriesData<AssetSummary[] | undefined>(
+        {
+          queryKey: queryKeys.assets.all('global'),
+          exact: false,
+        },
+        (previous) => applyUnifiedLocationSelection(previous, variables.locationId, variables.imageIndex),
+      )
+
       return {
         previousQueries,
+        previousUnifiedQueries,
         targetKey,
         requestId,
       }
@@ -214,10 +290,11 @@ export function useSelectLocationImage() {
       const latestRequestId = latestRequestIdByTargetRef.current[context.targetKey]
       if (latestRequestId !== context.requestId) return
       restoreLocationQuerySnapshots(queryClient, context.previousQueries)
+      restoreUnifiedQuerySnapshots(queryClient, context.previousUnifiedQueries)
     },
-    onSettled: (_data, _error, variables) => {
+    onSettled: async (_data, _error, variables) => {
       if (variables.confirm) {
-        void invalidateLocations()
+        await invalidateLocations()
       }
     },
   })
@@ -293,7 +370,12 @@ export function useDeleteLocation() {
         queryKey: queryKeys.globalAssets.locations(),
         exact: false,
       })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.assets.all('global'),
+        exact: false,
+      })
       const previousQueries = captureLocationQuerySnapshots(queryClient)
+      const previousUnifiedQueries = captureUnifiedQuerySnapshots(queryClient)
 
       queryClient.setQueriesData<GlobalLocation[] | undefined>(
         {
@@ -303,11 +385,20 @@ export function useDeleteLocation() {
         (previous) => previous?.filter((location) => location.id !== locationId),
       )
 
-      return { previousQueries }
+      queryClient.setQueriesData<AssetSummary[] | undefined>(
+        {
+          queryKey: queryKeys.assets.all('global'),
+          exact: false,
+        },
+        (previous) => previous?.filter((asset) => asset.id !== locationId),
+      )
+
+      return { previousQueries, previousUnifiedQueries }
     },
     onError: (_error, _locationId, context) => {
       if (!context) return
       restoreLocationQuerySnapshots(queryClient, context.previousQueries)
+      restoreUnifiedQuerySnapshots(queryClient, context.previousUnifiedQueries)
     },
     onSettled: invalidateLocations,
   })

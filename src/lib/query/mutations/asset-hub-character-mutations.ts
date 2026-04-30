@@ -6,6 +6,7 @@ import {
 } from '../task-target-overlay'
 import { queryKeys } from '../keys'
 import type { GlobalCharacter } from '../hooks/useGlobalAssets'
+import type { AssetSummary } from '@/lib/assets/contracts'
 import {
   requestJsonWithError,
   requestVoidWithError,
@@ -20,14 +21,37 @@ interface SelectCharacterImageContext {
     queryKey: readonly unknown[]
     data: GlobalCharacter[] | undefined
   }>
+  previousUnifiedQueries: Array<{
+    queryKey: readonly unknown[]
+    data: AssetSummary[] | undefined
+  }>
   targetKey: string
   requestId: number
+}
+
+interface GenerateCharacterImageContext {
+  previousQueries: Array<{
+    queryKey: readonly unknown[]
+    data: GlobalCharacter[] | undefined
+  }>
+  previousUnifiedQueries: Array<{
+    queryKey: readonly unknown[]
+    data: AssetSummary[] | undefined
+  }>
+}
+
+type GenerateCharacterImageResponse = {
+  taskId?: string | null
 }
 
 interface DeleteCharacterContext {
   previousQueries: Array<{
     queryKey: readonly unknown[]
     data: GlobalCharacter[] | undefined
+  }>
+  previousUnifiedQueries: Array<{
+    queryKey: readonly unknown[]
+    data: AssetSummary[] | undefined
   }>
 }
 
@@ -67,9 +91,105 @@ function captureCharacterQuerySnapshots(queryClient: ReturnType<typeof useQueryC
     .map(([queryKey, data]) => ({ queryKey, data }))
 }
 
+function captureUnifiedQuerySnapshots(queryClient: ReturnType<typeof useQueryClient>) {
+  return queryClient
+    .getQueriesData<AssetSummary[]>({
+      queryKey: queryKeys.assets.all('global'),
+      exact: false,
+    })
+    .map(([queryKey, data]) => ({ queryKey, data }))
+}
+
+function applyUnifiedCharacterSelection(
+  assets: AssetSummary[] | undefined,
+  characterId: string,
+  appearanceIndex: number,
+  imageIndex: number | null,
+): AssetSummary[] | undefined {
+  if (!assets) return assets
+  return assets.map((asset) => {
+    if (asset.id !== characterId || asset.kind !== 'character') return asset
+    return {
+      ...asset,
+      variants: asset.variants.map((variant) => {
+        if (variant.index !== appearanceIndex) return variant
+        return {
+          ...variant,
+          selectionState: {
+            ...variant.selectionState,
+            selectedRenderIndex: imageIndex,
+          },
+          renders: variant.renders.map((render) => ({
+            ...render,
+            isSelected: imageIndex !== null && render.index === imageIndex,
+          })),
+        }
+      }),
+    }
+  })
+}
+
+function applyCharacterGenerationRunning(
+  characters: GlobalCharacter[] | undefined,
+  characterId: string,
+  appearanceIndex: number,
+): GlobalCharacter[] | undefined {
+  if (!characters) return characters
+  return characters.map((character) => {
+    if (character.id !== characterId) return character
+    return {
+      ...character,
+      appearances: (character.appearances || []).map((appearance) => {
+        if (appearance.appearanceIndex !== appearanceIndex) return appearance
+        return {
+          ...appearance,
+          imageTaskRunning: true,
+        }
+      }),
+    }
+  })
+}
+
+function applyUnifiedCharacterGenerationRunning(
+  assets: AssetSummary[] | undefined,
+  characterId: string,
+  appearanceIndex: number,
+): AssetSummary[] | undefined {
+  if (!assets) return assets
+  return assets.map((asset) => {
+    if (asset.id !== characterId || asset.kind !== 'character') return asset
+    return {
+      ...asset,
+      taskState: {
+        isRunning: true,
+        lastError: null,
+      },
+      variants: asset.variants.map((variant) => {
+        if (variant.index !== appearanceIndex) return variant
+        return {
+          ...variant,
+          taskState: {
+            isRunning: true,
+            lastError: null,
+          },
+        }
+      }),
+    }
+  })
+}
+
 function restoreCharacterQuerySnapshots(
   queryClient: ReturnType<typeof useQueryClient>,
   snapshots: Array<{ queryKey: readonly unknown[]; data: GlobalCharacter[] | undefined }>,
+) {
+  snapshots.forEach((snapshot) => {
+    queryClient.setQueryData(snapshot.queryKey, snapshot.data)
+  })
+}
+
+function restoreUnifiedQuerySnapshots(
+  queryClient: ReturnType<typeof useQueryClient>,
+  snapshots: Array<{ queryKey: readonly unknown[]; data: AssetSummary[] | undefined }>,
 ) {
   snapshots.forEach((snapshot) => {
     queryClient.setQueryData(snapshot.queryKey, snapshot.data)
@@ -83,41 +203,99 @@ export function useGenerateCharacterImage() {
   return useMutation({
     mutationFn: async ({
       characterId,
+      appearanceId,
       appearanceIndex,
       artStyle,
       count,
     }: {
       characterId: string
+      appearanceId: string
       appearanceIndex: number
       artStyle?: string
       count?: number
     }) => {
-      return await requestJsonWithError(`/api/assets/${characterId}/generate`, {
+      return await requestJsonWithError<GenerateCharacterImageResponse>(`/api/assets/${characterId}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scope: 'global',
           kind: 'character',
+          appearanceId,
           appearanceIndex,
           artStyle,
           count,
         }),
       }, 'Failed to generate image')
     },
-    onMutate: ({ characterId }) => {
+    onMutate: async ({ characterId, appearanceId, appearanceIndex }): Promise<GenerateCharacterImageContext> => {
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.globalAssets.characters(),
+        exact: false,
+      })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.assets.all('global'),
+        exact: false,
+      })
+      const previousQueries = captureCharacterQuerySnapshots(queryClient)
+      const previousUnifiedQueries = captureUnifiedQuerySnapshots(queryClient)
+
       upsertTaskTargetOverlay(queryClient, {
         projectId: GLOBAL_ASSET_PROJECT_ID,
-        targetType: 'GlobalCharacter',
-        targetId: characterId,
+        targetType: 'GlobalCharacterAppearance',
+        targetId: appearanceId,
+        runningTaskType: 'asset_hub_image',
+        intent: 'generate',
+      })
+
+      queryClient.setQueriesData<GlobalCharacter[] | undefined>(
+        {
+          queryKey: queryKeys.globalAssets.characters(),
+          exact: false,
+        },
+        (previous) => applyCharacterGenerationRunning(
+          previous,
+          characterId,
+          appearanceIndex,
+        ),
+      )
+
+      queryClient.setQueriesData<AssetSummary[] | undefined>(
+        {
+          queryKey: queryKeys.assets.all('global'),
+          exact: false,
+        },
+        (previous) => applyUnifiedCharacterGenerationRunning(
+          previous,
+          characterId,
+          appearanceIndex,
+        ),
+      )
+
+      return {
+        previousQueries,
+        previousUnifiedQueries,
+      }
+    },
+    onSuccess: (data, { appearanceId }) => {
+      upsertTaskTargetOverlay(queryClient, {
+        projectId: GLOBAL_ASSET_PROJECT_ID,
+        targetType: 'GlobalCharacterAppearance',
+        targetId: appearanceId,
+        runningTaskId: data.taskId ?? null,
+        runningTaskType: 'asset_hub_image',
         intent: 'generate',
       })
     },
-    onError: (_error, { characterId }) => {
+    onError: (_error, { appearanceId }, context) => {
       clearTaskTargetOverlay(queryClient, {
         projectId: GLOBAL_ASSET_PROJECT_ID,
-        targetType: 'GlobalCharacter',
-        targetId: characterId,
+        targetType: 'GlobalCharacterAppearance',
+        targetId: appearanceId,
       })
+      if (context) {
+        restoreCharacterQuerySnapshots(queryClient, context.previousQueries)
+        restoreUnifiedQuerySnapshots(queryClient, context.previousUnifiedQueries)
+      }
     },
     onSettled: invalidateCharacters,
   })
@@ -207,11 +385,20 @@ export function useSelectCharacterImage() {
       const requestId = (latestRequestIdByTargetRef.current[targetKey] ?? 0) + 1
       latestRequestIdByTargetRef.current[targetKey] = requestId
 
+      if (variables.confirm) {
+        return { previousQueries: [], previousUnifiedQueries: [], targetKey, requestId }
+      }
+
       await queryClient.cancelQueries({
         queryKey: queryKeys.globalAssets.characters(),
         exact: false,
       })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.assets.all('global'),
+        exact: false,
+      })
       const previousQueries = captureCharacterQuerySnapshots(queryClient)
+      const previousUnifiedQueries = captureUnifiedQuerySnapshots(queryClient)
 
       queryClient.setQueriesData<GlobalCharacter[] | undefined>(
         {
@@ -226,8 +413,22 @@ export function useSelectCharacterImage() {
         ),
       )
 
+      queryClient.setQueriesData<AssetSummary[] | undefined>(
+        {
+          queryKey: queryKeys.assets.all('global'),
+          exact: false,
+        },
+        (previous) => applyUnifiedCharacterSelection(
+          previous,
+          variables.characterId,
+          variables.appearanceIndex,
+          variables.imageIndex,
+        ),
+      )
+
       return {
         previousQueries,
+        previousUnifiedQueries,
         targetKey,
         requestId,
       }
@@ -237,10 +438,11 @@ export function useSelectCharacterImage() {
       const latestRequestId = latestRequestIdByTargetRef.current[context.targetKey]
       if (latestRequestId !== context.requestId) return
       restoreCharacterQuerySnapshots(queryClient, context.previousQueries)
+      restoreUnifiedQuerySnapshots(queryClient, context.previousUnifiedQueries)
     },
-    onSettled: (_data, _error, variables) => {
+    onSettled: async (_data, _error, variables) => {
       if (variables.confirm) {
-        void invalidateCharacters()
+        await invalidateCharacters()
       }
     },
   })
@@ -320,7 +522,12 @@ export function useDeleteCharacter() {
         queryKey: queryKeys.globalAssets.characters(),
         exact: false,
       })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.assets.all('global'),
+        exact: false,
+      })
       const previousQueries = captureCharacterQuerySnapshots(queryClient)
+      const previousUnifiedQueries = captureUnifiedQuerySnapshots(queryClient)
 
       queryClient.setQueriesData<GlobalCharacter[] | undefined>(
         {
@@ -330,11 +537,20 @@ export function useDeleteCharacter() {
         (previous) => previous?.filter((character) => character.id !== characterId),
       )
 
-      return { previousQueries }
+      queryClient.setQueriesData<AssetSummary[] | undefined>(
+        {
+          queryKey: queryKeys.assets.all('global'),
+          exact: false,
+        },
+        (previous) => previous?.filter((asset) => asset.id !== characterId),
+      )
+
+      return { previousQueries, previousUnifiedQueries }
     },
     onError: (_error, _characterId, context) => {
       if (!context) return
       restoreCharacterQuerySnapshots(queryClient, context.previousQueries)
+      restoreUnifiedQuerySnapshots(queryClient, context.previousUnifiedQueries)
     },
     onSettled: invalidateCharacters,
   })

@@ -126,6 +126,7 @@ export function CharacterCard({ character, onImageClick, onImageEdit, onVoiceDes
         generateImage.mutate(
             {
                 characterId: character.id,
+                appearanceId: appearance.id,
                 appearanceIndex: appearance.appearanceIndex,
                 artStyle: appearance.artStyle || undefined,
                 count,

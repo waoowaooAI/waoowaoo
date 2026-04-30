@@ -94,8 +94,8 @@ describe('chain contract - image queue behavior', () => {
       locale: 'zh',
       projectId: 'global-asset-hub',
       episodeId: null,
-      targetType: 'GlobalCharacter',
-      targetId: 'global-character-1',
+      targetType: 'GlobalCharacterAppearance',
+      targetId: 'appearance-1',
       payload: { type: 'character', id: 'global-character-1' },
       userId: 'user-1',
     })
@@ -153,9 +153,9 @@ describe('chain contract - image queue behavior', () => {
       locale: 'zh',
       projectId: 'global-asset-hub',
       episodeId: null,
-      targetType: 'GlobalCharacter',
-      targetId: 'global-character-1',
-      payload: { type: 'character', id: 'global-character-1', appearanceIndex: 0 },
+      targetType: 'GlobalCharacterAppearance',
+      targetId: 'appearance-1',
+      payload: { type: 'character', id: 'global-character-1', appearanceId: 'appearance-1', appearanceIndex: 0 },
       userId: 'user-1',
     })
 

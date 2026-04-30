@@ -43,6 +43,7 @@
         "speaker": "Speaker",
         "selectSpeaker": "Select Speaker",
         "noSpeaker": "Not Set",
+        "appearance": "Appearance",
         "primary": "Primary",
         "secondary": "Secondary",
         "generateFromPrimary": "Generate from Primary",

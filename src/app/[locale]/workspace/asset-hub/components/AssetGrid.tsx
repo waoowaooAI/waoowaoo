@@ -11,7 +11,7 @@ import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { groupAssetsByKind } from '@/lib/assets/grouping'
-import type { AssetSummary } from '@/lib/assets/contracts'
+import type { AssetRenderSummary, AssetSummary, AssetTaskError, AssetVariantSummary } from '@/lib/assets/contracts'
 interface AssetGridProps {
     assets: AssetSummary[]
     loading: boolean
@@ -37,11 +37,13 @@ function AddAssetDropdown({
     onAddLocation,
     onAddProp,
     onAddVoice,
+    currentFilter,
 }: {
     onAddCharacter: () => void
     onAddLocation: () => void
     onAddProp: () => void
     onAddVoice: () => void
+    currentFilter?: 'all' | 'character' | 'location' | 'prop' | 'voice'
 }) {
     const t = useTranslations('assetHub')
     const [open, setOpen] = useState(false)
@@ -78,11 +80,26 @@ function AddAssetDropdown({
     }
 
     const menuItems = [
-        { label: t('addCharacter'), icon: 'user' as const, action: onAddCharacter },
-        { label: t('addLocation'), icon: 'image' as const, action: onAddLocation },
-        { label: t('addProp'), icon: 'diamond' as const, action: onAddProp },
-        { label: t('addVoice'), icon: 'mic' as const, action: onAddVoice },
+        { label: t('addCharacter'), icon: 'user' as const, action: onAddCharacter, kind: 'character' as const },
+        { label: t('addLocation'), icon: 'image' as const, action: onAddLocation, kind: 'location' as const },
+        { label: t('addProp'), icon: 'diamond' as const, action: onAddProp, kind: 'prop' as const },
+        { label: t('addVoice'), icon: 'mic' as const, action: onAddVoice, kind: 'voice' as const },
     ]
+
+    if (currentFilter && currentFilter !== 'all') {
+        const item = menuItems.find((entry) => entry.kind === currentFilter)
+        if (item) {
+            return (
+                <button
+                    onClick={item.action}
+                    className="glass-btn-base glass-btn-primary px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
+                >
+                    <AppIcon name="plus" className="w-4 h-4" />
+                    <span>{item.label}</span>
+                </button>
+            )
+        }
+    }
 
     return (
         <>
@@ -121,11 +138,6 @@ function AddAssetDropdown({
     )
 }
 
-// 内联 SVG 图标
-const PlusIcon = ({ className }: { className?: string }) => (
-    <AppIcon name="plus" className={className} />
-)
-
 export function AssetGrid({
     assets,
     loading,
@@ -163,6 +175,13 @@ export function AssetGrid({
         voice: 1,
     })
     const groupedAssets = groupAssetsByKind(assets)
+    const resolveVariantTaskError = (
+        assetError: AssetTaskError | null,
+        variant: AssetVariantSummary,
+    ) => assetError
+        ?? variant.taskState.lastError
+        ?? variant.renders.find((render: AssetRenderSummary) => render.taskState.lastError)?.taskState.lastError
+        ?? null
     const characters = groupedAssets.character.map((asset) => ({
         id: asset.id,
         name: asset.name,
@@ -182,6 +201,7 @@ export function AssetGrid({
             previousImageUrl: variant.renders[0]?.previousImageUrl ?? null,
             previousImageUrls: variant.renders.map((render) => render.previousImageUrl ?? '').filter((value) => value.length > 0),
             imageTaskRunning: asset.taskState.isRunning || variant.taskState.isRunning || variant.renders.some((render) => render.taskState.isRunning),
+            lastError: resolveVariantTaskError(asset.taskState.lastError, variant),
         })),
     }))
     const locations = groupedAssets.location.map((asset) => ({
@@ -197,6 +217,7 @@ export function AssetGrid({
             previousImageUrl: variant.renders[0]?.previousImageUrl ?? null,
             isSelected: variant.renders[0]?.isSelected ?? false,
             imageTaskRunning: asset.taskState.isRunning || variant.taskState.isRunning || variant.renders.some((render) => render.taskState.isRunning),
+            lastError: resolveVariantTaskError(asset.taskState.lastError, variant),
         })),
     }))
     const props = groupedAssets.prop.map((asset) => ({
@@ -212,6 +233,7 @@ export function AssetGrid({
             previousImageUrl: variant.renders[0]?.previousImageUrl ?? null,
             isSelected: variant.renders[0]?.isSelected ?? false,
             imageTaskRunning: asset.taskState.isRunning || variant.taskState.isRunning || variant.renders.some((render) => render.taskState.isRunning),
+            lastError: resolveVariantTaskError(asset.taskState.lastError, variant),
         })),
     }))
     const voices = groupedAssets.voice.map((asset) => ({
@@ -337,6 +359,7 @@ export function AssetGrid({
                         onAddLocation={onAddLocation}
                         onAddProp={onAddProp}
                         onAddVoice={onAddVoice}
+                        currentFilter={filter}
                     />
                 </div>
             </div>
@@ -344,25 +367,28 @@ export function AssetGrid({
             {isEmpty ? (
                 /* 空状态 */
                 <div className="glass-surface rounded-xl p-12 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--glass-bg-muted)] flex items-center justify-center">
-                        <PlusIcon className="w-8 h-8 text-[var(--glass-text-tertiary)]" />
-                    </div>
                     <p className="text-[var(--glass-text-secondary)] mb-2">{t('emptyState')}</p>
                     <p className="text-sm text-[var(--glass-text-tertiary)]">{t('emptyStateHint')}</p>
-                    <div className="mt-6 flex justify-center">
-                        <AddAssetDropdown
-                            onAddCharacter={onAddCharacter}
-                            onAddLocation={onAddLocation}
-                            onAddProp={onAddProp}
-                            onAddVoice={onAddVoice}
-                        />
-                    </div>
                 </div>
             ) : visibleAssetCount === 0 ? (
-                <div className="flex min-h-[320px] items-center justify-center">
+                <div className="flex min-h-[320px] flex-col items-center justify-center gap-4">
                     <p className="text-sm text-[var(--glass-text-tertiary)]">
-                        {t('filteredEmptyHint')}
+                        {t(`filteredEmpty.${filter}` as Parameters<typeof t>[0])}
                     </p>
+                    {filter !== 'all' && (
+                        <button
+                            onClick={
+                                filter === 'character' ? onAddCharacter
+                                : filter === 'location' ? onAddLocation
+                                : filter === 'prop' ? onAddProp
+                                : onAddVoice
+                            }
+                            className="glass-btn-base glass-btn-primary px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
+                        >
+                            <AppIcon name="plus" className="w-4 h-4" />
+                            <span>{t(`add${filter.charAt(0).toUpperCase()}${filter.slice(1)}` as Parameters<typeof t>[0])}</span>
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-8">

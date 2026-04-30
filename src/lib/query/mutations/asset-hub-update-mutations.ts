@@ -122,6 +122,9 @@ export function useUpdateLocationSummary() {
 }
 
 export function useAiModifyCharacterDescription() {
+  const queryClient = useQueryClient()
+  const invalidateCharacters = () => invalidateGlobalCharacters(queryClient)
+
   return useMutation({
     mutationFn: async ({
       characterId,
@@ -150,10 +153,14 @@ export function useAiModifyCharacterDescription() {
       )
       return resolveTaskResponse<{ modifiedDescription?: string; availableSlots?: LocationAvailableSlot[] }>(response)
     },
+    onSettled: invalidateCharacters,
   })
 }
 
 export function useAiModifyLocationDescription() {
+  const queryClient = useQueryClient()
+  const invalidateLocations = () => invalidateGlobalLocations(queryClient)
+
   return useMutation({
     mutationFn: async ({
       locationId,
@@ -182,6 +189,7 @@ export function useAiModifyLocationDescription() {
       )
       return resolveTaskResponse<{ modifiedDescription?: string; availableSlots?: LocationAvailableSlot[] }>(response)
     },
+    onSettled: invalidateLocations,
   })
 }
 

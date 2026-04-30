@@ -201,9 +201,18 @@ function resolveGenerateOverlayTarget(
   }
 
   if (input.scope === 'global') {
+    if (input.kind === 'character') {
+      const appearanceId = normalizeOptionalString(payload.appearanceId)
+      if (!appearanceId) return null
+      return {
+        projectId: 'global-asset-hub',
+        targetType: 'GlobalCharacterAppearance',
+        targetId: appearanceId,
+      }
+    }
     return {
       projectId: 'global-asset-hub',
-      targetType: input.kind === 'character' ? 'GlobalCharacter' : 'GlobalLocation',
+      targetType: 'GlobalLocation',
       targetId: assetId,
     }
   }

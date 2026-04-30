@@ -195,6 +195,7 @@ export function useCharacterCreationSubmit({
     name,
     onClose,
     onSuccess,
+    referenceCharacterGenerationCount,
     referenceImagesBase64.length,
     referenceSubMode,
     t,
@@ -306,12 +307,14 @@ export function useCharacterCreationSubmit({
           artStyle,
         }) as CreatedCharacterResponse
         const createdCharacterId = result.character?.id
+        const createdAppearanceId = result.character?.appearances?.[0]?.id
         const createdAppearanceIndex = result.character?.appearances?.[0]?.appearanceIndex
-        if (!createdCharacterId || createdAppearanceIndex === undefined) {
+        if (!createdCharacterId || !createdAppearanceId || createdAppearanceIndex === undefined) {
           throw new Error(t('errors.createFailed'))
         }
         await generateAssetHubCharacterImage.mutateAsync({
           characterId: createdCharacterId,
+          appearanceId: createdAppearanceId,
           appearanceIndex: createdAppearanceIndex,
           artStyle,
           count: characterGenerationCount,

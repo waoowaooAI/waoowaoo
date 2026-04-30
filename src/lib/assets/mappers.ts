@@ -260,7 +260,7 @@ export function mapGlobalCharacterToAsset(character: GlobalCharacterRecord): Cha
         {
           targetType: 'GlobalCharacterAppearance',
           targetId: appearance.id,
-          types: ['asset_hub_modify'],
+          types: ['asset_hub_image', 'asset_hub_modify', 'asset_hub_reference_to_character'],
         },
       ],
     })
@@ -274,13 +274,7 @@ export function mapGlobalCharacterToAsset(character: GlobalCharacterRecord): Cha
     name: character.name,
     folderId: character.folderId,
     capabilities: registration.capabilities,
-    taskRefs: [
-      {
-        targetType: 'GlobalCharacter',
-        targetId: character.id,
-        types: ['asset_hub_image'],
-      },
-    ],
+    taskRefs: [],
     taskState: createIdleTaskState(),
     variants,
     introduction: null,

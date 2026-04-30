@@ -51,18 +51,6 @@ function inferTaskContractFromOperation(params: {
   const input = isRecord(params.input) ? params.input : {}
 
   switch (params.operationId) {
-    case 'api_asset_hub_generate_image':
-      return {
-        type: TASK_TYPE.ASSET_HUB_IMAGE,
-        targetType: input.type === 'location' ? 'GlobalLocation' : 'GlobalCharacter',
-        targetId: typeof input.id === 'string' ? input.id : 'global-asset-1',
-      }
-    case 'api_asset_hub_modify_image':
-      return {
-        type: TASK_TYPE.ASSET_HUB_MODIFY,
-        targetType: input.type === 'location' ? 'GlobalLocationImage' : 'GlobalCharacterAppearance',
-        targetId: typeof input.id === 'string' ? input.id : 'global-asset-1',
-      }
     case 'api_assets_generate':
       return input.scope === 'project'
         ? {
@@ -72,8 +60,12 @@ function inferTaskContractFromOperation(params: {
         }
         : {
           type: TASK_TYPE.ASSET_HUB_IMAGE,
-          targetType: input.kind === 'location' ? 'GlobalLocation' : 'GlobalCharacter',
-          targetId: typeof input.assetId === 'string' ? input.assetId : 'asset-1',
+          targetType: input.kind === 'location' ? 'GlobalLocation' : 'GlobalCharacterAppearance',
+          targetId: typeof input.appearanceId === 'string'
+            ? input.appearanceId
+            : typeof input.assetId === 'string'
+              ? input.assetId
+              : 'asset-1',
         }
     case 'api_assets_modify_render':
       return input.scope === 'project'
@@ -434,37 +426,17 @@ export async function invokePostRoute(routeCase: DirectRouteCase): Promise<Respo
 
 export const DIRECT_MEDIA_CASES: ReadonlyArray<DirectRouteCase> = [
   {
-    routeFile: 'src/app/api/asset-hub/generate-image/route.ts',
-    body: { type: 'character', id: 'global-character-1', appearanceIndex: 0, artStyle: 'realistic' },
-    expectedTaskType: TASK_TYPE.ASSET_HUB_IMAGE,
-    expectedTargetType: 'GlobalCharacter',
-    expectedProjectId: 'global-asset-hub',
-  },
-  {
-    routeFile: 'src/app/api/asset-hub/modify-image/route.ts',
-    body: {
-      type: 'character',
-      id: 'global-character-1',
-      modifyPrompt: 'sharpen details',
-      appearanceIndex: 0,
-      imageIndex: 0,
-      extraImageUrls: ['https://example.com/ref-a.png'],
-    },
-    expectedTaskType: TASK_TYPE.ASSET_HUB_MODIFY,
-    expectedTargetType: 'GlobalCharacterAppearance',
-    expectedProjectId: 'global-asset-hub',
-  },
-  {
     routeFile: 'src/app/api/assets/[assetId]/generate/route.ts',
     body: {
       scope: 'global',
       kind: 'character',
+      appearanceId: 'appearance-1',
       appearanceIndex: 0,
       artStyle: 'realistic',
     },
     params: { assetId: 'global-character-1' },
     expectedTaskType: TASK_TYPE.ASSET_HUB_IMAGE,
-    expectedTargetType: 'GlobalCharacter',
+    expectedTargetType: 'GlobalCharacterAppearance',
     expectedProjectId: 'global-asset-hub',
   },
   {

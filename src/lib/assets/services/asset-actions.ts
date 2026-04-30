@@ -9,7 +9,7 @@ import { getProjectModelConfig, getUserModelConfig, buildImageBillingPayload, bu
 import { withTaskUiPayload } from '@/lib/task/ui-payload'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import { ensureGlobalLocationImageSlots, ensureProjectLocationImageSlots } from '@/lib/image-generation/location-slots'
-import { hasCharacterAppearanceOutput, hasGlobalCharacterAppearanceOutput, hasGlobalCharacterOutput, hasGlobalLocationImageOutput, hasGlobalLocationOutput, hasLocationImageOutput } from '@/lib/task/has-output'
+import { hasCharacterAppearanceOutput, hasGlobalCharacterAppearanceOutput, hasGlobalLocationImageOutput, hasGlobalLocationOutput, hasLocationImageOutput } from '@/lib/task/has-output'
 import { sanitizeImageInputsForTaskPayload } from '@/lib/media/outbound-image'
 import { PRIMARY_APPEARANCE_INDEX, isArtStyleValue, removeLocationPromptSuffix, removePropPromptSuffix, type ArtStyleValue } from '@/lib/constants'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
@@ -192,12 +192,47 @@ async function submitGlobalAssetGenerateTask(input: AssetGenerateInput) {
     })
   }
 
+  let characterAppearanceId: string | null = null
+  if (normalizedKind === 'character') {
+    const requestedAppearanceId = normalizeString(input.body.appearanceId)
+    const appearance = requestedAppearanceId
+      ? await prisma.globalCharacterAppearance.findFirst({
+        where: {
+          id: requestedAppearanceId,
+          character: {
+            id: input.assetId,
+            userId: input.access.userId,
+          },
+        },
+        select: { id: true },
+      })
+      : await prisma.globalCharacterAppearance.findFirst({
+        where: {
+          characterId: input.assetId,
+          appearanceIndex,
+          character: {
+            userId: input.access.userId,
+          },
+        },
+        select: { id: true },
+      })
+    if (!appearance) {
+      throw new ApiError('NOT_FOUND')
+    }
+    characterAppearanceId = appearance.id
+  }
+
   const payloadBase: Record<string, unknown> = normalizedKind === 'character'
-    ? { ...input.body, id: input.assetId, type: input.kind, appearanceIndex, artStyle, count }
+    ? { ...input.body, id: input.assetId, type: input.kind, appearanceId: characterAppearanceId, appearanceIndex, artStyle, count }
     : { ...input.body, id: input.assetId, type: input.kind, artStyle, count }
-  const targetType = normalizedKind === 'character' ? 'GlobalCharacter' : 'GlobalLocation'
+  const targetType = normalizedKind === 'character' ? 'GlobalCharacterAppearance' : 'GlobalLocation'
+  const targetId = normalizedKind === 'character' ? characterAppearanceId : input.assetId
+  if (!targetId) {
+    throw new ApiError('INVALID_PARAMS')
+  }
   const hasOutputAtStart = normalizedKind === 'character'
-    ? await hasGlobalCharacterOutput({
+    ? await hasGlobalCharacterAppearanceOutput({
+      targetId,
       characterId: input.assetId,
       appearanceIndex,
     })
@@ -229,9 +264,9 @@ async function submitGlobalAssetGenerateTask(input: AssetGenerateInput) {
     projectId: 'global-asset-hub',
     type: TASK_TYPE.ASSET_HUB_IMAGE,
     targetType,
-    targetId: input.assetId,
+    targetId,
     payload: withTaskUiPayload(billingPayload, { hasOutputAtStart }),
-    dedupeKey: `${TASK_TYPE.ASSET_HUB_IMAGE}:${targetType}:${input.assetId}:${normalizedKind === 'character' ? appearanceIndex : 'na'}:${toNumber(input.body.imageIndex) === null ? count : `single:${toNumber(input.body.imageIndex)}`}`,
+    dedupeKey: `${TASK_TYPE.ASSET_HUB_IMAGE}:${targetType}:${targetId}:${normalizedKind === 'character' ? appearanceIndex : 'na'}:${toNumber(input.body.imageIndex) === null ? count : `single:${toNumber(input.body.imageIndex)}`}`,
     billingInfo: buildDefaultTaskBillingInfo(TASK_TYPE.ASSET_HUB_IMAGE, billingPayload),
   })
 }

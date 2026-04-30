@@ -43,6 +43,7 @@
         "speaker": "说话人",
         "selectSpeaker": "选择说话人",
         "noSpeaker": "未设置",
+        "appearance": "形象",
         "primary": "主形象",
         "secondary": "子状态",
         "generateFromPrimary": "基于主形象生成",
