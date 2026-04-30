@@ -2,7 +2,7 @@
 import { logError as _ulogError } from '@/lib/logging/core'
 import { useTranslations } from 'next-intl'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 interface ScreenplayScene {
     scene_number: number
@@ -31,20 +31,132 @@ interface Screenplay {
 interface ScreenplayDisplayProps {
     screenplay: string | null
     originalContent: string
+    onSaveScreenplay?: (screenplay: string) => Promise<void>
 }
 
-export default function ScreenplayDisplay({ screenplay, originalContent }: ScreenplayDisplayProps) {
+function cloneScreenplay(screenplay: Screenplay): Screenplay {
+    return JSON.parse(JSON.stringify(screenplay)) as Screenplay
+}
+
+function EditableScreenplayText({
+    value,
+    title,
+    multiline = true,
+    className = '',
+    onSave,
+}: {
+    value: string
+    title: string
+    multiline?: boolean
+    className?: string
+    onSave: (nextValue: string) => Promise<void>
+}) {
+    const t = useTranslations('storyboard')
+    const [isEditing, setIsEditing] = useState(false)
+    const [draft, setDraft] = useState(value)
+    const [isSaving, setIsSaving] = useState(false)
+
+    useEffect(() => {
+        if (!isEditing) setDraft(value)
+    }, [isEditing, value])
+
+    const handleSave = async () => {
+        if (draft === value) {
+            setIsEditing(false)
+            return
+        }
+        setIsSaving(true)
+        try {
+            await onSave(draft)
+            setIsEditing(false)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    if (isEditing) {
+        return (
+            <div className="space-y-1">
+                <textarea
+                    autoFocus
+                    value={draft}
+                    rows={multiline ? 3 : 1}
+                    onChange={(event) => setDraft(event.target.value)}
+                    className={`w-full rounded border border-[var(--glass-stroke-focus)] bg-[var(--glass-bg-surface)] px-2 py-1 text-sm text-[var(--glass-text-secondary)] outline-none ${multiline ? 'resize-y' : 'resize-none'} ${className}`}
+                />
+                <div className="flex items-center justify-end gap-2">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setDraft(value)
+                            setIsEditing(false)
+                        }}
+                        disabled={isSaving}
+                        className="glass-btn-base glass-btn-soft rounded px-2 py-1 text-xs disabled:opacity-50"
+                    >
+                        {t('screenplay.cancel')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => { void handleSave() }}
+                        disabled={isSaving}
+                        className="glass-btn-base glass-btn-primary rounded px-2 py-1 text-xs disabled:opacity-50"
+                    >
+                        {isSaving ? t('screenplay.saving') : t('screenplay.save')}
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className={`block w-full rounded border border-transparent px-1 py-0.5 text-left transition-colors hover:border-[var(--glass-stroke-focus)] hover:bg-[var(--glass-tone-info-bg)] ${className}`}
+            title={title}
+        >
+            {value || <span className="italic text-[var(--glass-text-tertiary)]">{t('screenplay.emptyEditable')}</span>}
+        </button>
+    )
+}
+
+export default function ScreenplayDisplay({ screenplay, originalContent, onSaveScreenplay }: ScreenplayDisplayProps) {
     const t = useTranslations('storyboard')
     const [activeTab, setActiveTab] = useState<'screenplay' | 'original'>('screenplay')
+    const [localScreenplay, setLocalScreenplay] = useState(screenplay)
+
+    useEffect(() => {
+        setLocalScreenplay(screenplay)
+    }, [screenplay])
 
     // 解析剧本JSON
-    let parsedScreenplay: Screenplay | null = null
-    try {
-        if (screenplay) {
-            parsedScreenplay = JSON.parse(screenplay)
+    const parsedScreenplay = useMemo(() => {
+        try {
+            if (localScreenplay) {
+                return JSON.parse(localScreenplay) as Screenplay
+            }
+        } catch (e) {
+            _ulogError('Failed to parse screenplay:', e)
         }
-    } catch (e) {
-        _ulogError('Failed to parse screenplay:', e)
+        return null
+    }, [localScreenplay])
+
+    const handleUpdateScreenplay = async (mutate: (nextScreenplay: Screenplay) => void) => {
+        if (!parsedScreenplay || !onSaveScreenplay) return
+        const previous = localScreenplay
+        const nextScreenplay = cloneScreenplay(parsedScreenplay)
+        mutate(nextScreenplay)
+        const nextSerialized = JSON.stringify(nextScreenplay)
+        setLocalScreenplay(nextSerialized)
+        try {
+            await onSaveScreenplay(nextSerialized)
+        } catch (error) {
+            setLocalScreenplay(previous)
+            _ulogError('Failed to save screenplay:', error)
+            alert(t('screenplay.saveFailed'))
+            throw error
+        }
     }
 
     return (
@@ -79,16 +191,56 @@ export default function ScreenplayDisplay({ screenplay, originalContent }: Scree
                                     <span className="font-bold text-[var(--glass-tone-info-fg)] bg-[var(--glass-tone-info-bg)] px-2 py-0.5 rounded">
                                         {t('screenplay.scene', { number: scene.scene_number })}
                                     </span>
-                                    <span className="text-[var(--glass-text-tertiary)]">
-                                        {typeof scene.heading === 'string'
-                                            ? scene.heading
-                                            : `${scene.heading.int_ext} · ${scene.heading.location} · ${scene.heading.time}`}
-                                    </span>
+                                    {typeof scene.heading === 'string' ? (
+                                        <span className="text-[var(--glass-text-tertiary)]">{scene.heading}</span>
+                                    ) : (
+                                        <span className="flex flex-wrap items-center gap-1 text-[var(--glass-text-tertiary)]">
+                                            <span>{scene.heading.int_ext}</span>
+                                            <span>·</span>
+                                            {onSaveScreenplay ? (
+                                                <EditableScreenplayText
+                                                    value={scene.heading.location || ''}
+                                                    title={t('screenplay.clickToEdit')}
+                                                    multiline={false}
+                                                    className="inline-block w-auto min-w-16 text-xs"
+                                                    onSave={(nextValue) => handleUpdateScreenplay((nextScreenplay) => {
+                                                        const nextScene = nextScreenplay.scenes[sceneIndex]
+                                                        if (nextScene && typeof nextScene.heading !== 'string') nextScene.heading.location = nextValue
+                                                    })}
+                                                />
+                                            ) : (
+                                                <span>{scene.heading.location}</span>
+                                            )}
+                                            <span>·</span>
+                                            {onSaveScreenplay ? (
+                                                <EditableScreenplayText
+                                                    value={scene.heading.time || ''}
+                                                    title={t('screenplay.clickToEdit')}
+                                                    multiline={false}
+                                                    className="inline-block w-auto min-w-12 text-xs"
+                                                    onSave={(nextValue) => handleUpdateScreenplay((nextScreenplay) => {
+                                                        const nextScene = nextScreenplay.scenes[sceneIndex]
+                                                        if (nextScene && typeof nextScene.heading !== 'string') nextScene.heading.time = nextValue
+                                                    })}
+                                                />
+                                            ) : (
+                                                <span>{scene.heading.time}</span>
+                                            )}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {scene.description && (
                                     <div className="text-xs text-[var(--glass-text-tertiary)] italic bg-[var(--glass-bg-muted)]/70 px-2 py-1 rounded">
-                                        {scene.description}
+                                        {onSaveScreenplay ? (
+                                            <EditableScreenplayText
+                                                value={scene.description}
+                                                title={t('screenplay.clickToEdit')}
+                                                onSave={(nextValue) => handleUpdateScreenplay((nextScreenplay) => {
+                                                    nextScreenplay.scenes[sceneIndex].description = nextValue
+                                                })}
+                                            />
+                                        ) : scene.description}
                                     </div>
                                 )}
 
@@ -107,7 +259,17 @@ export default function ScreenplayDisplay({ screenplay, originalContent }: Scree
                                     {scene.content.map((item, itemIndex) => (
                                         <div key={itemIndex}>
                                             {item.type === 'action' && (
-                                                <p className="text-sm text-[var(--glass-text-secondary)] leading-relaxed">{item.text}</p>
+                                                <div className="text-sm text-[var(--glass-text-secondary)] leading-relaxed">
+                                                    {onSaveScreenplay ? (
+                                                        <EditableScreenplayText
+                                                            value={item.text || ''}
+                                                            title={t('screenplay.clickToEdit')}
+                                                            onSave={(nextValue) => handleUpdateScreenplay((nextScreenplay) => {
+                                                                nextScreenplay.scenes[sceneIndex].content[itemIndex].text = nextValue
+                                                            })}
+                                                        />
+                                                    ) : item.text}
+                                                </div>
                                             )}
                                             {item.type === 'dialogue' && (
                                                 <div className="bg-[var(--glass-tone-warning-bg)]/60 border-l-2 border-[var(--glass-stroke-warning)] pl-2 py-1">
@@ -117,17 +279,56 @@ export default function ScreenplayDisplay({ screenplay, originalContent }: Scree
                                                             <span className="text-[var(--glass-tone-warning-fg)] ml-1">({item.parenthetical})</span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm text-[var(--glass-text-secondary)]">
+                                                    <div className="text-sm text-[var(--glass-text-secondary)]">
                                                         <span className="select-none text-[var(--glass-text-tertiary)]">&quot;</span>
-                                                        {item.lines}
+                                                        {onSaveScreenplay ? (
+                                                            <EditableScreenplayText
+                                                                value={item.lines || ''}
+                                                                title={t('screenplay.clickToEdit')}
+                                                                className="inline-block w-[calc(100%-1rem)]"
+                                                                onSave={(nextValue) => handleUpdateScreenplay((nextScreenplay) => {
+                                                                    nextScreenplay.scenes[sceneIndex].content[itemIndex].lines = nextValue
+                                                                })}
+                                                            />
+                                                        ) : item.lines}
                                                         <span className="select-none text-[var(--glass-text-tertiary)]">&quot;</span>
-                                                    </p>
+                                                    </div>
                                                 </div>
                                             )}
                                             {item.type === 'voiceover' && (
                                                 <div className="bg-[var(--glass-tone-info-bg)]/60 border-l-2 border-[var(--glass-stroke-focus)] pl-2 py-1">
-                                                    <span className="text-xs text-[var(--glass-tone-info-fg)]">{t('screenplay.voiceover')}</span>
-                                                    <p className="text-sm text-[var(--glass-text-secondary)] italic">{item.text}</p>
+                                                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                                                        <span className="text-xs text-[var(--glass-tone-info-fg)]">{t('screenplay.voiceover')}</span>
+                                                        {onSaveScreenplay && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    void handleUpdateScreenplay((nextScreenplay) => {
+                                                                        const nextItem = nextScreenplay.scenes[sceneIndex].content[itemIndex]
+                                                                        nextItem.type = 'action'
+                                                                        nextItem.text = nextItem.text || item.text || ''
+                                                                        delete nextItem.character
+                                                                        delete nextItem.lines
+                                                                        delete nextItem.parenthetical
+                                                                    })
+                                                                }}
+                                                                className="glass-btn-base glass-btn-soft rounded px-2 py-0.5 text-[10px]"
+                                                            >
+                                                                {t('screenplay.convertToAction')}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-sm text-[var(--glass-text-secondary)] italic">
+                                                        {onSaveScreenplay ? (
+                                                            <EditableScreenplayText
+                                                                value={item.text || ''}
+                                                                title={t('screenplay.clickToEdit')}
+                                                                onSave={(nextValue) => handleUpdateScreenplay((nextScreenplay) => {
+                                                                    nextScreenplay.scenes[sceneIndex].content[itemIndex].text = nextValue
+                                                                })}
+                                                            />
+                                                        ) : item.text}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

@@ -308,6 +308,13 @@
         "scene": "Scene {number}",
         "characters": "Characters",
         "voiceover": "Voiceover",
+        "clickToEdit": "Click to edit",
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "saveFailed": "Failed to save screenplay. Please retry.",
+        "emptyEditable": "Click to fill",
+        "convertToAction": "Convert to visual description",
         "parseFailedTitle": "Failed to parse screenplay format",
         "parseFailedDescription": "Please check the original content"
     },

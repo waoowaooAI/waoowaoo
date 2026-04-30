@@ -289,7 +289,33 @@ export default function ScriptViewScriptPanel({
                                     <span className="inline-flex items-center text-[13px] font-bold text-[var(--glass-tone-info-fg)]/80 bg-[var(--glass-tone-info-bg)]/50 border border-[var(--glass-stroke-focus)]/20 px-2.5 py-0.5 rounded-full shrink-0 italic">
                                       {tScript('screenplay.narration')}
                                     </span>
-                                    <p className="text-[15px] text-[var(--glass-text-secondary)] font-medium italic leading-[1.5] flex-1">{item.text}</p>
+                                    <button
+                                      type="button"
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        const newScreenplay = JSON.parse(JSON.stringify(screenplay))
+                                        const nextItem = newScreenplay.scenes[sceneIdx].content[itemIdx]
+                                        nextItem.type = 'action'
+                                        nextItem.text = nextItem.text || item.text || ''
+                                        delete nextItem.character
+                                        delete nextItem.lines
+                                        void handleScriptSave(clip.id, JSON.stringify(newScreenplay), true)
+                                      }}
+                                      className="text-[11px] text-[var(--glass-tone-info-fg)] hover:underline"
+                                    >
+                                      {tScript('screenplay.convertToAction')}
+                                    </button>
+                                    <div className="text-[15px] text-[var(--glass-text-secondary)] font-medium italic leading-[1.5] flex-1 min-w-0">
+                                      <EditableText
+                                        text={item.text}
+                                        onSave={(newVal) => {
+                                          const newScreenplay = JSON.parse(JSON.stringify(screenplay))
+                                          newScreenplay.scenes[sceneIdx].content[itemIdx].text = newVal
+                                          void handleScriptSave(clip.id, JSON.stringify(newScreenplay), true)
+                                        }}
+                                        tScript={tScript}
+                                      />
+                                    </div>
                                   </div>
                                 )
                               }

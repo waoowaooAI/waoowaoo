@@ -46,6 +46,7 @@
         "dialogue": "Dialogue",
         "action": "Action",
         "narration": "Narration",
+        "convertToAction": "Convert to visual description",
         "content": "Original Content",
         "noContent": "No content yet",
         "clickToEdit": "Click to edit",

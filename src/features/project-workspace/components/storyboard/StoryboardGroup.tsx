@@ -17,6 +17,7 @@ import type { StoryboardGroupProps } from './StoryboardGroup.types'
 import { AppIcon } from '@/components/ui/icons'
 import { getAspectRatioConfig } from '@/lib/constants'
 import { useAdaptiveCardGrid } from '../layout/useAdaptiveCardGrid'
+import { useUpdateProjectClip } from '@/lib/query/hooks'
 
 export default function StoryboardGroup({
   storyboard,
@@ -78,6 +79,7 @@ export default function StoryboardGroup({
   submittingVariantPanelId,
 }: StoryboardGroupProps) {
   const t = useTranslations('storyboard')
+  const updateProjectClip = useUpdateProjectClip(projectId)
   const isVerticalRatio = getAspectRatioConfig(videoRatio).isVertical
   const panelGrid = useAdaptiveCardGrid({
     itemCount: textPanels.length,
@@ -217,7 +219,15 @@ export default function StoryboardGroup({
             {isExpanded && (
               <div className="mt-2 glass-surface-soft p-2">
                 {clip.screenplay ? (
-                  <ScreenplayDisplay screenplay={clip.screenplay} originalContent={clip.content} />
+                  <ScreenplayDisplay
+                    screenplay={clip.screenplay}
+                    originalContent={clip.content}
+                    onSaveScreenplay={(nextScreenplay) => updateProjectClip.mutateAsync({
+                      clipId: clip.id,
+                      episodeId,
+                      data: { screenplay: nextScreenplay },
+                    }).then(() => undefined)}
+                  />
                 ) : (
                   <div className="whitespace-pre-wrap p-3 text-sm text-[var(--glass-text-secondary)]">
                     {clip.content}

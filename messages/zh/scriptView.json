@@ -46,6 +46,7 @@
         "dialogue": "对白",
         "action": "动作",
         "narration": "旁白",
+        "convertToAction": "改为画面描述",
         "content": "原文内容",
         "noContent": "暂无内容",
         "clickToEdit": "点击编辑",

@@ -308,6 +308,13 @@
         "scene": "场景 {number}",
         "characters": "出场角色",
         "voiceover": "旁白",
+        "clickToEdit": "点击编辑",
+        "save": "保存",
+        "saving": "保存中...",
+        "cancel": "取消",
+        "saveFailed": "剧本保存失败，请重试",
+        "emptyEditable": "点击填写",
+        "convertToAction": "改为画面描述",
         "parseFailedTitle": "剧本格式解析失败",
         "parseFailedDescription": "请查看原文内容"
     },
