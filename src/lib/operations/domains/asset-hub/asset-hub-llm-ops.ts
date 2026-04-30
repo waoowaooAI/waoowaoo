@@ -302,15 +302,20 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
 
         const count = normalizeImageGenerationCount('reference-to-character', body.count)
         const isBackgroundJob = body.isBackgroundJob === true || body.isBackgroundJob === 1 || body.isBackgroundJob === '1'
+        const extractOnly = body.extractOnly === true || body.extractOnly === 1 || body.extractOnly === '1'
         const characterId = typeof body.characterId === 'string' ? body.characterId.trim() : ''
         const appearanceId = typeof body.appearanceId === 'string' ? body.appearanceId.trim() : ''
         if (isBackgroundJob && (!characterId || !appearanceId)) {
           throw new ApiError('INVALID_PARAMS')
         }
 
-        const userConfig = await getUserModelConfig(ctx.userId)
-        if (!userConfig.analysisModel) {
-          throw new ApiError('MISSING_CONFIG')
+        let analysisModel = ''
+        if (extractOnly) {
+          const userConfig = await getUserModelConfig(ctx.userId)
+          analysisModel = userConfig.analysisModel || ''
+          if (!analysisModel) {
+            throw new ApiError('MISSING_CONFIG')
+          }
         }
 
         const payload: Record<string, unknown> = {
@@ -318,7 +323,7 @@ export function createAssetHubLlmOperations(): ProjectAgentOperationRegistryDraf
           count,
           referenceImageUrls: normalized,
           ...(issues.length > 0 ? { referenceImageIssues: issues } : {}),
-          analysisModel: userConfig.analysisModel,
+          ...(analysisModel ? { analysisModel } : {}),
           displayMode: 'detail',
         }
 

@@ -74,11 +74,6 @@ const mustIncludeRules: Rule[] = [
     message: 'modify-storyboard-image route must sanitize image inputs',
   },
   {
-    file: 'src/app/api/asset-hub/modify-image/route.ts',
-    pattern: /sanitizeImageInputsForTaskPayload/,
-    message: 'asset-hub modify-image route must sanitize image inputs',
-  },
-  {
     file: 'src/components/ui/ImagePreviewModal.tsx',
     pattern: /import\s+\{\s*resolveOriginalImageUrl,\s*toDisplayImageUrl\s*\}\s+from\s+'@\/lib\/media\/image-url'/,
     message: 'ImagePreviewModal must use shared image-url helpers',

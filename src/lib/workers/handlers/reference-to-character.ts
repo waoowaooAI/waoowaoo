@@ -2,8 +2,7 @@ import sharp from 'sharp'
 import type { Job } from 'bullmq'
 import { prisma } from '@/lib/prisma'
 import { generateImage } from '@/lib/ai-exec/engine'
-import { fetchGeneratedMediaWithRetry, queryFalGeneratedMediaStatus } from '@/lib/ai-exec/media-result'
-import { getProviderConfig } from '@/lib/user-api/runtime-config'
+import { fetchGeneratedMediaWithRetry } from '@/lib/ai-exec/media-result'
 import { executeAiVisionStep } from '@/lib/ai-exec/engine'
 import { getUserModelConfig } from '@/lib/config-service'
 import {
@@ -15,7 +14,7 @@ import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { generateUniqueKey, getSignedUrl, uploadObject } from '@/lib/storage'
 import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { reportTaskProgress } from '@/lib/workers/shared'
-import { assertTaskActive } from '@/lib/workers/utils'
+import { assertTaskActive, waitExternalResult } from '@/lib/workers/utils'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
 import { buildAiPrompt as buildPrompt, AI_PROMPT_IDS as PROMPT_IDS } from '@/lib/ai-prompts'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
@@ -24,8 +23,7 @@ import {
   readBoolean,
   readString,
 } from './reference-to-character-helpers'
-const POLL_MAX_ATTEMPTS = 60
-const POLL_INTERVAL_MS = 2000
+
 async function generateReferenceImage(params: {
   job: Job<TaskJobData>
   imageIndex: number
@@ -33,7 +31,6 @@ async function generateReferenceImage(params: {
   imageModel: string
   prompt: string
   referenceImages?: string[]
-  falApiKey?: string | null
   keyPrefix: string
   labelText?: string
 }): Promise<string | null> {
@@ -44,7 +41,6 @@ async function generateReferenceImage(params: {
     imageModel,
     prompt,
     referenceImages,
-    falApiKey,
     keyPrefix,
     labelText,
   } = params
@@ -69,23 +65,20 @@ async function generateReferenceImage(params: {
     )
 
     let finalImageUrl = result.imageUrl
-    const requestId = typeof result.requestId === 'string' ? result.requestId : ''
-    const endpoint = typeof result.endpoint === 'string' ? result.endpoint : ''
-    if (result.async && requestId && endpoint) {
-      if (!falApiKey) {
-        throw new Error('reference_to_character async result requires falApiKey')
+    if (result.async) {
+      const externalId = result.externalId
+        ?? (result.endpoint && result.requestId ? `FAL:IMAGE:${result.endpoint}:${result.requestId}` : null)
+      if (!externalId) {
+        return null
       }
-      for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt += 1) {
-        await assertTaskActive(job, `reference_to_character_poll_${imageIndex + 1}_${attempt + 1}`)
-        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS))
-        const status = await queryFalGeneratedMediaStatus({ endpoint, requestId, apiKey: falApiKey })
-        if (status.completed && status.resultUrl) {
-          finalImageUrl = status.resultUrl
-          break
-        }
-        if (status.failed) {
-          return null
-        }
+      try {
+        const polled = await waitExternalResult(job, externalId, userId, {
+          progressStart: 40,
+          progressEnd: 85,
+        })
+        finalImageUrl = polled.url
+      } catch {
+        return null
       }
     }
 
@@ -227,7 +220,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
   }
 
   const useReferenceImages = !customDescription
-  const { apiKey: falApiKey } = await getProviderConfig(job.data.userId, 'fal')
   const keyPrefix = isAssetHub ? 'ref-char' : `proj-ref-char-${job.data.projectId}`
   const count = normalizeImageGenerationCount('reference-to-character', payload.count)
 
@@ -245,28 +237,10 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       imageModel,
       prompt,
       ...(useReferenceImages ? { referenceImages: allReferenceImages } : {}),
-      falApiKey,
       keyPrefix,
       ...(isProject ? { labelText: characterName } : {}),
     }),
   ))
-
-  let description: string | null = null
-  if (analysisModel) {
-    const analysisPrompt = buildPrompt({
-      promptId: PROMPT_IDS.CHARACTER_REFERENCE_DESCRIBE_IMAGE,
-      locale: job.data.locale,
-    })
-    const completion = await executeAiVisionStep({
-      userId: job.data.userId,
-      model: analysisModel,
-      prompt: analysisPrompt,
-      imageUrls: allReferenceImages,
-      temperature: 0.3,
-      ...(isProject ? { projectId: job.data.projectId } : {}),
-    })
-    description = completion.text
-  }
 
   const successfulCosKeys = imageResults.filter((item): item is string => Boolean(item))
   if (successfulCosKeys.length === 0) {
@@ -281,7 +255,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
         data: {
           imageUrl: successfulCosKeys[0],
           imageUrls: encodeImageUrls(successfulCosKeys),
-          description: description || undefined,
         },
       })
     } else {
@@ -290,7 +263,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
         data: {
           imageUrl: successfulCosKeys[0],
           imageUrls: encodeImageUrls(successfulCosKeys),
-          description: description || undefined,
         },
       })
     }
@@ -316,6 +288,5 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     imageUrl: mainSignedUrl,
     cosKey: mainCosKey,
     cosKeys: successfulCosKeys,
-    description,
   }
 }

@@ -9,7 +9,6 @@ import { resolveTaskLocale } from '@/lib/task/resolve-locale'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import { TASK_TYPE } from '@/lib/task/types'
 import { sanitizeImageInputsForTaskPayload } from '@/lib/media/outbound-image'
-import { getUserModelConfig } from '@/lib/config-service'
 import { submitOperationTask } from '@/lib/operations/submit-operation-task'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
 import { defineOperation } from '@/lib/operations/define-operation'
@@ -128,6 +127,20 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
         const initialImageUrl = normalizeString(body.initialImageUrl) || null
         const descriptionText = normalizeString(body.description) || `${name} 的角色设定`
         const imageMedia = await resolveMediaRefFromLegacyValue(initialImageUrl)
+        const generateFromReference = body.generateFromReference === true || body.generateFromReference === 1 || body.generateFromReference === '1'
+        const referenceImages = generateFromReference ? parseReferenceImages(body) : []
+        const sanitizedReferenceImages = generateFromReference && referenceImages.length > 0
+          ? sanitizeImageInputsForTaskPayload(referenceImages)
+          : null
+
+        if (sanitizedReferenceImages) {
+          if (sanitizedReferenceImages.normalized.length === 0) {
+            throw new ApiError('INVALID_PARAMS', {
+              code: 'REFERENCE_IMAGES_INVALID',
+              issues: sanitizedReferenceImages.issues,
+            })
+          }
+        }
 
         const character = await prisma.globalCharacter.create({
           data: {
@@ -153,31 +166,14 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
           },
         })
 
-        const generateFromReference = body.generateFromReference === true || body.generateFromReference === 1 || body.generateFromReference === '1'
-        const referenceImages = generateFromReference ? parseReferenceImages(body) : []
-        if (generateFromReference && referenceImages.length > 0) {
-          const { normalized, issues } = sanitizeImageInputsForTaskPayload(referenceImages)
-          if (normalized.length === 0) {
-            await prisma.globalCharacter.delete({ where: { id: character.id } })
-            throw new ApiError('INVALID_PARAMS', {
-              code: 'REFERENCE_IMAGES_INVALID',
-              issues,
-            })
-          }
-
+        if (sanitizedReferenceImages) {
           const count = normalizeImageGenerationCount('reference-to-character', body.count)
           const customDescription = normalizeString(body.customDescription)
 
-          const userConfig = await getUserModelConfig(ctx.userId)
-          if (!userConfig.analysisModel) {
-            await prisma.globalCharacter.delete({ where: { id: character.id } })
-            throw new ApiError('MISSING_CONFIG')
-          }
-
           const payload: Record<string, unknown> = {
             ...body,
-            referenceImageUrls: normalized,
-            ...(issues.length > 0 ? { referenceImageIssues: issues } : {}),
+            referenceImageUrls: sanitizedReferenceImages.normalized,
+            ...(sanitizedReferenceImages.issues.length > 0 ? { referenceImageIssues: sanitizedReferenceImages.issues } : {}),
             characterName: name,
             characterId: character.id,
             appearanceId: appearance.id,
@@ -190,7 +186,6 @@ export function createAssetHubCharacterLibraryOperations(): ProjectAgentOperatio
               ...bodyMeta,
               ...(taskLocale ? { locale: taskLocale } : {}),
             },
-            analysisModel: userConfig.analysisModel,
             displayMode: 'detail',
           }
 

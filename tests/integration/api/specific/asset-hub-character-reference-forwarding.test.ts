@@ -113,6 +113,7 @@ describe('api specific - asset hub character reference forwarding', () => {
       customDescription?: string
       artStyle?: string
       referenceImageUrls?: string[]
+      analysisModel?: string
       appearanceId?: string
       characterId?: string
       count?: number
@@ -123,6 +124,7 @@ describe('api specific - asset hub character reference forwarding', () => {
     expect(forwarded.customDescription).toBe('冷静，黑发')
     expect(forwarded.artStyle).toBe('realistic')
     expect(forwarded.referenceImageUrls).toEqual(['https://example.com/ref.png'])
+    expect(forwarded.analysisModel).toBeUndefined()
     expect(forwarded.characterId).toBe('character-1')
     expect(forwarded.appearanceId).toBe('appearance-1')
     expect(forwarded.count).toBe(5)

@@ -206,7 +206,7 @@ describe('worker reference-to-character', () => {
     expect(Object.prototype.hasOwnProperty.call(options, 'referenceImages')).toBe(false)
   })
 
-  it('keeps three-view suffix in template flow and writes extracted description in background mode', async () => {
+  it('keeps three-view suffix in template flow without requiring vision analysis in background mode', async () => {
     const job = buildJob(
       {
         referenceImageUrls: [' https://example.com/ref-a.png ', 'https://example.com/ref-b.png'],
@@ -222,6 +222,7 @@ describe('worker reference-to-character', () => {
 
     expect(result).toEqual(expect.objectContaining({ success: true }))
     expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(3)
+    expect(generatorApiMock.executeAiVisionStep).not.toHaveBeenCalled()
     expect(fontsMock.initializeFonts).not.toHaveBeenCalled()
     expect(fontsMock.createLabelSVG).not.toHaveBeenCalled()
 
@@ -237,7 +238,7 @@ describe('worker reference-to-character', () => {
     } | undefined
     const updateData = updateArg?.data || {}
     expect(updateArg?.where).toEqual({ id: 'appearance-1' })
-    expect(updateData.description).toBe('AI_EXTRACTED_DESCRIPTION')
+    expect(Object.prototype.hasOwnProperty.call(updateData, 'description')).toBe(false)
     expect(typeof updateData.imageUrls).toBe('string')
     expect(updateData.imageUrl).toMatch(/^cos\/reference-key-\d+\.jpg$/)
   })
