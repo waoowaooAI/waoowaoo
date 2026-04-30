@@ -25,6 +25,14 @@ function asRecord(value: unknown): ArkResponseObject | null {
   return value && typeof value === 'object' ? (value as ArkResponseObject) : null
 }
 
+function mergeStreamingText(existing: string, next: string): string {
+  if (!next) return existing
+  if (!existing) return next
+  if (next.startsWith(existing)) return next
+  if (existing.includes(next)) return existing
+  return existing + next
+}
+
 function collectText(node: unknown, acc: string[]) {
   if (!node) return
   if (typeof node === 'string') {
@@ -39,12 +47,22 @@ function collectText(node: unknown, acc: string[]) {
   if (!obj) return
   const type = typeof obj.type === 'string' ? obj.type : undefined
   if (type === 'reasoning' || type === 'function_call') return
+
   if (typeof obj.output_text === 'string') acc.push(obj.output_text)
+  if (obj.response) collectText(obj.response, acc)
+  if (obj.output) collectText(obj.output, acc)
+  if (obj.outputs) collectText(obj.outputs, acc)
+  if (obj.reasoning) collectText(obj.reasoning, acc)
+  if (obj.reasoning_content) collectText(obj.reasoning_content, acc)
   if (typeof obj.text === 'string' && type !== 'reasoning') acc.push(obj.text)
+  if (typeof obj.delta === 'string') acc.push(obj.delta)
+  if (obj.done) collectText(obj.done, acc)
   if (typeof obj.content === 'string') acc.push(obj.content)
   if (obj.content && typeof obj.content !== 'string') collectText(obj.content, acc)
   if (typeof obj.message === 'string') acc.push(obj.message)
   if (obj.message && typeof obj.message !== 'string') collectText(obj.message, acc)
+  if (obj.output_text && typeof obj.output_text !== 'string') collectText(obj.output_text, acc)
+  if (obj.response && typeof obj.response === 'string') acc.push(obj.response)
 }
 
 function collectReasoning(node: unknown, acc: string[]) {
@@ -61,10 +79,13 @@ function collectReasoning(node: unknown, acc: string[]) {
     if (typeof obj.text === 'string') acc.push(obj.text)
     if (typeof obj.content === 'string') acc.push(obj.content)
     if (obj.content && typeof obj.content !== 'string') collectReasoning(obj.content, acc)
+    if (typeof obj.delta === 'string') acc.push(obj.delta)
   }
+  if (obj.response) collectReasoning(obj.response, acc)
   if (obj.reasoning) collectReasoning(obj.reasoning, acc)
   if (obj.reasoning_content) collectReasoning(obj.reasoning_content, acc)
   if (obj.thinking) collectReasoning(obj.thinking, acc)
+  if (obj.reasoning_details) collectReasoning(obj.reasoning_details, acc)
 }
 
 function extractArkText(data: unknown): string {
@@ -234,8 +255,8 @@ export function arkResponsesStream(options: ArkResponsesOptions & { temperature?
           const data = line.slice(5).trim()
           if (!data || data === '[DONE]') continue
           const parsed = JSON.parse(data) as ArkResponseObject
-          finalText = extractArkText(parsed) || finalText
-          finalReasoning = extractArkReasoning(parsed) || finalReasoning
+          finalText = mergeStreamingText(finalText, extractArkText(parsed))
+          finalReasoning = mergeStreamingText(finalReasoning, extractArkReasoning(parsed))
           finalUsage = extractArkUsage(parsed)
           const deltaText = extractArkText(parsed)
           const deltaReasoning = extractArkReasoning(parsed)
