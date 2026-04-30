@@ -8,10 +8,8 @@ import {
   getProjectModels,
   getUserModels,
   resolveImageSourceFromGeneration,
-  stripLabelBar,
   toSignedUrlIfCos,
   uploadImageSourceToCos,
-  withLabelBar,
 } from '../utils'
 import {
   normalizeOptionalReferenceImagesForGeneration,
@@ -75,7 +73,6 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
 
     const appearance = await prisma.characterAppearance.findUnique({
       where: { id: appearanceId },
-      include: { character: true },
     })
     if (!appearance) throw new Error('Character appearance not found')
 
@@ -85,7 +82,6 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const currentUrl = toSignedUrlIfCos(currentKey, 3600)
     if (!currentUrl) throw new Error('No image to modify')
 
-    const requiredReference = await stripLabelBar(currentUrl)
     const extraReferenceInputs: string[] = []
     if (Array.isArray(payload.extraImageUrls)) {
       for (const url of payload.extraImageUrls) {
@@ -97,7 +93,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
       context: { taskType: String(job.data.type), scope: 'image-task-handlers-core.extra' },
     })
-    const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
+    const referenceImages = Array.from(new Set([currentUrl, ...normalizedExtras]))
     const currentDescription = readIndexedDescription({
       descriptions: appearance.descriptions,
       fallbackDescription: appearance.description,
@@ -116,9 +112,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
       },
     })
 
-    const label = `${appearance.character?.name || '角色'} - ${appearance.changeReason || '形象'}`
-    const labeled = await withLabelBar(source, label)
-    const cosKey = await uploadImageSourceToCos(labeled, 'character-modify', appearance.id)
+    const cosKey = await uploadImageSourceToCos(source, 'character-modify', appearance.id)
 
     while (imageUrls.length <= imageIndex) imageUrls.push('')
     imageUrls[imageIndex] = cosKey
@@ -195,7 +189,6 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const currentUrl = toSignedUrlIfCos(locationImage.imageUrl, 3600)
     if (!currentUrl) throw new Error('No location image url')
 
-    const requiredReference = await stripLabelBar(currentUrl)
     const extraReferenceInputs: string[] = []
     if (Array.isArray(payload.extraImageUrls)) {
       for (const url of payload.extraImageUrls) {
@@ -207,7 +200,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
     const normalizedExtras = await normalizeOptionalReferenceImagesForGeneration(extraReferenceInputs, {
       context: { taskType: String(job.data.type), scope: 'image-task-handlers-core.extra' },
     })
-    const referenceImages = Array.from(new Set([requiredReference, ...normalizedExtras]))
+    const referenceImages = Array.from(new Set([currentUrl, ...normalizedExtras]))
 
     const isProp = type === 'prop'
     const prompt = isProp
@@ -225,9 +218,7 @@ export async function handleModifyAssetImageTask(job: Job<TaskJobData>) {
       },
     })
 
-    const label = locationImage.location?.name || (isProp ? '道具' : '场景')
-    const labeled = await withLabelBar(source, label)
-    const cosKey = await uploadImageSourceToCos(labeled, isProp ? 'prop-modify' : 'location-modify', locationImage.id)
+    const cosKey = await uploadImageSourceToCos(source, isProp ? 'prop-modify' : 'location-modify', locationImage.id)
 
     let extractedDescription: {
       prompt: string

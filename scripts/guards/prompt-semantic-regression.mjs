@@ -5,7 +5,6 @@ import path from 'path'
 import process from 'process'
 
 const root = process.cwd()
-const catalogPath = path.join(root, 'src', 'lib', 'prompt-i18n', 'catalog.ts')
 const chineseCharPattern = /[\p{Script=Han}]/u
 const singlePlaceholderPattern = /\{([A-Za-z0-9_]+)\}/g
 const doublePlaceholderPattern = /\{\{([A-Za-z0-9_]+)\}\}/g
@@ -33,14 +32,29 @@ function fail(title, details = []) {
 
 function parseCatalog(text) {
   const entries = []
-  const entryPattern = /pathStem:\s*'([^']+)'\s*,[\s\S]*?variableKeys:\s*\[([\s\S]*?)\]\s*,/g
+  const promptIds = parsePromptIds()
+  const entryPattern = /\[AI_PROMPT_IDS\.([A-Z0-9_]+)\]:\s*\{([\s\S]*?)\n  \},/g
   for (const match of text.matchAll(entryPattern)) {
-    const pathStem = match[1]
-    const rawKeys = match[2] || ''
+    const promptId = promptIds.get(match[1])
+    const body = match[2] || ''
+    const pathStem = body.match(/pathStem:\s*'([^']+)'/)?.[1]
+    const rawKeys = body.match(/variableKeys:\s*\[([\s\S]*?)\]/)?.[1] || ''
     const keys = Array.from(rawKeys.matchAll(/'([^']+)'/g)).map((item) => item[1])
-    entries.push({ pathStem, variableKeys: keys })
+    if (promptId && pathStem) entries.push({ promptId, pathStem, variableKeys: keys })
   }
   return entries
+}
+
+function parsePromptIds() {
+  const idsPath = path.join(root, 'src', 'lib', 'ai-prompts', 'ids.ts')
+  if (!fs.existsSync(idsPath)) {
+    fail('ids.ts not found', ['src/lib/ai-prompts/ids.ts'])
+  }
+  const idsText = fs.readFileSync(idsPath, 'utf8')
+  return new Map(
+    Array.from(idsText.matchAll(/\b([A-Z0-9_]+):\s*'([^']+)'/g))
+      .map((match) => [match[1], match[2]]),
+  )
 }
 
 function extractPlaceholders(template) {
@@ -54,27 +68,29 @@ function extractPlaceholders(template) {
   return Array.from(keys)
 }
 
-if (!fs.existsSync(catalogPath)) {
-  fail('catalog.ts not found', ['src/lib/prompt-i18n/catalog.ts'])
+const registryPath = path.join(root, 'src', 'lib', 'ai-prompts', 'registry.ts')
+if (!fs.existsSync(registryPath)) {
+  fail('registry.ts not found', ['src/lib/ai-prompts/registry.ts'])
 }
 
-const catalogText = fs.readFileSync(catalogPath, 'utf8')
+const catalogText = fs.readFileSync(registryPath, 'utf8')
 const entries = parseCatalog(catalogText)
 if (entries.length === 0) {
-  fail('failed to parse prompt catalog entries')
+  fail('failed to parse AI prompt catalog entries')
 }
 
 const violations = []
 for (const entry of entries) {
-  const templatePath = path.join(root, 'lib', 'prompts', `${entry.pathStem}.en.txt`)
+  const templatePath = path.join(root, 'src', 'lib', 'ai-prompts', 'templates', entry.pathStem, `${entry.promptId}.en.txt`)
+  const relTemplatePath = `src/lib/ai-prompts/templates/${entry.pathStem}/${entry.promptId}.en.txt`
   if (!fs.existsSync(templatePath)) {
-    violations.push(`missing template: lib/prompts/${entry.pathStem}.en.txt`)
+    violations.push(`missing template: ${relTemplatePath}`)
     continue
   }
 
   const template = fs.readFileSync(templatePath, 'utf8')
   if (chineseCharPattern.test(template)) {
-    violations.push(`unexpected Chinese content in English template: lib/prompts/${entry.pathStem}.en.txt`)
+    violations.push(`unexpected Chinese content in English template: ${relTemplatePath}`)
   }
 
   const placeholders = extractPlaceholders(template)
@@ -83,20 +99,20 @@ for (const entry of entries) {
 
   for (const key of entry.variableKeys) {
     if (!placeholderSet.has(key)) {
-      violations.push(`missing placeholder {${key}} in lib/prompts/${entry.pathStem}.en.txt`)
+      violations.push(`missing placeholder {${key}} in ${relTemplatePath}`)
     }
   }
 
   for (const key of placeholders) {
     if (!variableKeySet.has(key)) {
-      violations.push(`unexpected placeholder {${key}} in lib/prompts/${entry.pathStem}.en.txt`)
+      violations.push(`unexpected placeholder {${key}} in ${relTemplatePath}`)
     }
   }
 
   const requiredTokens = criticalTemplateTokens.get(entry.pathStem) || []
   for (const token of requiredTokens) {
     if (!template.includes(token)) {
-      violations.push(`missing semantic token ${token} in lib/prompts/${entry.pathStem}.en.txt`)
+      violations.push(`missing semantic token ${token} in ${relTemplatePath}`)
     }
   }
 }

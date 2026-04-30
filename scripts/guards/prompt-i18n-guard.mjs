@@ -8,7 +8,7 @@ const root = process.cwd()
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'])
 const scanRoots = ['src', 'scripts']
 const allowedPromptTemplateReaders = new Set([
-  'src/lib/prompt-i18n/template-store.ts',
+  'src/lib/ai-prompts/template-store.ts',
   'scripts/guards/prompt-i18n-guard.mjs',
   'scripts/guards/prompt-semantic-regression.mjs',
   'scripts/guards/prompt-ab-regression.mjs',
@@ -63,9 +63,10 @@ function collectDirectPromptReadViolations() {
     if (!hasReadFileSync) continue
     const hasPromptPathToken =
       content.includes('lib/prompts')
+      || content.includes('ai-prompts/templates')
       || (
-        /['"]lib['"]/.test(content)
-        && /['"]prompts['"]/.test(content)
+        /['"]ai-prompts['"]/.test(content)
+        && /['"]templates['"]/.test(content)
       )
     if (hasPromptPathToken) {
       violations.push(`${relPath} direct prompt file read is forbidden; use buildPrompt/getPromptTemplate`)
@@ -89,7 +90,7 @@ function collectLanguageDirectiveViolations() {
     }
   }
 
-  const promptFiles = walk(path.join(root, 'lib', 'prompts'))
+  const promptFiles = walk(path.join(root, 'src', 'lib', 'ai-prompts', 'templates'))
     .filter((fullPath) => fullPath.endsWith('.en.txt'))
   for (const filePath of promptFiles) {
     const relPath = toRel(filePath)
@@ -106,32 +107,59 @@ function collectLanguageDirectiveViolations() {
 }
 
 function collectLegacyPromptFiles() {
-  return walk(path.join(root, 'lib', 'prompts'))
+  return walk(path.join(root, 'src', 'lib', 'ai-prompts', 'templates'))
     .map((fullPath) => toRel(fullPath))
     .filter((relPath) => relPath.endsWith('.txt') && !relPath.endsWith('.zh.txt') && !relPath.endsWith('.en.txt'))
 }
 
+function parsePromptIds() {
+  const idsPath = path.join(root, 'src', 'lib', 'ai-prompts', 'ids.ts')
+  if (!fs.existsSync(idsPath)) {
+    fail('Missing prompt ids file', ['src/lib/ai-prompts/ids.ts'])
+  }
+  const idsText = fs.readFileSync(idsPath, 'utf8')
+  return new Map(
+    Array.from(idsText.matchAll(/\b([A-Z0-9_]+):\s*'([^']+)'/g))
+      .map((match) => [match[1], match[2]]),
+  )
+}
+
+function parseAiPromptRegistry() {
+  const registryPath = path.join(root, 'src', 'lib', 'ai-prompts', 'registry.ts')
+  if (!fs.existsSync(registryPath)) {
+    fail('Missing AI prompt registry file', ['src/lib/ai-prompts/registry.ts'])
+  }
+
+  const promptIds = parsePromptIds()
+  const registryText = fs.readFileSync(registryPath, 'utf8')
+  const entries = []
+  const entryPattern = /\[AI_PROMPT_IDS\.([A-Z0-9_]+)\]:\s*\{([\s\S]*?)\n  \},/g
+
+  for (const match of registryText.matchAll(entryPattern)) {
+    const idKey = match[1]
+    const body = match[2] || ''
+    const promptId = promptIds.get(idKey)
+    const pathStem = body.match(/pathStem:\s*'([^']+)'/)?.[1]
+    if (promptId && pathStem) entries.push({ promptId, pathStem })
+  }
+
+  if (entries.length === 0) {
+    fail('No prompt entries found in AI_PROMPT_CATALOG')
+  }
+
+  return entries
+}
+
 function verifyPromptCatalogCoverage() {
-  const catalogPath = path.join(root, 'src', 'lib', 'prompt-i18n', 'catalog.ts')
-  if (!fs.existsSync(catalogPath)) {
-    fail('Missing prompt catalog file', ['src/lib/prompt-i18n/catalog.ts'])
-  }
-
-  const catalogText = fs.readFileSync(catalogPath, 'utf8')
-  const stems = Array.from(catalogText.matchAll(/pathStem:\s*'([^']+)'/g)).map((match) => match[1])
-  if (stems.length === 0) {
-    fail('No prompt pathStem found in catalog.ts')
-  }
-
   const missing = []
-  for (const stem of stems) {
-    const zhPath = path.join(root, 'lib', 'prompts', `${stem}.zh.txt`)
-    const enPath = path.join(root, 'lib', 'prompts', `${stem}.en.txt`)
+  for (const entry of parseAiPromptRegistry()) {
+    const zhPath = path.join(root, 'src', 'lib', 'ai-prompts', 'templates', entry.pathStem, `${entry.promptId}.zh.txt`)
+    const enPath = path.join(root, 'src', 'lib', 'ai-prompts', 'templates', entry.pathStem, `${entry.promptId}.en.txt`)
     if (!fs.existsSync(zhPath)) {
-      missing.push(`missing zh template: lib/prompts/${stem}.zh.txt`)
+      missing.push(`missing zh template: src/lib/ai-prompts/templates/${entry.pathStem}/${entry.promptId}.zh.txt`)
     }
     if (!fs.existsSync(enPath)) {
-      missing.push(`missing en template: lib/prompts/${stem}.en.txt`)
+      missing.push(`missing en template: src/lib/ai-prompts/templates/${entry.pathStem}/${entry.promptId}.en.txt`)
     }
   }
 

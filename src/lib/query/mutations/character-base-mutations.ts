@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { logError as _ulogError } from '@/lib/logging/core'
 import { useRef } from 'react'
 import type { Character, Project } from '@/types/project'
 import { queryKeys } from '../keys'
 import type { ProjectAssetsData } from '../hooks/useProjectAssets'
-import { apiFetch } from '@/lib/api-fetch'
 import {
     clearTaskTargetOverlay,
     upsertTaskTargetOverlay,
@@ -160,13 +158,12 @@ export function useUploadProjectCharacterImage(projectId: string) {
 
     return useMutation({
         mutationFn: async ({
-            file, characterId, appearanceId, imageIndex, labelText
+            file, characterId, appearanceId, imageIndex
         }: {
             file: File
             characterId: string
             appearanceId: string
             imageIndex?: number
-            labelText?: string
         }) => {
             const formData = new FormData()
             formData.append('file', file)
@@ -174,7 +171,6 @@ export function useUploadProjectCharacterImage(projectId: string) {
             formData.append('id', characterId)
             formData.append('appearanceId', appearanceId)
             if (imageIndex !== undefined) formData.append('imageIndex', imageIndex.toString())
-            if (labelText) formData.append('labelText', labelText)
 
             return await requestJsonWithError(`/api/projects/${projectId}/upload-asset-image`, {
                 method: 'POST',
@@ -365,7 +361,7 @@ export function useUpdateProjectCharacterName(projectId: string) {
 
     return useMutation({
         mutationFn: async ({ characterId, name }: { characterId: string; name: string }) => {
-            const res = await requestJsonWithError(`/api/assets/${characterId}`, {
+            return await requestJsonWithError(`/api/assets/${characterId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -375,24 +371,6 @@ export function useUpdateProjectCharacterName(projectId: string) {
                     name,
                 })
             }, 'Failed to update character name')
-
-            // 等待图片标签更新完成，确保 onSuccess invalidate 后前端能立即看到新标签
-            try {
-                await apiFetch(`/api/assets/${characterId}/update-label`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        scope: 'project',
-                        kind: 'character',
-                        projectId,
-                        newName: name
-                    })
-                })
-            } catch (e) {
-                _ulogError('更新图片标签失败:', e)
-            }
-
-            return res
         },
         onSuccess: invalidateProjectAssets,
     })

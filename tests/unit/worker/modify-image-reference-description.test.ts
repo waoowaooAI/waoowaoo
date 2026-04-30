@@ -8,10 +8,8 @@ const utilsMock = vi.hoisted(() => ({
   getProjectModels: vi.fn(async () => ({ editModel: 'edit-model' })),
   getUserModels: vi.fn(async () => ({ editModel: 'edit-model', analysisModel: 'analysis-model' })),
   resolveImageSourceFromGeneration: vi.fn(async () => 'generated-image-source'),
-  stripLabelBar: vi.fn(async () => 'required-reference-image'),
   toSignedUrlIfCos: vi.fn(() => 'https://signed/current-image.png'),
   uploadImageSourceToCos: vi.fn(async () => 'cos/new-image.png'),
-  withLabelBar: vi.fn(async (source: unknown) => source),
 }))
 
 const outboundImageMock = vi.hoisted(() => ({
@@ -200,8 +198,6 @@ describe('modify image syncs descriptions after edit', () => {
     await handleAssetHubModifyTask(job)
 
     expect(aiRuntimeMock.executeAiVisionStep).toHaveBeenCalledTimes(1)
-    expect(utilsMock.stripLabelBar).not.toHaveBeenCalled()
-    expect(utilsMock.withLabelBar).not.toHaveBeenCalled()
     expect(utilsMock.resolveImageSourceFromGeneration).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
@@ -256,8 +252,6 @@ describe('modify image syncs descriptions after edit', () => {
 
     await handleAssetHubModifyTask(job)
 
-    expect(utilsMock.stripLabelBar).not.toHaveBeenCalled()
-    expect(utilsMock.withLabelBar).not.toHaveBeenCalled()
     expect(utilsMock.resolveImageSourceFromGeneration).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({

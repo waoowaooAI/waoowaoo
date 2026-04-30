@@ -85,7 +85,6 @@ export default function LocationCard({
         file,
         locationId: location.id,
         imageIndex: uploadIndex,
-        labelText: location.name
       },
       {
         onSuccess: () => {

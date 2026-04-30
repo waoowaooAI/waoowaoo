@@ -1,11 +1,9 @@
-import sharp from 'sharp'
 import { type Job } from 'bullmq'
 import { createScopedLogger } from '@/lib/logging/core'
 import { withLogContext } from '@/lib/logging/context'
 import { generateImage, generateLipSync, generateVideo } from '@/lib/ai-exec/engine'
 import { pollAsyncTask } from '@/lib/ai-exec/async-poll'
-import { getSignedUrl, toFetchableUrl } from '@/lib/storage'
-import { initializeFonts, createLabelSVG } from '@/lib/fonts'
+import { getSignedUrl } from '@/lib/storage'
 import { processMediaResult } from '@/lib/media-process'
 import {
   getProjectModelConfig,
@@ -692,55 +690,6 @@ export async function resolveLipSyncVideoSource(
   })
 
   return polled.url
-}
-
-/**
- * 裁掉图片顶部的黑边标签区域，返回纯净内容的 base64 data URL
- * 用于改图前去除旧黑边，避免 AI 参考图携带黑边导致叠加
- */
-export async function stripLabelBar(imageSource: string): Promise<string> {
-  const response = await fetch(toFetchableUrl(imageSource))
-  if (!response.ok) {
-    throw new Error(`Failed to download image for strip: ${response.status}`)
-  }
-  const raw = Buffer.from(await response.arrayBuffer())
-  const meta = await sharp(raw).metadata()
-  const w = meta.width || 2160
-  const h = meta.height || 2160
-  const fontSize = Math.floor(h * 0.04)
-  const pad = Math.floor(fontSize * 0.5)
-  const barH = fontSize + pad * 2
-
-  const cropped = await sharp(raw)
-    .extract({ left: 0, top: barH, width: w, height: h - barH })
-    .jpeg({ quality: 95, mozjpeg: true })
-    .toBuffer()
-
-  return `data:image/jpeg;base64,${cropped.toString('base64')}`
-}
-
-export async function withLabelBar(imageSource: string, labelText: string): Promise<Buffer> {
-  await initializeFonts()
-
-  const response = await fetch(toFetchableUrl(imageSource))
-  if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.status}`)
-  }
-
-  const raw = Buffer.from(await response.arrayBuffer())
-  const meta = await sharp(raw).metadata()
-  const width = meta.width || 2160
-  const height = meta.height || 2160
-  const fontSize = Math.floor(height * 0.04)
-  const pad = Math.floor(fontSize * 0.5)
-  const barHeight = fontSize + pad * 2
-  const svg = await createLabelSVG(width, barHeight, fontSize, pad, labelText)
-
-  return await sharp(raw)
-    .extend({ top: barHeight, bottom: 0, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 1 } })
-    .composite([{ input: svg, top: 0, left: 0 }])
-    .jpeg({ quality: 90, mozjpeg: true })
-    .toBuffer()
 }
 
 export async function uploadImageSourceToCos(source: string | Buffer, keyPrefix: string, targetId: string) {

@@ -17,7 +17,6 @@ const authMock = vi.hoisted(() => ({
 }))
 
 const readAssetsMock = vi.hoisted(() => vi.fn())
-const updateAssetRenderLabelMock = vi.hoisted(() => vi.fn())
 const submitAssetGenerateTaskMock = vi.hoisted(() => vi.fn())
 const copyAssetFromGlobalMock = vi.hoisted(() => vi.fn())
 const createAssetMock = vi.hoisted(() => vi.fn())
@@ -30,9 +29,6 @@ const revertAssetRenderMock = vi.hoisted(() => vi.fn())
 vi.mock('@/lib/api-auth', () => authMock)
 vi.mock('@/lib/assets/services/read-assets', () => ({
   readAssets: readAssetsMock,
-}))
-vi.mock('@/lib/assets/services/asset-label', () => ({
-  updateAssetRenderLabel: updateAssetRenderLabelMock,
 }))
 vi.mock('@/lib/assets/services/asset-actions', () => ({
   createAsset: createAssetMock,
@@ -50,7 +46,6 @@ describe('api specific - unified assets routes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     readAssetsMock.mockResolvedValue([{ id: 'asset-1', kind: 'character' }])
-    updateAssetRenderLabelMock.mockResolvedValue(undefined)
     submitAssetGenerateTaskMock.mockResolvedValue({ success: true, taskId: 'task-1' })
     copyAssetFromGlobalMock.mockResolvedValue({ success: true })
     createAssetMock.mockResolvedValue({ success: true, assetId: 'prop-1' })
@@ -142,56 +137,6 @@ describe('api specific - unified assets routes', () => {
       },
     })
     expect(body).toEqual({ success: true, assetId: 'prop-1' })
-  })
-
-  it('POST /api/assets/[assetId]/update-label forwards to the centralized label service', async () => {
-    const mod = await import('@/app/api/assets/[assetId]/update-label/route')
-    const req = buildMockRequest({
-      path: '/api/assets/asset-1/update-label',
-      method: 'POST',
-      body: {
-        scope: 'project',
-        kind: 'character',
-        projectId: 'project-1',
-        newName: '林夏',
-      },
-    })
-
-    const res = await mod.POST(req, {
-      params: Promise.resolve({ assetId: 'asset-1' }),
-    })
-
-    expect(res.status).toBe(200)
-    expect(authMock.requireProjectAuth).toHaveBeenCalledWith('project-1')
-    expect(updateAssetRenderLabelMock).toHaveBeenCalledWith({
-      scope: 'project',
-      kind: 'character',
-      assetId: 'asset-1',
-      projectId: 'project-1',
-      newName: '林夏',
-    })
-  })
-
-  it('POST /api/asset-hub/update-asset-label explicitly rejects global image label updates', async () => {
-    const mod = await import('@/app/api/asset-hub/update-asset-label/route')
-    const req = buildMockRequest({
-      path: '/api/asset-hub/update-asset-label',
-      method: 'POST',
-      body: {
-        type: 'character',
-        id: 'asset-1',
-        newName: '林夏',
-      },
-    })
-
-    const res = await mod.POST(req, { params: Promise.resolve({}) })
-    const body = await res.json()
-
-    expect(res.status).toBe(400)
-    expect(authMock.requireUserAuth).toHaveBeenCalled()
-    expect(body.error.code).toBe('INVALID_PARAMS')
-    expect(body.error.message).toBe('Global asset images no longer support label updates')
-    expect(updateAssetRenderLabelMock).not.toHaveBeenCalled()
   })
 
   it('PATCH /api/assets/[assetId] updates a global prop through the unified route', async () => {

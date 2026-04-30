@@ -13,6 +13,9 @@ Character info:
 Location info:
 {locations_description}
 
+Prop info:
+{props_description}
+
 Task:
 For each panel, output a complete panel object with improved cinematic detail.
 If any character already has `slot`, prefer preserving it exactly and use it as a preferred placement anchor.

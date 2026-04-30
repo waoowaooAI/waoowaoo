@@ -10,16 +10,18 @@ import {
   toSignedUrlIfCos,
   uploadImageSourceToCos,
 } from '../utils'
-import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   formatLocationAvailableSlotsText,
   parseLocationAvailableSlots,
 } from '@/lib/location-available-slots'
 import {
   AnyObj,
+  formatReferenceImagesMapForPrompt,
+  normalizeReferenceImageItemsForGeneration,
   parseImageUrls,
   parsePanelCharacterReferences,
   pickFirstString,
+  type ReferenceImageItem,
   resolveNovelData,
 } from './image-task-handler-shared'
 import {
@@ -43,6 +45,7 @@ interface VariantPromptParams {
   videoPrompt: string
   characterAssets: string
   locationAsset: string
+  referenceImages: string
   aspectRatio: string
   style: string
   directorStyleDoc?: Awaited<ReturnType<typeof resolveNovelData>>['directorStyleDoc']
@@ -65,6 +68,7 @@ function buildVariantPrompt(params: VariantPromptParams): string {
       video_prompt: params.videoPrompt,
       character_assets: params.characterAssets,
       location_asset: params.locationAsset,
+      reference_images: params.referenceImages,
       aspect_ratio: params.aspectRatio,
       style: params.style,
     },
@@ -140,7 +144,7 @@ function buildLocationAssetDescription(params: {
   return params.locale === 'en' ? 'No location reference' : '无场景参考'
 }
 
-function buildVariantReferenceImages(params: {
+function buildVariantReferenceImageItems(params: {
   includeCharacterAssets: boolean
   includeLocationAsset: boolean
   newPanel: {
@@ -149,9 +153,15 @@ function buildVariantReferenceImages(params: {
   }
   sourcePanelImageUrl: string | null
   projectData: Awaited<ReturnType<typeof resolveNovelData>>
-}): string[] {
-  const refs: string[] = []
-  if (params.sourcePanelImageUrl) refs.push(params.sourcePanelImageUrl)
+}): ReferenceImageItem[] {
+  const refs: ReferenceImageItem[] = []
+  if (params.sourcePanelImageUrl) {
+    refs.push({
+      url: params.sourcePanelImageUrl,
+      role: 'source_panel',
+      name: 'source panel',
+    })
+  }
 
   if (params.includeCharacterAssets) {
     const panelCharacters = parsePanelCharacterReferences(params.newPanel.characters)
@@ -183,7 +193,15 @@ function buildVariantReferenceImages(params: {
         throw new Error(`PANEL_VARIANT_CHARACTER_REFERENCE_INVALID:${character.name}:reference_image_missing`)
       }
       const signed = toSignedUrlIfCos(selectedUrl, 3600)
-      if (signed) refs.push(signed)
+      if (signed) {
+        refs.push({
+          url: signed,
+          role: 'character',
+          name: character.name,
+          appearance: appearance.changeReason || item.appearance || null,
+          slot: item.slot || null,
+        })
+      }
     }
   }
 
@@ -194,7 +212,13 @@ function buildVariantReferenceImages(params: {
     if (location) {
       const selected = (location.images || []).find((image) => image.isSelected) || location.images?.[0]
       const signed = toSignedUrlIfCos(selected?.imageUrl, 3600)
-      if (signed) refs.push(signed)
+      if (signed) {
+        refs.push({
+          url: signed,
+          role: 'location',
+          name: location.name,
+        })
+      }
     }
   }
 
@@ -240,14 +264,15 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
   if (!storyboardModel) throw new Error('Storyboard model not configured')
 
   const sourcePanelImageUrl = toSignedUrlIfCos(sourcePanel.imageUrl, 3600)
-  const refs = buildVariantReferenceImages({
+  const referenceImageItems = buildVariantReferenceImageItems({
     includeCharacterAssets,
     includeLocationAsset,
     newPanel,
     sourcePanelImageUrl,
     projectData,
   })
-  const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
+  const { referenceImages, referenceImagesMap } = await normalizeReferenceImageItemsForGeneration(referenceImageItems, {
+    locale: job.data.locale,
     context: { taskType: String(job.data.type), scope: 'panel-variant.refs' },
   })
 
@@ -281,6 +306,7 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
       locale: job.data.locale,
       projectData,
     }),
+    referenceImages: formatReferenceImagesMapForPrompt(referenceImagesMap, job.data.locale),
     aspectRatio,
     style: artStyle,
     directorStyleDoc: projectData.directorStyleDoc,
@@ -294,7 +320,7 @@ export async function handlePanelVariantTask(job: Job<TaskJobData>) {
     modelId: storyboardModel,
     prompt,
     options: {
-      referenceImages: normalizedRefs,
+      referenceImages,
       aspectRatio,
     },
   })

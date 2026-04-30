@@ -21,7 +21,18 @@ const utilsMock = vi.hoisted(() => ({
 }))
 
 const sharedMock = vi.hoisted(() => ({
-  collectPanelReferenceImages: vi.fn(async () => ['https://signed.example/ref-character.png']),
+  normalizeReferenceImageItemsForGeneration: vi.fn(async (
+    items: Array<{ url: string; role: string; name: string; appearance?: string | null; slot?: string | null }>,
+  ) => ({
+    referenceImages: items.map((item) => `normalized:${item.url}`),
+    referenceImagesMap: items.map((item, index) => ({
+      image_no: `图 ${index + 1}`,
+      role: item.role,
+      name: item.role === 'source_panel' ? '原始镜头' : item.name,
+      ...(item.appearance ? { appearance: item.appearance } : {}),
+      ...(item.slot ? { slot: item.slot } : {}),
+    })),
+  })),
   resolveNovelData: vi.fn(async () => ({
     videoRatio: '16:9',
     directorStyleDoc: {
@@ -51,6 +62,7 @@ const sharedMock = vi.hoisted(() => ({
       name: 'Old Town',
       images: [{
         isSelected: true,
+        imageUrl: 'cos/old-town.png',
         description: '老街中央留出明确人物站位',
         availableSlots: JSON.stringify([
           '街道左侧靠墙的留白位置',
@@ -60,17 +72,12 @@ const sharedMock = vi.hoisted(() => ({
   })),
 }))
 
-const outboundMock = vi.hoisted(() => ({
-  normalizeOptionalReferenceImagesForGeneration: vi.fn(async (refs: string[]) => refs.map((item) => `normalized:${item}`)),
-}))
-
 const promptMock = vi.hoisted(() => ({
   buildPrompt: vi.fn(() => 'panel-variant-prompt'),
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/workers/utils', () => utilsMock)
-vi.mock('@/lib/media/outbound-image', () => outboundMock)
 vi.mock('@/lib/logging/core', () => ({
   logInfo: vi.fn(),
   createScopedLogger: vi.fn(() => ({
@@ -88,7 +95,7 @@ vi.mock('@/lib/workers/handlers/image-task-handler-shared', async () => {
   )
   return {
     ...actual,
-    collectPanelReferenceImages: sharedMock.collectPanelReferenceImages,
+    normalizeReferenceImageItemsForGeneration: sharedMock.normalizeReferenceImageItemsForGeneration,
     resolveNovelData: sharedMock.resolveNovelData,
   }
 })
@@ -187,9 +194,18 @@ describe('worker panel-variant-task-handler behavior', () => {
           referenceImages: [
             'normalized:https://signed.example/cos/panel-source.png',
             'normalized:https://signed.example/cos/hero-default.png',
+            'normalized:https://signed.example/cos/old-town.png',
           ],
         }),
       }),
+    )
+    expect(sharedMock.normalizeReferenceImageItemsForGeneration).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({ role: 'source_panel', name: 'source panel' }),
+        expect.objectContaining({ role: 'character', name: 'Hero', appearance: 'default' }),
+        expect.objectContaining({ role: 'location', name: 'Old Town' }),
+      ],
+      expect.objectContaining({ locale: 'zh' }),
     )
 
     expect(prismaMock.projectPanel.update).toHaveBeenCalledWith({
@@ -200,6 +216,17 @@ describe('worker panel-variant-task-handler behavior', () => {
       variables: expect.objectContaining({
         characters_info: expect.stringContaining('固定位置：街道左侧靠墙的留白位置'),
         location_asset: expect.stringContaining('街道左侧靠墙的留白位置'),
+        reference_images: expect.stringContaining('图 1 = 原始镜头「原始镜头」'),
+      }),
+    }))
+    expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
+      variables: expect.objectContaining({
+        reference_images: expect.stringContaining('图 2 = 角色「Hero」，形象「default」'),
+      }),
+    }))
+    expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
+      variables: expect.objectContaining({
+        reference_images: expect.stringContaining('图 3 = 场景「Old Town」'),
       }),
     }))
     expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
@@ -232,12 +259,10 @@ describe('worker panel-variant-task-handler behavior', () => {
 
     await handlePanelVariantTask(buildJob(payload))
 
-    expect(outboundMock.normalizeOptionalReferenceImagesForGeneration).toHaveBeenCalledWith(
-      ['https://signed.example/cos/panel-source.png'],
+    expect(sharedMock.normalizeReferenceImageItemsForGeneration).toHaveBeenCalledWith(
+      [expect.objectContaining({ role: 'source_panel' })],
       expect.objectContaining({
-        context: expect.objectContaining({
-          scope: 'panel-variant.refs',
-        }),
+        context: expect.objectContaining({ scope: 'panel-variant.refs' }),
       }),
     )
     expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({

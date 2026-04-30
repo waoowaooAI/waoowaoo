@@ -12,7 +12,6 @@ import {
 import { resolveProjectImageStyleForTask, resolveSystemImageStylePrompt } from '@/lib/image-generation/style'
 import { encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { generateUniqueKey, getSignedUrl, uploadObject } from '@/lib/storage'
-import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { reportTaskProgress } from '@/lib/workers/shared'
 import { assertTaskActive, waitExternalResult } from '@/lib/workers/utils'
 import { TASK_TYPE, type TaskJobData } from '@/lib/task/types'
@@ -32,7 +31,6 @@ async function generateReferenceImage(params: {
   prompt: string
   referenceImages?: string[]
   keyPrefix: string
-  labelText?: string
 }): Promise<string | null> {
   const {
     job,
@@ -42,7 +40,6 @@ async function generateReferenceImage(params: {
     prompt,
     referenceImages,
     keyPrefix,
-    labelText,
   } = params
 
   try {
@@ -90,30 +87,9 @@ async function generateReferenceImage(params: {
       logPrefix: `[reference-to-character:${imageIndex + 1}]`,
     })
     const buffer = Buffer.from(await imgRes.arrayBuffer())
-    const processed = labelText
-      ? await (async () => {
-        const meta = await sharp(buffer).metadata()
-        const width = meta.width || 2160
-        const height = meta.height || 2160
-        const fontSize = Math.floor(height * 0.04)
-        const pad = Math.floor(fontSize * 0.5)
-        const barHeight = fontSize + pad * 2
-        const svg = await createLabelSVG(width, barHeight, fontSize, pad, labelText)
-        return await sharp(buffer)
-          .extend({
-            top: barHeight,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: { r: 0, g: 0, b: 0, alpha: 1 },
-          })
-          .composite([{ input: svg, top: 0, left: 0 }])
-          .jpeg({ quality: 90, mozjpeg: true })
-          .toBuffer()
-      })()
-      : await sharp(buffer)
-        .jpeg({ quality: 90, mozjpeg: true })
-        .toBuffer()
+    const processed = await sharp(buffer)
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer()
 
     const key = generateUniqueKey(`${keyPrefix}-${Date.now()}-${imageIndex}`, 'jpg')
     return await uploadObject(processed, key)
@@ -140,7 +116,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
   const characterId = readString(payload.characterId)
   const extractOnly = readBoolean(payload.extractOnly)
   const customDescription = readString(payload.customDescription)
-  const characterName = readString(payload.characterName) || '新角色 - 初始形象'
   const artStyle = readString(payload.artStyle)
 
   if (isBackgroundJob && (!characterId || !appearanceId)) {
@@ -153,10 +128,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
     displayMode: 'detail',
   })
   await assertTaskActive(job, 'reference_to_character_prepare')
-  if (isProject) {
-    await initializeFonts()
-  }
-
   const userConfig = await getUserModelConfig(job.data.userId)
   const imageModel = readString(userConfig.characterModel)
   const analysisModel = readString(userConfig.analysisModel)
@@ -238,7 +209,6 @@ export async function handleReferenceToCharacterTask(job: Job<TaskJobData>) {
       prompt,
       ...(useReferenceImages ? { referenceImages: allReferenceImages } : {}),
       keyPrefix,
-      ...(isProject ? { labelText: characterName } : {}),
     }),
   ))
 

@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { logError as _ulogError } from '@/lib/logging/core'
 import type { Project } from '@/types/project'
 import { queryKeys } from '../keys'
 import type { ProjectAssetsData } from '../hooks/useProjectAssets'
@@ -100,7 +99,7 @@ export function useUpdateProjectLocationName(projectId: string) {
 
     return useMutation({
         mutationFn: async ({ locationId, name }: { locationId: string; name: string }) => {
-            const res = await requestJsonWithError(`/api/assets/${locationId}`, {
+            return await requestJsonWithError(`/api/assets/${locationId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -110,24 +109,6 @@ export function useUpdateProjectLocationName(projectId: string) {
                     name,
                 })
             }, 'Failed to update location name')
-
-            // 等待图片标签更新完成，确保 onSuccess invalidate 后前端能立即看到新标签
-            try {
-                await apiFetch(`/api/assets/${locationId}/update-label`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        scope: 'project',
-                        kind: 'location',
-                        projectId,
-                        newName: name
-                    })
-                })
-            } catch (e) {
-                _ulogError('更新图片标签失败:', e)
-            }
-
-            return res
         },
         onSuccess: invalidateProjectAssets,
     })

@@ -11,7 +11,7 @@ import {
 } from '../utils'
 import {
   AnyObj,
-  generateProjectLabeledImageToStorage,
+  generateCleanImageToStorage,
   pickFirstString,
 } from './image-task-handler-shared'
 import { buildLocationImagePromptCore } from '@/lib/location-image-prompt'
@@ -39,7 +39,6 @@ interface LocationImageTaskDb {
   }
   projectLocation: {
     findUnique(args: Record<string, unknown>): Promise<LocationWithImages | null>
-    findMany(args: Record<string, unknown>): Promise<LocationWithImages[]>
   }
 }
 
@@ -74,14 +73,8 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
   })
 
   let locationImages: LocationImageRecord[] = []
-  // 用于存储 locationId -> name 的映射，避免 images 子集缺少 location 关联
-  const locationNameMap: Record<string, string> = {}
 
   if (maybeLocationImage) {
-    // 来源 location 名字已 include，先记录
-    if (maybeLocationImage.location?.name) {
-      locationNameMap[maybeLocationImage.locationId] = maybeLocationImage.location.name
-    }
     if (payload.imageIndex !== undefined) {
       locationImages = [maybeLocationImage]
     } else {
@@ -89,9 +82,6 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
         where: { id: maybeLocationImage.locationId },
         include: { images: { orderBy: { imageIndex: 'asc' } } },
       })
-      if (location?.name) {
-        locationNameMap[maybeLocationImage.locationId] = location.name
-      }
       const orderedImages = location?.images || [maybeLocationImage]
       locationImages = requestedCount === null ? orderedImages : orderedImages.slice(0, requestedCount)
     }
@@ -108,9 +98,6 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
       throw new Error('Location images not found')
     }
 
-    // 记录 location 名字
-    locationNameMap[locationId] = location.name
-
     if (payload.imageIndex !== undefined) {
       const image = location.images.find((it) => it.imageIndex === Number(payload.imageIndex))
       if (!image) throw new Error(`Location image not found for imageIndex=${payload.imageIndex}`)
@@ -120,24 +107,10 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
     }
   }
 
-  // 补充查询缺失的 location 名字（兜底）
-  const missingLocationIds = Array.from(new Set(locationImages.map((it) => it.locationId)))
-    .filter((id) => !locationNameMap[id])
-  if (missingLocationIds.length > 0) {
-    const extras = await db.projectLocation.findMany({
-      where: { id: { in: missingLocationIds } } as Record<string, unknown>,
-    })
-    for (const loc of extras) {
-      locationNameMap[loc.id] = loc.name
-    }
-  }
-
   const locationIds = Array.from(new Set(locationImages.map((it) => it.locationId)))
 
   for (let i = 0; i < locationImages.length; i++) {
     const item = locationImages[i]
-    // 优先用映射表中的名字，回退到 item.location?.name，最后才用默认值
-    const name = locationNameMap[item.locationId] || item.location?.name || '场景'
     const promptBody = item.description || ''
     if (!promptBody) continue
     const promptCore = assetType === 'prop'
@@ -160,12 +133,11 @@ export async function handleLocationImageTask(job: Job<TaskJobData>) {
       imageId: item.id,
     })
 
-    const imageKey = await generateProjectLabeledImageToStorage({
+    const imageKey = await generateCleanImageToStorage({
       job,
       userId,
       modelId,
       prompt,
-      label: name,
       targetId: item.id,
       keyPrefix: 'location',
       options: {

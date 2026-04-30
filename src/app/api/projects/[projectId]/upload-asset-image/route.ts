@@ -24,9 +24,8 @@ export const POST = apiHandler(async (
   const id = formData.get('id') as string // characterId 或 locationId
   const appearanceId = formData.get('appearanceId') as string | null  // UUID
   const imageIndex = formData.get('imageIndex') as string | null
-  const labelText = formData.get('labelText') as string // 文字标识符
 
-  if (!file || !type || !id || !labelText) {
+  if (!file || !type || !id) {
     throw new ApiError('INVALID_PARAMS')
   }
 
@@ -47,7 +46,6 @@ export const POST = apiHandler(async (
     input: {
       type,
       id,
-      labelText,
       appearanceId,
       imageIndex: normalizedIndex,
       imageBase64: buffer.toString('base64'),

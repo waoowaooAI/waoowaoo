@@ -11,11 +11,13 @@ import {
   toSignedUrlIfCos,
   uploadImageSourceToCos,
 } from '../utils'
-import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
   clampCount,
-  collectPanelReferenceImagesWithDiagnostics,
+  collectPanelReferenceImageItemsWithDiagnostics,
+  normalizeReferenceImageItemsForGeneration,
+  type NumberedReferenceImage,
+  type ReferenceImageItem,
   parsePanelCharacterReferences,
   pickFirstString,
   resolveNovelData,
@@ -84,6 +86,7 @@ function buildPanelPromptContext(params: {
   }
   projectData: Awaited<ReturnType<typeof resolveNovelData>>
   referenceImageNotes?: string[]
+  referenceImagesMap: NumberedReferenceImage[]
 }) {
   const panelCharacters = parsePanelCharacterReferences(params.panel.characters)
   const characterContexts = panelCharacters.map((reference) => {
@@ -146,6 +149,7 @@ function buildPanelPromptContext(params: {
     context: {
       character_appearances: characterContexts,
       location_reference: locationContext,
+      reference_images: params.referenceImagesMap,
       additional_reference_images: (params.referenceImageNotes || []).map((note, index) => ({
         reference_image_order: index + 1,
         note,
@@ -192,17 +196,29 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
   if (!modelKey) throw new Error('Storyboard model not configured')
 
   const candidateCount = clampCount(payload.candidateCount ?? payload.count, 1, 4, 1)
-  const refCollection = await collectPanelReferenceImagesWithDiagnostics(projectData, panel, { strict: true })
-  const refs = [...refCollection.refs]
+  const refCollection = await collectPanelReferenceImageItemsWithDiagnostics(projectData, panel, { strict: true })
+  const referenceImageItems: ReferenceImageItem[] = [...refCollection.items]
   if (Array.isArray(payload.referencePanelImageUrls)) {
-    for (const url of payload.referencePanelImageUrls) {
+    for (const [index, url] of payload.referencePanelImageUrls.entries()) {
       const signed = toSignedUrlIfCos(typeof url === 'string' ? url : null, 3600)
-      if (signed) refs.push(signed)
+      if (signed) {
+        referenceImageItems.push({
+          url: signed,
+          role: 'source_panel',
+          name: `previous storyboard panel ${index + 1}`,
+        })
+      }
     }
   }
   if (Array.isArray(payload.extraImageUrls)) {
-    for (const url of payload.extraImageUrls) {
-      if (typeof url === 'string' && url.trim()) refs.push(url.trim())
+    for (const [index, url] of payload.extraImageUrls.entries()) {
+      if (typeof url === 'string' && url.trim()) {
+        referenceImageItems.push({
+          url: url.trim(),
+          role: 'extra',
+          name: `extra reference ${index + 1}`,
+        })
+      }
     }
   }
   const referenceImageNotes = Array.isArray(payload.referenceImageNotes)
@@ -212,7 +228,8 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       .slice(0, 16)
     : []
   const normalizationIssues: OutboundImageNormalizationIssue[] = []
-  const normalizedRefs = await normalizeOptionalReferenceImagesForGeneration(refs, {
+  const { referenceImages, referenceImagesMap } = await normalizeReferenceImageItemsForGeneration(referenceImageItems, {
+    locale: job.data.locale,
     onIssue: (issue) => {
       normalizationIssues.push(issue)
     },
@@ -241,14 +258,15 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       panelId,
       modelKey,
       candidateCount,
-      referenceImagesRawCount: refs.length,
-      referenceImagesNormalizedCount: normalizedRefs.length,
+      referenceImagesRawCount: referenceImageItems.length,
+      referenceImagesNormalizedCount: referenceImages.length,
       referenceImageNotes,
       expectedCharacterReferenceCount: refCollection.expectedCharacterReferenceCount,
       referenceImageDiagnostics: refCollection.diagnostics,
       referenceImageNormalizationIssues: normalizationIssues,
-      rawUrls: refs.map((u) => u.substring(0, 100)),
-      normalizedUrls: normalizedRefs.map((u) => u.substring(0, 100)),
+      rawUrls: referenceImageItems.map((item) => item.url.substring(0, 100)),
+      normalizedUrls: referenceImages.map((u) => u.substring(0, 100)),
+      referenceImagesMap,
       panelCharacters: panel.characters,
       panelLocation: panel.location,
       artStyle: modelConfig.artStyle,
@@ -278,6 +296,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
     },
     projectData,
     referenceImageNotes,
+    referenceImagesMap,
   })
   const contextJson = JSON.stringify(promptContext, null, 2)
   const prompt = buildPanelPrompt({
@@ -308,7 +327,7 @@ export async function handlePanelImageTask(job: Job<TaskJobData>) {
       modelId: modelKey,
       prompt,
       options: {
-        referenceImages: normalizedRefs,
+        referenceImages,
         aspectRatio,
       },
       // 单个任务内会串行生成多候选，若允许按 task.externalId 续接会复用上一候选外部任务结果。

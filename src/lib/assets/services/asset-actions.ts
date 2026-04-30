@@ -15,7 +15,6 @@ import { PRIMARY_APPEARANCE_INDEX, isArtStyleValue, removeLocationPromptSuffix, 
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { deleteObject } from '@/lib/storage'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
-import { createProjectCharacterLabeledCopies, createProjectLocationLabeledCopies } from '@/lib/image-label'
 import { resolveProjectImageStyleSignatureForTask } from '@/lib/image-generation/style'
 import type { AssetKind, AssetScope } from '@/lib/assets/contracts'
 import {
@@ -866,18 +865,10 @@ async function copyCharacterFromGlobal(input: AssetCopyInput) {
   if (projectCharacter.appearances.length > 0) {
     await prisma.characterAppearance.deleteMany({ where: { characterId: input.targetId } })
   }
-  const labeledCopies = await createProjectCharacterLabeledCopies(
-    globalCharacter.appearances.map((appearance) => ({
-      imageUrl: appearance.imageUrl,
-      imageUrls: appearance.imageUrls || encodeImageUrls([]),
-      changeReason: appearance.changeReason,
-    })),
-    projectCharacter.name,
-  )
   for (let index = 0; index < globalCharacter.appearances.length; index += 1) {
     const appearance = globalCharacter.appearances[index]
-    const labeledCopy = labeledCopies[index]
     const originalImageUrls = decodeImageUrlsFromDb(appearance.imageUrls, 'globalCharacterAppearance.imageUrls')
+    const mainImageUrl = appearance.imageUrl || originalImageUrls.find((url) => !!url) || null
     await prisma.characterAppearance.create({
       data: {
         characterId: input.targetId,
@@ -885,8 +876,8 @@ async function copyCharacterFromGlobal(input: AssetCopyInput) {
         changeReason: appearance.changeReason,
         description: appearance.description,
         descriptions: appearance.descriptions,
-        imageUrl: labeledCopy?.imageUrl || appearance.imageUrl,
-        imageUrls: labeledCopy?.imageUrls || encodeImageUrls(originalImageUrls),
+        imageUrl: mainImageUrl,
+        imageUrls: encodeImageUrls(originalImageUrls),
         previousImageUrls: encodeImageUrls([]),
         selectedIndex: appearance.selectedIndex,
       },
@@ -920,21 +911,16 @@ async function copyLocationFromGlobal(input: AssetCopyInput) {
   if (projectLocation.images.length > 0) {
     await prisma.locationImage.deleteMany({ where: { locationId: input.targetId } })
   }
-  const labeledCopies = await createProjectLocationLabeledCopies(
-    globalLocation.images.map((image) => ({ imageUrl: image.imageUrl })),
-    projectLocation.name,
-  )
   const copiedImages: Array<{ id: string; imageIndex: number; imageUrl: string | null }> = []
   for (let index = 0; index < globalLocation.images.length; index += 1) {
     const image = globalLocation.images[index]
-    const labeledCopy = labeledCopies[index]
     const created = await prisma.locationImage.create({
       data: {
         locationId: input.targetId,
         imageIndex: image.imageIndex,
         description: image.description,
         availableSlots: image.availableSlots,
-        imageUrl: labeledCopy?.imageUrl || image.imageUrl,
+        imageUrl: image.imageUrl,
         isSelected: image.isSelected,
       },
     })

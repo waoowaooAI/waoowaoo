@@ -75,29 +75,6 @@ function isSupportedAudioUpload(file: UploadFileLike): boolean {
 
 export function createAssetHubApiOperations(): ProjectAgentOperationRegistryDraft {
   return {
-    api_asset_hub_update_asset_label_disabled: defineOperation({
-      id: 'api_asset_hub_update_asset_label_disabled',
-      summary: 'API-only: Legacy /asset-hub/update-asset-label disabled endpoint.',
-      intent: 'act',
-      effects: {
-        writes: false,
-        billable: false,
-        destructive: false,
-        overwrite: false,
-        bulk: false,
-        externalSideEffects: false,
-        longRunning: false,
-      },
-      inputSchema: z.object({}).passthrough(),
-      outputSchema: z.unknown(),
-      execute: async () => {
-        throw new ApiError('INVALID_PARAMS', {
-          code: 'GLOBAL_ASSET_LABEL_UPDATES_DISABLED',
-          message: 'Global asset images no longer support label updates',
-        })
-      },
-    }),
-
     api_asset_hub_upload_temp: defineOperation({
       id: 'api_asset_hub_upload_temp',
       summary: 'API-only: Upload a temporary base64 blob and return signed url.',

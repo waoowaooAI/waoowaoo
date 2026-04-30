@@ -26,6 +26,9 @@ Character assets:
 Location asset:
 {location_asset}
 
+Reference image order map:
+{reference_images}
+
 Output aspect ratio:
 {aspect_ratio}
 
@@ -38,4 +41,9 @@ Execution rules:
 3. Change framing/angle/composition according to target shot and camera move.
 4. If characters_info or location_asset includes fixed slots / available slots, keep every visible character anchored to the same fixed slot instead of drifting to another area.
 5. Keep one-frame output only, no text overlays.
-6. The final visual style must follow the project style requirement above. Do not inherit old art styles from reference images if they conflict with the current project visual style.
+6. The reference image order map is the ordered map for the actual uploaded reference images. Use it to identify which image number belongs to each character, location, or source panel.
+7. Match names in the user-editable prompt, variant description, and character/location data to reference images through the reference image order map.
+8. The order of names in user text does not define reference image order. Only the reference image order map defines the image order.
+9. Do not read text, black borders, labels, or watermarks inside the image to identify assets.
+10. Do not draw image numbers, asset names, labels, or any text into the output.
+11. The final visual style must follow the project style requirement above. Do not inherit old art styles from reference images if they conflict with the current project visual style.

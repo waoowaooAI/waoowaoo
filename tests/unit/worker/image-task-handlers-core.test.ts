@@ -8,10 +8,8 @@ const utilsMock = vi.hoisted(() => ({
   getProjectModels: vi.fn(async () => ({ editModel: 'edit-model' })),
   getUserModels: vi.fn(async () => ({ editModel: 'edit-model', analysisModel: 'analysis-model' })),
   resolveImageSourceFromGeneration: vi.fn(async () => 'generated-image-source'),
-  stripLabelBar: vi.fn(async () => 'required-reference-image'),
   toSignedUrlIfCos: vi.fn(() => 'https://signed/current-image.png'),
   uploadImageSourceToCos: vi.fn(async () => 'cos/new-image.png'),
-  withLabelBar: vi.fn(async (source: unknown) => source),
 }))
 
 const outboundImageMock = vi.hoisted(() => ({
@@ -118,7 +116,7 @@ describe('worker image-task-handlers-core', () => {
         options: expect.objectContaining({
           aspectRatio: LOCATION_IMAGE_RATIO,
           resolution: '1536x1024',
-          referenceImages: ['required-reference-image', 'normalized-reference-image'],
+          referenceImages: ['https://signed/current-image.png', 'normalized-reference-image'],
         }),
       }),
     )

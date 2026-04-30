@@ -31,7 +31,6 @@ vi.mock('@/lib/storage', () => ({
   getSignedUrl: vi.fn((value: string) => value),
   toFetchableUrl: vi.fn((value: string) => value),
 }))
-vi.mock('@/lib/fonts', () => ({ initializeFonts: vi.fn(), createLabelSVG: vi.fn() }))
 vi.mock('@/lib/media-process', () => ({ processMediaResult: vi.fn() }))
 vi.mock('@/lib/config-service', () => ({
   getProjectModelConfig: vi.fn(),

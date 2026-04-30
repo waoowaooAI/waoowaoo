@@ -14,7 +14,7 @@ import {
 import { normalizeOptionalReferenceImagesForGeneration } from '@/lib/media/outbound-image'
 import {
   AnyObj,
-  generateProjectLabeledImageToStorage,
+  generateCleanImageToStorage,
   parseImageUrls,
   parseJsonStringArray,
   pickFirstString,
@@ -72,7 +72,6 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
 
   const appearanceId = pickFirstString(job.data.targetId, payload.appearanceId)
   let appearance: CharacterAppearanceRecord | null = null
-  let characterName = '角色'
 
   if (appearanceId) {
     const appearanceWithCharacter = await db.characterAppearance.findUnique({
@@ -81,7 +80,6 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
     })
     if (appearanceWithCharacter) {
       appearance = appearanceWithCharacter
-      characterName = appearanceWithCharacter.character.name
     }
   }
 
@@ -92,9 +90,6 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
       include: { appearances: { orderBy: { appearanceIndex: 'asc' } } },
     })
     appearance = character?.appearances?.[0] || null
-    if (character && appearance) {
-      characterName = character.name
-    }
   }
 
   if (!appearance) throw new Error('Character appearance not found')
@@ -141,7 +136,6 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
 
   const imageUrls = parseImageUrls(appearance.imageUrls, 'characterAppearance.imageUrls')
   const nextImageUrls = [...imageUrls]
-  const label = `${characterName} - ${appearance.changeReason || '形象'}`
 
   for (let i = 0; i < indexes.length; i++) {
     const index = indexes[i]
@@ -163,12 +157,11 @@ export async function handleCharacterImageTask(job: Job<TaskJobData>) {
       options.referenceImages = primaryReferenceImages
     }
 
-    const imageKey = await generateProjectLabeledImageToStorage({
+    const imageKey = await generateCleanImageToStorage({
       job,
       userId,
       modelId,
       prompt,
-      label,
       targetId: `${appearance.id}-${index}`,
       keyPrefix: 'character',
       options,

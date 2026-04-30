@@ -461,24 +461,6 @@ export function useAssetActions(input: AssetActionScopeInput) {
     return response.json()
   }
 
-  const updateLabel = async (assetId: string, payload: { newName: string }) => {
-    const response = await apiFetch(`/api/assets/${assetId}/update-label`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        scope: input.scope,
-        kind: input.kind,
-        projectId: input.projectId,
-        newName: payload.newName,
-      }),
-    })
-    if (!response.ok) {
-      throw new Error('Failed to update asset label')
-    }
-    invalidateScopeQueries(queryClient, input)
-    return response.json()
-  }
-
   const updateVariant = async (assetId: string, variantId: string, payload: Record<string, unknown>) => {
     const response = await apiFetch(`/api/assets/${assetId}/variants/${variantId}`, {
       method: 'PATCH',
@@ -508,6 +490,5 @@ export function useAssetActions(input: AssetActionScopeInput) {
     modifyRender,
     copyFromGlobal,
     bindVoice,
-    updateLabel,
   }
 }

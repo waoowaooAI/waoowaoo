@@ -19,6 +19,9 @@ Character details:
 Location details:
 {locations_description}
 
+Prop details:
+{props_description}
+
 Task:
 Generate exactly one transition panel with coherent action and cinematic continuity.
 

@@ -10,12 +10,10 @@ const EXTRACT_ALLOWLIST = new Set<string>([
 const FETCH_MEDIA_ALLOWLIST = new Set<string>([
   'src/lib/media-process.ts',
   'src/lib/image-cache.ts',
-  'src/lib/image-label.ts',
   'src/lib/workers/utils.ts',
   'src/app/api/projects/[projectId]/download-images/route.ts',
   'src/app/api/projects/[projectId]/download-videos/route.ts',
   'src/app/api/projects/[projectId]/download-voices/route.ts',
-  'src/app/api/projects/[projectId]/update-asset-label/route.ts',
   'src/app/api/projects/[projectId]/voice-generate/route.ts',
   'src/app/api/projects/[projectId]/video-proxy/route.ts',
 ])

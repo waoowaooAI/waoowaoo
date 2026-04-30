@@ -112,7 +112,6 @@ export default function CharacterCard({
         characterId: character.id,
         appearanceId: appearance.id,
         imageIndex: uploadIndex,
-        labelText: `${character.name} - ${appearance.changeReason}`
       },
       {
         onSuccess: () => {

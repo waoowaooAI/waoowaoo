@@ -21,19 +21,38 @@ const utilsMock = vi.hoisted(() => ({
 }))
 
 const sharedMock = vi.hoisted(() => ({
-  collectPanelReferenceImages: vi.fn(async () => ['https://signed.example/ref-1.png']),
-  collectPanelReferenceImagesWithDiagnostics: vi.fn(async () => ({
-    refs: ['https://signed.example/ref-1.png'],
+  collectPanelReferenceImageItemsWithDiagnostics: vi.fn(async () => ({
+    items: [
+      { url: 'https://signed.example/sketch.png', role: 'sketch', name: 'storyboard sketch' },
+      { url: 'https://signed.example/hero.png', role: 'character', name: 'Hero', appearance: 'default', slot: '街道左侧靠墙的留白位置' },
+      { url: 'https://signed.example/location.png', role: 'location', name: 'Old Town' },
+    ],
     diagnostics: [{
       kind: 'character',
-      inputIndex: 0,
+      inputIndex: 1,
       name: 'Hero',
       appearance: 'default',
-      signedUrl: 'https://signed.example/ref-1.png',
+      signedUrl: 'https://signed.example/hero.png',
       issue: null,
     }],
     issues: [],
     expectedCharacterReferenceCount: 1,
+  })),
+  normalizeReferenceImageItemsForGeneration: vi.fn(async (
+    items: Array<{ url: string; role: string; name: string; appearance?: string | null; slot?: string | null }>,
+    _options?: { onIssue?: (issue: { index: number; input: string; code: string; stage: string; message: string }) => void },
+  ) => ({
+    referenceImages: items.map((item, index) => {
+      const defaults = ['normalized-sketch', 'normalized-hero', 'normalized-location']
+      return defaults[index] || `normalized:${item.url}`
+    }),
+    referenceImagesMap: items.map((item, index) => ({
+      image_no: `图 ${index + 1}`,
+      role: item.role,
+      name: item.role === 'sketch' ? '分镜草图' : item.name,
+      ...(item.appearance ? { appearance: item.appearance } : {}),
+      ...(item.slot ? { slot: item.slot } : {}),
+    })),
   })),
   resolveNovelData: vi.fn(async () => ({
     videoRatio: '16:9',
@@ -66,20 +85,12 @@ const sharedMock = vi.hoisted(() => ({
   })),
 }))
 
-const outboundMock = vi.hoisted(() => ({
-  normalizeOptionalReferenceImagesForGeneration: vi.fn(async (
-    _refs: string[],
-    _options?: { onIssue?: (issue: { index: number; input: string; code: string; stage: string; message: string }) => void },
-  ) => ['normalized-ref-1']),
-}))
-
 const promptMock = vi.hoisted(() => ({
   buildPrompt: vi.fn(() => 'panel-image-prompt'),
 }))
 
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 vi.mock('@/lib/workers/utils', () => utilsMock)
-vi.mock('@/lib/media/outbound-image', () => outboundMock)
 vi.mock('@/lib/workers/shared', () => ({ reportTaskProgress: vi.fn(async () => undefined) }))
 vi.mock('@/lib/logging/core', () => ({
   logInfo: vi.fn(),
@@ -98,8 +109,8 @@ vi.mock('@/lib/workers/handlers/image-task-handler-shared', async () => {
   )
   return {
     ...actual,
-    collectPanelReferenceImages: sharedMock.collectPanelReferenceImages,
-    collectPanelReferenceImagesWithDiagnostics: sharedMock.collectPanelReferenceImagesWithDiagnostics,
+    collectPanelReferenceImageItemsWithDiagnostics: sharedMock.collectPanelReferenceImageItemsWithDiagnostics,
+    normalizeReferenceImageItemsForGeneration: sharedMock.normalizeReferenceImageItemsForGeneration,
     resolveNovelData: sharedMock.resolveNovelData,
   }
 })
@@ -185,10 +196,18 @@ describe('worker panel-image-task-handler behavior', () => {
         prompt: 'panel-image-prompt',
         allowTaskExternalIdResume: false,
         options: expect.objectContaining({
-          referenceImages: ['normalized-ref-1'],
+          referenceImages: ['normalized-sketch', 'normalized-hero', 'normalized-location'],
           aspectRatio: '16:9',
         }),
       }),
+    )
+    expect(sharedMock.normalizeReferenceImageItemsForGeneration).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ role: 'sketch', name: 'storyboard sketch' }),
+        expect.objectContaining({ role: 'character', name: 'Hero' }),
+        expect.objectContaining({ role: 'location', name: 'Old Town' }),
+      ]),
+      expect.objectContaining({ locale: 'zh' }),
     )
     expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
       variables: expect.objectContaining({
@@ -200,6 +219,19 @@ describe('worker panel-image-task-handler behavior', () => {
         storyboard_text_json_input: expect.stringContaining('"available_slots"'),
       }),
     }))
+    const promptCalls = promptMock.buildPrompt.mock.calls as unknown as Array<[unknown]>
+    const promptCall = promptCalls[0]?.[0] as {
+      variables?: { storyboard_text_json_input?: string }
+    } | undefined
+    const contextJson = promptCall?.variables?.storyboard_text_json_input || '{}'
+    const context = JSON.parse(contextJson) as {
+      context?: { reference_images?: Array<{ image_no: string; role: string; name: string }> }
+    }
+    expect(context.context?.reference_images).toEqual([
+      { image_no: '图 1', role: 'sketch', name: '分镜草图' },
+      { image_no: '图 2', role: 'character', name: 'Hero', appearance: 'default', slot: '街道左侧靠墙的留白位置' },
+      { image_no: '图 3', role: 'location', name: 'Old Town' },
+    ])
     expect(promptMock.buildPrompt).toHaveBeenCalledWith(expect.objectContaining({
       directorStyleDoc: expect.objectContaining({
         image: expect.objectContaining({
@@ -218,10 +250,6 @@ describe('worker panel-image-task-handler behavior', () => {
   })
 
   it('includes selected previous panel images as generation references', async () => {
-    outboundMock.normalizeOptionalReferenceImagesForGeneration.mockImplementationOnce(async (inputs: string[]) =>
-      inputs.map((input) => `normalized:${input}`),
-    )
-
     const job = buildJob({
       candidateCount: 1,
       referencePanelImageUrls: ['images/previous-panel.png'],
@@ -233,13 +261,16 @@ describe('worker panel-image-task-handler behavior', () => {
     })
     await handlePanelImageTask(job)
 
-    expect(outboundMock.normalizeOptionalReferenceImagesForGeneration).toHaveBeenCalledWith(
-      [
-        'https://signed.example/ref-1.png',
-        'images/previous-panel.png',
-        'https://example.com/manual-ref.png',
-      ],
+    expect(sharedMock.normalizeReferenceImageItemsForGeneration).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ url: 'https://signed.example/sketch.png', role: 'sketch' }),
+        expect.objectContaining({ url: 'https://signed.example/hero.png', role: 'character' }),
+        expect.objectContaining({ url: 'https://signed.example/location.png', role: 'location' }),
+        expect.objectContaining({ url: 'images/previous-panel.png', role: 'source_panel' }),
+        expect.objectContaining({ url: 'https://example.com/manual-ref.png', role: 'extra' }),
+      ]),
       expect.objectContaining({
+        locale: 'zh',
         context: { taskType: TASK_TYPE.IMAGE_PANEL, scope: 'panel-image.refs' },
       }),
     )
@@ -248,7 +279,9 @@ describe('worker panel-image-task-handler behavior', () => {
       expect.objectContaining({
         options: expect.objectContaining({
           referenceImages: [
-            'normalized:https://signed.example/ref-1.png',
+            'normalized-sketch',
+            'normalized-hero',
+            'normalized-location',
             'normalized:images/previous-panel.png',
             'normalized:https://example.com/manual-ref.png',
           ],
@@ -311,15 +344,15 @@ describe('worker panel-image-task-handler behavior', () => {
   })
 
   it('fails when a character reference image cannot be normalized', async () => {
-    outboundMock.normalizeOptionalReferenceImagesForGeneration.mockImplementationOnce(async (_refs, options) => {
+    sharedMock.normalizeReferenceImageItemsForGeneration.mockImplementationOnce(async (_items, options) => {
       options?.onIssue?.({
-        index: 0,
-        input: 'https://signed.example/ref-1.png',
+        index: 1,
+        input: 'https://signed.example/hero.png',
         code: 'OUTBOUND_IMAGE_FETCH_EXCEPTION',
         stage: 'fetch',
         message: 'fetch failed',
       })
-      return []
+      return { referenceImages: [], referenceImagesMap: [] }
     })
 
     await expect(handlePanelImageTask(buildJob({ candidateCount: 1 })))

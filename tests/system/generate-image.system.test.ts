@@ -19,7 +19,7 @@ vi.mock('@/lib/workers/handlers/image-task-handler-shared', async () => {
   )
   return {
     ...actual,
-    generateProjectLabeledImageToStorage: vi.fn(async () => {
+    generateCleanImageToStorage: vi.fn(async () => {
       if (imageState.mode === 'fatal') {
         throw new Error(imageState.errorMessage)
       }

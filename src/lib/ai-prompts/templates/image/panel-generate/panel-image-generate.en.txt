@@ -32,7 +32,12 @@ Execution rules:
 4. When the panel description, source text, action flow, or scene nature implies movement, entry/exit, path traversal, transition space, temporary space, empty space, or abstract/non-literal space, do not force the character to remain inside an existing slot.
 5. Use character reference images for identity, face shape, hairstyle, outfit, body type, and primary appearance consistency. Do not replace the main appearance of asset-library characters.
 6. Use location reference images for spatial layout, key anchors, entrances/exits, relative object positions, and usable placement areas.
-7. Repaint the background according to shot type and angle.
-8. If storyboard conflicts with source text, keep narrative logic from source text.
-9. The final visual style must follow the project style requirement above. Do not let old styles from reference images override the current project visual style.
-10. Unless the panel or source text explicitly calls for a selfie, interview, surveillance view, subjective gaze toward the audience, or looking into the camera, characters must not stare directly at the camera. Prefer gaze toward scene partners, props, off-screen targets, travel direction, profile, or three-quarter profile.
+7. `context.reference_images` is the ordered map for the actual uploaded reference images. Use it to identify which image number belongs to each character, location, source panel, sketch, or extra reference.
+8. Match names in the user-editable prompt, storyboard description, and source text to reference images through `context.reference_images`.
+9. The order of names in user text does not define reference image order. Only `context.reference_images` defines the image order.
+10. Do not read text, black borders, labels, or watermarks inside the image to identify assets.
+11. Do not draw image numbers, asset names, labels, or any text into the output.
+12. Repaint the background according to shot type and angle.
+13. If storyboard conflicts with source text, keep narrative logic from source text.
+14. The final visual style must follow the project style requirement above. Do not let old styles from reference images override the current project visual style.
+15. Unless the panel or source text explicitly calls for a selfie, interview, surveillance view, subjective gaze toward the audience, or looking into the camera, characters must not stare directly at the camera. Prefer gaze toward scene partners, props, off-screen targets, travel direction, profile, or three-quarter profile.

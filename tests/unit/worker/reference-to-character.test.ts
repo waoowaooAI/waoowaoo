@@ -74,11 +74,6 @@ const cosMock = vi.hoisted(() => {
   }
 })
 
-const fontsMock = vi.hoisted(() => ({
-  initializeFonts: vi.fn(async () => {}),
-  createLabelSVG: vi.fn(async () => Buffer.from('<svg />')),
-}))
-
 const workersSharedMock = vi.hoisted(() => ({
   reportTaskProgress: vi.fn(async () => {}),
 }))
@@ -129,7 +124,6 @@ vi.mock('@/lib/user-api/runtime-config', () => apiConfigMock)
 vi.mock('@/lib/config-service', () => configServiceMock)
 vi.mock('@/lib/ai-exec/llm-helpers', () => llmClientMock)
 vi.mock('@/lib/storage', () => cosMock)
-vi.mock('@/lib/fonts', () => fontsMock)
 vi.mock('@/lib/workers/shared', () => workersSharedMock)
 vi.mock('@/lib/workers/utils', () => workersUtilsMock)
 vi.mock('@/lib/ai-prompts', () => aiPromptMock)
@@ -196,8 +190,6 @@ describe('worker reference-to-character', () => {
 
     expect(result).toEqual(expect.objectContaining({ success: true }))
     expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(3)
-    expect(fontsMock.initializeFonts).not.toHaveBeenCalled()
-    expect(fontsMock.createLabelSVG).not.toHaveBeenCalled()
 
     const { prompt, options } = readGenerateCall(0)
     expect(prompt).toContain('冷静黑发角色')
@@ -223,8 +215,6 @@ describe('worker reference-to-character', () => {
     expect(result).toEqual(expect.objectContaining({ success: true }))
     expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(3)
     expect(generatorApiMock.executeAiVisionStep).not.toHaveBeenCalled()
-    expect(fontsMock.initializeFonts).not.toHaveBeenCalled()
-    expect(fontsMock.createLabelSVG).not.toHaveBeenCalled()
 
     const { prompt, options } = readGenerateCall(0)
     expect(prompt).toContain('BASE_REFERENCE_PROMPT')
@@ -296,7 +286,7 @@ describe('worker reference-to-character', () => {
     expect(prompt).not.toContain(getArtStylePrompt('realistic', 'zh'))
   })
 
-  it('adds project label bars only for project reference generation', async () => {
+  it('generates project reference sheets as clean images', async () => {
     const job = buildJob(
       {
         referenceImageUrls: ['https://example.com/ref-a.png'],
@@ -306,9 +296,10 @@ describe('worker reference-to-character', () => {
       TASK_TYPE.REFERENCE_TO_CHARACTER,
     )
 
-    await handleReferenceToCharacterTask(job)
+    const result = await handleReferenceToCharacterTask(job)
 
-    expect(fontsMock.initializeFonts).toHaveBeenCalledTimes(1)
-    expect(fontsMock.createLabelSVG).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(expect.objectContaining({ success: true }))
+    expect(generatorApiMock.generateImage).toHaveBeenCalledTimes(1)
+    expect(cosMock.uploadObject).toHaveBeenCalledTimes(1)
   })
 })

@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { removeLocationPromptSuffix } from '@/lib/constants'
 import { selectAssetRender } from '@/lib/assets/services/asset-actions'
-import { updateAssetRenderLabel } from '@/lib/assets/services/asset-label'
 import { deleteObject } from '@/lib/storage'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import { resolveStorageKeyFromMediaValue } from '@/lib/media/service'
@@ -61,28 +60,6 @@ export function createEditOperations(): ProjectAgentOperationRegistryDraft {
             projectId: ctx.projectId,
           },
         }),
-    }),
-    update_asset_render_label: defineOperation({
-      id: 'update_asset_render_label',
-      summary: 'Update the display label watermark for a selected asset render (character/location).',
-      intent: 'act',
-      effects: EFFECTS_OVERWRITE,
-      inputSchema: z.object({
-        type: z.enum(['character', 'location']),
-        assetId: z.string().min(1),
-        newName: z.string().min(1),
-      }),
-      outputSchema: z.object({ success: z.boolean() }),
-      execute: async (ctx, input) => {
-        await updateAssetRenderLabel({
-          scope: 'project',
-          kind: input.type,
-          assetId: input.assetId,
-          projectId: ctx.projectId,
-          newName: input.newName,
-        })
-        return { success: true }
-      },
     }),
     update_character_appearance_description: defineOperation({
       id: 'update_character_appearance_description',

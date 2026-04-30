@@ -149,6 +149,7 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
       'video_prompt',
       'character_assets',
       'location_asset',
+      'reference_images',
       'aspect_ratio',
       'style',
       'style_requirements',

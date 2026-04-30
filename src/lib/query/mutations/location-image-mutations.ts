@@ -144,19 +144,17 @@ export function useUploadProjectLocationImage(projectId: string) {
 
     return useMutation({
         mutationFn: async ({
-            file, locationId, imageIndex, labelText
+            file, locationId, imageIndex
         }: {
             file: File
             locationId: string
             imageIndex?: number
-            labelText?: string
         }) => {
             const formData = new FormData()
             formData.append('file', file)
             formData.append('type', 'location')
             formData.append('id', locationId)
             if (imageIndex !== undefined) formData.append('imageIndex', imageIndex.toString())
-            if (labelText) formData.append('labelText', labelText)
 
             return await requestJsonWithError(`/api/projects/${projectId}/upload-asset-image`, {
                 method: 'POST',

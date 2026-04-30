@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { ApiError } from '@/lib/api-errors'
 import { createAsset, copyAssetFromGlobal, removeAsset, revertAssetRender, selectAssetRender, submitAssetGenerateTask, submitAssetModifyTask, updateAsset, updateAssetVariant } from '@/lib/assets/services/asset-actions'
-import { updateAssetRenderLabel } from '@/lib/assets/services/asset-label'
 import { readAssets } from '@/lib/assets/services/read-assets'
 import type { AssetKind, AssetScope } from '@/lib/assets/contracts'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
@@ -305,34 +304,6 @@ export function createAssetsApiOperations(): ProjectAgentOperationRegistryDraft 
             projectId: input.projectId,
           },
         })
-      },
-    }),
-
-    api_assets_update_label: defineOperation({
-      id: 'api_assets_update_label',
-      summary: 'API-only: Update asset render label (global or project scope).',
-      intent: 'act',
-      effects: EFFECTS_WRITE,
-      inputSchema: z.object({
-        assetId: z.string().min(1),
-        scope: scopeSchema,
-        kind: mutableKindSchema,
-        projectId: z.string().optional(),
-        newName: z.string().min(1),
-      }),
-      outputSchema: z.unknown(),
-      execute: async (_ctx, input) => {
-        if (input.scope === 'project') {
-          requireProjectId(input.scope, input.projectId)
-        }
-        await updateAssetRenderLabel({
-          scope: input.scope,
-          kind: input.kind,
-          assetId: input.assetId,
-          projectId: input.projectId,
-          newName: input.newName,
-        })
-        return { success: true }
       },
     }),
 

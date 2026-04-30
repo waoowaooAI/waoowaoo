@@ -16,6 +16,9 @@ Character library:
 Character introductions:
 {characters_introduction}
 
+Prop library:
+{props_lib_name}
+
 Output format (JSON object only):
 {
   "clip_id": "{clip_id}",

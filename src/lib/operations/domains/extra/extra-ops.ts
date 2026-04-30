@@ -7,7 +7,6 @@ import { TASK_TYPE } from '@/lib/task/types'
 import { getProjectModelConfig } from '@/lib/config-service'
 import { normalizeImageGenerationCount } from '@/lib/image-generation/count'
 import { detectEpisodeMarkers, splitByMarkers } from '@/lib/episode-marker-detector'
-import { initializeFonts, createLabelSVG } from '@/lib/fonts'
 import { uploadObject, generateUniqueKey } from '@/lib/storage'
 import { decodeImageUrlsFromDb, encodeImageUrls } from '@/lib/contracts/image-urls-contract'
 import type { ProjectAgentOperationRegistryDraft } from '@/lib/operations/types'
@@ -321,7 +320,6 @@ export function createExtraOperations(): ProjectAgentOperationRegistryDraft {
         confirmed: z.boolean().optional(),
         type: z.enum(['character', 'location']),
         id: z.string().min(1),
-        labelText: z.string().min(1),
         appearanceId: z.string().nullable().optional(),
         imageIndex: z.number().int().min(0).max(50).nullable().optional(),
         imageBase64: z.string().min(1),
@@ -329,21 +327,8 @@ export function createExtraOperations(): ProjectAgentOperationRegistryDraft {
       }).passthrough(),
       outputSchema: z.unknown(),
       execute: async (ctx, input) => {
-        await initializeFonts()
-
         const buffer = Buffer.from(input.imageBase64, 'base64')
-        const meta = await sharp(buffer).metadata()
-        const w = meta.width || 2160
-        const h = meta.height || 2160
-        const fontSize = Math.floor(h * 0.04)
-        const pad = Math.floor(fontSize * 0.5)
-        const barH = fontSize + pad * 2
-
-        const svg = await createLabelSVG(w, barH, fontSize, pad, input.labelText)
-
         const processed = await sharp(buffer)
-          .extend({ top: barH, bottom: 0, left: 0, right: 0, background: { r: 0, g: 0, b: 0, alpha: 1 } })
-          .composite([{ input: svg, top: 0, left: 0 }])
           .jpeg({ quality: 90, mozjpeg: true })
           .toBuffer()
 
@@ -421,7 +406,7 @@ export function createExtraOperations(): ProjectAgentOperationRegistryDraft {
                 locationId: input.id,
                 imageIndex: targetImageIndex,
                 imageUrl: key,
-                description: input.labelText,
+                description: null,
                 isSelected: targetImageIndex === 0,
               },
               select: { id: true },
