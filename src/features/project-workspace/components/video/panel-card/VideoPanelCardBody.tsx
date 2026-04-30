@@ -2,6 +2,7 @@ import React from 'react'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
+import InlineVideoGenerationControls from '../InlineVideoGenerationControls'
 import { AppIcon } from '@/components/ui/icons'
 import type { VideoPanelRuntime } from './hooks/useVideoPanelActions'
 
@@ -25,25 +26,6 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
     lipSync,
     computed,
   } = runtime
-  const safeTranslate = (key: string | undefined, fallback = ''): string => {
-    if (!key) return fallback
-    try {
-      return t(key as never)
-    } catch {
-      return fallback
-    }
-  }
-
-  const renderCapabilityLabel = (field: {
-    field: string
-    label: string
-    labelKey?: string
-    unitKey?: string
-  }): string => {
-    const labelText = safeTranslate(field.labelKey, safeTranslate(`capability.${field.field}`, field.label))
-    const unitText = safeTranslate(field.unitKey)
-    return unitText ? `${labelText} (${unitText})` : labelText
-  }
 
   const isFirstLastFrameGenerated = panel.videoGenerationMode === 'firstlastframe' && !!panel.videoUrl
   const showsIncomingLinkBadge = layout.isLastFrame && !!layout.prevPanel
@@ -161,7 +143,23 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
               )
             })() : (
               <>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-[minmax(0,300px)_auto] items-center justify-between gap-3">
+                  <InlineVideoGenerationControls
+                    models={videoModel.videoModelOptions}
+                    modelValue={videoModel.selectedModel || undefined}
+                    onModelChange={(modelKey) => {
+                      videoModel.setSelectedModel(modelKey)
+                    }}
+                    capabilityFields={videoModel.capabilityFields}
+                    capabilityOverrides={videoModel.generationOptions}
+                    onCapabilityChange={(field, rawValue) => videoModel.setCapabilityValue(field, rawValue)}
+                    fields={['resolution', 'duration']}
+                    disabled={taskStatus.isVideoTaskRunning}
+                    className="min-w-0"
+                    size="xs"
+                    showLabels
+                    layout="stacked"
+                  />
                   <button
                     onClick={() =>
                       actions.onGenerateVideo(
@@ -178,29 +176,10 @@ export default function VideoPanelCardBody({ runtime }: VideoPanelCardBodyProps)
                       || !videoModel.selectedModel
                       || videoModel.missingCapabilityFields.length > 0
                     }
-                    className="flex-shrink-0 min-w-[90px] py-2 px-3 text-sm font-medium rounded-lg shadow-sm transition-all disabled:opacity-50 bg-[var(--glass-accent-from)] text-white"
+                    className="glass-btn-base glass-btn-primary h-8 min-w-[86px] self-center px-3 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {panel.videoUrl ? t('stage.hasSynced') : taskStatus.isVideoTaskRunning ? taskStatus.taskRunningVideoLabel : t('panelCard.generateVideo')}
+                    {panel.videoUrl ? t('panelCard.regenerate') : taskStatus.isVideoTaskRunning ? taskStatus.taskRunningVideoLabel : t('panelCard.generateVideo')}
                   </button>
-                  <div className="flex-1 min-w-0">
-                    <ModelCapabilityDropdown
-                      compact
-                      models={videoModel.videoModelOptions}
-                      value={videoModel.selectedModel || undefined}
-                      onModelChange={(modelKey) => {
-                        videoModel.setSelectedModel(modelKey)
-                      }}
-                      capabilityFields={videoModel.capabilityFields.map((field) => ({
-                        field: field.field,
-                        label: renderCapabilityLabel(field),
-                        options: field.options,
-                        disabledOptions: field.disabledOptions,
-                      }))}
-                      capabilityOverrides={videoModel.generationOptions}
-                      onCapabilityChange={(field, rawValue) => videoModel.setCapabilityValue(field, rawValue)}
-                      placeholder={t('panelCard.selectModel')}
-                    />
-                  </div>
                 </div>
 
                 {computed.showLipSyncSection && (

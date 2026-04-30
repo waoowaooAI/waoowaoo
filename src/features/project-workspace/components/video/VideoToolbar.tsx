@@ -3,6 +3,8 @@ import { useTranslations } from 'next-intl'
 import TaskStatusInline from '@/components/task/TaskStatusInline'
 import { resolveTaskPresentationState } from '@/lib/task/presentation'
 import { AppIcon } from '@/components/ui/icons'
+import InlineVideoGenerationControls, { type InlineVideoCapabilityField } from './InlineVideoGenerationControls'
+import type { VideoGenerationOptions, VideoModelOption } from './types'
 
 interface VideoToolbarProps {
   totalPanels: number
@@ -12,6 +14,13 @@ interface VideoToolbarProps {
   isAnyTaskRunning: boolean
   isDownloading: boolean
   onGenerateAll: () => void
+  canGenerateAll: boolean
+  batchModels: VideoModelOption[]
+  batchModel: string
+  onBatchModelChange: (model: string) => void
+  batchCapabilityFields: InlineVideoCapabilityField[]
+  batchGenerationOptions: VideoGenerationOptions
+  onBatchCapabilityChange: (field: string, rawValue: string) => void
   onDownloadAll: () => void
   onBack: () => void
   onEnterEditor?: () => void  // 进入剪辑器
@@ -26,6 +35,13 @@ export default function VideoToolbar({
   isAnyTaskRunning,
   isDownloading,
   onGenerateAll,
+  canGenerateAll,
+  batchModels,
+  batchModel,
+  onBatchModelChange,
+  batchCapabilityFields,
+  batchGenerationOptions,
+  onBatchCapabilityChange,
   onDownloadAll,
   onBack,
   onEnterEditor,
@@ -50,7 +66,7 @@ export default function VideoToolbar({
     : null
   return (
     <div className="glass-surface p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-[var(--glass-text-secondary)]">
              {t('toolbar.title')}
@@ -68,10 +84,23 @@ export default function VideoToolbar({
             )}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+          <InlineVideoGenerationControls
+            models={batchModels}
+            modelValue={batchModel}
+            onModelChange={onBatchModelChange}
+            capabilityFields={batchCapabilityFields}
+            capabilityOverrides={batchGenerationOptions}
+            onCapabilityChange={onBatchCapabilityChange}
+            fields={['resolution']}
+            disabled={isAnyTaskRunning}
+            className="flex-none"
+            size="xs"
+            wrap={false}
+          />
           <button
             onClick={onGenerateAll}
-            disabled={isAnyTaskRunning}
+            disabled={isAnyTaskRunning || !canGenerateAll}
             className="glass-btn-base glass-btn-primary flex items-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isAnyTaskRunning ? (

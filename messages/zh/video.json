@@ -93,6 +93,14 @@
     "enterEdit": "进入剪辑",
     "back": "返回"
   },
+  "groupBatch": {
+    "title": "第 {number} 幕",
+    "summary": "共 {total} 个镜头，{ready} 个可生成",
+    "open": "批量设置并生成",
+    "modalTitle": "第 {number} 幕批量生成",
+    "modalDesc": "将用同一组参数生成或重生成本幕中 {count} 个已有图片的镜头",
+    "confirm": "确认并生成本幕"
+  },
   "stage": {
     "title": "视频生成",
     "generateAll": "批量生成全部",
@@ -100,7 +108,7 @@
     "downloadAll": "下载全部视频",
     "enterEditor": "进入剪辑器",
     "lipSyncStatus": "口型同步中...",
-    "hasSynced": "✓ 已生成",
+    "hasSynced": "重新生成",
     "generating": "生成中...",
     "downloading": "下载中...",
     "downloadProgress": "正在准备视频文件... {current}/{total}",
@@ -128,7 +136,7 @@
     "promptPlaceholder": "输入首尾帧视频提示词...",
     "useDefault": "使用默认",
     "generate": "生成首尾帧视频",
-    "generated": "首尾帧视频已生成",
+    "generated": "重新生成",
     "model": "模型",
     "withAudio": "包含音频",
     "audioOn": "开",

@@ -9,7 +9,6 @@ import {
   type VideoGenerationOptions,
   type VideoModelOption,
 } from '@/features/project-workspace/components/video'
-import { AppIcon } from '@/components/ui/icons'
 import {
   useDownloadRemoteBlob,
   useListProjectEpisodeVideoUrls,
@@ -18,7 +17,6 @@ import {
 } from '@/lib/query/hooks'
 import { useLipSync } from '@/lib/query/hooks/useStoryboards'
 import ImagePreviewModal from '@/components/ui/ImagePreviewModal'
-import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
 import VideoTimelinePanel from '@/features/project-workspace/components/video-stage/VideoTimelinePanel'
 import VideoRenderPanel from '@/features/project-workspace/components/video-stage/VideoRenderPanel'
 import type { VideoStageShellProps } from './video-stage-runtime/types'
@@ -54,6 +52,31 @@ interface BatchCapabilityField {
 
 function toFieldLabel(field: string): string {
   return field.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase())
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isGenerationOptionValue(value: unknown): value is VideoGenerationOptionValue {
+  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+}
+
+function readSelectionForModel(
+  capabilityOverrides: Record<string, unknown> | undefined,
+  modelKey: string,
+): VideoGenerationOptions {
+  if (!modelKey || !capabilityOverrides) return {}
+  const rawSelection = capabilityOverrides[modelKey]
+  if (!isRecord(rawSelection)) return {}
+
+  const selection: VideoGenerationOptions = {}
+  for (const [field, value] of Object.entries(rawSelection)) {
+    if (field === 'aspectRatio') continue
+    if (!isGenerationOptionValue(value)) continue
+    selection[field] = value
+  }
+  return selection
 }
 
 export function useVideoStageRuntime({
@@ -155,27 +178,6 @@ export function useVideoStageRuntime({
     [allVideoModelOptions],
   )
 
-  const safeTranslate = useCallback((key: string | undefined, fallback = ''): string => {
-    if (!key) return fallback
-    try {
-      return t(key as never)
-    } catch {
-      return fallback
-    }
-  }, [t])
-
-  const renderCapabilityLabel = useCallback((field: {
-    field: string
-    label: string
-    labelKey?: string
-    unitKey?: string
-  }): string => {
-    const labelText = safeTranslate(field.labelKey, safeTranslate(`capability.${field.field}`, field.label))
-    const unitText = safeTranslate(field.unitKey)
-    return unitText ? `${labelText} (${unitText})` : labelText
-  }, [safeTranslate])
-
-  const [isBatchConfigOpen, setIsBatchConfigOpen] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const [isSubmittingVideoBatch, setIsSubmittingVideoBatch] = useState(false)
   const [submittingVideoPanelKeys, setSubmittingVideoPanelKeys] = useState<Set<string>>(new Set())
@@ -216,6 +218,29 @@ export function useVideoStageRuntime({
       pricingTiers: batchPricingTiers,
     })
   }, [batchPricingTiers, selectedBatchModelOption?.capabilities?.video])
+
+  const selectedBatchModelOverrides = useMemo(
+    () => readSelectionForModel(capabilityOverrides, batchSelectedModel),
+    [batchSelectedModel, capabilityOverrides],
+  )
+  const selectedBatchModelOverridesSignature = useMemo(
+    () => JSON.stringify(selectedBatchModelOverrides),
+    [selectedBatchModelOverrides],
+  )
+
+  useEffect(() => {
+    setBatchGenerationOptions(normalizeVideoGenerationSelections({
+      definitions: batchCapabilityDefinitions,
+      pricingTiers: batchPricingTiers,
+      selection: selectedBatchModelOverrides,
+    }))
+  }, [
+    batchCapabilityDefinitions,
+    batchPricingTiers,
+    batchSelectedModel,
+    selectedBatchModelOverrides,
+    selectedBatchModelOverridesSignature,
+  ])
 
   useEffect(() => {
     setBatchGenerationOptions((previous) => {
@@ -470,15 +495,6 @@ export function useVideoStageRuntime({
   const isAnyTaskRunning = runningCount > 0 || isSubmittingVideoBatch
   const canSubmitBatchGenerate = !!batchSelectedModel && batchMissingCapabilityFields.length === 0
 
-  const handleOpenBatchGenerateModal = useCallback(() => {
-    if (isAnyTaskRunning) return
-    setIsBatchConfigOpen(true)
-  }, [isAnyTaskRunning])
-
-  const handleCloseBatchGenerateModal = useCallback(() => {
-    setIsBatchConfigOpen(false)
-  }, [])
-
   const handleConfirmBatchGenerate = useCallback(async () => {
     if (!canSubmitBatchGenerate || isConfirming) return
 
@@ -488,7 +504,6 @@ export function useVideoStageRuntime({
         videoModel: batchSelectedModel,
         generationOptions: batchGenerationOptions,
       })
-      setIsBatchConfigOpen(false)
     } finally {
       setIsConfirming(false)
     }
@@ -509,7 +524,14 @@ export function useVideoStageRuntime({
         failedCount={failedCount}
         isAnyTaskRunning={isAnyTaskRunning}
         isDownloading={isDownloading}
-        onGenerateAll={handleOpenBatchGenerateModal}
+        onGenerateAll={handleConfirmBatchGenerate}
+        canGenerateAll={canSubmitBatchGenerate && !isConfirming}
+        batchModels={normalVideoModelOptions}
+        batchModel={batchSelectedModel}
+        onBatchModelChange={setBatchSelectedModel}
+        batchCapabilityFields={batchCapabilityFields}
+        batchGenerationOptions={batchGenerationOptions}
+        onBatchCapabilityChange={setBatchCapabilityValue}
         onDownloadAll={handleDownloadAllVideos}
         onBack={onBack}
         onEnterEditor={onEnterEditor}
@@ -566,67 +588,6 @@ export function useVideoStageRuntime({
         updateLocalPrompt={updateLocalPrompt}
         savePrompt={savePrompt}
       />
-
-      {isBatchConfigOpen && (
-        <div
-          className="fixed inset-0 z-[120] glass-overlay flex items-center justify-center p-4"
-          onClick={handleCloseBatchGenerateModal}
-        >
-          <div
-            className="glass-surface-modal w-full max-w-2xl p-5 space-y-4"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-[var(--glass-text-primary)]">
-                {t('toolbar.batchConfigTitle')}
-              </h3>
-              <p className="text-sm text-[var(--glass-text-tertiary)]">
-                {t('toolbar.batchConfigDesc')}
-              </p>
-            </div>
-
-            <ModelCapabilityDropdown
-              models={normalVideoModelOptions}
-              value={batchSelectedModel || undefined}
-              onModelChange={setBatchSelectedModel}
-              capabilityFields={batchCapabilityFields.map((field) => ({
-                field: field.field,
-                label: renderCapabilityLabel(field),
-                options: field.options,
-                disabledOptions: field.disabledOptions,
-              }))}
-              capabilityOverrides={batchGenerationOptions}
-              onCapabilityChange={(field, rawValue) => setBatchCapabilityValue(field, rawValue)}
-              placeholder={t('panelCard.selectModel')}
-            />
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={handleCloseBatchGenerateModal}
-                className="glass-btn-base glass-btn-secondary px-4 py-2 text-sm font-medium"
-              >
-                {t('panelCard.cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={() => { void handleConfirmBatchGenerate() }}
-                disabled={!canSubmitBatchGenerate || isConfirming}
-                className="glass-btn-base glass-btn-primary px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isConfirming ? (
-                  <>
-                    <AppIcon name="loader" className="animate-spin h-4 w-4" />
-                    <span>{t('toolbar.confirming')}</span>
-                  </>
-                ) : (
-                  <span>{t('toolbar.confirmGenerateAll')}</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {previewImage && <ImagePreviewModal imageUrl={previewImage} onClose={closePreviewImage} />}
     </div>

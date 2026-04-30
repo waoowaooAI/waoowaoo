@@ -18,7 +18,6 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
     layout,
     media,
     taskStatus,
-    videoModel,
     player,
     actions,
   } = runtime
@@ -130,29 +129,6 @@ export default function VideoPanelCardHeader({ runtime }: VideoPanelCardHeaderPr
           </div>
         </div>
       ) : null}
-
-      {/* 重新生成按钮 */}
-      {!layout.isLinked && !layout.isLastFrame && (hasVisibleBaseVideo || taskStatus.isVideoTaskRunning) && (
-        <button
-          onClick={() =>
-            actions.onGenerateVideo(
-              panel.storyboardId,
-              panel.panelIndex,
-              videoModel.selectedModel,
-              undefined,
-              videoModel.generationOptions,
-              panel.panelId,
-            )}
-          disabled={
-            taskStatus.isVideoTaskRunning
-            || !videoModel.selectedModel
-            || videoModel.missingCapabilityFields.length > 0
-          }
-          className="absolute bottom-2 right-2 bg-[var(--glass-overlay)] hover:bg-[var(--glass-overlay-strong)] text-white p-2 rounded-full transition-all z-20 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <AppIcon name="refresh" className="w-4 h-4" />
-        </button>
-      )}
 
       {/* 任务进度遮罩 */}
       {(taskStatus.isVideoTaskRunning || taskStatus.isLipSyncTaskRunning) && (

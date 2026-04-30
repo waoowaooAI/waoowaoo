@@ -93,6 +93,14 @@
     "enterEdit": "Enter Editor",
     "back": "Back"
   },
+  "groupBatch": {
+    "title": "Act {number}",
+    "summary": "{ready} of {total} shots ready",
+    "open": "Batch settings and generate",
+    "modalTitle": "Batch generate Act {number}",
+    "modalDesc": "Generate or regenerate {count} shots in this act that already have images, using the same settings.",
+    "confirm": "Confirm and Generate Act"
+  },
   "stage": {
     "title": "Video Generation",
     "generateAll": "Generate All",
@@ -100,7 +108,7 @@
     "downloadAll": "Download All Videos",
     "enterEditor": "Enter Editor",
     "lipSyncStatus": "Lip syncing...",
-    "hasSynced": "✓ Generated",
+    "hasSynced": "Regenerate",
     "generating": "Generating...",
     "downloading": "Downloading...",
     "downloadProgress": "Preparing video files... {current}/{total}",
@@ -128,7 +136,7 @@
     "promptPlaceholder": "Enter first/last frame video prompt...",
     "useDefault": "Use Default",
     "generate": "Generate First/Last Frame Video",
-    "generated": "First/Last Frame Video Generated",
+    "generated": "Regenerate",
     "model": "Model",
     "withAudio": "With Audio",
     "audioOn": "On",
