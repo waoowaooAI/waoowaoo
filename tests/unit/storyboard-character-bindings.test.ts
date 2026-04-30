@@ -46,7 +46,7 @@ describe('storyboard character bindings', () => {
 
   it('throws instead of silently accepting unbound characters', () => {
     expect(() => canonicalizePanelCharacterReferences(characters, [
-      { name: '顾娘子', appearance: '夜行衣' },
+      { name: '系统没这个角色', appearance: '夜行衣' },
     ])).toThrow('STORYBOARD_CHARACTER_BINDING_INVALID')
   })
 })

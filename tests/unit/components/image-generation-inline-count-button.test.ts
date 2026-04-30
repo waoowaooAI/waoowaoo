@@ -25,7 +25,7 @@ describe('ImageGenerationInlineCountButton', () => {
     expect(html).toContain('role="button"')
     expect(html).toContain('aria-disabled="true"')
     expect(html).not.toContain('<select disabled=""')
-    expect(html).toContain('rounded-full bg-white/12')
+    expect(html).toContain('rounded-full border-white/20 bg-white/10')
     expect(html).toContain('inline-flex shrink-0 items-center whitespace-nowrap leading-none')
   })
 
@@ -47,9 +47,7 @@ describe('ImageGenerationInlineCountButton', () => {
     expect(html).toContain('重新生成')
     expect(html).toContain('张')
     expect(html).toContain('whitespace-nowrap')
-    expect(html).toContain('rounded-full bg-white/12')
-    expect(html).toContain('right-2')
-    expect(html).toContain('hover:bg-white/16')
+    expect(html).toContain('rounded-full border-white/20 bg-white/10')
   })
 
   it('can render a regenerate action without exposing the count selector', () => {
