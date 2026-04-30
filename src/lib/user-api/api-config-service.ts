@@ -36,8 +36,10 @@ import {
 import {
   normalizeDefaultModelsInput,
   normalizeWorkflowConcurrencyInput,
+  sanitizeDefaultModelsAgainstModels,
   sanitizeDefaultModelsForBilling,
   sanitizeModelsForBilling,
+  validateDefaultModelsAgainstModels,
   validateDefaultModelPricing,
 } from './api-config-defaults'
 import {
@@ -117,6 +119,7 @@ export async function getUserApiConfig(userId: string) {
   const defaultModels = billingMode === 'OFF'
     ? rawDefaults
     : sanitizeDefaultModelsForBilling(rawDefaults)
+  const enabledDefaultModels = sanitizeDefaultModelsAgainstModels(defaultModels, models)
   const capabilityDefaults = sanitizeCapabilitySelectionsAgainstModels(
     parseStoredCapabilitySelections(pref?.capabilityDefaults, 'capabilityDefaults'),
     [...models, ...disabledPresets],
@@ -133,7 +136,7 @@ export async function getUserApiConfig(userId: string) {
     catalog: buildApiConfigServerCatalog({
       resolveCapabilities: (model) => resolveBuiltinCapabilities(model.type, model.provider, model.modelId),
     }),
-    defaultModels,
+    defaultModels: enabledDefaultModels,
     capabilityDefaults,
     workflowConcurrency,
     pricingDisplay,
@@ -166,6 +169,15 @@ export async function putUserApiConfig(userId: string, body: unknown) {
     select: {
       customProviders: true,
       customModels: true,
+      analysisModel: true,
+      characterModel: true,
+      locationModel: true,
+      storyboardModel: true,
+      editModel: true,
+      videoModel: true,
+      audioModel: true,
+      lipSyncModel: true,
+      voiceDesignModel: true,
     },
   })
   const existingProviders = parseStoredProviders(existingPref?.customProviders)
@@ -217,6 +229,10 @@ export async function putUserApiConfig(userId: string, body: unknown) {
   }
 
   if (normalizedDefaults !== undefined) {
+    const modelSource = billingMode === 'OFF'
+      ? (normalizedModels ?? existingModels)
+      : sanitizeModelsForBilling(normalizedModels ?? existingModels)
+    validateDefaultModelsAgainstModels(normalizedDefaults, modelSource)
     if (billingMode !== 'OFF') {
       validateDefaultModelPricing(normalizedDefaults)
     }
@@ -246,6 +262,34 @@ export async function putUserApiConfig(userId: string, body: unknown) {
     }
     if (normalizedDefaults.voiceDesignModel !== undefined) {
       updateData.voiceDesignModel = normalizedDefaults.voiceDesignModel || null
+    }
+  }
+
+  if (normalizedModels !== undefined) {
+    const modelSource = billingMode === 'OFF'
+      ? normalizedModels
+      : sanitizeModelsForBilling(normalizedModels)
+    const existingDefaults: DefaultModelsPayload = {
+      analysisModel: existingPref?.analysisModel || '',
+      characterModel: existingPref?.characterModel || '',
+      locationModel: existingPref?.locationModel || '',
+      storyboardModel: existingPref?.storyboardModel || '',
+      editModel: existingPref?.editModel || '',
+      videoModel: existingPref?.videoModel || '',
+      audioModel: existingPref?.audioModel || '',
+      lipSyncModel: existingPref?.lipSyncModel || '',
+      voiceDesignModel: existingPref?.voiceDesignModel || '',
+    }
+    const nextDefaults = {
+      ...existingDefaults,
+      ...(normalizedDefaults || {}),
+    }
+    const cleanedDefaults = sanitizeDefaultModelsAgainstModels(nextDefaults, modelSource)
+    for (const field of Object.keys(cleanedDefaults) as Array<keyof DefaultModelsPayload>) {
+      const cleanedValue = cleanedDefaults[field]
+      if (cleanedValue === undefined) continue
+      if (nextDefaults[field] === cleanedValue) continue
+      updateData[field] = cleanedValue || null
     }
   }
 

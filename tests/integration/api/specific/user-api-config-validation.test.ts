@@ -275,6 +275,42 @@ describe('api specific - user api-config validation', () => {
     expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
   })
 
+  it('rejects default image model that is not enabled as an image model', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'PUT',
+      body: {
+        providers: [
+          { id: 'ark', name: 'Volcengine Ark', apiKey: 'ark-key' },
+        ],
+        models: [
+          {
+            type: 'image',
+            provider: 'ark',
+            modelId: 'doubao-seedream-5-0-260128',
+            modelKey: 'ark::doubao-seedream-5-0-260128',
+            name: 'Seedream',
+          },
+        ],
+        defaultModels: {
+          characterModel: 'openai-compatible:old::gemini-3-pro-image-preview',
+        },
+      },
+    })
+
+    const res = await route.PUT(req, routeContext)
+    const body = await res.json() as { error?: { details?: { code?: string; field?: string } } }
+
+    expect(res.status).toBe(400)
+    expect(body.error?.details?.code).toBe('DEFAULT_MODEL_NOT_ENABLED')
+    expect(body.error?.details?.field).toBe('defaultModels.characterModel')
+    expect(prismaMock.userPreference.upsert).not.toHaveBeenCalled()
+  })
+
   it('rejects gemini-compatible provider when apiMode is openai-official', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')

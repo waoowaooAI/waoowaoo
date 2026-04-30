@@ -33,6 +33,18 @@ const BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE: Readonly<Record<StoredModel['type
   lipsync: 'lip-sync',
 }
 
+const DEFAULT_FIELD_TO_MODEL_TYPE: Readonly<Record<DefaultModelField, StoredModel['type']>> = {
+  analysisModel: 'llm',
+  characterModel: 'image',
+  locationModel: 'image',
+  storyboardModel: 'image',
+  editModel: 'image',
+  videoModel: 'video',
+  audioModel: 'audio',
+  lipSyncModel: 'lipsync',
+  voiceDesignModel: 'audio',
+}
+
 const OPTIONAL_PRICING_PROVIDER_KEYS = new Set([
   'openai-compatible',
   'gemini-compatible',
@@ -192,4 +204,59 @@ export function sanitizeDefaultModelsForBilling(defaultModels: DefaultModelsPayl
   }
 
   return sanitized
+}
+
+function hasCandidateModelsForField(field: DefaultModelField, models: StoredModel[]): boolean {
+  const expectedType = DEFAULT_FIELD_TO_MODEL_TYPE[field]
+  return models.some((model) => model.type === expectedType)
+}
+
+function isEnabledDefaultModel(field: DefaultModelField, modelKey: string, models: StoredModel[]): boolean {
+  const parsed = parseModelKeyStrict(modelKey)
+  if (!parsed) return false
+  const expectedType = DEFAULT_FIELD_TO_MODEL_TYPE[field]
+  return models.some((model) => model.type === expectedType && model.modelKey === parsed.modelKey)
+}
+
+export function sanitizeDefaultModelsAgainstModels(
+  defaultModels: DefaultModelsPayload,
+  models: StoredModel[],
+): DefaultModelsPayload {
+  const sanitized: DefaultModelsPayload = {}
+
+  for (const field of DEFAULT_MODEL_FIELDS) {
+    const rawModelKey = defaultModels[field]
+    if (rawModelKey === undefined) continue
+    const modelKey = readTrimmedString(rawModelKey)
+    if (!modelKey) {
+      sanitized[field] = ''
+      continue
+    }
+    if (!hasCandidateModelsForField(field, models)) {
+      sanitized[field] = modelKey
+      continue
+    }
+    sanitized[field] = isEnabledDefaultModel(field, modelKey, models) ? modelKey : ''
+  }
+
+  return sanitized
+}
+
+export function validateDefaultModelsAgainstModels(
+  defaultModels: DefaultModelsPayload,
+  models: StoredModel[],
+) {
+  for (const field of DEFAULT_MODEL_FIELDS) {
+    const modelKey = readTrimmedString(defaultModels[field])
+    if (!modelKey) continue
+    if (!hasCandidateModelsForField(field, models)) continue
+    if (isEnabledDefaultModel(field, modelKey, models)) continue
+
+    throw new ApiError('INVALID_PARAMS', {
+      code: 'DEFAULT_MODEL_NOT_ENABLED',
+      field: `defaultModels.${field}`,
+      modelKey,
+      expectedType: DEFAULT_FIELD_TO_MODEL_TYPE[field],
+    })
+  }
 }

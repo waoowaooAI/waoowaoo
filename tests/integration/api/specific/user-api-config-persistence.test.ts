@@ -278,6 +278,39 @@ describe('api specific - user api-config persistence', () => {
     expect(json.models?.some((model) => model.modelKey === 'bailian::qwen3.5-flash')).toBe(true)
   })
 
+  it('clears stale default image model in GET when enabled image models use another key', async () => {
+    installAuthMocks()
+    mockAuthenticated('user-1')
+    prismaMock.userPreference.findUnique.mockResolvedValue({
+      customProviders: JSON.stringify([
+        { id: 'gemini-compatible:gm-1', name: 'Gemini Compat', apiKey: 'enc:gm-key' },
+      ]),
+      customModels: JSON.stringify([
+        {
+          type: 'image',
+          provider: 'gemini-compatible:gm-1',
+          modelId: 'gemini-3-pro-image-preview',
+          modelKey: 'gemini-compatible:gm-1::gemini-3-pro-image-preview',
+          name: 'Banana Pro',
+        },
+      ]),
+      characterModel: 'openai-compatible:old::gemini-3-pro-image-preview',
+    })
+    const route = await import('@/app/api/user/api-config/route')
+
+    const req = buildMockRequest({
+      path: '/api/user/api-config',
+      method: 'GET',
+    })
+
+    const res = await route.GET(req, routeContext)
+    expect(res.status).toBe(200)
+    const json = await res.json() as {
+      defaultModels?: { characterModel?: string }
+    }
+    expect(json.defaultModels?.characterModel).toBe('')
+  })
+
   it('accepts workflow concurrency payload and returns normalized values on GET', async () => {
     installAuthMocks()
     mockAuthenticated('user-1')

@@ -11,6 +11,7 @@ export type UserPreferenceSnapshot = {
   videoModel?: string | null
   audioModel?: string | null
   lipSyncModel?: string | null
+  voiceDesignModel?: string | null
   capabilityDefaults?: string | null
   analysisConcurrency?: number | null
   imageConcurrency?: number | null
