@@ -172,7 +172,7 @@ export default function VoiceControlPanel({
                 <select
                   value={editingSpeaker}
                   onChange={(event) => onEditingSpeakerChange(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--glass-stroke-focus)]"
+                  className="glass-select-base px-3 py-2 text-sm"
                 >
                   <option value="" disabled>{t('lineEditor.selectSpeaker')}</option>
                   {speakerOptions.map((speaker) => (
@@ -191,7 +191,7 @@ export default function VoiceControlPanel({
                 <select
                   value={editingMatchedPanelId}
                   onChange={(event) => onEditingMatchedPanelIdChange(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--glass-stroke-strong)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--glass-stroke-focus)]"
+                  className="glass-select-base px-3 py-2 text-sm"
                 >
                   <option value="">{t('lineEditor.unboundPanel')}</option>
                   {bindablePanelOptions.map((panel) => (
