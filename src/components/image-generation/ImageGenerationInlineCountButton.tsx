@@ -1,7 +1,7 @@
 'use client'
 
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
-import { AppIcon } from '@/components/ui/icons'
+import { GlassNumberStepper } from '@/components/ui/primitives'
 
 interface ImageGenerationInlineCountButtonProps {
   prefix: ReactNode
@@ -23,6 +23,8 @@ interface ImageGenerationInlineCountButtonProps {
   ariaLabel: string
 }
 
+const COUNT_STEPPER_WIDTH_CLASS = 'w-[64px]'
+
 export default function ImageGenerationInlineCountButton({
   prefix,
   suffix,
@@ -38,7 +40,6 @@ export default function ImageGenerationInlineCountButton({
   className = '',
   actionClassName = '',
   countClassName = '',
-  selectClassName = '',
   labelClassName = '',
   ariaLabel,
 }: ImageGenerationInlineCountButtonProps) {
@@ -48,9 +49,23 @@ export default function ImageGenerationInlineCountButton({
     ? 'opacity-60 cursor-not-allowed'
     : 'cursor-pointer'
   const selectStateClassName = isSelectDisabled
-    ? 'pointer-events-none opacity-70'
+    ? 'opacity-70'
     : 'cursor-pointer'
   const resolvedActionClassName = (actionClassName || className).trim()
+  const countStepper = (
+    <GlassNumberStepper
+      value={value}
+      onValueChange={onValueChange}
+      allowedValues={options}
+      ariaLabel={ariaLabel}
+      disabled={isSelectDisabled}
+      size="xs"
+      fullWidth={false}
+      className={`${selectStateClassName} h-6 ${COUNT_STEPPER_WIDTH_CLASS} rounded-full border-white/20 bg-white/10 text-current`.trim()}
+      controlClassName="!w-4 text-current opacity-80 hover:bg-white/12 hover:text-current"
+      inputClassName="w-6 px-0 text-xs font-semibold text-current"
+    />
+  )
 
   if (!showCountControl) {
     return (
@@ -85,28 +100,11 @@ export default function ImageGenerationInlineCountButton({
           <span className={`${labelClassName} inline-flex items-center gap-1 whitespace-nowrap`.trim()}>{prefix}</span>
         </button>
         <span
-          className={`group relative inline-flex h-6 items-center gap-1 rounded-md px-1.5 transition-colors ${
-            isSelectDisabled ? '' : 'hover:bg-white/12 focus-within:bg-white/14'
-          } ${countClassName}`.trim()}
+          className={`inline-flex items-center gap-1 ${countClassName}`.trim()}
         >
-          <select
-            value={String(value)}
-            onChange={(event) => onValueChange(Number(event.target.value))}
-            aria-label={ariaLabel}
-            disabled={isSelectDisabled}
-            className={`${selectClassName} ${selectStateClassName}`.trim()}
-          >
-            {options.map((option) => (
-              <option key={option} value={option} className="text-black">
-                {option}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute inset-y-0 right-1 flex items-center text-current opacity-85 transition-colors group-hover:opacity-100 group-focus-within:opacity-100">
-            <AppIcon name="chevronDown" className="h-3 w-3" />
-          </span>
+          {countStepper}
           {suffix ? (
-            <span className={`${labelClassName} whitespace-nowrap pr-4`.trim()}>{suffix}</span>
+            <span className={`${labelClassName} whitespace-nowrap`.trim()}>{suffix}</span>
           ) : null}
         </span>
       </div>
@@ -133,27 +131,10 @@ export default function ImageGenerationInlineCountButton({
     >
       <span className={`${labelClassName} inline-flex shrink-0 items-center whitespace-nowrap leading-none`.trim()}>{prefix}</span>
       <span
-        className={`group relative inline-flex h-8 shrink-0 items-center rounded-full bg-white/12 px-2 transition-colors ${
-          isSelectDisabled ? '' : 'hover:bg-white/16 focus-within:bg-white/18'
-        }`}
+        className={`inline-flex shrink-0 items-center ${countClassName}`.trim()}
         onClick={(event: MouseEvent<HTMLSpanElement>) => event.stopPropagation()}
       >
-        <select
-          value={String(value)}
-          onChange={(event) => onValueChange(Number(event.target.value))}
-          aria-label={ariaLabel}
-          disabled={isSelectDisabled}
-          className={`${selectClassName} ${selectStateClassName}`.trim()}
-        >
-          {options.map((option) => (
-            <option key={option} value={option} className="text-black">
-              {option}
-            </option>
-          ))}
-        </select>
-        <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-current opacity-85 transition-colors group-hover:opacity-100 group-focus-within:opacity-100">
-          <AppIcon name="chevronDown" className="h-3 w-3" />
-        </span>
+        {countStepper}
       </span>
       <span className={`${labelClassName} inline-flex shrink-0 items-center whitespace-nowrap leading-none`.trim()}>{suffix}</span>
     </div>

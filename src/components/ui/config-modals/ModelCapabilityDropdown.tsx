@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import type { CapabilityValue } from '@/lib/ai-registry/types'
 import { AppIcon, RatioPreviewIcon } from '@/components/ui/icons'
+import { GlassNumberStepper, GlassSelect } from '@/components/ui/primitives'
 
 // ─── Types ────────────────────────────────────────────
 
@@ -107,6 +108,13 @@ function shouldUseSelectControl(field: string, options: CapabilityValue[]): bool
 function isOptionDisabled(def: CapabilityFieldDefinition, option: CapabilityValue): boolean {
     if (!Array.isArray(def.disabledOptions) || def.disabledOptions.length === 0) return false
     return def.disabledOptions.includes(option)
+}
+
+function toEnabledNumericOptions(def: CapabilityFieldDefinition): number[] {
+    return def.options
+        .filter((option) => !isOptionDisabled(def, option))
+        .map((option) => (typeof option === 'number' ? option : Number(option)))
+        .filter((value) => Number.isFinite(value))
 }
 
 // ─── Component ────────────────────────────────────────
@@ -350,6 +358,8 @@ export function ModelCapabilityDropdown({
                                             const useSelect = shouldUseSelectControl(def.field, def.options)
                                             const fallbackOption = def.options[0]
                                             const selectValue = currentVal || String(fallbackOption)
+                                            const numericOptions = toEnabledNumericOptions(def)
+                                            const useNumberStepper = def.field === 'duration' && numericOptions.length > 0
 
                                             return (
                                                 <div key={def.field} className="flex items-center justify-between gap-3">
@@ -365,24 +375,31 @@ export function ModelCapabilityDropdown({
                                                             {formatOptionLabel(def.options[0])}
                                                             <span className="text-[var(--glass-text-tertiary)] text-[10px]">({t('fixed')})</span>
                                                         </span>
+                                                    ) : useNumberStepper ? (
+                                                        <GlassNumberStepper
+                                                            value={selectValue}
+                                                            onValueChange={(nextValue) => onCapabilityChange(def.field, String(nextValue), def.options[0])}
+                                                            allowedValues={numericOptions}
+                                                            ariaLabel={resolveCapabilityLabel(def)}
+                                                            size="xs"
+                                                            className="w-[104px]"
+                                                        />
                                                     ) : useSelect ? (
-                                                        <div className="relative group">
-                                                            <select
-                                                                value={selectValue}
-                                                                onChange={(event) => onCapabilityChange(def.field, event.target.value, def.options[0])}
-                                                                className="appearance-none bg-transparent hover:bg-[#f2f2f7] dark:hover:bg-[#1c1c1e] text-[13px] font-bold text-[var(--glass-text-primary)] pl-3 pr-7 py-1 rounded-md transition-colors outline-none cursor-pointer border border-transparent"
-                                                            >
-                                                                {def.options.map((opt) => {
-                                                                    const s = String(opt)
-                                                                    return (
-                                                                        <option key={s} value={s}>
-                                                                            {formatOptionLabel(opt)}
-                                                                        </option>
-                                                                    )
-                                                                })}
-                                                            </select>
-                                                            <AppIcon name="chevronDown" className="w-3.5 h-3.5 text-[var(--glass-text-tertiary)] absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none group-hover:text-[var(--glass-text-primary)] transition-colors" />
-                                                        </div>
+                                                        <GlassSelect
+                                                            value={selectValue}
+                                                            onValueChange={(nextValue) => onCapabilityChange(def.field, nextValue, def.options[0])}
+                                                            options={def.options.map((opt) => ({
+                                                                value: String(opt),
+                                                                label: formatOptionLabel(opt),
+                                                                disabled: isOptionDisabled(def, opt),
+                                                            }))}
+                                                            ariaLabel={resolveCapabilityLabel(def)}
+                                                            size="xs"
+                                                            triggerVariant="plain"
+                                                            triggerClassName="h-7 min-w-[76px] rounded-md px-2 text-[13px] font-bold text-[var(--glass-text-primary)] hover:bg-[#f2f2f7] dark:hover:bg-[#1c1c1e]"
+                                                            menuMinWidth={120}
+                                                            align="end"
+                                                        />
                                                     ) : (
                                                         <div className="flex bg-[#f2f2f7] dark:bg-[#1c1c1e] p-[3px] rounded-lg shadow-inner">
                                                             {def.options.map((opt) => {

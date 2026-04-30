@@ -9,6 +9,10 @@ export type { GlassFieldProps } from './GlassField'
 
 export { default as GlassInput } from './GlassInput'
 export type { GlassInputProps } from './GlassInput'
+export { default as GlassNumberStepper } from './GlassNumberStepper'
+export type { GlassNumberStepperProps } from './GlassNumberStepper'
+export { default as GlassSelect } from './GlassSelect'
+export type { GlassSelectOption, GlassSelectProps } from './GlassSelect'
 
 export { default as GlassTextarea } from './GlassTextarea'
 export type { GlassTextareaProps } from './GlassTextarea'
