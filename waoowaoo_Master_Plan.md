@@ -642,5 +642,6 @@ npm run verify:push
 - ✅ 已完成：成片阶段第一块完整迁移。`FinalTimelineView` 已接入 Final StageNode，复用 `VideoEditorStage` 和 `createProjectFromPanels()` 从业务 panel 视频生成初始时间线。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
+- ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。
 - ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能；下一步重点是阶段内部虚拟化、command registry、旧 wrapper 清理、组件级/系统级测试和浏览器 QA。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
