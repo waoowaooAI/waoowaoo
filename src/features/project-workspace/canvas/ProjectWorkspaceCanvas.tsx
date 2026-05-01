@@ -9,6 +9,7 @@ import {
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
+  type NodeMouseHandler,
   type NodeChange,
   useReactFlow,
 } from '@xyflow/react'
@@ -25,7 +26,8 @@ import {
 } from './hooks/useWorkspaceNodeCanvasProjection'
 import { useWorkspaceNodeCanvasActions } from './hooks/useWorkspaceNodeCanvasActions'
 import { workspaceNodeTypes } from './nodes/workspaceNodeTypes'
-import type { WorkspaceCanvasFlowNode } from './node-canvas-types'
+import CanvasObjectDetailLayer from './details/CanvasObjectDetailLayer'
+import type { WorkspaceCanvasFlowNode, WorkspaceCanvasNodeAction } from './node-canvas-types'
 
 const DEFAULT_VIEWPORT = { x: 48, y: 96, zoom: 0.72 }
 const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
@@ -33,10 +35,11 @@ const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
 function ProjectWorkspaceCanvasContent() {
   const t = useTranslations('projectWorkflow.canvas.workspace')
   const { projectId, episodeId } = useWorkspaceProvider()
-  const { novelText, clips, storyboards } = useWorkspaceEpisodeStageData()
+  const { novelText, clips, storyboards, shots } = useWorkspaceEpisodeStageData()
   const reactFlow = useReactFlow<WorkspaceCanvasFlowNode>()
-  const onNodeAction = useWorkspaceNodeCanvasActions()
+  const runNodeAction = useWorkspaceNodeCanvasActions()
   const [nodes, setNodes] = useState<WorkspaceCanvasFlowNode[]>([])
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 
   const {
     layout,
@@ -53,11 +56,20 @@ function ProjectWorkspaceCanvasContent() {
   })
 
   const savedNodeLayouts = layout?.nodeLayouts ?? EMPTY_SAVED_NODE_LAYOUTS
+  const onNodeAction = useCallback((action: WorkspaceCanvasNodeAction) => {
+    if (action.type === 'open_details') {
+      setSelectedNodeId(action.nodeId)
+      return
+    }
+    runNodeAction(action)
+  }, [runNodeAction])
+
   const projection = useWorkspaceNodeCanvasProjection({
     episodeId: episodeId ?? 'pending-episode',
     storyText: novelText,
     clips,
     storyboards,
+    shots,
     savedLayouts: savedNodeLayouts,
     translate: t,
     onAction: onNodeAction,
@@ -100,6 +112,11 @@ function ProjectWorkspaceCanvasContent() {
     setNodes((currentNodes) => applyNodeChanges(changes, currentNodes))
   }, [])
 
+  const handleNodeClick = useCallback<NodeMouseHandler<WorkspaceCanvasFlowNode>>((_event, node) => {
+    if (node.data.kind === 'analysis') return
+    setSelectedNodeId(node.id)
+  }, [])
+
   const resetLayout = useCallback(() => {
     if (!episodeId) return
     const defaultProjection = buildWorkspaceNodeCanvasProjection({
@@ -107,6 +124,7 @@ function ProjectWorkspaceCanvasContent() {
       storyText: novelText,
       clips,
       storyboards,
+      shots,
       savedLayouts: EMPTY_SAVED_NODE_LAYOUTS,
       translate: t,
       onAction: onNodeAction,
@@ -114,7 +132,7 @@ function ProjectWorkspaceCanvasContent() {
     setNodes([...defaultProjection.nodes])
     void reactFlow.setViewport(DEFAULT_VIEWPORT)
     void resetSavedLayout()
-  }, [clips, episodeId, novelText, onNodeAction, reactFlow, resetSavedLayout, storyboards, t])
+  }, [clips, episodeId, novelText, onNodeAction, reactFlow, resetSavedLayout, shots, storyboards, t])
 
   const fitView = useCallback(() => {
     void reactFlow.fitView({ padding: 0.14, duration: 180 })
@@ -142,6 +160,10 @@ function ProjectWorkspaceCanvasContent() {
     nodes: nodes.length,
     edges: projection.edges.length,
   })
+  const selectedNode = useMemo(
+    () => nodes.find((node) => node.id === selectedNodeId) ?? null,
+    [nodes, selectedNodeId],
+  )
 
   if (!episodeId) return null
 
@@ -169,6 +191,8 @@ function ProjectWorkspaceCanvasContent() {
           edges={[...projection.edges]}
           nodeTypes={workspaceNodeTypes}
           onNodesChange={handleNodesChange}
+          onNodeClick={handleNodeClick}
+          onPaneClick={() => setSelectedNodeId(null)}
           onNodeDragStop={async () => persistCurrentLayout(nodes)}
           onMoveEnd={async () => persistCurrentLayout(nodes)}
           nodesDraggable
@@ -186,6 +210,13 @@ function ProjectWorkspaceCanvasContent() {
           <MiniMap pannable zoomable />
         </ReactFlow>
       </div>
+
+      <CanvasObjectDetailLayer
+        selectedNode={selectedNode}
+        clips={clips}
+        storyboards={storyboards}
+        onClose={() => setSelectedNodeId(null)}
+      />
     </div>
   )
 }

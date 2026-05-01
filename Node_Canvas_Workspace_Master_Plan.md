@@ -27,6 +27,8 @@ src/
       nodes/
         WorkspaceNode.tsx
         workspaceNodeTypes.ts
+      details/
+        CanvasObjectDetailLayer.tsx       # 画布内对象详情层，承载旧 GUI 非语音功能等价能力
   lib/project-canvas/
     layout/                               # 仅保留 layout persistence/API 合约；旧 graph/commands 已删除
 messages/
@@ -34,6 +36,8 @@ messages/
   zh/project-workflow.json
 tests/
   unit/project-workspace/node-canvas-projection.test.ts
+  unit/project-workspace/workspace-node-render.test.tsx
+  unit/project-workspace/canvas-object-detail-layer.test.tsx
   unit/project-workflow/workspace-runtime.test.ts
   unit/components/workspace-assistant-panel-layout.test.tsx
   regression/project-canvas-preserves-business-order.test.ts
@@ -92,6 +96,22 @@ tests/
 - ✅ **Task 4.7**: `src/features/project-workspace/canvas/hooks/useWorkspaceNodeCanvasProjection.ts` - 修复正式 workspace 节点画布 i18n key；`useTranslations('projectWorkflow.canvas.workspace')` 下只传相对 key，避免 `projectWorkflow.canvas.workspace.nodeCanvas.*` 缺文案。
 - 🔄 **Task 4.8**: 手动验收：真实项目不出现旧 stage 大容器，所有真实 clips/panels/images/videos 独立成节点。代码层正式渲染路径已切到 `workspaceNodeTypes`，旧 canvas/stage UI 代码已删除。
 
+### 阶段 5: 节点画布功能等价迁移（不含语音）
+
+- ✅ **Task 5.1**: `src/features/project-workspace/canvas/details/CanvasObjectDetailLayer.tsx` - 新增画布内对象详情层；点击剧本、分镜、图片、视频、成片节点后打开对应详情，不恢复旧 stage tab，不把旧页面级 UI 原样塞进节点。
+- ✅ **Task 5.2**: `src/features/project-workspace/canvas/ProjectWorkspaceCanvas.tsx` - 增加 selected node 状态、节点点击打开详情、点击画布关闭详情；`open_details` action 由 canvas shell 处理，其他动作继续走 runtime bridge。
+- ✅ **Task 5.3**: `src/features/project-workspace/canvas/node-canvas-types.ts` - 扩展节点命令类型，覆盖 clip 编辑、panel 保存/删除/复制/插入/变体、候选图选择/取消、图片编辑/下载、视频 prompt/model/options/生成、资产库打开、最终成片入口。
+- ✅ **Task 5.4**: `src/features/project-workspace/canvas/hooks/useWorkspaceNodeCanvasActions.ts` - 将节点动作桥接到现有 workspace runtime；复杂写操作由详情层调用既有 mutation/runtime，禁止 UI 直接改 DB。
+- ✅ **Task 5.5**: `CanvasObjectDetailLayer.tsx` - 剧本详情恢复完整 screenplay、原始片段、角色、场景、道具、保存 clip、生成分镜入口；保存走 `useUpdateProjectClip`。
+- ✅ **Task 5.6**: `CanvasObjectDetailLayer.tsx` - 分镜详情恢复景别、运镜、描述、场景、角色、道具、SRT、时长、video prompt、摄影规则、表演指导、保存、删除、复制、插入、变体、生成图片；角色/场景选择从真实资产库读取。
+- ✅ **Task 5.7**: `src/lib/operations/domains/storyboard/panel-mutations.ts` - 扩展 `update_storyboard_panel_fields` 支持 `srtSegment`，确保分镜详情里的 SRT 文本不是只在 UI 中编辑而无法保存。
+- ✅ **Task 5.8**: `CanvasObjectDetailLayer.tsx` - 图片详情恢复图片预览、候选图确认/取消、参考图 URL、重新生成、图片修改、下载图片、上一张图片只读提示；不制造不存在的撤回接口。
+- ✅ **Task 5.9**: `CanvasObjectDetailLayer.tsx` - 视频详情恢复播放器、lip-sync 结果展示、video prompt、首尾帧 prompt、视频模型、生成参数 JSON、单镜头生成、批量生成、镜头衔接状态；生成参数 JSON 无效时显式报错并禁用生成。
+- ✅ **Task 5.10**: `CanvasObjectDetailLayer.tsx` - 成片详情恢复时间线顺序、总镜头、总视频、缺失视频、总时长、批量生成视频、下载视频；最终导出能力未真实接入时显式显示“未接入”，不放假按钮。
+- ✅ **Task 5.11**: `messages/en/project-workflow.json`、`messages/zh/project-workflow.json` - 新增详情层全部正式文案；禁止硬编码中文。
+- ✅ **Task 5.12**: `tests/unit/project-workspace/canvas-object-detail-layer.test.tsx` - 覆盖剧本、分镜、图片、视频、成片详情字段渲染；断言不出现 voice node。
+- ✅ **Task 5.13**: `tests/integration/api/contract/project-panel-routes.test.ts` - 更新 panel PUT 契约，确认 `srtSegment` 通过统一 operation 输入传递。
+
 ### 当前验证结果
 
 - ✅ `npx prisma generate` - 已执行，Prisma Client 同步到当前 schema。
@@ -99,6 +119,7 @@ tests/
 - ✅ `BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/node-canvas-projection.test.ts` - i18n key 修复后单独复跑，通过。
 - ✅ `BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/node-canvas-projection.test.ts tests/regression/project-canvas-preserves-business-order.test.ts tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-workflow/workspace-runtime.test.ts tests/unit/components/workspace-assistant-panel-layout.test.tsx tests/unit/project-workflow/asset-stage-mutations.test.ts tests/unit/script-view/clip-asset-utils.test.ts` - 通过，7 个文件 30 个测试全部通过。
 - ✅ `BILLING_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/integration/api/contract/project-canvas-layout.route.test.ts` - 通过，1 个文件 5 个测试全部通过。
+- ✅ `BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/node-canvas-projection.test.ts tests/unit/project-workspace/workspace-node-render.test.tsx tests/unit/project-workspace/canvas-object-detail-layer.test.tsx tests/regression/project-canvas-preserves-business-order.test.ts tests/integration/api/contract/project-panel-routes.test.ts` - 功能等价详情层完成后通过，5 个文件 18 个测试全部通过。
 - ✅ `/src/app/[locale]/dev` - 已删除，`rg`/`find` 检查无剩余测试页文件。
 - ✅ 旧 stage/canvas 容器死代码 - 已删除，`rg` 确认无 `CanvasStageNode`、`ProjectCanvas`、旧 graph/commands/layout engine 正式引用。
 - ✅ 前端 stage 导航残留 - `rg "ProjectInputStage|StoryComposer|ScriptComposer|StoryboardComposer|VideoComposer|FinalTimelineView|workspace-stage|currentStage|stageNav|handleStageChange|onStageChange|urlStage|stageLabel"` 在 workspace 前端、页面和相关测试范围内无结果；后端 agent 协议仍保留可选 `currentStage?` 字段但真实页面不再传入。
@@ -111,8 +132,9 @@ tests/
 
 ```bash
 npm run typecheck
-BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/node-canvas-projection.test.ts tests/regression/project-canvas-preserves-business-order.test.ts tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-workflow/workspace-runtime.test.ts tests/unit/components/workspace-assistant-panel-layout.test.tsx tests/unit/project-workflow/asset-stage-mutations.test.ts tests/unit/script-view/clip-asset-utils.test.ts
+BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/node-canvas-projection.test.ts tests/unit/project-workspace/workspace-node-render.test.tsx tests/unit/project-workspace/canvas-object-detail-layer.test.tsx tests/regression/project-canvas-preserves-business-order.test.ts tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-workflow/workspace-runtime.test.ts tests/unit/components/workspace-assistant-panel-layout.test.tsx tests/unit/project-workflow/asset-stage-mutations.test.ts tests/unit/script-view/clip-asset-utils.test.ts
 BILLING_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/integration/api/contract/project-canvas-layout.route.test.ts
+BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/integration/api/contract/project-panel-routes.test.ts
 ```
 
 ## 5. 📝 架构备忘与工程约束 (Architecture Notes & Constraints)

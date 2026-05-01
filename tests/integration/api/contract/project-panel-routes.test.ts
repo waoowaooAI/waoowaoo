@@ -111,7 +111,7 @@ describe('api contract - project panel routes (operation adapter)', () => {
       buildMockRequest({
         path: '/api/projects/project-1/panel',
         method: 'PUT',
-        body: { storyboardId: 'storyboard-1', panelIndex: 0, description: 'desc' },
+        body: { storyboardId: 'storyboard-1', panelIndex: 0, description: 'desc', srtSegment: 'dialogue line' },
       }),
       { params: Promise.resolve({ projectId: 'project-1' }) },
     )
@@ -119,7 +119,7 @@ describe('api contract - project panel routes (operation adapter)', () => {
     expect(res.status).toBe(200)
     expect(apiAdapterMock.executeProjectAgentOperationFromApi).toHaveBeenCalledWith(expect.objectContaining({
       operationId: 'update_storyboard_panel_fields',
-      input: expect.objectContaining({ storyboardId: 'storyboard-1', panelIndex: 0, description: 'desc' }),
+      input: expect.objectContaining({ storyboardId: 'storyboard-1', panelIndex: 0, description: 'desc', srtSegment: 'dialogue line' }),
     }))
   })
 

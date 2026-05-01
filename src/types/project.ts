@@ -179,11 +179,17 @@ export interface ProjectPanel {
   videoPrompt: string | null
   firstLastFramePrompt?: string | null
   videoUrl: string | null
+  videoModel?: string | null
+  videoErrorCode?: string | null
+  videoErrorMessage?: string | null
   videoGenerationMode?: 'normal' | 'firstlastframe' | null
   lastVideoGenerationOptions?: ProjectVideoGenerationOptions | null
   videoMedia?: MediaRef | null
   lipSyncVideoUrl?: string | null
   lipSyncVideoMedia?: MediaRef | null
+  lipSyncErrorCode?: string | null
+  lipSyncErrorMessage?: string | null
+  linkedToNextPanel?: boolean | null
   sketchImageUrl?: string | null
   sketchImageMedia?: MediaRef | null
   previousImageUrl?: string | null

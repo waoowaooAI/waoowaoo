@@ -13,21 +13,168 @@ export type WorkspaceCanvasNodeKind =
 export type WorkspaceCanvasTargetType = 'episode' | 'clip' | 'panel'
 
 export type WorkspaceCanvasNodeAction =
+  | { readonly type: 'open_details'; readonly nodeId: string }
   | { readonly type: 'update_story'; readonly value: string }
   | { readonly type: 'generate_script' }
   | { readonly type: 'generate_storyboard' }
+  | { readonly type: 'update_clip'; readonly clipId: string; readonly data: Record<string, unknown> }
+  | { readonly type: 'open_asset_library'; readonly characterId?: string | null }
+  | {
+      readonly type: 'update_panel'
+      readonly storyboardId: string
+      readonly panelIndex: number
+      readonly panelId: string
+      readonly data: Record<string, unknown>
+    }
+  | { readonly type: 'delete_panel'; readonly storyboardId: string; readonly panelId: string }
+  | { readonly type: 'copy_panel'; readonly panelId: string }
+  | { readonly type: 'insert_panel'; readonly storyboardId: string; readonly panelId: string; readonly userInput: string }
+  | {
+      readonly type: 'create_panel_variant'
+      readonly storyboardId: string
+      readonly panelId: string
+      readonly variant: {
+        readonly title: string
+        readonly description: string
+        readonly shot_type: string
+        readonly camera_move: string
+        readonly video_prompt: string
+      }
+      readonly includeCharacterAssets: boolean
+      readonly includeLocationAsset: boolean
+    }
   | { readonly type: 'generate_image'; readonly panelId: string }
+  | { readonly type: 'select_candidate'; readonly panelId: string; readonly imageUrl: string }
+  | { readonly type: 'cancel_candidate'; readonly panelId: string }
+  | {
+      readonly type: 'modify_image'
+      readonly storyboardId: string
+      readonly panelIndex: number
+      readonly modifyPrompt: string
+      readonly extraImageUrls: readonly string[]
+    }
+  | { readonly type: 'download_images' }
   | {
       readonly type: 'generate_video'
       readonly storyboardId: string
       readonly panelIndex: number
       readonly panelId: string
+      readonly videoModel?: string
+      readonly generationOptions?: Record<string, string | number | boolean>
+      readonly firstLastFrame?: {
+        readonly lastFrameStoryboardId: string
+        readonly lastFramePanelIndex: number
+        readonly flModel: string
+        readonly customPrompt?: string
+      }
     }
+  | {
+      readonly type: 'update_video_prompt'
+      readonly storyboardId: string
+      readonly panelIndex: number
+      readonly value: string
+      readonly field?: 'videoPrompt' | 'firstLastFramePrompt'
+    }
+  | { readonly type: 'update_panel_video_model'; readonly storyboardId: string; readonly panelIndex: number; readonly model: string }
+  | { readonly type: 'toggle_panel_link'; readonly storyboardId: string; readonly panelIndex: number; readonly linked: boolean }
   | { readonly type: 'generate_all_videos' }
 
 export type WorkspaceCanvasNodeActionHandler = (action: WorkspaceCanvasNodeAction) => void
 
+export interface WorkspaceCanvasAssetRef {
+  readonly name: string
+  readonly appearance?: string | null
+}
+
+export interface WorkspaceCanvasTextLine {
+  readonly kind: 'action' | 'dialogue' | 'voiceover' | 'text'
+  readonly speaker?: string | null
+  readonly text: string
+}
+
+export interface WorkspaceCanvasScriptScene {
+  readonly sceneNumber?: number | null
+  readonly heading?: string | null
+  readonly description?: string | null
+  readonly characters: readonly string[]
+  readonly lines: readonly WorkspaceCanvasTextLine[]
+}
+
+export interface WorkspaceCanvasScriptDetails {
+  readonly originalText: string
+  readonly screenplayText?: string | null
+  readonly scenes: readonly WorkspaceCanvasScriptScene[]
+  readonly characters: readonly WorkspaceCanvasAssetRef[]
+  readonly locations: readonly string[]
+  readonly props: readonly string[]
+  readonly timeRange?: string | null
+  readonly duration?: number | null
+  readonly shotCount?: number | null
+}
+
+export interface WorkspaceCanvasShotDetails {
+  readonly shotType?: string | null
+  readonly cameraMove?: string | null
+  readonly characters: readonly WorkspaceCanvasAssetRef[]
+  readonly location?: string | null
+  readonly props: readonly string[]
+  readonly srtSegment?: string | null
+  readonly timeRange?: string | null
+  readonly duration?: number | null
+  readonly imagePrompt?: string | null
+  readonly videoPrompt?: string | null
+  readonly photographyRules?: string | null
+  readonly actingNotes?: string | null
+  readonly storyboardTextJson?: string | null
+  readonly photographyPlan?: string | null
+  readonly errorMessage?: string | null
+  readonly promptShot?: {
+    readonly sequence?: string | null
+    readonly locations?: string | null
+    readonly characters?: string | null
+    readonly plot?: string | null
+    readonly pov?: string | null
+    readonly imagePrompt?: string | null
+    readonly scale?: string | null
+    readonly module?: string | null
+    readonly focus?: string | null
+    readonly zhSummarize?: string | null
+  } | null
+}
+
+export interface WorkspaceCanvasImageDetails {
+  readonly imagePrompt?: string | null
+  readonly description?: string | null
+  readonly candidateImages: readonly string[]
+  readonly imageHistory?: string | null
+  readonly sketchImageUrl?: string | null
+  readonly previousImageUrl?: string | null
+  readonly errorMessage?: string | null
+}
+
+export interface WorkspaceCanvasVideoDetails {
+  readonly videoPrompt?: string | null
+  readonly firstLastFramePrompt?: string | null
+  readonly videoGenerationMode?: string | null
+  readonly lastVideoGenerationOptions?: readonly WorkspaceCanvasTextLine[]
+  readonly videoUrl?: string | null
+  readonly lipSyncVideoUrl?: string | null
+  readonly videoModel?: string | null
+  readonly linkedToNextPanel?: boolean | null
+  readonly errorMessage?: string | null
+  readonly lipSyncErrorMessage?: string | null
+}
+
+export interface WorkspaceCanvasFinalDetails {
+  readonly totalShots: number
+  readonly totalImages: number
+  readonly totalVideos: number
+  readonly totalDuration?: number | null
+  readonly orderedVideoLabels: readonly string[]
+}
+
 export interface WorkspaceCanvasNodeData extends Record<string, unknown> {
+  readonly nodeId?: string
   readonly kind: WorkspaceCanvasNodeKind
   readonly layoutNodeType: CanvasLayoutNodeType
   readonly targetType: WorkspaceCanvasTargetType
@@ -44,6 +191,11 @@ export interface WorkspaceCanvasNodeData extends Record<string, unknown> {
   readonly onAction?: WorkspaceCanvasNodeActionHandler
   readonly indexLabel?: string
   readonly previewImageUrl?: string | null
+  readonly scriptDetails?: WorkspaceCanvasScriptDetails
+  readonly shotDetails?: WorkspaceCanvasShotDetails
+  readonly imageDetails?: WorkspaceCanvasImageDetails
+  readonly videoDetails?: WorkspaceCanvasVideoDetails
+  readonly finalDetails?: WorkspaceCanvasFinalDetails
 }
 
 export type WorkspaceCanvasFlowNode = Node<WorkspaceCanvasNodeData, 'workspaceNode'>

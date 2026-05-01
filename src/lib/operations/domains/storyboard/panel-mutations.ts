@@ -72,6 +72,7 @@ const storyboardMutationInputSchema = z.object({
   location: z.string().nullable().optional(),
   characters: z.string().nullable().optional(),
   props: z.string().nullable().optional(),
+  srtSegment: z.string().nullable().optional(),
   srtStart: z.unknown().optional(),
   srtEnd: z.unknown().optional(),
   duration: z.unknown().optional(),
@@ -606,6 +607,7 @@ export async function executeStoryboardMutationOperation(
     if (Object.prototype.hasOwnProperty.call(input, 'location')) updateData.location = input.location
     if (Object.prototype.hasOwnProperty.call(input, 'characters')) updateData.characters = input.characters
     if (Object.prototype.hasOwnProperty.call(input, 'props')) updateData.props = input.props
+    if (Object.prototype.hasOwnProperty.call(input, 'srtSegment')) updateData.srtSegment = input.srtSegment
     if (Object.prototype.hasOwnProperty.call(input, 'srtStart')) updateData.srtStart = parseNullableNumberField(input.srtStart)
     if (Object.prototype.hasOwnProperty.call(input, 'srtEnd')) updateData.srtEnd = parseNullableNumberField(input.srtEnd)
     if (Object.prototype.hasOwnProperty.call(input, 'duration')) updateData.duration = parseNullableNumberField(input.duration)
@@ -634,6 +636,7 @@ export async function executeStoryboardMutationOperation(
             location: true,
             characters: true,
             props: true,
+            srtSegment: true,
             srtStart: true,
             srtEnd: true,
             duration: true,
@@ -663,6 +666,7 @@ export async function executeStoryboardMutationOperation(
               location: true,
               characters: true,
               props: true,
+              srtSegment: true,
               srtStart: true,
               srtEnd: true,
               duration: true,
@@ -993,4 +997,3 @@ export async function executeStoryboardMutationOperation(
 
   return { ...result, storyboardId, mutationBatchId: mutationBatch.id }
 }
-

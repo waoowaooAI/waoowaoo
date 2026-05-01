@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ProjectClip, ProjectPanel, ProjectStoryboard } from '@/types/project'
+import type { ProjectClip, ProjectPanel, ProjectShot, ProjectStoryboard } from '@/types/project'
 import {
   buildWorkspaceNodeCanvasProjection,
 } from '@/features/project-workspace/canvas/hooks/useWorkspaceNodeCanvasProjection'
@@ -18,6 +18,28 @@ function createClip(id: string, content: string): ProjectClip {
     props: null,
     content,
     screenplay: null,
+  }
+}
+
+function createShot(id: string, shotId: string): ProjectShot {
+  return {
+    id,
+    shotId,
+    srtStart: 1,
+    srtEnd: 3,
+    srtDuration: 2,
+    sequence: 'prompt sequence',
+    locations: 'prompt location',
+    characters: 'prompt character',
+    plot: 'prompt plot',
+    pov: 'prompt pov',
+    imagePrompt: 'prompt image text',
+    scale: 'medium',
+    module: 'module-a',
+    focus: 'robot light',
+    zhSummarize: 'prompt summary',
+    imageUrl: null,
+    media: null,
   }
 }
 
@@ -45,11 +67,17 @@ function createPanel(input: Partial<ProjectPanel> & Pick<ProjectPanel, 'id' | 'p
     videoPrompt: input.videoPrompt ?? null,
     firstLastFramePrompt: input.firstLastFramePrompt ?? null,
     videoUrl: input.videoUrl ?? null,
+    videoModel: input.videoModel ?? null,
+    videoErrorCode: input.videoErrorCode ?? null,
+    videoErrorMessage: input.videoErrorMessage ?? null,
     videoGenerationMode: input.videoGenerationMode ?? null,
     lastVideoGenerationOptions: input.lastVideoGenerationOptions ?? null,
     videoMedia: input.videoMedia ?? null,
     lipSyncVideoUrl: input.lipSyncVideoUrl ?? null,
     lipSyncVideoMedia: input.lipSyncVideoMedia ?? null,
+    lipSyncErrorCode: input.lipSyncErrorCode ?? null,
+    lipSyncErrorMessage: input.lipSyncErrorMessage ?? null,
+    linkedToNextPanel: input.linkedToNextPanel ?? null,
     sketchImageUrl: input.sketchImageUrl ?? null,
     sketchImageMedia: input.sketchImageMedia ?? null,
     previousImageUrl: input.previousImageUrl ?? null,
@@ -182,5 +210,147 @@ describe('workspace node canvas projection', () => {
     const shotNodes = projection.nodes.filter((node) => node.data.kind === 'shot')
     expect(shotNodes.map((node) => node.id)).toEqual(['shot:panel-early', 'shot:panel-late'])
     expect(shotNodes[0].position).toEqual({ x: 999, y: 888 })
+  })
+
+  it('projects full non-voice business details into typed node data', () => {
+    const screenplay = JSON.stringify({
+      scenes: [
+        {
+          scene_number: 1,
+          heading: { int_ext: 'EXT', location: '城市街道_雨夜', time: '夜晚' },
+          description: '雨夜街道',
+          characters: ['小机器人', '小女孩'],
+          content: [
+            { type: 'action', text: '小机器人举起发光路灯。' },
+            { type: 'dialogue', character: '小女孩', text: '我们到家了吗？' },
+          ],
+        },
+      ],
+    })
+    const clip: ProjectClip = {
+      ...createClip('clip-rich', 'original clip text'),
+      summary: 'rich summary',
+      location: '["城市街道_雨夜"]',
+      characters: JSON.stringify([{ name: '小机器人', appearance: '初始形象' }]),
+      props: '["发光路灯"]',
+      screenplay,
+      start: 2,
+      end: 8,
+      duration: 6,
+      shotCount: 5,
+    }
+    const panel = createPanel({
+      id: 'panel-rich',
+      panelIndex: 0,
+      shotType: '全景',
+      cameraMove: '缓慢推进',
+      description: 'rich panel description',
+      location: '城市街道_雨夜',
+      characters: JSON.stringify([{ name: '小女孩', appearance: '初始形象' }]),
+      props: '["发光路灯"]',
+      srtSegment: '小女孩说话',
+      srtStart: 2,
+      srtEnd: 4,
+      duration: 2,
+      imagePrompt: 'rich image prompt',
+      videoPrompt: 'rich video prompt',
+      candidateImages: JSON.stringify(['https://example.com/a.png', 'PENDING:1']),
+      imageHistory: 'image history json',
+      sketchImageUrl: 'https://example.com/sketch.png',
+      previousImageUrl: 'https://example.com/previous.png',
+      firstLastFramePrompt: 'first last prompt',
+      videoUrl: 'https://example.com/video.mp4',
+      videoGenerationMode: 'firstlastframe',
+      lastVideoGenerationOptions: { duration: 5, enhance: true },
+      lipSyncVideoUrl: 'https://example.com/lip.mp4',
+      videoModel: 'video-model',
+      linkedToNextPanel: true,
+      photographyRules: 'photo rules',
+      actingNotes: 'acting notes',
+      imageErrorMessage: 'image failed',
+      videoErrorMessage: 'video failed',
+      lipSyncErrorMessage: 'lip failed',
+    })
+
+    const projection = buildWorkspaceNodeCanvasProjection({
+      episodeId: 'episode-1',
+      storyText: 'story',
+      clips: [clip],
+      storyboards: [{
+        ...createStoryboard({ id: 'storyboard-rich', clipId: 'clip-rich', panels: [panel] }),
+        storyboardTextJson: 'storyboard json',
+        photographyPlan: 'photography plan',
+        lastError: 'storyboard failed',
+      }],
+      shots: [createShot('shot-rich', '01')],
+      savedLayouts: [],
+      translate: t,
+    })
+
+    const clipNode = projection.nodes.find((node) => node.id === 'clip:clip-rich')
+    expect(clipNode?.data.body).toContain('"scenes"')
+    expect(clipNode?.data.scriptDetails?.screenplayText).toBe(screenplay)
+    expect(clipNode?.data.scriptDetails?.originalText).toBe('original clip text')
+    expect(clipNode?.data.scriptDetails?.characters).toEqual([{ name: '小机器人', appearance: '初始形象' }])
+    expect(clipNode?.data.scriptDetails?.locations).toEqual(['城市街道_雨夜'])
+    expect(clipNode?.data.scriptDetails?.props).toEqual(['发光路灯'])
+    expect(clipNode?.data.scriptDetails?.scenes[0]?.lines).toEqual([
+      { kind: 'action', speaker: null, text: '小机器人举起发光路灯。' },
+      { kind: 'dialogue', speaker: '小女孩', text: '我们到家了吗？' },
+    ])
+
+    const shotNode = projection.nodes.find((node) => node.id === 'shot:panel-rich')
+    expect(shotNode?.data.shotDetails).toMatchObject({
+      shotType: '全景',
+      cameraMove: '缓慢推进',
+      location: '城市街道_雨夜',
+      srtSegment: '小女孩说话',
+      imagePrompt: 'rich image prompt',
+      videoPrompt: 'rich video prompt',
+      photographyRules: 'photo rules',
+      actingNotes: 'acting notes',
+      storyboardTextJson: 'storyboard json',
+      photographyPlan: 'photography plan',
+      errorMessage: 'image failed',
+    })
+    expect(shotNode?.data.shotDetails?.characters).toEqual([{ name: '小女孩', appearance: '初始形象' }])
+    expect(shotNode?.data.shotDetails?.promptShot?.plot).toBe('prompt plot')
+
+    const imageNode = projection.nodes.find((node) => node.id === 'image:panel-rich')
+    expect(imageNode?.data.imageDetails).toMatchObject({
+      imagePrompt: 'rich image prompt',
+      candidateImages: ['https://example.com/a.png', 'PENDING:1'],
+      imageHistory: 'image history json',
+      sketchImageUrl: 'https://example.com/sketch.png',
+      previousImageUrl: 'https://example.com/previous.png',
+      errorMessage: 'image failed',
+    })
+
+    const videoNode = projection.nodes.find((node) => node.id === 'video:panel-rich')
+    expect(videoNode?.data.videoDetails).toMatchObject({
+      videoPrompt: 'rich video prompt',
+      firstLastFramePrompt: 'first last prompt',
+      videoGenerationMode: 'firstlastframe',
+      videoUrl: 'https://example.com/video.mp4',
+      lipSyncVideoUrl: 'https://example.com/lip.mp4',
+      videoModel: 'video-model',
+      linkedToNextPanel: true,
+      errorMessage: 'video failed',
+      lipSyncErrorMessage: 'lip failed',
+    })
+    expect(videoNode?.data.videoDetails?.lastVideoGenerationOptions).toEqual([
+      { kind: 'text', speaker: 'duration', text: '5' },
+      { kind: 'text', speaker: 'enhance', text: 'true' },
+    ])
+
+    const finalNode = projection.nodes.find((node) => node.id === 'final:episode-1')
+    expect(finalNode?.data.finalDetails).toMatchObject({
+      totalShots: 1,
+      totalImages: 1,
+      totalVideos: 1,
+      totalDuration: 2,
+    })
+    expect(projection.nodes.some((node) => node.data.kind === 'finalTimeline')).toBe(true)
+    expect(projection.nodes.some((node) => String(node.id).startsWith('voice:'))).toBe(false)
   })
 })

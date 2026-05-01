@@ -3,13 +3,20 @@
 import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
-import type { ProjectClip, ProjectPanel, ProjectStoryboard } from '@/types/project'
+import type { ProjectClip, ProjectPanel, ProjectShot, ProjectStoryboard } from '@/types/project'
 import type {
+  WorkspaceCanvasAssetRef,
   WorkspaceCanvasFlowEdge,
   WorkspaceCanvasFlowNode,
+  WorkspaceCanvasImageDetails,
   WorkspaceCanvasNodeActionHandler,
   WorkspaceCanvasNodeData,
   WorkspaceCanvasProjection,
+  WorkspaceCanvasScriptDetails,
+  WorkspaceCanvasScriptScene,
+  WorkspaceCanvasShotDetails,
+  WorkspaceCanvasTextLine,
+  WorkspaceCanvasVideoDetails,
 } from '../node-canvas-types'
 
 const STORY_NODE_WIDTH = 360
@@ -33,9 +40,258 @@ export interface BuildWorkspaceNodeCanvasProjectionInput {
   readonly storyText: string
   readonly clips: readonly ProjectClip[]
   readonly storyboards: readonly ProjectStoryboard[]
+  readonly shots?: readonly ProjectShot[]
   readonly savedLayouts: readonly CanvasNodeLayout[]
   readonly translate: Translate
   readonly onAction?: WorkspaceCanvasNodeActionHandler
+}
+
+type JsonRecord = Record<string, unknown>
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function numberValue(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function parseJson(value: string | null | undefined): unknown | null {
+  if (!value?.trim()) return null
+  try {
+    return JSON.parse(value) as unknown
+  } catch {
+    return null
+  }
+}
+
+function uniqueStrings(values: readonly string[]): string[] {
+  const seen = new Set<string>()
+  const output: string[] = []
+  values.forEach((value) => {
+    const normalized = value.trim()
+    if (!normalized || seen.has(normalized)) return
+    seen.add(normalized)
+    output.push(normalized)
+  })
+  return output
+}
+
+function parseStringList(value: string | null | undefined): string[] {
+  if (!value?.trim()) return []
+  const parsed = parseJson(value)
+  if (Array.isArray(parsed)) {
+    return uniqueStrings(parsed.flatMap((item) => {
+      if (typeof item === 'string') return [item]
+      if (isRecord(item)) {
+        const name = stringValue(item.name) ?? stringValue(item.location) ?? stringValue(item.title)
+        return name ? [name] : []
+      }
+      return []
+    }))
+  }
+  return uniqueStrings(value.split(','))
+}
+
+function parseAssetRefs(value: string | null | undefined): WorkspaceCanvasAssetRef[] {
+  if (!value?.trim()) return []
+  const parsed = parseJson(value)
+  if (Array.isArray(parsed)) {
+    const refs = parsed.flatMap((item): WorkspaceCanvasAssetRef[] => {
+      if (typeof item === 'string' && item.trim()) return [{ name: item.trim() }]
+      if (!isRecord(item)) return []
+      const name = stringValue(item.name)
+      if (!name) return []
+      return [{ name, appearance: stringValue(item.appearance) }]
+    })
+    const seen = new Set<string>()
+    return refs.filter((ref) => {
+      const key = `${ref.name}::${ref.appearance ?? ''}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }
+  return parseStringList(value).map((name) => ({ name }))
+}
+
+function formatTimeRange(start: number | null | undefined, end: number | null | undefined): string | null {
+  if (typeof start !== 'number' || typeof end !== 'number') return null
+  return `${start}s - ${end}s`
+}
+
+function parseScreenplayScenes(screenplay: string | null | undefined): WorkspaceCanvasScriptScene[] {
+  const parsed = parseJson(screenplay)
+  const scenesValue = isRecord(parsed) ? parsed.scenes : parsed
+  if (!Array.isArray(scenesValue)) return []
+
+  return scenesValue.flatMap((scene): WorkspaceCanvasScriptScene[] => {
+    if (!isRecord(scene)) return []
+    const headingValue = scene.heading
+    const heading = (() => {
+      if (typeof headingValue === 'string') return headingValue
+      if (!isRecord(headingValue)) return null
+      const parts = [
+        stringValue(headingValue.int_ext),
+        stringValue(headingValue.location),
+        stringValue(headingValue.time),
+      ].filter((part): part is string => Boolean(part))
+      return parts.length > 0 ? parts.join(' · ') : null
+    })()
+
+    const rawCharacters = scene.characters
+    const characters = Array.isArray(rawCharacters)
+      ? uniqueStrings(rawCharacters.flatMap((item) => (typeof item === 'string' ? [item] : [])))
+      : []
+
+    const rawContent = scene.content
+    const lines = Array.isArray(rawContent)
+      ? rawContent.flatMap((item): WorkspaceCanvasTextLine[] => {
+        if (typeof item === 'string' && item.trim()) return [{ kind: 'text', text: item.trim() }]
+        if (!isRecord(item)) return []
+        const text = stringValue(item.text)
+        if (!text) return []
+        const type = stringValue(item.type)
+        const kind: WorkspaceCanvasTextLine['kind'] =
+          type === 'dialogue' || type === 'voiceover' || type === 'action' ? type : 'text'
+        return [{
+          kind,
+          speaker: stringValue(item.character),
+          text,
+        }]
+      })
+      : []
+
+    return [{
+      sceneNumber: numberValue(scene.scene_number),
+      heading,
+      description: stringValue(scene.description),
+      characters,
+      lines,
+    }]
+  })
+}
+
+function collectSceneLocations(scenes: readonly WorkspaceCanvasScriptScene[]): string[] {
+  return uniqueStrings(scenes.flatMap((scene) => {
+    if (!scene.heading) return []
+    const parts = scene.heading.split(' · ')
+    return parts.length >= 2 ? [parts[1]] : []
+  }))
+}
+
+function createScriptDetails(clip: ProjectClip): WorkspaceCanvasScriptDetails {
+  const scenes = parseScreenplayScenes(clip.screenplay)
+  const sceneCharacters = scenes.flatMap((scene) => scene.characters).map((name) => ({ name }))
+  const explicitCharacters = parseAssetRefs(clip.characters)
+  const characters = explicitCharacters.length > 0 ? explicitCharacters : sceneCharacters
+  const explicitLocations = parseStringList(clip.location)
+  return {
+    originalText: clip.content,
+    screenplayText: clip.screenplay,
+    scenes,
+    characters,
+    locations: explicitLocations.length > 0 ? explicitLocations : collectSceneLocations(scenes),
+    props: parseStringList(clip.props),
+    timeRange: formatTimeRange(clip.start, clip.end),
+    duration: clip.duration ?? null,
+    shotCount: clip.shotCount ?? null,
+  }
+}
+
+function parseCandidateImages(value: string | null | undefined): string[] {
+  const parsed = parseJson(value)
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
+function stringifyJsonObject(value: unknown): readonly WorkspaceCanvasTextLine[] {
+  if (!isRecord(value)) return []
+  return Object.entries(value).flatMap(([key, entry]): WorkspaceCanvasTextLine[] => {
+    if (entry === null || entry === undefined || entry === '') return []
+    const text = typeof entry === 'object' ? JSON.stringify(entry) : String(entry)
+    return [{ kind: 'text', speaker: key, text }]
+  })
+}
+
+function createImageDetails(panel: ProjectPanel): WorkspaceCanvasImageDetails {
+  return {
+    imagePrompt: panel.imagePrompt,
+    description: panel.description,
+    candidateImages: parseCandidateImages(panel.candidateImages),
+    imageHistory: panel.imageHistory,
+    sketchImageUrl: panel.sketchImageMedia?.url ?? panel.sketchImageUrl,
+    previousImageUrl: panel.previousImageMedia?.url ?? panel.previousImageUrl,
+    errorMessage: panel.imageErrorMessage,
+  }
+}
+
+function createVideoDetails(panel: ProjectPanel): WorkspaceCanvasVideoDetails {
+  return {
+    videoPrompt: panel.videoPrompt,
+    firstLastFramePrompt: panel.firstLastFramePrompt,
+    videoGenerationMode: panel.videoGenerationMode,
+    lastVideoGenerationOptions: stringifyJsonObject(panel.lastVideoGenerationOptions),
+    videoUrl: panel.videoMedia?.url ?? panel.videoUrl,
+    lipSyncVideoUrl: panel.lipSyncVideoMedia?.url ?? panel.lipSyncVideoUrl,
+    videoModel: panel.videoModel,
+    linkedToNextPanel: panel.linkedToNextPanel,
+    errorMessage: panel.videoErrorMessage,
+    lipSyncErrorMessage: panel.lipSyncErrorMessage,
+  }
+}
+
+function findPromptShot(panel: ProjectPanel, shots: readonly ProjectShot[]): ProjectShot | null {
+  const panelNumber = panel.panelNumber ?? panel.panelIndex + 1
+  const paddedPanelNumber = String(panelNumber).padStart(2, '0')
+  return shots.find((shot) => (
+    shot.id === panel.id ||
+    shot.shotId === String(panelNumber) ||
+    shot.shotId === paddedPanelNumber
+  )) ?? null
+}
+
+function createShotDetails(
+  panel: ProjectPanel,
+  storyboard: ProjectStoryboard,
+  shots: readonly ProjectShot[],
+): WorkspaceCanvasShotDetails {
+  const promptShot = findPromptShot(panel, shots)
+  return {
+    shotType: panel.shotType,
+    cameraMove: panel.cameraMove,
+    characters: parseAssetRefs(panel.characters),
+    location: panel.location,
+    props: parseStringList(panel.props),
+    srtSegment: panel.srtSegment,
+    timeRange: formatTimeRange(panel.srtStart, panel.srtEnd),
+    duration: panel.duration,
+    imagePrompt: panel.imagePrompt,
+    videoPrompt: panel.videoPrompt,
+    photographyRules: panel.photographyRules,
+    actingNotes: panel.actingNotes,
+    storyboardTextJson: storyboard.storyboardTextJson,
+    photographyPlan: storyboard.photographyPlan,
+    errorMessage: panel.imageErrorMessage ?? storyboard.lastError,
+    promptShot: promptShot
+      ? {
+          sequence: promptShot.sequence,
+          locations: promptShot.locations,
+          characters: promptShot.characters,
+          plot: promptShot.plot,
+          pov: promptShot.pov,
+          imagePrompt: promptShot.imagePrompt,
+          scale: promptShot.scale,
+          module: promptShot.module,
+          focus: promptShot.focus,
+          zhSummarize: promptShot.zhSummarize,
+        }
+      : null,
+  }
 }
 
 function compactText(value: string | null | undefined, fallback: string): string {
@@ -99,7 +355,10 @@ function createNode(params: {
     draggable: true,
     selectable: true,
     style: layoutStyle(params.data.width, params.data.height),
-    data: params.data,
+    data: {
+      ...params.data,
+      nodeId: params.id,
+    },
   }
 }
 
@@ -118,11 +377,30 @@ function createEdge(id: string, source: string, target: string): WorkspaceCanvas
 }
 
 function hasImage(panel: ProjectPanel): boolean {
-  return Boolean(panel.imageUrl || panel.media?.url || panel.imageTaskRunning)
+  return Boolean(
+    panel.imageUrl ||
+    panel.media?.url ||
+    panel.imageTaskRunning ||
+    panel.candidateImages ||
+    panel.imageHistory ||
+    panel.sketchImageUrl ||
+    panel.sketchImageMedia?.url ||
+    panel.previousImageUrl ||
+    panel.previousImageMedia?.url ||
+    panel.imageErrorMessage
+  )
 }
 
 function hasVideo(panel: ProjectPanel): boolean {
-  return Boolean(panel.videoUrl || panel.videoMedia?.url || panel.videoTaskRunning)
+  return Boolean(
+    panel.videoUrl ||
+    panel.videoMedia?.url ||
+    panel.videoTaskRunning ||
+    panel.lipSyncVideoUrl ||
+    panel.lipSyncVideoMedia?.url ||
+    panel.videoErrorMessage ||
+    panel.lipSyncErrorMessage
+  )
 }
 
 function panelDisplayNumber(panel: ProjectPanel): string {
@@ -134,6 +412,7 @@ export function buildWorkspaceNodeCanvasProjection({
   storyText,
   clips,
   storyboards,
+  shots = [],
   savedLayouts,
   translate,
   onAction,
@@ -218,12 +497,13 @@ export function buildWorkspaceNodeCanvasProjection({
         targetId: clip.id,
         title: clip.summary || translate('nodes.clip.title', { index: index + 1 }),
         eyebrow: translate('nodes.clip.eyebrow'),
-        body: compactText(clip.content || clip.screenplay || clip.summary, translate('empty.clip')),
+        body: compactText(clip.screenplay || clip.content || clip.summary, translate('empty.clip')),
         meta: translate('nodes.clip.meta', { index: index + 1 }),
         statusLabel: translate('status.ready'),
         width: DEFAULT_NODE_WIDTH,
-        height: DEFAULT_NODE_HEIGHT,
+        height: 360,
         indexLabel: `C${index + 1}`,
+        scriptDetails: createScriptDetails(clip),
         actionLabel: translate('actions.generateStoryboard'),
         action: { type: 'generate_storyboard' },
         onAction,
@@ -259,8 +539,9 @@ export function buildWorkspaceNodeCanvasProjection({
         }),
         statusLabel: panel.imageTaskRunning ? translate('status.processing') : translate('status.ready'),
         width: DEFAULT_NODE_WIDTH,
-        height: DEFAULT_NODE_HEIGHT,
+        height: 380,
         indexLabel: panelDisplayNumber(panel),
+        shotDetails: createShotDetails(panel, storyboard, shots),
         actionLabel: panel.imageTaskRunning
           ? undefined
           : hasImage(panel)
@@ -300,9 +581,10 @@ export function buildWorkspaceNodeCanvasProjection({
           meta: translate('nodes.image.meta'),
           statusLabel: panel.imageTaskRunning ? translate('status.processing') : translate('status.ready'),
           width: MEDIA_NODE_WIDTH,
-          height: MEDIA_NODE_HEIGHT,
+          height: 390,
           indexLabel: `I${panelDisplayNumber(panel)}`,
           previewImageUrl: panel.media?.url ?? panel.imageUrl,
+          imageDetails: createImageDetails(panel),
           actionLabel: panel.imageTaskRunning ? undefined : translate('actions.regenerateImage'),
           action: panel.imageTaskRunning ? undefined : { type: 'generate_image', panelId: panel.id },
           onAction,
@@ -332,9 +614,10 @@ export function buildWorkspaceNodeCanvasProjection({
           meta: translate('nodes.video.meta'),
           statusLabel: panel.videoTaskRunning ? translate('status.processing') : translate('status.ready'),
           width: MEDIA_NODE_WIDTH,
-          height: MEDIA_NODE_HEIGHT,
+          height: 410,
           indexLabel: `V${panelDisplayNumber(panel)}`,
           previewImageUrl: panel.videoMedia?.url ?? panel.videoUrl ?? panel.media?.url ?? panel.imageUrl,
+          videoDetails: createVideoDetails(panel),
           actionLabel: panel.videoTaskRunning ? undefined : translate('actions.generateVideo'),
           action: panel.videoTaskRunning
             ? undefined
@@ -354,6 +637,8 @@ export function buildWorkspaceNodeCanvasProjection({
   const videoNodeIds = nodes.filter((node) => node.data.kind === 'videoClip').map((node) => node.id)
   if (videoNodeIds.length > 0) {
     const finalNodeId = `final:${episodeId}`
+    const totalDuration = panelsWithStoryboard.reduce((total, item) => total + (item.panel.duration ?? 0), 0)
+    const imageCount = panelsWithStoryboard.filter((item) => hasImage(item.panel)).length
     nodes.push(createNode({
       id: finalNodeId,
       fallbackX: 40 + COLUMN_GAP * 6,
@@ -371,7 +656,14 @@ export function buildWorkspaceNodeCanvasProjection({
         meta: translate('nodes.final.meta'),
         statusLabel: translate('status.ready'),
         width: FINAL_NODE_WIDTH,
-        height: DEFAULT_NODE_HEIGHT,
+        height: 280,
+        finalDetails: {
+          totalShots: panelsWithStoryboard.length,
+          totalImages: imageCount,
+          totalVideos: videoNodeIds.length,
+          totalDuration: totalDuration > 0 ? totalDuration : null,
+          orderedVideoLabels: videoNodeIds.map((videoNodeId) => videoNodeId.replace('video:', '')),
+        },
         actionLabel: translate('actions.generateAllVideos'),
         action: { type: 'generate_all_videos' },
         onAction,
@@ -393,6 +685,7 @@ export function useWorkspaceNodeCanvasProjection(input: BuildWorkspaceNodeCanvas
       input.episodeId,
       input.onAction,
       input.savedLayouts,
+      input.shots,
       input.storyText,
       input.storyboards,
       input.translate,
