@@ -47,10 +47,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
         assetModal,
         assetPicker,
         layout,
-        workspaceRedesign,
         home,
-        assistantAgent,
-        selectionPreview
+        assistantAgent
     ] = await Promise.all([
         import(`../messages/${locale}/common.json`),
         import(`../messages/${locale}/stages.json`),
@@ -82,10 +80,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
         import(`../messages/${locale}/assetModal.json`),
         import(`../messages/${locale}/assetPicker.json`),
         import(`../messages/${locale}/layout.json`),
-        import(`../messages/${locale}/workspaceRedesign.json`),
         import(`../messages/${locale}/home.json`),
-        import(`../messages/${locale}/assistantAgent.json`),
-        import(`../messages/${locale}/selectionPreview.json`)
+        import(`../messages/${locale}/assistantAgent.json`)
     ]);
 
     return {
@@ -121,10 +117,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
             assetModal: assetModal.default,
             assetPicker: assetPicker.default,
             layout: layout.default,
-            workspaceRedesign: workspaceRedesign.default,
             home: home.default,
-            assistantAgent: assistantAgent.default,
-            selectionPreview: selectionPreview.default
+            assistantAgent: assistantAgent.default
         }
     };
 });

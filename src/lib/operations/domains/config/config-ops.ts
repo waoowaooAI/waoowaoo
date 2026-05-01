@@ -27,6 +27,7 @@ const MODEL_FIELDS = [
   'editModel',
   'videoModel',
   'audioModel',
+  'musicModel',
 ] as const
 
 const MODEL_FIELD_TO_TYPE: Record<typeof MODEL_FIELDS[number], UnifiedModelType> = {
@@ -37,6 +38,7 @@ const MODEL_FIELD_TO_TYPE: Record<typeof MODEL_FIELDS[number], UnifiedModelType>
   editModel: 'image',
   videoModel: 'video',
   audioModel: 'audio',
+  musicModel: 'music',
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -155,6 +157,7 @@ function getNextProjectModelMap(
     editModel: string | null
     videoModel: string | null
     audioModel: string | null
+    musicModel: string | null
   },
   updates: Record<string, unknown>,
 ): Record<string, CapabilityModelContext> {
@@ -268,6 +271,7 @@ export function createConfigOperations(): ProjectAgentOperationRegistryDraft {
             editModel: true,
             videoModel: true,
             audioModel: true,
+            musicModel: true,
           },
         })
         if (!projectData) {
@@ -314,6 +318,7 @@ export function createConfigOperations(): ProjectAgentOperationRegistryDraft {
           editModel: projectData.editModel,
           videoModel: projectData.videoModel,
           audioModel: projectData.audioModel,
+          musicModel: projectData.musicModel,
         }, {})
         const cleanedOverrides = sanitizeCapabilityOverrides(storedOverrides, modelContextMap)
 
@@ -357,6 +362,7 @@ export function createConfigOperations(): ProjectAgentOperationRegistryDraft {
         editModel: z.string().nullable().optional(),
         videoModel: z.string().nullable().optional(),
         audioModel: z.string().nullable().optional(),
+        musicModel: z.string().nullable().optional(),
         videoRatio: z.string().optional(),
         artStyle: z.string().optional(),
         visualStylePreset: z.object({
@@ -386,6 +392,7 @@ export function createConfigOperations(): ProjectAgentOperationRegistryDraft {
             editModel: true,
             videoModel: true,
             audioModel: true,
+            musicModel: true,
           },
         })
         if (!currentProjectConfig) {

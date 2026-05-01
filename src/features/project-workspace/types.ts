@@ -26,8 +26,6 @@ export interface ProjectWorkspaceProps {
   episodeId?: string
   episode?: Episode | null
   viewMode?: 'global-assets' | 'episode'
-  urlStage?: string | null
-  onStageChange?: (stage: string) => void
   episodes?: Episode[]
   onEpisodeSelect?: (episodeId: string) => void
   onEpisodeCreate?: () => void

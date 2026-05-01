@@ -63,6 +63,7 @@ export async function getUserApiConfig(userId: string) {
       editModel: true,
       videoModel: true,
       audioModel: true,
+      musicModel: true,
       lipSyncModel: true,
       voiceDesignModel: true,
       capabilityDefaults: true,
@@ -113,6 +114,7 @@ export async function getUserApiConfig(userId: string) {
     editModel: pref?.editModel || '',
     videoModel: pref?.videoModel || '',
     audioModel: pref?.audioModel || '',
+    musicModel: pref?.musicModel || '',
     lipSyncModel: pref?.lipSyncModel || DEFAULT_LIPSYNC_MODEL_KEY,
     voiceDesignModel: pref?.voiceDesignModel || '',
   }
@@ -176,6 +178,7 @@ export async function putUserApiConfig(userId: string, body: unknown) {
       editModel: true,
       videoModel: true,
       audioModel: true,
+      musicModel: true,
       lipSyncModel: true,
       voiceDesignModel: true,
     },
@@ -257,6 +260,9 @@ export async function putUserApiConfig(userId: string, body: unknown) {
     if (normalizedDefaults.audioModel !== undefined) {
       updateData.audioModel = normalizedDefaults.audioModel || null
     }
+    if (normalizedDefaults.musicModel !== undefined) {
+      updateData.musicModel = normalizedDefaults.musicModel || null
+    }
     if (normalizedDefaults.lipSyncModel !== undefined) {
       updateData.lipSyncModel = normalizedDefaults.lipSyncModel || null
     }
@@ -277,6 +283,7 @@ export async function putUserApiConfig(userId: string, body: unknown) {
       editModel: existingPref?.editModel || '',
       videoModel: existingPref?.videoModel || '',
       audioModel: existingPref?.audioModel || '',
+      musicModel: existingPref?.musicModel || '',
       lipSyncModel: existingPref?.lipSyncModel || '',
       voiceDesignModel: existingPref?.voiceDesignModel || '',
     }

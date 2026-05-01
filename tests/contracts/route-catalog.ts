@@ -92,6 +92,7 @@ const ROUTE_FILES = [
   'src/app/api/projects/[projectId]/episodes/split/route.ts',
   'src/app/api/projects/[projectId]/generate-character-image/route.ts',
   'src/app/api/projects/[projectId]/generate-image/route.ts',
+  'src/app/api/projects/[projectId]/generate-music/route.ts',
   'src/app/api/projects/[projectId]/generate-video/route.ts',
   'src/app/api/projects/[projectId]/insert-panel/route.ts',
   'src/app/api/projects/[projectId]/lip-sync/route.ts',
@@ -203,6 +204,7 @@ function resolveContractGroup(routeFile: string): RouteContractGroup {
   }
   if (
     routeFile.endsWith('/generate-image/route.ts')
+    || routeFile.endsWith('/generate-music/route.ts')
     || routeFile.endsWith('/generate-video/route.ts')
     || routeFile.endsWith('/generate/route.ts')
     || routeFile.endsWith('/modify-image/route.ts')

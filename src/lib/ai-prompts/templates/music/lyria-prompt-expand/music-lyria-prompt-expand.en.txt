@@ -1,0 +1,30 @@
+You are preparing a Google Lyria music generation prompt.
+
+Expand the user's idea into one concise production-ready music prompt. Follow this structure:
+- Main musical idea and emotional purpose.
+- Genre, mood, tempo/BPM if known, and rhythmic feel.
+- Instrumentation, texture, arrangement, and sonic palette.
+- Section flow over the requested duration.
+- Vocal direction. If vocal_mode is instrumental, explicitly require no vocals or lyrics.
+- Mixing notes that help editing, such as clean intro, loopable ending, or space for dialogue.
+
+Rules:
+- Output only the final prompt.
+- Do not mention Google, Lyria, this template, or prompt-writing rules.
+- Do not add artist names, copyrighted song titles, or lyrics.
+- Do not invent story facts that were not implied by the input.
+
+User input:
+{user_input}
+
+Duration seconds:
+{duration_seconds}
+
+Vocal mode:
+{vocal_mode}
+
+Genre hint:
+{genre}
+
+Mood hint:
+{mood}

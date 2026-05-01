@@ -27,6 +27,7 @@ interface ProjectSnapshotInput {
   editModel: string | undefined
   videoModel: string | undefined
   audioModel: string | undefined
+  musicModel: string | undefined
   videoRatio: string | undefined
   capabilityOverrides: CapabilitySelections
   artStyle: string | undefined
@@ -64,10 +65,6 @@ interface BuildWorkspaceControllerViewModelParams {
       videoPricingTiers?: VideoPricingTier[]
     }>
     userModelsLoaded: boolean
-  }
-  stageNavState: {
-    currentStage: string
-    handleStageChange: (stage: string) => void
   }
   rebuildState: {
     showRebuildConfirm: boolean
@@ -131,7 +128,6 @@ export function buildWorkspaceControllerViewModel({
   te,
   projectSnapshot,
   uiState,
-  stageNavState,
   rebuildState,
   executionState,
   videoState,
@@ -142,7 +138,6 @@ export function buildWorkspaceControllerViewModel({
     i18n: { t, tc, te },
     project: projectSnapshot,
     ui: uiState,
-    stageNav: stageNavState,
     rebuild: rebuildState,
     execution: executionState,
     video: videoState,

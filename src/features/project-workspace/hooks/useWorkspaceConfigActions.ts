@@ -11,21 +11,15 @@ import {
 interface UseWorkspaceConfigActionsParams {
   projectId: string
   episodeId?: string
-  onStageChange?: (stage: string) => void
 }
 
 export function useWorkspaceConfigActions({
   projectId,
   episodeId,
-  onStageChange,
 }: UseWorkspaceConfigActionsParams) {
   const updateProjectConfigMutation = useUpdateProjectConfig(projectId)
   const updateProjectEpisodeMutation = useUpdateProjectEpisodeField(projectId)
   const getProjectStoryboardStatsMutation = useGetProjectStoryboardStats(projectId)
-
-  const handleStageChange = useCallback((stage: string) => {
-    onStageChange?.(stage)
-  }, [onStageChange])
 
   const handleUpdateConfig = useCallback(async (key: string, value: unknown) => {
     try {
@@ -53,7 +47,6 @@ export function useWorkspaceConfigActions({
   }, [getProjectStoryboardStatsMutation])
 
   return {
-    handleStageChange,
     handleUpdateConfig,
     handleUpdateEpisode,
     getProjectStoryboardStats,

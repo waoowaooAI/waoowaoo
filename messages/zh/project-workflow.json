@@ -225,64 +225,82 @@
     },
     "workspace": {
       "title": "工作区画布",
-      "subtitle": "故事、剧本、分镜、视频、成片统一在一个受控画布中完成",
-      "summary": "{stages} 个阶段 · {clips} 段剧本 · {storyboards} 组分镜",
+      "subtitle": "真实业务对象会按创作链路自动展开为节点",
+      "summary": "{nodes} 个节点 · {edges} 条关系",
       "layoutLoading": "正在读取布局",
       "layoutSaving": "正在保存布局",
-      "layoutWarning": "画布布局暂时无法同步，当前仍使用默认阶段布局。",
+      "layoutWarning": "画布布局暂时无法同步，当前仍使用默认节点布局。",
       "toolbar": {
         "resetLayout": "重置布局",
-        "collapseAll": "全部折叠",
-        "expandAll": "全部展开",
         "fitView": "适配视图"
-      },
-      "focus": {
-        "story": "故事",
-        "script": "剧本",
-        "storyboard": "分镜",
-        "video": "视频",
-        "final": "成片"
       },
       "actions": {
         "generateScript": "生成剧本",
         "generateStoryboard": "生成分镜",
-        "generateAllVideos": "生成视频"
+        "generateImage": "生成图片",
+        "regenerateImage": "重新生成",
+        "generateVideo": "生成视频",
+        "generateAllVideos": "批量生成"
       },
       "status": {
-        "story": "故事",
-        "script": "剧本",
-        "storyboard": "分镜",
-        "video": "视频",
-        "final": "成片"
+        "empty": "待输入",
+        "ready": "已就绪",
+        "processing": "处理中",
+        "failed": "失败"
       },
-      "stages": {
+      "statusBar": {
+        "storyEmpty": "故事待输入",
+        "storyReady": "故事已输入",
+        "clips": "{count} 段剧本",
+        "panels": "{count} 个镜头",
+        "images": "{count} 张图片",
+        "videos": "{count} 个视频"
+      },
+      "empty": {
+        "clip": "暂无剧本内容",
+        "panel": "暂无镜头描述",
+        "image": "暂无图片提示词",
+        "video": "暂无视频提示词",
+        "location": "未指定场景"
+      },
+      "nodes": {
         "story": {
-          "title": "故事",
-          "description": "输入和编辑当前剧集的原始内容。"
+          "title": "故事输入",
+          "eyebrow": "入口节点",
+          "meta": "{chars} 个字符"
         },
-        "script": {
-          "title": "剧本",
-          "description": "生成后的 clip 保持业务顺序，阶段整体可以在画布上移动。"
+        "analysis": {
+          "title": "故事结构分析",
+          "eyebrow": "业务状态",
+          "body": "已识别 {clips} 段剧本、{storyboards} 组分镜、{panels} 个镜头。",
+          "meta": "人物 / 场景 / 节奏 / 视觉方向"
         },
-        "storyboard": {
-          "title": "分镜",
-          "description": "分镜组和镜头顺序仍然由业务数据决定。"
+        "clip": {
+          "title": "第 {index} 段剧本",
+          "eyebrow": "剧本片段",
+          "meta": "clip #{index}"
+        },
+        "shot": {
+          "title": "镜头 {index}",
+          "eyebrow": "单个镜头",
+          "meta": "场景：{location}"
+        },
+        "image": {
+          "title": "镜头 {index} 图片",
+          "eyebrow": "图片节点",
+          "meta": "绑定来源镜头"
         },
         "video": {
-          "title": "视频",
-          "description": "视频生成继续绑定到每个来源镜头。"
+          "title": "镜头 {index} 视频",
+          "eyebrow": "视频节点",
+          "meta": "绑定来源镜头"
         },
         "final": {
-          "title": "成片",
-          "description": "成片和时间线汇总所有已生成的视频素材。"
+          "title": "成片时间线",
+          "eyebrow": "最终输出",
+          "body": "{videos} 个视频片段已进入成片链路。",
+          "meta": "顺序来自业务数据"
         }
-      },
-      "summaries": {
-        "story": "{storyChars} 个故事字符",
-        "script": "{clips} 段剧本",
-        "storyboard": "{storyboards} 组分镜 · {panels} 个镜头",
-        "video": "{videos} 个已生成或生成中的视频",
-        "final": "{videos} 个可用于成片的视频素材"
       }
     }
   }

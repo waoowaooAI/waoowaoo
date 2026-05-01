@@ -40,7 +40,7 @@ export interface WorkspaceStageRuntimeValue {
   onClipUpdate: (clipId: string, data: unknown) => Promise<void>
   onOpenAssetLibrary: () => void
   onRunScriptToStoryboard: () => Promise<void>
-  onStageChange: (stage: string) => void
+  onGeneratePanelImage: (panelId: string, count?: number) => Promise<void>
   onGenerateVideo: (
     storyboardId: string,
     panelIndex: number,

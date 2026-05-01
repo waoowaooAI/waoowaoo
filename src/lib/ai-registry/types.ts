@@ -2,7 +2,7 @@ import type OpenAI from 'openai'
 import type { InternalLLMStreamStepMeta } from '@/lib/llm-observe/internal-stream-context'
 import type { LLMStreamKind } from '@/lib/llm-observe/types'
 
-export type AiModality = 'llm' | 'vision' | 'image' | 'video' | 'audio' | 'lipsync'
+export type AiModality = 'llm' | 'vision' | 'image' | 'video' | 'audio' | 'music' | 'lipsync'
 export type AiExecutionMode = 'sync' | 'async' | 'stream' | 'batch'
 export type AiVariantSubKind = 'official' | 'user-template'
 export type AiLipSyncProviderKey = 'fal' | 'vidu' | 'bailian'
@@ -237,7 +237,7 @@ export type AiLlmExecutionResult = {
   successDetails?: AiUnknownObject
 }
 
-export type UnifiedModelType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync'
+export type UnifiedModelType = 'llm' | 'image' | 'video' | 'audio' | 'music' | 'lipsync'
 export type CapabilityValue = string | number | boolean
 export type CapabilityOptionValue = CapabilityValue
 export type CapabilitySelections = Record<string, Record<string, CapabilityValue>>
@@ -290,6 +290,14 @@ export interface AudioCapabilities {
   fieldI18n?: CapabilityFieldI18nMap
 }
 
+export interface MusicCapabilities {
+  durationSecondsOptions?: number[]
+  vocalModeOptions?: string[]
+  outputFormatOptions?: string[]
+  bpmOptions?: number[]
+  fieldI18n?: CapabilityFieldI18nMap
+}
+
 export interface LipSyncCapabilities {
   modeOptions?: string[]
   fieldI18n?: CapabilityFieldI18nMap
@@ -300,6 +308,7 @@ export interface ModelCapabilities {
   image?: ImageCapabilities
   video?: VideoCapabilities
   audio?: AudioCapabilities
+  music?: MusicCapabilities
   lipsync?: LipSyncCapabilities
 }
 
@@ -308,6 +317,7 @@ const CAPABILITY_NAMESPACES = new Set<keyof ModelCapabilities>([
   'image',
   'video',
   'audio',
+  'music',
   'lipsync',
 ])
 
@@ -335,6 +345,14 @@ const VIDEO_ALLOWED_FIELDS = new Set<keyof VideoCapabilities>([
 const AUDIO_ALLOWED_FIELDS = new Set<keyof AudioCapabilities>([
   'voiceOptions',
   'rateOptions',
+  'fieldI18n',
+])
+
+const MUSIC_ALLOWED_FIELDS = new Set<keyof MusicCapabilities>([
+  'durationSecondsOptions',
+  'vocalModeOptions',
+  'outputFormatOptions',
+  'bpmOptions',
   'fieldI18n',
 ])
 
@@ -626,6 +644,53 @@ function validateAudioCapabilities(issues: CapabilityValidationIssue[], raw: unk
   })
 }
 
+function validateMusicCapabilities(issues: CapabilityValidationIssue[], raw: unknown) {
+  if (!isRecord(raw)) return
+
+  const durationSecondsOptions = raw.durationSecondsOptions
+  if (durationSecondsOptions !== undefined && !isNumberArray(durationSecondsOptions)) {
+    issues.push({
+      code: 'CAPABILITY_FIELD_INVALID',
+      field: 'capabilities.music.durationSecondsOptions',
+      message: 'durationSecondsOptions must be a finite number array',
+    })
+  }
+
+  const vocalModeOptions = raw.vocalModeOptions
+  if (vocalModeOptions !== undefined && !isStringArray(vocalModeOptions)) {
+    issues.push({
+      code: 'CAPABILITY_FIELD_INVALID',
+      field: 'capabilities.music.vocalModeOptions',
+      message: 'vocalModeOptions must be a non-empty string array',
+    })
+  }
+
+  const outputFormatOptions = raw.outputFormatOptions
+  if (outputFormatOptions !== undefined && !isStringArray(outputFormatOptions)) {
+    issues.push({
+      code: 'CAPABILITY_FIELD_INVALID',
+      field: 'capabilities.music.outputFormatOptions',
+      message: 'outputFormatOptions must be a non-empty string array',
+    })
+  }
+
+  const bpmOptions = raw.bpmOptions
+  if (bpmOptions !== undefined && !isNumberArray(bpmOptions)) {
+    issues.push({
+      code: 'CAPABILITY_FIELD_INVALID',
+      field: 'capabilities.music.bpmOptions',
+      message: 'bpmOptions must be a finite number array',
+    })
+  }
+
+  validateFieldI18nMap(issues, 'music', raw.fieldI18n, {
+    durationSeconds: isNumberArray(durationSecondsOptions) ? durationSecondsOptions : undefined,
+    vocalMode: isStringArray(vocalModeOptions) ? vocalModeOptions : undefined,
+    outputFormat: isStringArray(outputFormatOptions) ? outputFormatOptions : undefined,
+    bpm: isNumberArray(bpmOptions) ? bpmOptions : undefined,
+  })
+}
+
 function validateLipSyncCapabilities(issues: CapabilityValidationIssue[], raw: unknown) {
   if (!isRecord(raw)) return
   const modeOptions = raw.modeOptions
@@ -703,18 +768,21 @@ export function validateModelCapabilities(
   validateNamespaceShape(issues, 'image', (capabilities as ModelCapabilities).image)
   validateNamespaceShape(issues, 'video', (capabilities as ModelCapabilities).video)
   validateNamespaceShape(issues, 'audio', (capabilities as ModelCapabilities).audio)
+  validateNamespaceShape(issues, 'music', (capabilities as ModelCapabilities).music)
   validateNamespaceShape(issues, 'lipsync', (capabilities as ModelCapabilities).lipsync)
 
   validateNamespaceAllowedFields(issues, 'llm', (capabilities as ModelCapabilities).llm, LLM_ALLOWED_FIELDS)
   validateNamespaceAllowedFields(issues, 'image', (capabilities as ModelCapabilities).image, IMAGE_ALLOWED_FIELDS)
   validateNamespaceAllowedFields(issues, 'video', (capabilities as ModelCapabilities).video, VIDEO_ALLOWED_FIELDS)
   validateNamespaceAllowedFields(issues, 'audio', (capabilities as ModelCapabilities).audio, AUDIO_ALLOWED_FIELDS)
+  validateNamespaceAllowedFields(issues, 'music', (capabilities as ModelCapabilities).music, MUSIC_ALLOWED_FIELDS)
   validateNamespaceAllowedFields(issues, 'lipsync', (capabilities as ModelCapabilities).lipsync, LIPSYNC_ALLOWED_FIELDS)
 
   validateLLMCapabilities(issues, (capabilities as ModelCapabilities).llm)
   validateImageCapabilities(issues, (capabilities as ModelCapabilities).image)
   validateVideoCapabilities(issues, (capabilities as ModelCapabilities).video)
   validateAudioCapabilities(issues, (capabilities as ModelCapabilities).audio)
+  validateMusicCapabilities(issues, (capabilities as ModelCapabilities).music)
   validateLipSyncCapabilities(issues, (capabilities as ModelCapabilities).lipsync)
 
   return issues

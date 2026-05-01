@@ -62,6 +62,7 @@ function buildProject(): Project {
     editModel: null,
     videoModel: null,
     audioModel: null,
+    musicModel: null,
     videoRatio: '9:16',
     capabilityOverrides: null,
     artStyle: 'american-comic',

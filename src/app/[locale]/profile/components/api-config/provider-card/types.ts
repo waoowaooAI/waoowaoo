@@ -9,6 +9,7 @@ export interface ProviderCardDefaultModels {
   editModel?: string
   videoModel?: string
   audioModel?: string
+  musicModel?: string
   lipSyncModel?: string
   voiceDesignModel?: string
 }
@@ -42,7 +43,7 @@ export interface ModelFormState {
   optionPricesJson?: string
 }
 
-export type ProviderCardModelType = 'llm' | 'image' | 'video' | 'audio'
+export type ProviderCardModelType = 'llm' | 'image' | 'video' | 'audio' | 'music'
 
 export type ProviderCardGroupedModels = Partial<Record<ProviderCardModelType, CustomModel[]>>
 

@@ -7,7 +7,7 @@ interface WorkspaceAssistantPanelHeaderProps {
   eyebrow: string
   title: string
   episodeLabel: string
-  stageLabel: string
+  workspaceLabel: string
   runLabel: string
   downloadLabel: string
   downloadHref: string
@@ -45,7 +45,7 @@ export function WorkspaceAssistantPanelHeader(props: WorkspaceAssistantPanelHead
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {[props.episodeLabel, props.stageLabel, props.runLabel].map((item) => (
+        {[props.episodeLabel, props.workspaceLabel, props.runLabel].map((item) => (
           <div
             key={item}
             className="rounded-full border border-[var(--glass-stroke-base)] bg-[rgba(255,255,255,0.82)] px-3 py-1 text-xs text-[var(--glass-text-secondary)]"

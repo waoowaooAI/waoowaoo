@@ -202,7 +202,7 @@ describe('useWorkspaceAssetLibraryShell', () => {
     }))
   })
 
-  it('refreshes assets when the only visible workspace stage is the canvas', () => {
+  it('refreshes assets for the single node canvas workspace', () => {
     const effectCallbacks: Array<() => void | (() => void)> = []
     const router = { replace: vi.fn() }
     const onRefresh = vi.fn(async () => undefined)
@@ -212,7 +212,6 @@ describe('useWorkspaceAssetLibraryShell', () => {
     })
 
     useWorkspaceAssetLibraryShell({
-      currentStage: 'canvas',
       searchParams: new URLSearchParams('episode=episode-1'),
       router,
       onRefresh,
@@ -244,7 +243,6 @@ describe('useWorkspaceExecution', () => {
 
   it('story-to-script submits directly without writing legacy mode fields', async () => {
     const onRefresh = vi.fn(async () => undefined)
-    const onStageChange = vi.fn()
     const onOpenAssetLibrary = vi.fn()
 
     storyToScriptRunMock.mockResolvedValueOnce({
@@ -255,12 +253,10 @@ describe('useWorkspaceExecution', () => {
     const execution = useWorkspaceExecution({
       projectId: 'project-1',
       episodeId: 'episode-1',
-      currentStage: 'config',
       analysisModel: 'provider::analysis-model',
       novelText: '第一章内容',
       t: (key: string) => key,
       onRefresh,
-      onStageChange,
       onOpenAssetLibrary,
     })
 
@@ -280,7 +276,6 @@ describe('useWorkspaceExecution', () => {
       runId: 'run-story-1',
     })
     expect(onRefresh).toHaveBeenCalledTimes(1)
-    expect(onStageChange).toHaveBeenCalledWith('script')
     expect(onOpenAssetLibrary).toHaveBeenCalledTimes(1)
   })
 })

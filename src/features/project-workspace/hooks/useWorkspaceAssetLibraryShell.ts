@@ -14,14 +14,12 @@ interface SearchParamsLike {
 }
 
 interface UseWorkspaceAssetLibraryShellParams {
-  currentStage: string
   searchParams: SearchParamsLike | null
   router: RouterLike
   onRefresh: (options?: RefreshOptions) => Promise<void>
 }
 
 export function useWorkspaceAssetLibraryShell({
-  currentStage,
   searchParams,
   router,
   onRefresh,
@@ -74,17 +72,8 @@ export function useWorkspaceAssetLibraryShell({
   }, [openAssetLibrary, router, searchParams])
 
   useEffect(() => {
-    const needsAssets =
-      currentStage === 'canvas' ||
-      currentStage === 'script' ||
-      currentStage === 'assets' ||
-      currentStage === 'storyboard' ||
-      currentStage === 'videos'
-
-    if (needsAssets) {
-      onRefresh({ scope: 'assets' })
-    }
-  }, [currentStage, onRefresh])
+    void onRefresh({ scope: 'assets' })
+  }, [onRefresh])
 
   return {
     isAssetLibraryOpen,

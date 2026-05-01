@@ -5,6 +5,7 @@ import { QueueType, TaskType, TASK_TYPE, type TaskJobData } from './types'
 export const QUEUE_NAME = {
   IMAGE: 'waoowaoo-image',
   VIDEO: 'waoowaoo-video',
+  MUSIC: 'waoowaoo-music',
   VOICE: 'waoowaoo-voice',
   TEXT: 'waoowaoo-text',
 } as const
@@ -49,6 +50,10 @@ export function getVideoQueue() {
   return getOrCreateQueue('video', QUEUE_NAME.VIDEO)
 }
 
+export function getMusicQueue() {
+  return getOrCreateQueue('music', QUEUE_NAME.MUSIC)
+}
+
 export function getVoiceQueue() {
   return getOrCreateQueue('voice', QUEUE_NAME.VOICE)
 }
@@ -58,7 +63,7 @@ export function getTextQueue() {
 }
 
 export function getAllQueues() {
-  return [getImageQueue(), getVideoQueue(), getVoiceQueue(), getTextQueue()]
+  return [getImageQueue(), getVideoQueue(), getMusicQueue(), getVoiceQueue(), getTextQueue()]
 }
 
 const IMAGE_TYPES = new Set<TaskType>([
@@ -73,6 +78,7 @@ const IMAGE_TYPES = new Set<TaskType>([
 ])
 
 const VIDEO_TYPES = new Set<TaskType>([TASK_TYPE.VIDEO_PANEL, TASK_TYPE.LIP_SYNC])
+const MUSIC_TYPES = new Set<TaskType>([TASK_TYPE.MUSIC_GENERATE])
 const VOICE_TYPES = new Set<TaskType>([
   TASK_TYPE.VOICE_LINE,
   TASK_TYPE.VOICE_DESIGN,
@@ -87,6 +93,7 @@ const SINGLE_ATTEMPT_TASK_TYPES = new Set<TaskType>([
 export function getQueueTypeByTaskType(type: TaskType): QueueType {
   if (IMAGE_TYPES.has(type)) return 'image'
   if (VIDEO_TYPES.has(type)) return 'video'
+  if (MUSIC_TYPES.has(type)) return 'music'
   if (VOICE_TYPES.has(type)) return 'voice'
   return 'text'
 }
@@ -97,6 +104,8 @@ export function getQueueByType(type: QueueType) {
       return getImageQueue()
     case 'video':
       return getVideoQueue()
+    case 'music':
+      return getMusicQueue()
     case 'voice':
       return getVoiceQueue()
     case 'text':

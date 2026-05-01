@@ -107,6 +107,7 @@ export interface ProjectModelConfig {
   editModel: string | null
   videoModel: string | null
   audioModel: string | null
+  musicModel: string | null
   videoRatio: string | null
   artStyle: string | null
   capabilityDefaults: CapabilitySelections
@@ -121,6 +122,7 @@ export interface UserModelConfig {
   editModel: string | null
   videoModel: string | null
   audioModel: string | null
+  musicModel: string | null
   capabilityDefaults: CapabilitySelections
 }
 
@@ -163,6 +165,7 @@ export async function getProjectModelConfig(
     editModel: extractModelKey(projectData?.editModel) || null,
     videoModel: extractModelKey(projectData?.videoModel) || null,
     audioModel: extractModelKey(projectData?.audioModel) || extractModelKey(userPref?.audioModel) || null,
+    musicModel: extractModelKey(projectData?.musicModel) || extractModelKey(userPref?.musicModel) || null,
     videoRatio: projectData?.videoRatio || '9:16',
     artStyle: projectData?.artStyle || null,
     capabilityDefaults: parseCapabilitySelections(userPref?.capabilityDefaults),
@@ -186,6 +189,7 @@ export async function getUserModelConfig(userId: string): Promise<UserModelConfi
     editModel: extractModelKey(userPref?.editModel) || null,
     videoModel: extractModelKey(userPref?.videoModel) || null,
     audioModel: extractModelKey(userPref?.audioModel) || null,
+    musicModel: extractModelKey(userPref?.musicModel) || null,
     capabilityDefaults: parseCapabilitySelections(userPref?.capabilityDefaults),
   }
 }

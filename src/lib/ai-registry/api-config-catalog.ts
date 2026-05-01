@@ -82,7 +82,8 @@ const CATALOG_TYPE_ORDER: Readonly<Record<UnifiedModelType, number>> = {
   image: 1,
   video: 2,
   audio: 3,
-  lipsync: 4,
+  music: 4,
+  lipsync: 5,
 }
 
 function normalizeApiConfigCatalogModel(raw: unknown, index: number): ApiConfigCatalogModel {

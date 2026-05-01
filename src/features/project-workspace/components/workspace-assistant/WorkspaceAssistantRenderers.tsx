@@ -408,7 +408,7 @@ function ProjectContextDataCard({ data }: DataMessagePartProps<ProjectContextPar
       <div className="font-medium text-[var(--glass-text-primary)]">{t('cards.projectContext')}</div>
       <div className="mt-2">{t('cards.projectLabel')}: {data.context.projectName}</div>
       <div>{t('cards.episodeLabel')}: {data.context.episodeName}</div>
-      <div>{t('cards.stageLabel')}: {data.context.currentStage}</div>
+      <div>{t('cards.workspaceLabel')}: {t('panel.workspaceStatus')}</div>
     </div>
   )
 }

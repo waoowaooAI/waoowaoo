@@ -10,6 +10,7 @@ import { createLlmTaskOperations } from './domains/llm/llm-task-ops'
 import { createMediaOperations } from './domains/media/media-ops'
 import { createVideoOperations } from './domains/media/video-ops'
 import { createVideoGenerationOperations } from './domains/media/video-generation-ops'
+import { createMusicGenerationOperations } from './domains/media/music-generation-ops'
 import { createLipSyncOperations } from './domains/media/lipsync-ops'
 import { createDownloadOperations } from './domains/media/download-ops'
 import { createConfigOperations } from './domains/config/config-ops'
@@ -188,6 +189,12 @@ export function createProjectAgentOperationRegistry(): ProjectAgentOperationRegi
     }),
     ...withOperationPack(createVideoGenerationOperations(), {
       groupPath: ['media', 'video'],
+      channels: CHANNELS_TOOL_API,
+      prerequisites: PREREQ_EPISODE_OPTIONAL,
+      confirmation: CONFIRM_NONE,
+    }),
+    ...withOperationPack(createMusicGenerationOperations(), {
+      groupPath: ['media', 'music'],
       channels: CHANNELS_TOOL_API,
       prerequisites: PREREQ_EPISODE_OPTIONAL,
       confirmation: CONFIRM_NONE,

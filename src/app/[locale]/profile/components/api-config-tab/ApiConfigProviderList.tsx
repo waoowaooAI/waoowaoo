@@ -30,6 +30,7 @@ interface DefaultModels {
   editModel?: string
   videoModel?: string
   audioModel?: string
+  musicModel?: string
   lipSyncModel?: string
 }
 

@@ -31,6 +31,7 @@ export const AI_PROMPT_IDS = {
   DESIGN_VISUAL_STYLE_PRESET: 'design-visual-style-preset',
   DESIGN_DIRECTOR_STYLE_PRESET: 'design-director-style-preset',
   VOICE_GENERATE_LINES: 'voice-generate-lines',
+  MUSIC_LYRIA_PROMPT_EXPAND: 'music-lyria-prompt-expand',
 } as const
 
 export type AiPromptId = (typeof AI_PROMPT_IDS)[keyof typeof AI_PROMPT_IDS]

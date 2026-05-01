@@ -128,7 +128,7 @@ export function normalizeCustomPricing(
     return undefined
   }
   if (options?.strict) {
-    validateAllowedObjectKeys(raw, ['llm', 'image', 'video', 'input', 'output'], options.field || 'models.customPricing')
+    validateAllowedObjectKeys(raw, ['llm', 'image', 'video', 'music', 'input', 'output'], options.field || 'models.customPricing')
   }
 
   const llmRaw = isRecord(raw.llm) ? raw.llm : raw
@@ -184,12 +184,17 @@ export function normalizeCustomPricing(
     strict: options?.strict,
     field: options?.field ? `${options.field}.video` : 'models.customPricing.video',
   })
+  const music = normalizeMediaCustomPricing(raw.music, {
+    strict: options?.strict,
+    field: options?.field ? `${options.field}.music` : 'models.customPricing.music',
+  })
 
-  if (!llm && !image && !video) return undefined
+  if (!llm && !image && !video && !music) return undefined
   return {
     ...(llm ? { llm } : {}),
     ...(image ? { image } : {}),
     ...(video ? { video } : {}),
+    ...(music ? { music } : {}),
   }
 }
 
@@ -213,6 +218,13 @@ export function hasCustomPricingForType(model: StoredModel): boolean {
     return (
       typeof videoPricing?.basePrice === 'number'
       || (isRecord(videoPricing?.optionPrices) && Object.keys(videoPricing.optionPrices).length > 0)
+    )
+  }
+  if (model.type === 'music') {
+    const musicPricing = model.customPricing.music
+    return (
+      typeof musicPricing?.basePrice === 'number'
+      || (isRecord(musicPricing?.optionPrices) && Object.keys(musicPricing.optionPrices).length > 0)
     )
   }
   return false

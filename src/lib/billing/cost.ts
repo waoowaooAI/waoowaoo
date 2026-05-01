@@ -31,6 +31,7 @@ export const MARKUP = {
   text: 1.0,
   image: 1.0,
   video: 1.0,
+  music: 1.0,
   voice: 1.0,
   voiceDesign: 1.0,
   lipSync: 1.0,
@@ -38,7 +39,7 @@ export const MARKUP = {
 
 export type MarkupCategory = keyof typeof MARKUP
 
-export type ApiType = 'text' | 'image' | 'video' | 'voice' | 'voice-design' | 'lip-sync'
+export type ApiType = 'text' | 'image' | 'video' | 'music' | 'voice' | 'voice-design' | 'lip-sync'
 export type UsageUnit = 'token' | 'image' | 'video' | 'second' | 'call'
 
 export interface LlmCustomPricing {
@@ -55,6 +56,7 @@ export interface ModelCustomPricing {
   llm?: LlmCustomPricing
   image?: MediaCustomPricing
   video?: MediaCustomPricing
+  music?: MediaCustomPricing
 }
 
 type BillingMetadata = { [field: string]: unknown }
@@ -332,7 +334,7 @@ export function calcText(
 }
 
 function resolveCustomMediaPrice(input: {
-  apiType: 'image' | 'video'
+  apiType: 'image' | 'video' | 'music'
   model: string
   selections: Record<string, CapabilityValue>
   pricing?: MediaCustomPricing
@@ -613,6 +615,80 @@ export function calcVideoByTokens(
     )
   }
   return calcVideoCostFromTokens(model, totalTokens, tokenPricing, metadata)
+}
+
+export function calcMusic(
+  model: string,
+  durationSeconds: number,
+  metadata?: BillingMetadata,
+  customPricing?: ModelCustomPricing | null,
+): number {
+  const selections = normalizeCapabilitySelections(metadata)
+  let unitPrice: number | null = null
+  const resolved = resolveBuiltinPricing({
+    apiType: 'music',
+    model,
+    selections,
+  })
+  if (resolved.status === 'resolved') {
+    unitPrice = resolved.amount
+  } else if (resolved.status === 'ambiguous_model') {
+    throw new BillingOperationError(
+      'BILLING_PRICING_MODEL_AMBIGUOUS',
+      `Ambiguous music pricing modelId: ${resolved.modelId}`,
+      {
+        apiType: 'music',
+        model,
+        modelId: resolved.modelId,
+        candidates: resolved.candidates.map((candidate) => `${candidate.provider}::${candidate.modelId}`),
+      },
+    )
+  }
+
+  if (unitPrice === null) {
+    const customResolved = resolveCustomMediaPrice({
+      apiType: 'music',
+      model,
+      selections,
+      pricing: customPricing?.music,
+    })
+    if (customResolved.status === 'resolved') {
+      unitPrice = customResolved.amount
+    } else if (customResolved.status === 'invalid') {
+      throw new BillingOperationError(
+        'BILLING_CAPABILITY_PRICE_NOT_FOUND',
+        `No custom music price matched for field ${customResolved.field}`,
+        { apiType: 'music', model, field: customResolved.field, selections },
+      )
+    }
+  }
+
+  if (unitPrice === null) {
+    if (resolved.status === 'missing_capability_match') {
+      throw new BillingOperationError(
+        'BILLING_CAPABILITY_PRICE_NOT_FOUND',
+        `No capability pricing tier matched for ${model}`,
+        {
+          apiType: 'music',
+          model,
+          selections,
+        },
+      )
+    }
+    const modelId = parseModelId(model)
+    throw new BillingOperationError(
+      'BILLING_UNKNOWN_MODEL',
+      `Unknown music model pricing: ${model}`,
+      {
+        apiType: 'music',
+        model,
+        modelId,
+      },
+    )
+  }
+
+  const seconds = Math.max(1, Math.floor(Number(durationSeconds) || 0))
+  return unitPrice * seconds * getMarkup('music')
 }
 
 export function calcVoice(durationSeconds: number): number {

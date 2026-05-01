@@ -39,7 +39,6 @@ import { buildWorkspaceAssistantPanelLayout, WORKSPACE_ASSISTANT_TOP_OFFSET } fr
 interface WorkspaceAssistantPanelProps {
   projectId: string
   episodeId?: string
-  currentStage: string
   storyToScriptStream: RunStreamView
   scriptToStoryboardStream: RunStreamView
   isCollapsed: boolean
@@ -49,7 +48,6 @@ interface WorkspaceAssistantPanelProps {
 export default function WorkspaceAssistantPanel({
   projectId,
   episodeId,
-  currentStage,
   storyToScriptStream,
   scriptToStoryboardStream,
   isCollapsed,
@@ -64,14 +62,12 @@ export default function WorkspaceAssistantPanel({
   }), [])
   const { data: projectContext } = useProjectContext(projectId, {
     episodeId,
-    currentStage,
   })
   const approvePlan = useApproveProjectPlan(projectId, episodeId)
   const rejectPlan = useRejectProjectPlan(projectId, episodeId)
   const assistantRuntime = useWorkspaceAssistantRuntime({
     projectId,
     episodeId,
-    currentStage,
     interactionMode,
   })
   const pendingApprovalActions = useMemo(
@@ -120,7 +116,7 @@ export default function WorkspaceAssistantPanel({
         {
           type: 'text',
           text: t('cards.approvedPlan', {
-            workflow: pendingApproval ? workflowLabels[pendingApproval.data.workflowId] : currentStage,
+            workflow: pendingApproval ? workflowLabels[pendingApproval.data.workflowId] : t('panel.workspaceStatus'),
           }),
         },
       ]),
@@ -136,7 +132,7 @@ export default function WorkspaceAssistantPanel({
         {
           type: 'text',
           text: t('cards.rejectedPlan', {
-            workflow: pendingApproval ? workflowLabels[pendingApproval.data.workflowId] : currentStage,
+            workflow: pendingApproval ? workflowLabels[pendingApproval.data.workflowId] : t('panel.workspaceStatus'),
             reason: params.note?.trim() ? ` ${params.note.trim()}` : '',
           }),
         },
@@ -178,7 +174,7 @@ export default function WorkspaceAssistantPanel({
     onCancelOperation: handleCancelOperation,
     confirmationSubmittingKey,
   })
-  const contextSummary = `${projectContext?.episodeName || episodeId || t('cards.globalScope')} · ${currentStage} · ${t('panel.runs', { count: projectContext?.activeRuns.length || 0 })}`
+  const contextSummary = `${projectContext?.episodeName || episodeId || t('cards.globalScope')} · ${t('panel.workspaceStatus')} · ${t('panel.runs', { count: projectContext?.activeRuns.length || 0 })}`
   const statusText = assistantRuntime.syncError
     || assistantRuntime.storageError
     || assistantRuntime.error?.message
@@ -236,7 +232,7 @@ export default function WorkspaceAssistantPanel({
                 eyebrow={t('panel.eyebrow')}
                 title={t('panel.title')}
                 episodeLabel={projectContext?.episodeName || episodeId || t('cards.globalScope')}
-                stageLabel={currentStage}
+                workspaceLabel={t('panel.workspaceStatus')}
                 runLabel={t('panel.runs', { count: projectContext?.activeRuns.length || 0 })}
                 downloadLabel={t('panel.downloadLog')}
                 downloadHref={downloadHref}

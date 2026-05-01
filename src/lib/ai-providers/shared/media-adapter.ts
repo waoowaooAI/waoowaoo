@@ -1,7 +1,6 @@
 import { getProviderKey } from '@/lib/ai-registry/selection'
 import type {
   AiExecutionMode,
-  AiModality,
   AiOptionSchema,
   AiResolvedSelection,
   AiVariantDescriptor,

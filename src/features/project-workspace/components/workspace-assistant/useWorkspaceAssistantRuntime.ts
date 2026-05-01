@@ -26,7 +26,6 @@ import { isPersistableUIMessages } from '@/lib/project-agent/ui-message-validati
 interface UseWorkspaceAssistantRuntimeParams {
   projectId: string
   episodeId?: string
-  currentStage: string
   interactionMode: ProjectAgentInteractionMode
 }
 
@@ -56,7 +55,6 @@ export function buildWorkspaceAssistantChatId(params: {
 export function useWorkspaceAssistantRuntime({
   projectId,
   episodeId,
-  currentStage,
   interactionMode,
 }: UseWorkspaceAssistantRuntimeParams): UseWorkspaceAssistantRuntimeResult {
   const locale = useLocale()
@@ -72,9 +70,8 @@ export function useWorkspaceAssistantRuntime({
     locale,
     projectId,
     episodeId,
-    currentStage,
     interactionMode,
-  }), [currentStage, episodeId, interactionMode, locale, projectId])
+  }), [episodeId, interactionMode, locale, projectId])
   const transport = useMemo(() => new AssistantChatTransport({
     api: `/api/projects/${projectId}/assistant/chat`,
     body: {

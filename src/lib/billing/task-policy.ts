@@ -1,6 +1,7 @@
 import {
   calcImage,
   calcLipSync,
+  calcMusic,
   calcText,
   calcVideo,
   calcVoice,
@@ -19,6 +20,7 @@ const BILLABLE_TASK_TYPES = new Set<TaskType>([
   TASK_TYPE.IMAGE_PANEL,
   TASK_TYPE.IMAGE_CHARACTER,
   TASK_TYPE.IMAGE_LOCATION,
+  TASK_TYPE.MUSIC_GENERATE,
   TASK_TYPE.VIDEO_PANEL,
   TASK_TYPE.LIP_SYNC,
   TASK_TYPE.VOICE_LINE,
@@ -201,6 +203,40 @@ function buildVideoTaskInfo(taskType: TaskType, payload: AnyPayload): TaskBillin
   }
 }
 
+function buildMusicTaskInfo(taskType: TaskType, payload: AnyPayload): TaskBillingInfo | null {
+  const model = pickFirstString([payload?.musicModel, payload?.modelId, payload?.model])
+  if (!model) return null
+  const durationSeconds = readNumber(payload?.durationSeconds)
+  if (durationSeconds === null || durationSeconds <= 0) return null
+  const outputFormat = readString(payload?.outputFormat)
+  const vocalMode = readString(payload?.vocalMode)
+  const genre = readString(payload?.genre)
+  const mood = readString(payload?.mood)
+  const bpm = readNumber(payload?.bpm)
+  const metadata = {
+    durationSeconds,
+    ...(outputFormat ? { outputFormat } : {}),
+    ...(vocalMode ? { vocalMode } : {}),
+    ...(genre ? { genre } : {}),
+    ...(mood ? { mood } : {}),
+    ...(typeof bpm === 'number' ? { bpm } : {}),
+  }
+  return {
+    billable: true,
+    source: 'task',
+    taskType,
+    apiType: 'music',
+    model,
+    quantity: durationSeconds,
+    unit: 'second',
+    maxFrozenCost: calcMusic(model, durationSeconds, metadata),
+    pricingVersion: BUILTIN_PRICING_VERSION,
+    action: String(taskType),
+    metadata,
+    status: 'quoted',
+  }
+}
+
 function buildVoiceTaskInfo(taskType: TaskType, payload: AnyPayload): TaskBillingInfo {
   const maxSeconds = Math.max(1, Math.floor(toNumber(payload?.maxSeconds, 5)))
   return {
@@ -253,6 +289,8 @@ export function buildDefaultTaskBillingInfo(taskType: TaskType, payload: AnyPayl
       return buildImageTaskInfo(taskType, payload)
     case TASK_TYPE.VIDEO_PANEL:
       return buildVideoTaskInfo(taskType, payload)
+    case TASK_TYPE.MUSIC_GENERATE:
+      return buildMusicTaskInfo(taskType, payload)
     case TASK_TYPE.LIP_SYNC: {
       const lipSyncModel = pickFirstString([payload?.lipSyncModel]) || DEFAULT_LIPSYNC_MODEL_KEY
       return {

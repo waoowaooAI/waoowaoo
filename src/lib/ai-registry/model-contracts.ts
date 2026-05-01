@@ -2,7 +2,7 @@ import { resolveBuiltinCapabilitiesByModelKey } from '@/lib/ai-registry/capabili
 import type { AiUnknownObject, ModelCapabilities } from '@/lib/ai-registry/types'
 import type { AiModality, AiResolvedLlmSelection, AiResolvedSelection } from '@/lib/ai-registry/types'
 
-function resolveCapabilityModelType(modality: AiModality): 'llm' | 'image' | 'video' | 'audio' | 'lipsync' {
+function resolveCapabilityModelType(modality: AiModality): 'llm' | 'image' | 'video' | 'audio' | 'music' | 'lipsync' {
   if (modality === 'vision') return 'llm'
   return modality
 }

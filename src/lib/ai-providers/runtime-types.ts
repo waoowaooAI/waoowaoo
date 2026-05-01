@@ -1,4 +1,3 @@
-import type OpenAI from 'openai'
 import type { LanguageModel } from 'ai'
 import type {
   AiLlmExecutionInput,
@@ -23,6 +22,9 @@ export type GenerateResult = {
   imageBase64?: string
   videoUrl?: string
   audioUrl?: string
+  audioBase64?: string
+  audioMimeType?: string
+  metadata?: Record<string, unknown>
   error?: string
   requestId?: string
   async?: boolean
@@ -129,6 +131,25 @@ export type AiProviderAudioExecutionContext = {
   }
 }
 
+export type AiProviderMusicExecutionContext = {
+  userId: string
+  selection: AiResolvedSelection & {
+    provider: string
+    modelId: string
+    modelKey: string
+  }
+  prompt: string
+  options?: {
+    durationSeconds?: number
+    vocalMode?: 'instrumental' | 'vocal'
+    genre?: string
+    mood?: string
+    bpm?: number
+    outputFormat?: 'mp3' | 'wav'
+    [key: string]: unknown
+  }
+}
+
 export type AiProviderLipSyncExecutionContext = {
   userId: string
   selection: AiResolvedSelection & {
@@ -174,14 +195,16 @@ export type AiProviderVoiceLineResult = {
   audioDuration: number
 }
 
-export type AiProviderMediaModalityAdapter<M extends 'image' | 'video' | 'audio'> = {
+export type AiProviderMediaModalityAdapter<M extends 'image' | 'video' | 'audio' | 'music'> = {
   describe: (selection: AiResolvedSelection) => AiVariantDescriptor
   execute: (
     input: M extends 'image'
       ? AiProviderImageExecutionContext
       : M extends 'video'
         ? AiProviderVideoExecutionContext
-        : AiProviderAudioExecutionContext,
+        : M extends 'audio'
+          ? AiProviderAudioExecutionContext
+          : AiProviderMusicExecutionContext,
   ) => Promise<GenerateResult>
 }
 
@@ -204,6 +227,7 @@ export interface AiProviderAdapter {
   image?: AiProviderMediaModalityAdapter<'image'>
   video?: AiProviderMediaModalityAdapter<'video'>
   audio?: AiProviderMediaModalityAdapter<'audio'>
+  music?: AiProviderMediaModalityAdapter<'music'>
   lipsync?: AiProviderLipSyncModalityAdapter
   voiceLine?: AiProviderVoiceLineModalityAdapter
   languageModel?: AiProviderLanguageModelAdapter

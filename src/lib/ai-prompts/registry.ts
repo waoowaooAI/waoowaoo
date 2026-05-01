@@ -176,6 +176,10 @@ export const AI_PROMPT_CATALOG: Record<AiPromptId, AiPromptCatalogEntry> = {
     variableKeys: ['input', 'characters_lib_name', 'characters_introduction', 'storyboard_json'],
     workflowSkillIds: ['generate-voice-lines'],
   },
+  [AI_PROMPT_IDS.MUSIC_LYRIA_PROMPT_EXPAND]: {
+    pathStem: 'music/lyria-prompt-expand',
+    variableKeys: ['user_input', 'duration_seconds', 'vocal_mode', 'genre', 'mood'],
+  },
 }
 
 const WORKFLOW_SKILL_TO_AI_PROMPT_ID = new Map<WorkflowSkillId, AiPromptId>()

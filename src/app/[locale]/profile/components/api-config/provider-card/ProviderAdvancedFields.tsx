@@ -44,6 +44,10 @@ const TypeIcon = ({
       return (
         <AppIcon name="audioWave" className={className} />
       )
+    case 'music':
+      return (
+        <AppIcon name="audioWave" className={className} />
+      )
   }
 }
 
@@ -57,15 +61,21 @@ const typeLabel = (type: ProviderCardModelType, t: ProviderCardTranslator) => {
       return t('typeVideo')
     case 'audio':
       return t('typeAudio')
+    case 'music':
+      return t('typeMusic')
   }
 }
 
-const MODEL_TYPES: readonly ProviderCardModelType[] = ['llm', 'image', 'video', 'audio']
+type ProviderCardVisibleType = Exclude<ProviderCardModelType, 'music'>
+type AudioSubType = 'speech' | 'music' | 'lipsync'
+
+const MODEL_TYPES: readonly ProviderCardVisibleType[] = ['llm', 'image', 'video', 'audio']
 
 export function getAddableModelTypesForProvider(providerId: string): ProviderCardModelType[] {
   const providerKey = getProviderKey(providerId)
   if (providerKey === 'openai-compatible') return ['llm', 'image', 'video']
-  return ['llm', 'image', 'video', 'audio']
+  if (providerKey === 'gemini-compatible') return ['llm', 'image', 'video', 'audio']
+  return ['llm', 'image', 'video', 'audio', 'music']
 }
 
 export function shouldShowOpenAICompatVideoHint(
@@ -80,19 +90,44 @@ function shouldShowDefaultTabs(providerId: string): boolean {
   return providerKey === 'openai-compatible' || providerKey === 'gemini-compatible'
 }
 
+function getDefaultVisibleModelTypes(providerId: string): ProviderCardVisibleType[] {
+  const providerKey = getProviderKey(providerId)
+  if (providerKey === 'openai-compatible') return ['llm', 'image', 'video']
+  if (providerKey === 'gemini-compatible') return ['llm', 'image', 'video', 'audio']
+  return [...MODEL_TYPES]
+}
+
 export function getVisibleModelTypesForProvider(
   providerId: string,
   groupedModels: Partial<Record<ProviderCardModelType, CustomModel[]>>,
-): ProviderCardModelType[] {
+): ProviderCardVisibleType[] {
   const shouldShowAllTabs = shouldShowDefaultTabs(providerId)
   if (shouldShowAllTabs) {
-    return getAddableModelTypesForProvider(providerId)
+    return getDefaultVisibleModelTypes(providerId)
   }
 
   return MODEL_TYPES.filter((type) => {
     const modelsOfType = groupedModels[type]
     return Array.isArray(modelsOfType) && modelsOfType.length > 0
   })
+}
+
+function getAudioSubType(model: CustomModel): AudioSubType | null {
+  if (model.type === 'audio') return 'speech'
+  if (model.type === 'music') return 'music'
+  if (model.type === 'lipsync') return 'lipsync'
+  return null
+}
+
+function audioSubTypeLabel(type: AudioSubType, t: ProviderCardTranslator): string {
+  switch (type) {
+    case 'speech':
+      return t('audioSubSpeech')
+    case 'music':
+      return t('audioSubMusic')
+    case 'lipsync':
+      return t('audioSubLipSync')
+  }
 }
 
 function formatPriceAmount(amount: number): string {
@@ -139,7 +174,7 @@ export function ProviderAdvancedFields({
     () => getVisibleModelTypesForProvider(provider.id, state.groupedModels),
     [provider.id, state.groupedModels],
   )
-  const [activeType, setActiveType] = useState<ProviderCardModelType | null>(
+  const [activeType, setActiveType] = useState<ProviderCardVisibleType | null>(
     visibleTypes[0] ?? null,
   )
   const activeTypeSignature = visibleTypes.join('|')
@@ -156,10 +191,27 @@ export function ProviderAdvancedFields({
 
   const currentType = activeType ?? visibleTypes[0] ?? null
   const currentModels = currentType ? (state.groupedModels[currentType] ?? []) : []
+  const audioSubTypeOptions = useMemo(() => {
+    if (currentType !== 'audio') return [] as Array<{ type: AudioSubType; count: number }>
+    const counts: Record<AudioSubType, number> = {
+      speech: 0,
+      music: 0,
+      lipsync: 0,
+    }
+    for (const model of currentModels) {
+      const subtype = getAudioSubType(model)
+      if (subtype) counts[subtype] += 1
+    }
+    return (['speech', 'music', 'lipsync'] as const)
+      .filter((type) => counts[type] > 0)
+      .map((type) => ({ type, count: counts[type] }))
+  }, [currentModels, currentType])
+  const visibleCurrentModels = currentModels
+  const currentAddType: ProviderCardModelType | null = currentType
   const shouldShowAddButton =
-    !!currentType
-    && addableModelTypes.has(currentType)
-    && state.showAddForm !== currentType
+    !!currentAddType
+    && addableModelTypes.has(currentAddType)
+    && state.showAddForm !== currentAddType
   const defaultAddType: ProviderCardModelType = providerKey === 'openrouter' ? 'llm' : 'image'
   const useTabbedLayout = state.hasModels || shouldShowDefaultTabs(provider.id)
   const shouldShowVideoHint = shouldShowOpenAICompatVideoHint(provider.id, currentType)
@@ -177,7 +229,7 @@ export function ProviderAdvancedFields({
       <SegmentedControl
         options={segmentedControlOptions}
         value={currentType ?? visibleTypes[0]}
-        onChange={(val) => setActiveType(val as ProviderCardModelType)}
+        onChange={(val) => setActiveType(val as ProviderCardVisibleType)}
       />
 
       {currentType && (
@@ -191,7 +243,7 @@ export function ProviderAdvancedFields({
           </div>
           {shouldShowAddButton && (
             <button
-              onClick={() => state.setShowAddForm(currentType)}
+              onClick={() => state.setShowAddForm(currentAddType)}
               className="glass-btn-base glass-btn-soft px-2 py-1 text-[12px] font-medium"
             >
               <AppIcon name="plus" className="h-3.5 w-3.5" />
@@ -201,7 +253,21 @@ export function ProviderAdvancedFields({
         </div>
       )}
 
-      {currentType && state.showAddForm === currentType && addableModelTypes.has(currentType) && (
+      {currentType === 'audio' && audioSubTypeOptions.length > 0 && (
+        <div className="flex items-center gap-4 px-1 text-[12px] font-semibold text-[var(--glass-text-primary)]">
+          {audioSubTypeOptions.map((option) => (
+            <span
+              key={option.type}
+              className="inline-flex items-center gap-1"
+            >
+              {audioSubTypeLabel(option.type, t)}
+              <span className="text-[var(--glass-text-secondary)]">{option.count}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {currentAddType && state.showAddForm === currentAddType && addableModelTypes.has(currentAddType) && (
         <div className="glass-surface-soft rounded-xl p-3">
           <div className="mb-2.5 flex items-center gap-2">
             <input
@@ -226,15 +292,15 @@ export function ProviderAdvancedFields({
                 state.setNewModel({ ...state.newModel, modelId: event.target.value })
               }
               placeholder={t('modelActualId')}
-              className={`glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono ${currentType === 'video' && state.batchMode && provider.id === 'ark' ? 'rounded-r-none' : ''}`}
+              className={`glass-input-base flex-1 px-3 py-1.5 text-[12px] font-mono ${currentAddType === 'video' && state.batchMode && provider.id === 'ark' ? 'rounded-r-none' : ''}`}
             />
-            {currentType === 'video' && state.batchMode && provider.id === 'ark' && (
+            {currentAddType === 'video' && state.batchMode && provider.id === 'ark' && (
               <span className="rounded-r-lg bg-[var(--glass-bg-muted)] px-2 py-1.5 font-mono text-[12px] text-[var(--glass-text-secondary)]">
                 -batch
               </span>
             )}
             <button
-              onClick={() => state.handleAddModel(currentType)}
+              onClick={() => state.handleAddModel(currentAddType)}
               disabled={state.isModelSavePending}
               className="glass-btn-base glass-btn-primary px-3 py-1.5 text-[12px] font-medium"
             >
@@ -246,7 +312,7 @@ export function ProviderAdvancedFields({
               {t('openaiCompatVideoOnlyHint')}
             </p>
           )}
-          {currentType === 'video' && provider.id === 'ark' && (
+          {currentAddType === 'video' && provider.id === 'ark' && (
             <div className="mt-2.5 flex items-center gap-2 rounded-lg bg-[var(--glass-bg-muted)] px-2 py-2">
               <button
                 onClick={() => state.setBatchMode(!state.batchMode)}
@@ -270,7 +336,7 @@ export function ProviderAdvancedFields({
           className="app-scrollbar h-[280px] overflow-y-auto pr-1"
         >
           <div className="space-y-2">
-            {currentModels.map((model, index) => (
+            {visibleCurrentModels.map((model, index) => (
               <ModelRow
                 key={`${model.modelKey}-${index}`}
                 model={model}

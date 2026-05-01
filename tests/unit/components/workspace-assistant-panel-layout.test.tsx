@@ -36,7 +36,7 @@ describe('workspace assistant panel layout', () => {
         eyebrow: 'AI Assistant',
         title: 'Workspace Chat',
         episodeLabel: 'Episode 1',
-        stageLabel: 'script',
+        workspaceLabel: 'Node Canvas',
         runLabel: '1 active runs',
         downloadLabel: 'Download Log',
         downloadHref: '/api/projects/project-1/assistant/chat/log',

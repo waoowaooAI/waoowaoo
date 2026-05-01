@@ -12,12 +12,10 @@ import { emitWorkspaceAssistantWorkflowEvent } from '../components/workspace-ass
 interface UseWorkspaceExecutionParams {
   projectId: string
   episodeId?: string
-  currentStage: string
   analysisModel?: string | null
   novelText: string
   t: (key: string) => string
   onRefresh: (options?: { scope?: string; mode?: string }) => Promise<void>
-  onStageChange: (stage: string) => void
   onOpenAssetLibrary: (focusCharacterId?: string | null, refreshAssets?: boolean) => void
 }
 
@@ -38,12 +36,10 @@ function isRunStreamTimeoutMessage(message: string): boolean {
 export function useWorkspaceExecution({
   projectId,
   episodeId,
-  currentStage,
   analysisModel,
   novelText,
   t,
   onRefresh,
-  onStageChange,
   onOpenAssetLibrary,
 }: UseWorkspaceExecutionParams) {
   const analyzeProjectAssetsMutation = useAnalyzeProjectAssets(projectId)
@@ -83,10 +79,9 @@ export function useWorkspaceExecution({
       workflowId: 'story-to-script',
       runId: normalizedRunId,
     })
-    onStageChange('script')
     onOpenAssetLibrary()
     storyToScriptStream.reset()
-  }, [onOpenAssetLibrary, onRefresh, onStageChange, storyToScriptStream])
+  }, [onOpenAssetLibrary, onRefresh, storyToScriptStream])
 
   const finalizeScriptToStoryboardSuccess = useCallback(async (runId: string) => {
     const normalizedRunId = runId.trim()
@@ -108,9 +103,8 @@ export function useWorkspaceExecution({
       workflowId: 'script-to-storyboard',
       runId: normalizedRunId,
     })
-    onStageChange('storyboard')
     scriptToStoryboardStream.reset()
-  }, [onRefresh, onStageChange, scriptToStoryboardStream])
+  }, [onRefresh, scriptToStoryboardStream])
 
   const handleGenerateTTS = useCallback(async () => {
     _ulogInfo('[ProjectWorkspace] TTS is disabled, skip generate request')
@@ -251,11 +245,7 @@ export function useWorkspaceExecution({
       }
       return
     }
-    if (
-      storyToScriptStream.status === 'completed' &&
-      (currentStage === 'canvas' || currentStage === 'config') &&
-      storyToScriptStream.runId
-    ) {
+    if (storyToScriptStream.status === 'completed' && storyToScriptStream.runId) {
       void finalizeStoryToScriptSuccess(storyToScriptStream.runId)
       return
     }
@@ -263,7 +253,6 @@ export function useWorkspaceExecution({
       storyToScriptWasActiveRef.current = false
     }
   }, [
-    currentStage,
     finalizeStoryToScriptSuccess,
     storyToScriptStream.runId,
     storyToScriptStream.isRecoveredRunning,
@@ -297,11 +286,7 @@ export function useWorkspaceExecution({
       }
       return
     }
-    if (
-      scriptToStoryboardStream.status === 'completed' &&
-      (currentStage === 'canvas' || currentStage === 'script') &&
-      scriptToStoryboardStream.runId
-    ) {
+    if (scriptToStoryboardStream.status === 'completed' && scriptToStoryboardStream.runId) {
       void finalizeScriptToStoryboardSuccess(scriptToStoryboardStream.runId)
       return
     }
@@ -309,7 +294,6 @@ export function useWorkspaceExecution({
       scriptToStoryboardWasActiveRef.current = false
     }
   }, [
-    currentStage,
     finalizeScriptToStoryboardSuccess,
     scriptToStoryboardStream.runId,
     scriptToStoryboardStream.isRecoveredRunning,

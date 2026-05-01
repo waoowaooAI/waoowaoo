@@ -46,4 +46,15 @@ describe('task queues', () => {
     expect(queue).toBeDefined()
     expect(QueueMock).toHaveBeenCalledTimes(1)
   })
+
+  it('routes music generation tasks to the music queue', async () => {
+    const queuesModule = await import('@/lib/task/queues')
+    const taskTypes = await import('@/lib/task/types')
+
+    expect(queuesModule.getQueueTypeByTaskType(taskTypes.TASK_TYPE.MUSIC_GENERATE)).toBe('music')
+
+    const queue = queuesModule.getQueueByType('music')
+    expect(queue).toBeDefined()
+    expect(QueueMock).toHaveBeenCalledTimes(1)
+  })
 })

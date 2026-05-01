@@ -16,6 +16,7 @@ import { useWorkspaceModalEscape } from './useWorkspaceModalEscape'
 import { useWorkspaceStageRuntime } from './useWorkspaceStageRuntime'
 import { useWorkspaceConfigActions } from './useWorkspaceConfigActions'
 import { useWorkspaceAutoRun } from './useWorkspaceAutoRun'
+import { useWorkspaceImageActions } from './useWorkspaceImageActions'
 import { buildWorkspaceControllerViewModel } from './workspace-controller-view-model'
 import type { ProjectWorkspaceProps } from '../types'
 import { useRouter } from '@/i18n/navigation'
@@ -25,8 +26,6 @@ export function useProjectWorkspaceController({
   projectId,
   episodeId,
   episode,
-  urlStage,
-  onStageChange,
 }: ProjectWorkspaceProps) {
   const t = useTranslations('projectWorkflow')
   const te = useTranslations('errors')
@@ -36,8 +35,7 @@ export function useProjectWorkspaceController({
   const router = useRouter()
   const { onRefresh } = useWorkspaceProvider()
 
-  const projectSnapshot = useWorkspaceProjectSnapshot({ project, episode, urlStage })
-  const { currentStage, ...projectSection } = projectSnapshot
+  const projectSnapshot = useWorkspaceProjectSnapshot({ project, episode })
 
   const assetsLoading = false
   const assetsLoadingState = assetsLoading
@@ -60,7 +58,6 @@ export function useProjectWorkspaceController({
   const [isWorldContextModalOpen, setIsWorldContextModalOpen] = useState(false)
 
   const assetLibrary = useWorkspaceAssetLibraryShell({
-    currentStage,
     searchParams,
     router,
     onRefresh,
@@ -78,7 +75,6 @@ export function useProjectWorkspaceController({
   const configActions = useWorkspaceConfigActions({
     projectId,
     episodeId,
-    onStageChange,
   })
 
   const rebuildState = useRebuildConfirm({
@@ -93,12 +89,10 @@ export function useProjectWorkspaceController({
   const execution = useWorkspaceExecution({
     projectId,
     episodeId,
-    currentStage,
     analysisModel: projectSnapshot.analysisModel,
     novelText: projectSnapshot.novelText,
     t,
     onRefresh,
-    onStageChange: configActions.handleStageChange,
     onOpenAssetLibrary: assetLibrary.openAssetLibrary,
   })
 
@@ -106,6 +100,10 @@ export function useProjectWorkspaceController({
     projectId,
     episodeId,
     t,
+  })
+  const imageActions = useWorkspaceImageActions({
+    projectId,
+    episodeId,
   })
 
   const isStartingStoryToScript = rebuildState.pendingActionType === 'storyToScript'
@@ -148,7 +146,7 @@ export function useProjectWorkspaceController({
     runScriptToStoryboardFlow: execution.runScriptToStoryboardFlow,
     handleUpdateClip: videoActions.handleUpdateClip,
     openAssetLibrary: assetLibrary.openAssetLibrary,
-    handleStageChange: configActions.handleStageChange,
+    handleGeneratePanelImage: imageActions.handleGeneratePanelImage,
     handleGenerateVideo: videoActions.handleGenerateVideo,
     handleGenerateAllVideos: videoActions.handleGenerateAllVideos,
     handleUpdateVideoPrompt: videoActions.handleUpdateVideoPrompt,
@@ -173,11 +171,6 @@ export function useProjectWorkspaceController({
     userModelsForSettings: userModels.userModelsForSettings,
     userVideoModels: userModels.userVideoModels || [],
     userModelsLoaded: userModels.userModelsLoaded,
-  }
-
-  const stageNavState = {
-    currentStage,
-    handleStageChange: configActions.handleStageChange,
   }
 
   const executionState = {
@@ -214,9 +207,8 @@ export function useProjectWorkspaceController({
     t,
     tc,
     te,
-    projectSnapshot: projectSection,
+    projectSnapshot,
     uiState,
-    stageNavState,
     rebuildState,
     executionState,
     videoState,

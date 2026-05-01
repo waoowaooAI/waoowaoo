@@ -76,7 +76,6 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
           <WorkspaceAssistantPanel
             projectId={projectId}
             episodeId={episodeId}
-            currentStage={vm.stageNav.currentStage}
             storyToScriptStream={vm.execution.storyToScriptStream}
             scriptToStoryboardStream={vm.execution.scriptToStoryboardStream}
             isCollapsed={isAssistantPanelCollapsed}

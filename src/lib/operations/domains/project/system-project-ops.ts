@@ -334,6 +334,7 @@ export function createSystemProjectOperations(): ProjectAgentOperationRegistryDr
               editModel: userPreference.editModel,
               videoModel: userPreference.videoModel,
               audioModel: userPreference.audioModel,
+              musicModel: userPreference.musicModel,
               videoRatio: userPreference.videoRatio,
               videoResolution: userPreference.videoResolution,
               artStyle: userPreference.artStyle,

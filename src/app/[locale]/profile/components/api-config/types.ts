@@ -58,6 +58,7 @@ export interface CustomModelPricing {
     llm?: LlmCustomPricing
     image?: MediaCustomPricing
     video?: MediaCustomPricing
+    music?: MediaCustomPricing
 }
 
 // 模型接口
@@ -106,6 +107,7 @@ export interface ApiConfig {
         editModel?: string
         videoModel?: string
         audioModel?: string
+        musicModel?: string
         lipSyncModel?: string
         voiceDesignModel?: string
     }

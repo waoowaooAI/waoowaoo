@@ -5,7 +5,7 @@ import type {
   AiOptionValidator,
 } from '@/lib/ai-registry/types'
 
-export type MediaModality = 'image' | 'video' | 'audio'
+export type MediaModality = 'image' | 'video' | 'audio' | 'music'
 
 export type ResolutionDurationRule = { resolution: string; durations: readonly number[] }
 
@@ -133,7 +133,20 @@ function buildAllowedKeys(modality: MediaModality): ReadonlySet<string> {
       'watermark',
     ])
   }
-  return new Set(['provider', 'modelId', 'modelKey', 'voice', 'rate'])
+  if (modality === 'audio') {
+    return new Set(['provider', 'modelId', 'modelKey', 'voice', 'rate'])
+  }
+  return new Set([
+    'provider',
+    'modelId',
+    'modelKey',
+    'durationSeconds',
+    'vocalMode',
+    'genre',
+    'mood',
+    'bpm',
+    'outputFormat',
+  ])
 }
 
 function pickFirstDefined(options: { readonly [key: string]: unknown }, keys: readonly string[]): unknown {

@@ -70,6 +70,36 @@ describe('ai prompt registry', () => {
     expect(directorEn).toContain('"cameraMotion"')
   })
 
+  it('registers Lyria prompt expansion templates in both locales', () => {
+    const zh = buildAiPrompt({
+      promptId: AI_PROMPT_IDS.MUSIC_LYRIA_PROMPT_EXPAND,
+      locale: 'zh',
+      variables: {
+        user_input: '给追车戏做一段紧张配乐',
+        duration_seconds: '30',
+        vocal_mode: 'instrumental',
+        genre: 'cinematic',
+        mood: 'tense',
+      },
+    })
+    const en = buildAiPrompt({
+      promptId: AI_PROMPT_IDS.MUSIC_LYRIA_PROMPT_EXPAND,
+      locale: 'en',
+      variables: {
+        user_input: 'tense chase cue',
+        duration_seconds: '30',
+        vocal_mode: 'instrumental',
+        genre: 'cinematic',
+        mood: 'tense',
+      },
+    })
+
+    expect(zh).toContain('给追车戏做一段紧张配乐')
+    expect(zh).toContain('instrumental')
+    expect(en).toContain('tense chase cue')
+    expect(en).toContain('instrumental')
+  })
+
   it('renders video style requirements into storyboard detail prompts', () => {
     const prompt = buildAiPrompt({
       promptId: AI_PROMPT_IDS.STORYBOARD_REFINE_DETAIL,

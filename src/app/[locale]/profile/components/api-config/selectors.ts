@@ -22,6 +22,7 @@ export interface DefaultModels {
   editModel?: string
   videoModel?: string
   audioModel?: string
+  musicModel?: string
   lipSyncModel?: string
   voiceDesignModel?: string
 }
@@ -39,6 +40,7 @@ export const DEFAULT_MODEL_FIELDS = [
   'editModel',
   'videoModel',
   'audioModel',
+  'musicModel',
   'lipSyncModel',
   'voiceDesignModel',
 ] as const satisfies ReadonlyArray<keyof DefaultModels>

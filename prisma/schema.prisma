@@ -529,6 +529,7 @@ model Project {
   imageModel         String?
   videoModel         String?
   audioModel         String?
+  musicModel         String?
   videoRatio         String                   @default("9:16")
   globalAssetText    String?                  @db.LongText
   artStyle           String                   @default("american-comic")
@@ -708,6 +709,7 @@ model UserPreference {
   editModel           String? // 用户配置的修图模型
   videoModel          String? // 用户配置的视频模型
   audioModel          String? // 用户配置的语音模型
+  musicModel          String? // 用户配置的音乐/配乐模型
   lipSyncModel        String? // 用户配置的口型同步模型
   voiceDesignModel    String? // 用户配置的音色设计模型
   analysisConcurrency Int? // 分析流程并发上限

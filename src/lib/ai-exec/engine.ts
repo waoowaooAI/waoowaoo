@@ -33,7 +33,7 @@ import { getCompletionContent, getCompletionParts } from '@/lib/ai-exec/llm-help
 import { toAiRuntimeError } from '@/lib/ai-exec/governance'
 import { preprocessLipSyncParams } from '@/lib/ai-exec/lipsync-preprocess'
 
-export type AiMediaExecutionModality = Extract<AiModality, 'image' | 'video' | 'audio'>
+export type AiMediaExecutionModality = Extract<AiModality, 'image' | 'video' | 'audio' | 'music'>
 
 export type AiImageExecutionOptions = {
   referenceImages?: string[]
@@ -63,6 +63,15 @@ export type AiVideoExecutionOptions = {
 export type AiAudioExecutionOptions = {
   voice?: string
   rate?: number
+}
+
+export type AiMusicExecutionOptions = {
+  durationSeconds?: number
+  vocalMode?: 'instrumental' | 'vocal'
+  genre?: string
+  mood?: string
+  bpm?: number
+  outputFormat?: 'mp3' | 'wav'
 }
 
 export type AiLlmExecutionInput = {
@@ -111,6 +120,13 @@ export type AiMediaExecutionInput =
     modelKey: string
     text: string
     options?: AiAudioExecutionOptions
+  }
+  | {
+    modality: 'music'
+    userId: string
+    modelKey: string
+    prompt: string
+    options?: AiMusicExecutionOptions
   }
 
 export type AiLipSyncExecutionInput = {
@@ -198,6 +214,24 @@ export async function executeMediaGeneration(input: AiMediaExecutionInput): Prom
         userId: input.userId,
         selection,
         text: input.text,
+        options: input.options,
+      })
+    }
+    case 'music': {
+      const modalityAdapter = adapter[input.modality]
+      if (!modalityAdapter) {
+        throw new Error(`AI_PROVIDER_MODALITY_UNSUPPORTED:${selection.provider}:${input.modality}`)
+      }
+      const descriptor = modalityAdapter.describe(selection)
+      validateAiOptions({
+        schema: descriptor.optionSchema,
+        options: input.options,
+        context: `${input.modality}:${selection.modelKey}`,
+      })
+      return await modalityAdapter.execute({
+        userId: input.userId,
+        selection,
+        prompt: input.prompt,
         options: input.options,
       })
     }
@@ -338,6 +372,21 @@ export async function generateAudio(
     userId,
     modelKey,
     text,
+    options,
+  })
+}
+
+export async function generateMusic(
+  userId: string,
+  modelKey: string,
+  prompt: string,
+  options?: AiMusicExecutionOptions,
+): Promise<GenerateResult> {
+  return await executeMediaGeneration({
+    modality: 'music',
+    userId,
+    modelKey,
+    prompt,
     options,
   })
 }

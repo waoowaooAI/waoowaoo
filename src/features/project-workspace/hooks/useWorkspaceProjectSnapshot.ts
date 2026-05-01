@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import type { ProjectWorkspaceProps } from '../types'
 import type { CapabilitySelections } from '@/lib/ai-registry/types'
-import { resolveWorkspaceStage } from '../workspace-stage'
 
 function parseCapabilitySelections(raw: unknown): CapabilitySelections {
   if (!raw) return {}
@@ -23,8 +22,7 @@ function parseCapabilitySelections(raw: unknown): CapabilitySelections {
 export function useWorkspaceProjectSnapshot({
   project,
   episode,
-  urlStage,
-}: Pick<ProjectWorkspaceProps, 'project' | 'episode' | 'urlStage'>) {
+}: Pick<ProjectWorkspaceProps, 'project' | 'episode'>) {
   return useMemo(() => {
     const capabilityOverrides = parseCapabilitySelections(project.capabilityOverrides)
     return {
@@ -32,7 +30,6 @@ export function useWorkspaceProjectSnapshot({
       projectCharacters: project.characters || [],
       projectLocations: project.locations || [],
       episodeStoryboards: episode?.storyboards || [],
-      currentStage: resolveWorkspaceStage(urlStage ?? null),
       globalAssetText: project.globalAssetText || '',
       novelText: episode?.novelText || '',
       analysisModel: project.analysisModel ?? undefined,
@@ -42,6 +39,7 @@ export function useWorkspaceProjectSnapshot({
       editModel: project.editModel ?? undefined,
       videoModel: project.videoModel ?? undefined,
       audioModel: project.audioModel ?? undefined,
+      musicModel: project.musicModel ?? undefined,
       videoRatio: project.videoRatio ?? undefined,
       capabilityOverrides,
       artStyle: project.artStyle ?? undefined,
@@ -50,5 +48,5 @@ export function useWorkspaceProjectSnapshot({
       directorStylePresetSource: project.directorStylePresetSource ?? undefined,
       directorStylePresetId: project.directorStylePresetId ?? undefined,
     }
-  }, [episode?.novelText, episode?.storyboards, project, urlStage])
+  }, [episode?.novelText, episode?.storyboards, project])
 }

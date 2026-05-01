@@ -72,6 +72,7 @@ function isUnifiedModelType(value: unknown): value is UnifiedModelType {
     || value === 'image'
     || value === 'video'
     || value === 'audio'
+    || value === 'music'
     || value === 'lipsync'
   )
 }
@@ -151,7 +152,7 @@ function normalizeStoredModel(raw: unknown, index: number): CustomModel {
 
   const typeRaw = Reflect.get(raw, 'type')
   if (!isUnifiedModelType(typeRaw)) {
-    throw new Error(`MODEL_PAYLOAD_INVALID: customModels[${index}].type must be one of llm/image/video/audio/lipsync`)
+    throw new Error(`MODEL_PAYLOAD_INVALID: customModels[${index}].type must be one of llm/image/video/audio/music/lipsync`)
   }
 
   const llmProtocolRaw = Reflect.get(raw, 'llmProtocol')

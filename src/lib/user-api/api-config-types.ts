@@ -12,6 +12,7 @@ export type DefaultModelField =
   | 'editModel'
   | 'videoModel'
   | 'audioModel'
+  | 'musicModel'
   | 'lipSyncModel'
   | 'voiceDesignModel'
 
@@ -39,6 +40,7 @@ export interface StoredModelCustomPricing {
   llm?: StoredModelLlmCustomPricing
   image?: StoredModelMediaCustomPricing
   video?: StoredModelMediaCustomPricing
+  music?: StoredModelMediaCustomPricing
 }
 
 export interface StoredModel {
@@ -81,6 +83,7 @@ export interface DefaultModelsPayload {
   editModel?: string
   videoModel?: string
   audioModel?: string
+  musicModel?: string
   lipSyncModel?: string
   voiceDesignModel?: string
 }
@@ -107,6 +110,7 @@ export const DEFAULT_MODEL_FIELDS: DefaultModelField[] = [
   'editModel',
   'videoModel',
   'audioModel',
+  'musicModel',
   'lipSyncModel',
   'voiceDesignModel',
 ]
@@ -115,5 +119,6 @@ export const CAPABILITY_MODEL_TYPES: readonly UnifiedModelType[] = [
   'video',
   'llm',
   'audio',
+  'music',
   'lipsync',
 ]

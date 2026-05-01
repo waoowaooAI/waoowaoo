@@ -16,6 +16,7 @@ const BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE: Readonly<Record<StoredModel['type
   image: 'image',
   video: 'video',
   audio: 'voice',
+  music: 'music',
   lipsync: 'lip-sync',
 }
 
@@ -184,11 +185,13 @@ export function validateModelProviderTypeSupport(models: StoredModel[], provider
 export function validateCustomPricingCapabilityMappings(models: StoredModel[]) {
   for (let index = 0; index < models.length; index += 1) {
     const model = models[index]
-    if (model.type !== 'image' && model.type !== 'video') continue
+    if (model.type !== 'image' && model.type !== 'video' && model.type !== 'music') continue
 
     const mediaPricing = model.type === 'image'
       ? model.customPricing?.image
-      : model.customPricing?.video
+      : model.type === 'video'
+        ? model.customPricing?.video
+        : model.customPricing?.music
     const optionPrices = mediaPricing?.optionPrices
     if (!optionPrices || Object.keys(optionPrices).length === 0) continue
 
@@ -196,7 +199,7 @@ export function validateCustomPricingCapabilityMappings(models: StoredModel[]) {
     if (!context) {
       throw new ApiError('INVALID_PARAMS', {
         code: 'CAPABILITY_MODEL_UNSUPPORTED',
-        field: `models[${index}].customPricing.${model.type}.optionPrices`,
+          field: `models[${index}].customPricing.${model.type}.optionPrices`,
       })
     }
 
@@ -233,6 +236,7 @@ export function validateBillableModelPricing(models: StoredModel[]) {
     const model = models[index]
     const apiType = BILLABLE_MODEL_TYPE_TO_PRICING_API_TYPE[model.type]
     if (!apiType) continue
+    if (apiType === 'music') continue
 
     // Skip validation if user provided custom pricing
     if (hasCustomPricingForType(model)) continue

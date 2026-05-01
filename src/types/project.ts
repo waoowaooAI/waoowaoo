@@ -258,6 +258,7 @@ export interface ProjectWorkflowData {
   editModel: string | null
   videoModel: string | null
   audioModel: string | null
+  musicModel: string | null
   videoRatio: string | null
   capabilityOverrides?: CapabilitySelections | string | null
   artStyle: string | null

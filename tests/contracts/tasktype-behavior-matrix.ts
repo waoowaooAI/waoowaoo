@@ -13,6 +13,9 @@ function resolveChainTestByTaskType(taskType: TaskType): string {
   if (taskType === 'video_panel' || taskType === 'lip_sync') {
     return 'tests/integration/chain/video.chain.test.ts'
   }
+  if (taskType === 'music_generate') {
+    return 'tests/integration/chain/music.chain.test.ts'
+  }
   if (taskType === 'voice_line' || taskType === 'voice_design' || taskType === 'asset_hub_voice_design') {
     return 'tests/integration/chain/voice.chain.test.ts'
   }
@@ -73,6 +76,7 @@ function resolveApiContractByTaskType(taskType: TaskType): string {
     || taskType === 'image_character'
     || taskType === 'image_location'
     || taskType === 'video_panel'
+    || taskType === 'music_generate'
     || taskType === 'lip_sync'
     || taskType === 'voice_line'
     || taskType === 'voice_design'

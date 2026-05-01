@@ -82,8 +82,8 @@ describe('api contract - project canvas layout route', () => {
       schemaVersion: 1,
       viewport: { x: 12, y: 24, zoom: 0.8 },
       nodeLayouts: [{
-        nodeKey: 'panelImage:panel-1',
-        nodeType: 'panelImage',
+        nodeKey: 'image:panel-1',
+        nodeType: 'imageAsset',
         targetType: 'panel',
         targetId: 'panel-1',
         x: 100,

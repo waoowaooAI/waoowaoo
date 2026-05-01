@@ -9,6 +9,7 @@ import { ensureAiCatalogsRegistered } from '@/lib/ai-exec/catalog-bootstrap'
 import {
   calcImage,
   calcLipSync,
+  calcMusic,
   calcText,
   calcVideo,
   calcVideoByTokens,
@@ -108,6 +109,8 @@ function resolveCost(input: CostInput) {
       const resolution = typeof input.metadata?.resolution === 'string' ? input.metadata.resolution : '720p'
       return asMoney(calcVideo(input.model, resolution, input.quantity, input.metadata, input.customPricing))
     }
+    case 'music':
+      return asMoney(calcMusic(input.model, input.quantity, input.metadata, input.customPricing))
     case 'voice':
       return asMoney(calcVoice(input.quantity))
     case 'voice-design':

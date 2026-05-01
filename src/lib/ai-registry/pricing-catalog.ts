@@ -22,6 +22,7 @@ export type PricingApiType =
   | 'text'
   | 'image'
   | 'video'
+  | 'music'
   | 'voice'
   | 'voice-design'
   | 'lip-sync'
@@ -56,6 +57,7 @@ function isPricingApiType(value: unknown): value is PricingApiType {
   return value === 'text'
     || value === 'image'
     || value === 'video'
+    || value === 'music'
     || value === 'voice'
     || value === 'voice-design'
     || value === 'lip-sync'
@@ -125,7 +127,7 @@ function normalizePricingEntry(raw: unknown, filePath: string, index: number): B
 
   const apiTypeRaw = Reflect.get(raw, 'apiType')
   if (!isPricingApiType(apiTypeRaw)) {
-    throw new Error(`PRICING_CATALOG_INVALID: ${filePath}#${index}.apiType must be one of text/image/video/voice/voice-design/lip-sync`)
+    throw new Error(`PRICING_CATALOG_INVALID: ${filePath}#${index}.apiType must be one of text/image/video/music/voice/voice-design/lip-sync`)
   }
 
   const provider = readTrimmedString(Reflect.get(raw, 'provider'))

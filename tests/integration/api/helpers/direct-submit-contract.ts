@@ -98,6 +98,12 @@ function inferTaskContractFromOperation(params: {
         targetType: 'ProjectPanel',
         targetId: typeof input.panelId === 'string' ? input.panelId : 'panel-1',
       }
+    case 'generate_project_music':
+      return {
+        type: TASK_TYPE.MUSIC_GENERATE,
+        targetType: 'Project',
+        targetId: params.projectId,
+      }
     case 'lip_sync':
       return {
         type: TASK_TYPE.LIP_SYNC,
@@ -226,6 +232,7 @@ export const prismaMock = {
     findUnique: vi.fn(async () => ({
       id: 'project-1',
       audioModel: 'fal::audio-model',
+      musicModel: 'google::lyria-3-clip-preview',
       artStyle: 'american-comic',
       visualStylePresetSource: 'system',
       visualStylePresetId: 'american-comic',
@@ -239,7 +246,7 @@ export const prismaMock = {
     })),
   },
   userPreference: {
-    findUnique: vi.fn(async () => ({ lipSyncModel: 'fal::lipsync-model' })),
+    findUnique: vi.fn(async () => ({ lipSyncModel: 'fal::lipsync-model', musicModel: 'google::lyria-3-clip-preview' })),
   },
   projectStoryboard: {
     findFirst: vi.fn(async () => ({ id: 'storyboard-1' })),
@@ -517,6 +524,27 @@ export const DIRECT_MEDIA_CASES: ReadonlyArray<DirectRouteCase> = [
       firstLastFrame: {
         flModel: 'ark::doubao-seedance-2-0-260128',
       },
+    },
+  },
+  {
+    routeFile: 'src/app/api/projects/[projectId]/generate-music/route.ts',
+    body: {
+      musicModel: 'google::lyria-3-clip-preview',
+      prompt: 'tense city chase score',
+      durationSeconds: 30,
+      vocalMode: 'instrumental',
+      outputFormat: 'mp3',
+    },
+    params: { projectId: 'project-1' },
+    expectedTaskType: TASK_TYPE.MUSIC_GENERATE,
+    expectedTargetType: 'Project',
+    expectedProjectId: 'project-1',
+    expectedPayloadSubset: {
+      musicModel: 'google::lyria-3-clip-preview',
+      prompt: 'tense city chase score',
+      durationSeconds: 30,
+      vocalMode: 'instrumental',
+      outputFormat: 'mp3',
     },
   },
   {

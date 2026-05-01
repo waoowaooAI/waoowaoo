@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { validateAiOptions } from '@/lib/ai-exec/normalize'
 import { arkAdapter } from '@/lib/ai-providers/ark/adapter'
 import { falAdapter } from '@/lib/ai-providers/fal/adapter'
+import { googleAdapter } from '@/lib/ai-providers/google/adapter'
 import { minimaxAdapter } from '@/lib/ai-providers/minimax/adapter'
 import { openAiAdapter } from '@/lib/ai-providers/openai/adapter'
 import { openAiCompatibleAdapter } from '@/lib/ai-providers/openai-compatible/adapter'
@@ -89,6 +90,37 @@ describe('media adapter option schema', () => {
       schema: descriptor!.optionSchema,
       options: { aspectRatio: '16:9', resolution: '8K' },
     })).toThrow('AI_OPTION_INVALID:unit:resolution:unsupported_value=8K')
+  })
+
+  it('validates Google Lyria music generation options before provider execution', () => {
+    const descriptor = googleAdapter.music?.describe(mediaSelection({
+      provider: 'google',
+      modelId: 'lyria-3-clip-preview',
+      modelKey: 'google::lyria-3-clip-preview',
+    }))
+    expect(descriptor).toBeDefined()
+
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: {
+        durationSeconds: 30,
+        vocalMode: 'instrumental',
+        genre: 'cinematic tension',
+        mood: 'urgent',
+        bpm: 128,
+        outputFormat: 'mp3',
+      },
+    })).not.toThrow()
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { durationSeconds: 30, vocalMode: 'spoken', bpm: 128 },
+      context: 'music:google::lyria-3-clip-preview',
+    })).toThrow('AI_OPTION_INVALID:music:google::lyria-3-clip-preview:vocalMode:unsupported_value=spoken')
+    expect(() => validateDescriptorOptions({
+      schema: descriptor!.optionSchema,
+      options: { durationSeconds: 30, vocalMode: 'instrumental', bpm: 500 },
+      context: 'music:google::lyria-3-clip-preview',
+    })).toThrow('AI_OPTION_INVALID:music:google::lyria-3-clip-preview:bpm:max=300')
   })
 
   it('allows same OpenAI compatible image size and resolution but rejects conflicts', () => {

@@ -44,6 +44,7 @@ interface UserModelsPayload {
   image: UserModelOption[]
   video: UserModelOption[]
   audio: UserModelOption[]
+  music: UserModelOption[]
   lipsync: UserModelOption[]
 }
 
@@ -62,6 +63,7 @@ function isUnifiedModelType(type: unknown): type is UnifiedModelType {
     || type === 'image'
     || type === 'video'
     || type === 'audio'
+    || type === 'music'
     || type === 'lipsync'
   )
 }
@@ -205,6 +207,7 @@ export function createUserModelsOperations(): ProjectAgentOperationRegistryDraft
           image: [],
           video: [],
           audio: [],
+          music: [],
           lipsync: [],
         }
 
@@ -248,6 +251,7 @@ export function createUserModelsOperations(): ProjectAgentOperationRegistryDraft
           image: dedupeByModelKey(grouped.image),
           video: dedupeByModelKey(grouped.video),
           audio: dedupeByModelKey(grouped.audio),
+          music: dedupeByModelKey(grouped.music),
           lipsync: dedupeByModelKey(grouped.lipsync),
         } satisfies UserModelsPayload
       },

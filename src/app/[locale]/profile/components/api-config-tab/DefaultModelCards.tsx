@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { AppIcon } from '@/components/ui/icons'
 import type { AppIconName } from '@/components/ui/icons'
 import { ModelCapabilityDropdown } from '@/components/ui/config-modals/ModelCapabilityDropdown'
@@ -11,7 +12,7 @@ import {
 } from './default-model-empty-state'
 
 // ---------- types ----------
-type ModelType = 'llm' | 'image' | 'video' | 'audio' | 'lipsync' | 'voicedesign'
+type ModelType = 'llm' | 'image' | 'video' | 'audio' | 'music' | 'lipsync' | 'voicedesign'
 
 interface ModelOption {
     modelKey: string
@@ -29,6 +30,7 @@ type DefaultModelField =
     | 'editModel'
     | 'videoModel'
     | 'audioModel'
+    | 'musicModel'
     | 'lipSyncModel'
     | 'voiceDesignModel'
 
@@ -42,6 +44,7 @@ interface DefaultModelCardsProps {
         editModel?: string
         videoModel?: string
         audioModel?: string
+        musicModel?: string
         lipSyncModel?: string
         voiceDesignModel?: string
     }
@@ -99,35 +102,49 @@ function computeCapabilityFields(current: ModelOption | null, modelType: keyof M
 function EmptyModelState({
     modelType,
     t,
-    onScrollToProviderPool,
 }: {
     modelType: DefaultModelEmptyStateType
     t: (key: string) => string
-    onScrollToProviderPool: () => void
 }) {
     const content = getDefaultModelEmptyStateText(modelType, t)
+    const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null)
+    const showTooltip = useCallback((target: HTMLElement) => {
+        setTooltipRect(target.getBoundingClientRect())
+    }, [])
+    const hideTooltip = useCallback(() => setTooltipRect(null), [])
 
     return (
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
-            <div className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                    <AppIcon name="alert" className="h-4 w-4" />
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+            <div className="flex min-w-0 items-center gap-2">
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                    <AppIcon name="alert" className="h-3.5 w-3.5" />
                 </span>
-                <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-[var(--glass-text-primary)]">
-                        {content.title}
-                    </p>
-                    <p className="mt-1 text-[12px] leading-relaxed text-[var(--glass-text-secondary)]">
-                        {content.description}
-                    </p>
-                    <button
-                        type="button"
-                        onClick={onScrollToProviderPool}
-                        className="mt-3 glass-btn-base glass-btn-secondary px-3 py-1.5 text-[12px] font-medium"
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[var(--glass-text-primary)]">
+                    {content.title}
+                </span>
+                <button
+                    type="button"
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--glass-text-tertiary)] transition-colors hover:bg-[var(--glass-bg-hover)] hover:text-[var(--glass-text-primary)]"
+                    aria-label={content.description}
+                    onMouseEnter={(event) => showTooltip(event.currentTarget)}
+                    onMouseLeave={hideTooltip}
+                    onFocus={(event) => showTooltip(event.currentTarget)}
+                    onBlur={hideTooltip}
+                >
+                    <AppIcon name="info" className="h-3.5 w-3.5" />
+                </button>
+                {tooltipRect && typeof document !== 'undefined' ? createPortal(
+                    <div
+                        className="pointer-events-none fixed z-[10000] max-w-[260px] rounded-xl border border-[var(--glass-stroke-base)] bg-[var(--glass-bg-surface)] px-3 py-2 text-[12px] leading-relaxed text-[var(--glass-text-secondary)] shadow-[0_16px_40px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+                        style={{
+                            left: Math.min(tooltipRect.left, window.innerWidth - 280),
+                            top: tooltipRect.bottom + 8,
+                        }}
                     >
-                        {t('defaultModelEmptyState.action')}
-                    </button>
-                </div>
+                        {content.description}
+                    </div>,
+                    document.body,
+                ) : null}
             </div>
         </div>
     )
@@ -146,7 +163,6 @@ function SmartSelector({
     locale,
     t,
     props,
-    onScrollToProviderPool,
 }: {
     field: DefaultModelField
     modelType: ModelType
@@ -157,7 +173,6 @@ function SmartSelector({
     locale: string
     t: (key: string) => string
     props: DefaultModelCardsProps
-    onScrollToProviderPool: () => void
 }) {
     const capabilityFields = computeCapabilityFields(current, modelType as keyof ModelCapabilities)
 
@@ -166,7 +181,6 @@ function SmartSelector({
             <EmptyModelState
                 modelType={modelType}
                 t={t}
-                onScrollToProviderPool={onScrollToProviderPool}
             />
         )
     }
@@ -212,7 +226,7 @@ function SmartSelector({
         )
     }
 
-    // Native select for audio / lipsync / voicedesign
+    // Native select for audio / music / lipsync / voicedesign
     return (
         <div className="relative">
             <select
@@ -313,14 +327,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
     const pipelineGlobalOptions = getEnabledModelsByType('image')
     const pipelineGlobalCurrent = pipelineGlobalOptions.find((opt) => opt.modelKey === pipelineGlobalKey) ?? null
     const pipelineGlobalCapFields = computeCapabilityFields(pipelineGlobalCurrent, 'image')
-    const handleScrollToProviderPool = useCallback(() => {
-        if (typeof document === 'undefined') return
-        document.getElementById('provider-pool-section')?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-        })
-    }, [])
-
   const handlePipelineGlobalChange = useCallback((newModelKey: string) => {
     setPipelineGlobalKey(newModelKey)
     setPipelineGlobalCapOverrides({})
@@ -352,6 +358,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
     const textModel = resolveModel('analysisModel', 'llm', defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
     const videoModel = resolveModel('videoModel', 'video', defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
     const audioModel = resolveModel('audioModel', 'audio', defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
+    const musicModel = resolveModel('musicModel', 'music', defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
     const lipsyncModel = resolveModel('lipSyncModel', 'lipsync', defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
     const voiceDesignModel = resolveModel('voiceDesignModel', 'voicedesign', defaultModels, getEnabledModelsByType, parseModelKey, encodeModelKey)
 
@@ -413,7 +420,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={textModel.options} normalizedKey={textModel.normalizedKey} current={textModel.current}
                             placeholder={t('defaultModelSection.corePlaceholder')}
                             locale={locale} t={t} props={allProps}
-                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
 
@@ -439,7 +445,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={videoModel.options} normalizedKey={videoModel.normalizedKey} current={videoModel.current}
                             placeholder={t('defaultModelSection.corePlaceholder')}
                             locale={locale} t={t} props={allProps}
-                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                 </div>
@@ -457,7 +462,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                         <EmptyModelState
                             modelType="image"
                             t={t}
-                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     ) : (
                         <>
@@ -513,7 +517,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                                                 options={resolved.options} normalizedKey={resolved.normalizedKey} current={resolved.current}
                                                 placeholder={t('defaultModelSection.followUnified')}
                                                 locale={locale} t={t} props={allProps}
-                                                onScrollToProviderPool={handleScrollToProviderPool}
                                             />
                                         </div>
                                     )
@@ -528,7 +531,7 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                     <AppIcon name="cube" className="w-5 h-5 text-emerald-500" />
                     {t('defaultModelSection.extensions')}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                     {/* Lip Sync */}
                     <div className="glass-surface glass-card-shadow-soft p-5 rounded-2xl bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
                         <h4 className="text-[13px] font-semibold text-[var(--glass-text-primary)] mb-4">{t('defaultModelSection.extLipSync')}</h4>
@@ -537,7 +540,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={lipsyncModel.options} normalizedKey={lipsyncModel.normalizedKey} current={lipsyncModel.current}
                             placeholder={t('defaultModelSection.extPlaceholder')}
                             locale={locale} t={t} props={allProps}
-                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                     {/* TTS */}
@@ -548,7 +550,16 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={audioModel.options} normalizedKey={audioModel.normalizedKey} current={audioModel.current}
                             placeholder={t('defaultModelSection.extPlaceholder')}
                             locale={locale} t={t} props={allProps}
-                            onScrollToProviderPool={handleScrollToProviderPool}
+                        />
+                    </div>
+                    {/* Music */}
+                    <div className="glass-surface glass-card-shadow-soft p-5 rounded-2xl bg-gradient-to-br from-[var(--glass-bg-surface)] to-transparent">
+                        <h4 className="text-[13px] font-semibold text-[var(--glass-text-primary)] mb-4">{t('defaultModelSection.extMusic')}</h4>
+                        <SmartSelector
+                            field="musicModel" modelType="music"
+                            options={musicModel.options} normalizedKey={musicModel.normalizedKey} current={musicModel.current}
+                            placeholder={t('defaultModelSection.extPlaceholder')}
+                            locale={locale} t={t} props={allProps}
                         />
                     </div>
                     {/* Voice Design */}
@@ -559,7 +570,6 @@ export function DefaultModelCards(allProps: DefaultModelCardsProps) {
                             options={voiceDesignModel.options} normalizedKey={voiceDesignModel.normalizedKey} current={voiceDesignModel.current}
                             placeholder={t('defaultModelSection.extPlaceholder')}
                             locale={locale} t={t} props={allProps}
-                            onScrollToProviderPool={handleScrollToProviderPool}
                         />
                     </div>
                 </div>

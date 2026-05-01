@@ -36,6 +36,7 @@ const ALLOWED_FIELDS: ReadonlyArray<string> = [
   'editModel',
   'videoModel',
   'audioModel',
+  'musicModel',
   'lipSyncModel',
   'videoRatio',
   'artStyle',

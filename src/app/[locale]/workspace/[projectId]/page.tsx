@@ -19,7 +19,6 @@ import { AppIcon } from '@/components/ui/icons'
 import { readConfiguredAnalysisModel, shouldGuideToModelSetup } from '@/lib/workspace/model-setup'
 import { useRouter } from '@/i18n/navigation'
 import { readApiErrorMessage } from '@/lib/api/read-error-message'
-import { resolveWorkspaceStage } from '@/features/project-workspace/workspace-stage'
 
 interface Episode {
   id: string
@@ -50,7 +49,6 @@ export default function ProjectDetailPage() {
   const tc = useTranslations('common')
 
   // 从URL读取参数
-  const urlStage = searchParams.get('stage')
   const urlEpisodeId = searchParams.get('episode') ?? null
 
   // 🔥 React Query 数据获取
@@ -69,16 +67,8 @@ export default function ProjectDetailPage() {
   const userModelsQuery = useUserModels()
   const llmModelOptions = userModelsQuery.data?.llm || []
 
-  // 更新URL参数（stage 和/或 episode）
-  const updateUrlParams = useCallback((updates: { stage?: string | null; episode?: string | null }) => {
+  const updateUrlParams = useCallback((updates: { episode?: string | null }) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (updates.stage !== undefined) {
-      if (updates.stage) {
-        params.set('stage', updates.stage)
-      } else {
-        params.delete('stage')
-      }
-    }
     if (updates.episode !== undefined) {
       if (updates.episode) {
         params.set('episode', updates.episode)
@@ -95,14 +85,6 @@ export default function ProjectDetailPage() {
       { scroll: false },
     )
   }, [router, projectId, searchParams])
-
-  // Stage 已迁入唯一画布；旧 stage change 调用只清理 URL，不再切换页面。
-  const updateUrlStage = useCallback((stage: string) => {
-    void stage
-    updateUrlParams({ stage: null })
-  }, [updateUrlParams])
-
-  const effectiveStage = resolveWorkspaceStage(urlStage)
 
   // 获取剧集列表
   const episodes = useMemo<Episode[]>(() => {
@@ -390,8 +372,6 @@ export default function ProjectDetailPage() {
                 project={project}
                 projectId={projectId}
                 viewMode="global-assets"
-                urlStage={effectiveStage}
-                onStageChange={updateUrlStage}
               />
             </div>
           ) : shouldShowImportWizard && !isGlobalAssetsView ? (
@@ -506,8 +486,6 @@ export default function ProjectDetailPage() {
               episodeId={selectedEpisodeId}
               episode={currentEpisode}
               viewMode="episode"
-              urlStage={effectiveStage}
-              onStageChange={updateUrlStage}
               episodes={episodes}
               onEpisodeSelect={handleEpisodeSelect}
               onEpisodeCreate={() => handleCreateEpisode(`${t('episode')} ${episodes.length + 1}`)}

@@ -46,6 +46,7 @@ export const TASK_TYPE = {
   IMAGE_PANEL: 'image_panel',
   IMAGE_CHARACTER: 'image_character',
   IMAGE_LOCATION: 'image_location',
+  MUSIC_GENERATE: 'music_generate',
   VIDEO_PANEL: 'video_panel',
   LIP_SYNC: 'lip_sync',
   VOICE_LINE: 'voice_line',
@@ -85,7 +86,7 @@ export const TASK_TYPE = {
 
 export type TaskType = (typeof TASK_TYPE)[keyof typeof TASK_TYPE]
 
-export type QueueType = 'image' | 'video' | 'voice' | 'text'
+export type QueueType = 'image' | 'video' | 'music' | 'voice' | 'text'
 
 export type BillingMode = 'OFF' | 'SHADOW' | 'ENFORCE'
 
@@ -99,7 +100,7 @@ export type TaskBillingInfo =
     billable: true
     source: 'task'
     taskType: TaskType
-    apiType: 'text' | 'image' | 'video' | 'voice' | 'voice-design' | 'lip-sync'
+    apiType: 'text' | 'image' | 'video' | 'music' | 'voice' | 'voice-design' | 'lip-sync'
     model: string
     quantity: number
     unit: 'token' | 'image' | 'video' | 'second' | 'call'

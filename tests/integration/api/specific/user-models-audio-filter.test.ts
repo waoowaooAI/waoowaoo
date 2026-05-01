@@ -26,12 +26,24 @@ const prismaMock = vi.hoisted(() => ({
           type: 'audio',
           provider: 'bailian',
         },
+        {
+          modelId: 'lyria-3-clip-preview',
+          modelKey: 'google::lyria-3-clip-preview',
+          name: 'Lyria 3 Clip Preview',
+          type: 'music',
+          provider: 'google',
+        },
       ]),
       customProviders: JSON.stringify([
         {
           id: 'bailian',
           name: 'Alibaba Bailian',
           apiKey: 'k-bailian',
+        },
+        {
+          id: 'google',
+          name: 'Google',
+          apiKey: 'k-google',
         },
       ]),
     })),
@@ -72,9 +84,12 @@ describe('api specific - user models audio filter', () => {
     const res = await mod.GET(req, routeContext)
 
     expect(res.status).toBe(200)
-    const body = await res.json() as { audio: Array<{ value: string }> }
+    const body = await res.json() as { audio: Array<{ value: string }>; music: Array<{ value: string }> }
     expect(body.audio.map((item) => item.value)).toEqual([
       'bailian::qwen3-tts-vd-2026-01-26',
+    ])
+    expect(body.music.map((item) => item.value)).toEqual([
+      'google::lyria-3-clip-preview',
     ])
   })
 })

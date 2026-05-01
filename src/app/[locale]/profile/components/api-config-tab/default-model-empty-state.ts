@@ -3,6 +3,7 @@ export type DefaultModelEmptyStateType =
   | 'image'
   | 'video'
   | 'audio'
+  | 'music'
   | 'lipsync'
   | 'voicedesign'
 
@@ -10,30 +11,27 @@ type Translator = (key: string) => string
 
 const EMPTY_STATE_TRANSLATION_KEYS: Record<
   DefaultModelEmptyStateType,
-  { title: string; description: string }
+  { description: string }
 > = {
   llm: {
-    title: 'defaultModelEmptyState.llmTitle',
     description: 'defaultModelEmptyState.llmDescription',
   },
   image: {
-    title: 'defaultModelEmptyState.imageTitle',
     description: 'defaultModelEmptyState.imageDescription',
   },
   video: {
-    title: 'defaultModelEmptyState.videoTitle',
     description: 'defaultModelEmptyState.videoDescription',
   },
   audio: {
-    title: 'defaultModelEmptyState.audioTitle',
     description: 'defaultModelEmptyState.audioDescription',
   },
+  music: {
+    description: 'defaultModelEmptyState.musicDescription',
+  },
   lipsync: {
-    title: 'defaultModelEmptyState.lipsyncTitle',
     description: 'defaultModelEmptyState.lipsyncDescription',
   },
   voicedesign: {
-    title: 'defaultModelEmptyState.voiceDesignTitle',
     description: 'defaultModelEmptyState.voiceDesignDescription',
   },
 }
@@ -44,7 +42,7 @@ export function getDefaultModelEmptyStateText(
 ): { title: string; description: string } {
   const keys = EMPTY_STATE_TRANSLATION_KEYS[modelType]
   return {
-    title: t(keys.title),
+    title: t('defaultModelEmptyState.genericTitle'),
     description: t(keys.description),
   }
 }

@@ -52,4 +52,23 @@ describe('project agent operation registry', () => {
       expect(operation.groupPath).not.toEqual(['storyboard'])
     }
   })
+
+  it('registers project music generation as a confirmed billable tool/api operation', () => {
+    const registry = createProjectAgentOperationRegistry()
+    const operation = registry.generate_project_music
+
+    expect(operation).toBeDefined()
+    expect(operation.channels).toEqual({ tool: true, api: true })
+    expect(operation.groupPath).toEqual(['media', 'music'])
+    expect(operation.confirmation.required).toBe(true)
+    expect(operation.effects).toEqual({
+      writes: true,
+      billable: true,
+      destructive: false,
+      overwrite: false,
+      bulk: false,
+      externalSideEffects: true,
+      longRunning: true,
+    })
+  })
 })

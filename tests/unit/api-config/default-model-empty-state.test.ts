@@ -5,6 +5,7 @@ import {
 } from '@/app/[locale]/profile/components/api-config-tab/default-model-empty-state'
 
 const translations: Record<string, string> = {
+  'defaultModelEmptyState.genericTitle': '暂无可选模型',
   'defaultModelEmptyState.llmTitle': '暂无可选文本模型',
   'defaultModelEmptyState.llmDescription': '请先去下方厂商资源池配置文本模型并开启模型。',
   'defaultModelEmptyState.imageTitle': '暂无可选图像模型',
@@ -24,7 +25,7 @@ describe('default model empty state copy', () => {
     for (const modelType of modelTypes) {
       const content = getDefaultModelEmptyStateText(modelType, t)
 
-      expect(content.title).toContain('暂无可选')
+      expect(content.title).toBe('暂无可选模型')
       expect(content.description).toContain('厂商资源池')
       expect(content.description).toContain('开启模型')
       expect(content.description).not.toContain('只显示已启用模型')
@@ -33,7 +34,7 @@ describe('default model empty state copy', () => {
 
   it('returns the exact llm guidance requested by the product flow', () => {
     expect(getDefaultModelEmptyStateText('llm', t)).toEqual({
-      title: '暂无可选文本模型',
+      title: '暂无可选模型',
       description: '请先去下方厂商资源池配置文本模型并开启模型。',
     })
   })

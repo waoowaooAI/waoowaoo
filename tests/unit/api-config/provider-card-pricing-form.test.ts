@@ -15,6 +15,24 @@ describe('provider card pricing form behavior', () => {
     expect(getAddableModelTypesForProvider('openai-compatible:oa-1')).toEqual(['llm', 'image', 'video'])
   })
 
+  it('keeps music models inside the audio tab instead of exposing a separate music tab', () => {
+    expect(getAddableModelTypesForProvider('google')).toEqual(['llm', 'image', 'video', 'audio', 'music'])
+    expect(getVisibleModelTypesForProvider('google', {
+      audio: [
+        {
+          modelId: 'lyria-3-clip-preview',
+          modelKey: 'google::lyria-3-clip-preview',
+          name: 'Lyria 3 Clip Preview',
+          type: 'music',
+          provider: 'google',
+          price: 0,
+          enabled: true,
+        },
+      ],
+    })).toEqual(['audio'])
+    expect(getVisibleModelTypesForProvider('gemini-compatible:gm-1', {})).toEqual(['llm', 'image', 'video', 'audio'])
+  })
+
   it('shows llm/image/video tabs by default for openai-compatible even with only image models', () => {
     const visible = getVisibleModelTypesForProvider(
       'openai-compatible:oa-1',
@@ -72,6 +90,15 @@ describe('provider card pricing form behavior', () => {
         price: 0,
         enabled: true,
       },
+      {
+        modelId: 'lyria-3-clip-preview',
+        modelKey: 'google::lyria-3-clip-preview',
+        name: 'Lyria 3 Clip Preview',
+        type: 'music',
+        provider: 'google',
+        price: 0,
+        enabled: true,
+      },
     ])
 
     expect(groupedModels).toEqual({
@@ -83,6 +110,7 @@ describe('provider card pricing form behavior', () => {
       ],
       audio: [
         expect.objectContaining({ modelId: 'sync-v1', type: 'lipsync' }),
+        expect.objectContaining({ modelId: 'lyria-3-clip-preview', type: 'music' }),
       ],
     })
   })

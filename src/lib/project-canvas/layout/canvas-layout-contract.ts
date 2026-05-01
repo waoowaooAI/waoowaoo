@@ -1,17 +1,19 @@
 import { z } from 'zod'
 import type { CanvasNodeLayout, CanvasViewportLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
-import type { ProjectCanvasNodeType } from '@/lib/project-canvas/graph/canvas-graph.types'
 
 export const CANVAS_LAYOUT_SCHEMA_VERSION = 1
 
 export const projectCanvasNodeTypeSchema = z.enum([
   'story',
+  'analysis',
   'scriptClip',
-  'storyboardGroup',
-  'panelImage',
-  'videoPanel',
-  'timeline',
+  'shot',
+  'imageAsset',
+  'videoClip',
+  'finalTimeline',
 ])
+
+export type CanvasLayoutNodeType = z.infer<typeof projectCanvasNodeTypeSchema>
 
 export const projectCanvasTargetTypeSchema = z.enum([
   'project',
@@ -46,7 +48,7 @@ export const canvasNodeLayoutInputSchema = z.object({
 export type CanvasNodeLayoutInput = z.infer<typeof canvasNodeLayoutInputSchema>
 
 export interface CanvasNodeLayoutSnapshot extends CanvasNodeLayout {
-  readonly nodeType: ProjectCanvasNodeType
+  readonly nodeType: CanvasLayoutNodeType
   readonly targetType: z.infer<typeof projectCanvasTargetTypeSchema>
   readonly targetId: string
 }

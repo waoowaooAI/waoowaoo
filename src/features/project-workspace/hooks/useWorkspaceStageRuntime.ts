@@ -36,7 +36,7 @@ interface UseWorkspaceStageRuntimeParams {
   runScriptToStoryboardFlow: () => Promise<void>
   handleUpdateClip: (clipId: string, updates: Record<string, unknown>) => Promise<void>
   openAssetLibrary: (characterId?: string | null, refreshAssets?: boolean) => void
-  handleStageChange: (stage: string) => void
+  handleGeneratePanelImage: (panelId: string, count?: number) => Promise<void>
   handleGenerateVideo: (
     storyboardId: string,
     panelIndex: number,
@@ -83,7 +83,7 @@ export function useWorkspaceStageRuntime({
   runScriptToStoryboardFlow,
   handleUpdateClip,
   openAssetLibrary,
-  handleStageChange,
+  handleGeneratePanelImage,
   handleGenerateVideo,
   handleGenerateAllVideos,
   handleUpdateVideoPrompt,
@@ -125,7 +125,7 @@ export function useWorkspaceStageRuntime({
     },
     onOpenAssetLibrary: () => openAssetLibrary(),
     onRunScriptToStoryboard: () => runWithRebuildConfirm('scriptToStoryboard', runScriptToStoryboardFlow),
-    onStageChange: handleStageChange,
+    onGeneratePanelImage: handleGeneratePanelImage,
     onGenerateVideo: handleGenerateVideo,
     onGenerateAllVideos: handleGenerateAllVideos,
     onUpdateVideoPrompt: handleUpdateVideoPrompt,
@@ -139,8 +139,8 @@ export function useWorkspaceStageRuntime({
     directorStylePresetId,
     assetsLoading,
     handleGenerateAllVideos,
+    handleGeneratePanelImage,
     handleGenerateVideo,
-    handleStageChange,
     handleUpdateClip,
     handleUpdateConfig,
     handleUpdateEpisode,

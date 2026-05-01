@@ -2,6 +2,10 @@
 
 > 状态机文档：本文件是 `waoowaoo` 项目从多 stage 工作区彻底迁移到唯一受控无限画布工作区的唯一工程上下文。任何新接手模型必须先阅读本文件，再执行代码修改。每次代码修改完成后，必须同步更新本文档的状态、实际改动文件、验证结果和风险。
 
+> **2026-05-01 取代说明**：真实工作台迁移已进入新的节点式重构任务，当前执行上下文以 `Node_Canvas_Workspace_Master_Plan.md` 为准。本文件仅保留历史讨论和早期阶段容器方案记录，不再作为最新执行计划。
+
+> **2026-05-01 方向纠偏（最高优先级）**：上一轮实现把旧 stage UI 原封不动放进画布，只是“旧 UI 的画布包装”，不符合最终产品目标。用户已明确纠正：目标是**节点式产品 UI**，而不是 stage 页面搬家。默认进入画布时只能看到一个故事输入节点；剧本片段、单个镜头、图片、视频、成片等节点必须随着业务流程逐步展开。节点粒度必须是每个不可拆分业务对象，例如单个 clip 是一个节点、单个 panel/shot 是一个节点、单个视频片段是一个节点。现有 stage 概念可以作为流程分区/阶段标签保留，但不能继续保留旧页面级 UI 容器。真实 workspace 迁移前，先在独立 dev route 建立静态节点式原型页，由用户确认产品方向后再替换真实 workspace。
+
 ## 1. 🎯 项目全局目标与上下文 (Project Context & Objectives)
 
 ### 业务背景 (Why)
@@ -17,7 +21,7 @@
 
 ### 最终目标 (What)
 
-最终系统默认只有一个 Workspace Canvas。旧的故事/剧本/分镜/视频 stage tab 不再作为主入口存在，旧 stage 页面必须删除或收敛为画布内部组件。
+最终系统默认只有一个 Workspace Canvas。旧的故事/剧本/分镜/视频 stage tab 不再作为主入口存在，旧 stage 页面必须删除。画布内不再把旧 stage UI 作为大容器原样嵌入，而是把创作流程拆成最小业务节点并按业务进度逐步显露。
 
 修改前：
 
@@ -26,34 +30,27 @@
 - 分镜和视频是不同页面，用户需要跳转理解上下游关系。
 - 画布只是新增的半成品 tab。
 
-修改后：
+最终目标：
 
 - 项目打开后默认进入唯一画布。
-- 画布内直接显示完整阶段容器：
+- 默认只显示一个故事输入节点，用户不需要学习阶段切换。
+- 用户提交/生成后，后续节点按横向流程逐步出现：
 
 ```text
-StoryStageContainer
-  StoryComposer
-
-ScriptStageContainer
-  ClipList / ClipEditor
-
-StoryboardStageContainer
-  StoryboardGroups / PanelCards
-
-VideoStageContainer
-  VideoPanelCards
-
-FinalStageContainer
-  Timeline / Export entry
+StoryInputNode
+  -> ScriptClipNode[]      # 每个 clip 是独立节点
+  -> ShotNode[]            # 每个 panel / shot 是独立节点
+  -> ImageNode[]           # 每个 panel 的图片产物是独立节点或绑定子节点
+  -> VideoClipNode[]       # 每个 panel 的视频片段是独立节点
+  -> FinalTimelineNode     # 成片/导出入口
 ```
 
-- 阶段容器整体可拖动、可折叠、可恢复默认布局。
-- 阶段内部默认保持当前规则化 UI，不允许普通空间拖动改变业务顺序。
+- 阶段作为流程区/分组标签保留，但不作为旧页面 UI 的承载壳。
+- 节点可按规则布局，用户可以 pan/zoom 查看全局；第一版以系统自动排布为主，不追求自由白板。
 - 插入镜头、删除真实数据、重排镜头、生成图片、生成视频等仍走现有业务 operation/task/worker。
 - 第一版不做右侧 Inspector，不做手动连线，不做自由备注节点。
 - Minimap 需要保留，用于右下角全局预览。
-- Assistant 保留，可以定位阶段/节点、创建业务内容、打开对应节点操作。
+- Assistant 保留，可以定位业务节点、创建业务内容、打开对应节点操作。
 
 核心分层：
 
@@ -65,13 +62,13 @@ Workflow Runtime
   tasks / generation status / retry / rollback / errors
 
 Canvas Projection
-  stage containers + child view models
+  progressive business nodes + stage lane metadata
 
 Canvas Layout
-  stage x/y/width/height/zIndex/collapsed/viewport
+  node x/y/width/height/zIndex + viewport + reveal/focus state
 
 Canvas Runtime
-  @xyflow/react pan/zoom/minimap/stage dragging/reset layout
+  @xyflow/react pan/zoom/minimap/progressive reveal/reset layout
 
 Command Layer
   create / update / delete / insert panel / reorder / generate / regenerate / export
@@ -81,7 +78,7 @@ Command Layer
 
 - 业务顺序、生成关系、画布位置三者分离。
 - `panelIndex` / `panelNumber` / timeline 顺序仍来自业务数据。
-- 普通画布拖动只改变阶段容器位置，不改变镜头顺序。
+- 普通画布拖动只改变节点空间位置或视角，不改变镜头顺序。
 - 镜头排序必须走明确排序交互和 command。
 - 删除真实数据必须二次确认。
 - React Flow 不作为业务事实源。
@@ -454,6 +451,20 @@ export type CanvasCommand =
 - ✅ **Task 11.2**: `npm run verify:push` - 已通过完整验证：lint、typecheck、test:all、build 全部成功。lint/build 仍输出仓库既有 warnings 与 bullmq dynamic dependency warning，但 exit code 为 0。
 - ⏸ **Task 11.3**: 手动 QA - 打开项目默认画布，确认无 stage tab、全流程 fitView、minimap 可见、阶段可拖动、阶段可折叠、reset layout 可用、刷新后恢复。
 
+### 阶段 12: 节点式产品方向纠偏与静态原型
+
+- 🔄 **Task 12.1**: `waoowaoo_Master_Plan.md` - 记录用户纠偏：旧 UI 原样放进画布不是最终目标；新目标是 progressive node canvas，默认只有一个输入节点，后续业务对象按流程逐步展开。
+- ✅ **Task 12.2**: `src/app/[locale]/dev/canvas-node-prototype/page.tsx` - 新增独立静态测试页，不读取 DB、不调用 task/worker、不复用旧 workspace stage UI。页面使用 `@xyflow/react` 直接展示完整成品态节点画布：`StoryInputNode`、`AnalysisNode`、`ScriptClipNode[]`、`ShotNode[]`、`ImageNode/VideoNode[]`、`FinalTimelineNode` 全部默认可见；顶部只显示业务状态和 UI 形态切换，不显示阶段或步骤跳转。当前提供三版视觉：A 精简工作流、B 制作看板、C 极简线路图。预期结果：用户可先确认产品 UI 方向，再决定真实 workspace 重构。
+- ✅ **Task 12.3**: `messages/zh/canvasNodePrototype.json` / `messages/en/canvasNodePrototype.json` / `src/i18n.ts` - 新增原型页 i18n namespace，补充三版 UI 形态和分析状态节点文案，所有可见文案走 next-intl，禁止硬编码固定语言。
+- ⏸ **Task 12.4**: 用户手动确认 `/zh/dev/canvas-node-prototype` 的产品方向，包括完整数据默认可见、无阶段概念、以状态表达进度、节点粒度、横向流程，以及三版 UI 中最终选择哪一版作为真实 workspace 的设计基线。
+- ⏸ **Task 12.5**: 确认后重写真实 workspace 架构：删除旧 `CanvasStageNode` 页面式容器路线，建立 `features/project-workspace/node-canvas/**`，以业务 projection 生成最小节点图。关键函数签名预期：
+
+```ts
+export function buildWorkspaceNodeCanvasProjection(input: WorkspaceNodeCanvasInput): WorkspaceNodeCanvasProjection
+```
+
+- ⏸ **Task 12.6**: 真实 workspace 的 node projection 必须保证：默认 story input only；script 生成后才出现 clip nodes；storyboard 生成后才出现 shot nodes；图片/视频节点按实际业务产物出现；final 节点只在有可用视频或用户进入成片阶段时出现。
+
 ## 4. 🧪 测试与验证策略 (Validation Strategy)
 
 ### 量化验收标准
@@ -461,17 +472,17 @@ export type CanvasCommand =
 产品验收：
 
 - 打开 `/workspace/[projectId]` 默认显示唯一 canvas，不显示旧 stage tab。
-- 用户无需进入任何非画布页面，即可完成故事输入、剧本生成、分镜生成、图片生成、视频生成、成片入口查看。
-- 画布默认显示完整流程，并自动 fit 到全流程。
-- 五个阶段容器默认可见：故事、剧本、分镜、视频、成片。
-- 阶段容器可整体拖动，阶段内部业务卡片默认不自由拖动。
-- 所有阶段可折叠/展开，刷新后保持状态。
+- 默认画布只显示故事输入节点，不显示空的后续阶段大容器。
+- 用户无需进入任何非画布页面，即可从单个输入节点逐步展开剧本片段、镜头、图片、视频、成片节点。
+- 画布按横向流程自动布局已存在节点，并自动 fit 到当前可见流程。
+- 阶段概念仅作为流程标签/分区提示，不能把旧 stage 页面 UI 原样塞进画布。
+- 每个不可拆分业务对象是独立节点：单个 clip、单个 shot/panel、单个 video clip。
 - Reset layout 后，阶段位置恢复默认规则布局。
 - Minimap 可见，并能反映全流程位置。
 - 删除真实数据必须二次确认。
 - 普通画布拖动不改变 `panelIndex`、`panelNumber`、timeline 顺序。
 - 镜头排序只能通过明确排序交互改变业务顺序。
-- 旧 stage 页面主入口完全消失。
+- 旧 stage 页面主入口完全消失，旧 stage UI wrapper 不再作为画布内容存在。
 
 工程验收：
 
@@ -553,10 +564,11 @@ npm run verify:push
 手动 QA：
 
 - 打开项目 URL，不带 `stage` 参数，确认默认是画布。
-- 输入故事并生成剧本，确认不跳转旧页面。
-- 生成分镜，确认分镜阶段容器直接更新。
-- 对某 panel 生成图片，确认任务状态和图片在同一 panel card 内展示。
-- 对某 panel 生成视频，确认 video stage 对应 card 更新。
+- 默认只出现故事输入节点。
+- 输入故事并生成剧本，确认不跳转旧页面，并逐步出现每个 clip 节点。
+- 生成分镜，确认每个镜头/panel 作为独立 shot 节点出现。
+- 对某 panel 生成图片，确认图片节点或绑定的图片子节点出现并展示任务状态。
+- 对某 panel 生成视频，确认对应 video clip 节点出现并绑定正确 panel。
 - 拖动故事阶段容器，刷新后位置恢复。
 - 折叠视频阶段，刷新后仍折叠。
 - 点击 reset layout，全部阶段回到默认位置。
@@ -567,6 +579,10 @@ npm run verify:push
 ### 产品约束
 
 - Workspace 第一屏必须是唯一 canvas。
+- Workspace 第一屏默认只能显示一个故事输入节点。
+- 后续阶段不能默认占位铺开；必须随着流程推进逐步出现。
+- 节点粒度必须是不可拆分业务对象：clip、shot/panel、image/video asset、video clip、final timeline。
+- 禁止把旧 stage 页面 UI 原样塞进画布作为最终实现。
 - 第一版不做 Inspector，节点/阶段内容直接显示完整功能。
 - 第一版不做手动连线。
 - 第一版不做自由便签/备注节点。

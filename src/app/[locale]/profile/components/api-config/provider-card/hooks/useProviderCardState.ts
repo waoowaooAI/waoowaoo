@@ -61,6 +61,7 @@ type AddModelCustomPricing = {
   llm?: { inputPerMillion?: number; outputPerMillion?: number }
   image?: { basePrice?: number; optionPrices?: Record<string, Record<string, number>> }
   video?: { basePrice?: number; optionPrices?: Record<string, Record<string, number>> }
+  music?: { basePrice?: number; optionPrices?: Record<string, Record<string, number>> }
 }
 
 type BuildCustomPricingResult =
@@ -275,6 +276,7 @@ export function buildCustomPricingFromModelForm(
 
 function toProviderCardModelType(type: CustomModel['type']): ProviderCardModelType | null {
   if (type === 'llm' || type === 'image' || type === 'video' || type === 'audio') return type
+  if (type === 'music') return 'audio'
   if (type === 'lipsync') return 'audio'
   return null
 }
@@ -383,7 +385,7 @@ export function useProviderCardState({
   )
 
   const hasModels = Object.keys(groupedModels).length > 0
-  const isPresetModel = (_modelKey: string) => false
+  const isPresetModel = () => false
 
   const isDefaultModel = (model: CustomModel) => {
     if (model.type === 'llm' && matchesModelKey(defaultModels.analysisModel, model.provider, model.modelId)) {
@@ -402,6 +404,10 @@ export function useProviderCardState({
     }
 
     if (model.type === 'audio' && matchesModelKey(defaultModels.audioModel, model.provider, model.modelId)) {
+      return true
+    }
+
+    if (model.type === 'music' && matchesModelKey(defaultModels.musicModel, model.provider, model.modelId)) {
       return true
     }
 

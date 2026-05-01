@@ -20,6 +20,7 @@ function pricingApiTypeToModelType(apiType: PricingApiType): UnifiedModelType | 
   if (apiType === 'text') return 'llm'
   if (apiType === 'image') return 'image'
   if (apiType === 'video') return 'video'
+  if (apiType === 'music') return 'music'
   if (apiType === 'voice') return 'audio'
   if (apiType === 'lip-sync') return 'lipsync'
   return null
@@ -183,7 +184,9 @@ export function withDisplayPricing(model: StoredModel, map: PricingDisplayMap): 
         ? model.customPricing.image
         : model.type === 'video'
           ? model.customPricing.video
-          : undefined
+          : model.type === 'music'
+            ? model.customPricing.music
+            : undefined
       if (mediaPricing) {
         const basePrice = typeof mediaPricing.basePrice === 'number' ? mediaPricing.basePrice : 0
         let minExtra = 0
