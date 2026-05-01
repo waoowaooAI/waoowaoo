@@ -392,7 +392,7 @@ export default function StoryComposer(): React.ReactElement
 - ⏸ **Task 5.4**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入现有分镜动作：生成图片、重生成、候选确认、AI data、插入镜头、删除镜头。
 - ✅ **Task 5.5**: `src/features/project-workspace/components/storyboard/StoryboardCanvas.tsx` - 已用 `@tanstack/react-virtual` 为分镜阶段内部 storyboard group 列表实现独立虚拟化。超过阈值时只挂载可视窗口附近 group，禁止只依赖 React Flow `onlyRenderVisibleElements`。
 - ⏸ **Task 5.6**: `tests/unit/project-workspace/storyboard-stage-virtualization.test.tsx` - 构造大量 panel fixture，断言初始渲染不会挂载全部 panel card，并验证滚动后可见窗口更新。
-- ⏸ **Task 5.7**: `src/lib/project-canvas/commands/canvas-command.types.ts` - 定义业务命令，不包含屏幕坐标：
+- ✅ **Task 5.7**: `src/lib/project-canvas/commands/canvas-command.types.ts` / `src/lib/project-canvas/commands/canvas-command-registry.ts` - 已定义业务命令和统一执行入口，不包含屏幕坐标：
 
 ```ts
 export type CanvasCommand =
@@ -435,10 +435,10 @@ export type CanvasCommand =
 
 ### 阶段 9: Assistant 接入唯一画布
 
-- ⏸ **Task 9.1**: `src/lib/project-canvas/commands/canvas-command-registry.ts` - 建立 command registry，将 assistant、节点按钮、快捷键统一映射到现有 operation。
+- 🔄 **Task 9.1**: `src/lib/project-canvas/commands/canvas-command-registry.ts` - 已建立 command registry 和强类型 `executeCanvasCommand()`；待补：把 assistant、节点按钮、快捷键全部切到该入口。
 - ⏸ **Task 9.2**: `src/features/project-workspace/components/workspace-assistant/**` - Assistant 保留在画布旁边；执行结果可定位阶段/节点、创建业务内容、打开节点相关操作。
 - ⏸ **Task 9.3**: `src/features/project-workspace/canvas/hooks/useCanvasFocus.ts` - 暴露 `focusStage(stageId)`、`focusPanel(panelId)`、`focusVideoPanel(panelId)`，只操作 UI 视角，不改业务数据。
-- ⏸ **Task 9.4**: `tests/unit/project-canvas/canvas-command-registry.test.ts` - 测试 assistant 和节点按钮共享同一个 command path。
+- ✅ **Task 9.4**: `tests/unit/project-canvas/canvas-command-registry.test.ts` - 已覆盖命令路由的具体入参：插入 panel、生成视频、聚焦阶段，并断言 UI focus command 不触发业务重排。
 
 ### 阶段 10: 删除旧 Stage 页面壳与清理双轨
 
@@ -641,7 +641,8 @@ npm run verify:push
 - ✅ 已完成：视频阶段第一块完整迁移。`VideoComposer` 已从 `VideoStageRoute` 中抽出，Video StageNode 直接渲染现有 `VideoStage` 的 panel video card、prompt、首尾帧、生成和批量生成入口。
 - ✅ 已完成：成片阶段第一块完整迁移。`FinalTimelineView` 已接入 Final StageNode，复用 `VideoEditorStage` 和 `createProjectFromPanels()` 从业务 panel 视频生成初始时间线。
 - ✅ 已完成：阶段内部虚拟化第一版。分镜 `StoryboardCanvas` 和视频 `VideoRenderPanel` 已接入 `@tanstack/react-virtual`，大项目超过阈值时按阶段内部 group 虚拟化挂载。
-- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
+- ✅ 已完成：Canvas command registry 基础层。新增 `CanvasCommand` 类型和 `executeCanvasCommand()`，覆盖 focus、panel insert/delete/reorder、图片生成、视频生成、成片导出等业务意图。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-command-registry.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，7 个测试文件 / 12 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
 - ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。
 - ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能；下一步重点是阶段内部虚拟化、command registry、旧 wrapper 清理、组件级/系统级测试和浏览器 QA。
