@@ -312,13 +312,13 @@ tests/
 
 - 🔄 **Task 1.1**: `src/features/project-workspace/workspace-stage.ts` - 将 workspace stage 语义重定义为内部 canvas focus target，而不是页面切换枚举。已完成第一步：未知 stage 和空 stage 默认进入 `canvas`，旧 `editor` 仅映射到 `videos` 以保持 URL 解析稳定；后续需要把旧 stage 语义进一步收敛为 canvas focus hint。
 - 🔄 **Task 1.2**: `src/app/[locale]/workspace/[projectId]/page.tsx` - 移除以 `stage` query 控制主页面的逻辑。当前页面层已不再通过 stage 渲染不同内容，但仍把解析后的 stage 传给 workspace runtime 作为 assistant/autoflow 上下文；后续需要把该字段重命名为 focus hint，避免继续表达页面分支。
-- ✅ **Task 1.3**: `src/features/project-workspace/ProjectWorkspace.tsx` - 已删除 `WorkspaceStageContent` 分支渲染，改为始终在 workspace 主内容区渲染 `ProjectCanvasRoute`。函数签名保持：
+- ✅ **Task 1.3**: `src/features/project-workspace/ProjectWorkspace.tsx` - 已删除 `WorkspaceStageContent` 分支渲染，并在阶段 2 升级为始终渲染 `ProjectWorkspaceCanvas`。函数签名保持：
 
 ```ts
 export default function ProjectWorkspace(props: ProjectWorkspaceProps): JSX.Element
 ```
 
-实际结果：Workspace 现在只有一个主画布入口；当前仍使用 `src/features/project-canvas/ProjectCanvasRoute.tsx` foundation，完整阶段容器迁移在阶段 2-8 执行。
+实际结果：Workspace 现在只有一个主画布入口；legacy `src/features/project-canvas/ProjectCanvasRoute.tsx` foundation 已不再作为 workspace 主内容入口，后续按阶段 3-8 把完整业务 UI 迁入五个 StageNode。
 
 - ✅ **Task 1.4**: `src/features/project-workspace/components/WorkspaceHeaderShell.tsx` - 已删除 `CapsuleNav` 主阶段导航。保留 episode selector、全局资产入口、设置、刷新。后续阶段定位统一放入 `CanvasToolbar`。
 - ✅ **Task 1.5**: `src/features/project-workspace/hooks/useWorkspaceStageNavigation.ts` - 已删除文件，workspace 主路径不再拥有页面 stage nav hook。
@@ -343,22 +343,24 @@ export interface CanvasStageDefinition {
 
 预期结果：阶段容器是稳定产品概念，不依赖旧 URL stage。
 
-- ⏸ **Task 2.2**: `src/features/project-workspace/canvas/stageRegistry.ts` - 注册五个固定阶段容器。第一版不开放用户自定义阶段；未来通过 registry 扩展。
-- ⏸ **Task 2.3**: `src/lib/project-canvas/layout/stage-layout-engine.ts` - 新增阶段级布局引擎：
+- ✅ **Task 2.2**: `src/features/project-workspace/canvas/stageTypes.ts` - 已注册五个固定阶段容器：story、script、storyboard、video、final。第一版不开放用户自定义阶段；未来如需扩展，可把当前 definition array 提升为 registry。
+- ✅ **Task 2.3**: `src/features/project-workspace/canvas/stage-layout.ts` - 已新增阶段级布局引擎：
 
 ```ts
-export function buildDefaultCanvasStageLayouts(
-  stages: readonly CanvasStageDefinition[],
-): Map<CanvasStageId, CanvasStageLayout>
+export function buildDefaultCanvasStageLayouts(episodeId: string): CanvasStageLayout[]
+export function resolveCanvasStageLayouts(params: {
+  readonly episodeId: string
+  readonly savedLayouts: readonly CanvasNodeLayout[]
+}): CanvasStageLayout[]
 ```
 
 默认横向流程：story -> script -> storyboard -> video -> final。预期结果：打开项目自动 fit 全流程。
 
-- ⏸ **Task 2.4**: `src/lib/project-canvas/layout/canvas-layout-contract.ts` - 将 layout contract 扩展为支持 stage layout、collapsed、viewport、schemaVersion。不得保存业务字段。
-- ⏸ **Task 2.5**: `prisma/schema.prisma` - 如现有 `ProjectCanvasNodeLayout` 足够表达 stage layout，可复用 `nodeType='stage'`；否则新增明确 `ProjectCanvasStageLayout`。结构变更必须有 migration。
-- ⏸ **Task 2.6**: `src/features/project-workspace/canvas/ProjectWorkspaceCanvas.tsx` - 创建唯一画布 shell，使用 `@xyflow/react` 渲染五个 stage node，启用 pan/zoom/minimap/fitView。
-- ⏸ **Task 2.7**: `src/features/project-workspace/canvas/CanvasToolbar.tsx` - 新增画布工具栏：reset layout、collapse all、expand all、focus story/script/storyboard/video/final。按钮文案走 i18n。
-- ⏸ **Task 2.8**: `tests/unit/project-workspace/canvas-stage-layout.test.ts` - 断言五个阶段默认位置、顺序、尺寸、reset layout 输出具体值。
+- ✅ **Task 2.4**: `src/lib/project-canvas/layout/canvas-layout-contract.ts` - 当前 layout contract 已可表达 stage layout 所需字段：nodeKey、nodeType、targetType、targetId、x/y、width/height、zIndex、collapsed、viewport、schemaVersion。未保存业务字段；本阶段不需要扩大 DB/API contract。
+- ✅ **Task 2.5**: `prisma/schema.prisma` - 现有 `ProjectCanvasNodeLayout` 足够表达阶段容器布局；本阶段不做破坏性 schema 变更、不新增 migration。
+- ✅ **Task 2.6**: `src/features/project-workspace/canvas/ProjectWorkspaceCanvas.tsx` - 已创建唯一画布 shell，使用 `@xyflow/react` 渲染五个 top-level stage node，并启用 pan、zoom、minimap、fitView、stage dragging。
+- ✅ **Task 2.7**: `src/features/project-workspace/canvas/CanvasToolbar.tsx` - 已新增 reset layout、collapse all、expand all、fit view、focus story/script/storyboard/video/final。按钮文案走 `messages/*/project-workflow.json` i18n。
+- ✅ **Task 2.8**: `tests/unit/project-workspace/canvas/stage-layout.test.ts` - 已断言五个阶段默认顺序、nodeKey、collapsed 默认值，以及保存的 collapsed 布局不会沿用展开高度。
 - ⏸ **Task 2.9**: `src/features/project-workspace/canvas/state/canvas-workspace-store.ts` 或等价细粒度订阅模块 - 建立 Canvas Workspace 的状态边界。StageNode 只接收稳定 `stageId/layout/actionIds`，业务数据由阶段内部组件通过 TanStack Query selector、细粒度 context 或 Zustand/Jotai 等 store 按需订阅。预期结果：单个 panel/video 状态变化不得触发整个 Canvas 或所有 StageNode 重渲染。
 
 ### 阶段 3: StoryStageNode 完整迁移
@@ -633,9 +635,12 @@ npm run verify:push
 - ✅ 已完成：修复 `stage=canvas` 被 workspace 页面路由层判定为无效 stage 后回退到故事阶段的问题。新增 `src/features/project-workspace/workspace-stage.ts`，让 `canvas` 成为有效 workspace stage。
 - ✅ 已完成：修复进入当前半成品 canvas 后 React maximum update depth 问题。原因是空 saved layout 每次 render 创建新数组，导致 `flowNodes` 重新生成并触发 `setNodes` 循环；现在使用稳定空数组常量。
 - ✅ 已完成：让当前半成品 canvas 节点保持可拖拽，为 layout 保存验证提供基础。
-- ✅ 已完成：第一阶段主入口收敛。`ProjectWorkspace.tsx` 现在始终渲染 `ProjectCanvasRoute`，`WorkspaceStageContent.tsx` 和 `useWorkspaceStageNavigation.ts` 已删除，`WorkspaceHeaderShell.tsx` 已移除 workspace 主阶段 `CapsuleNav`。
+- ✅ 已完成：第一阶段主入口收敛。`ProjectWorkspace.tsx` 现在始终渲染唯一画布，`WorkspaceStageContent.tsx` 和 `useWorkspaceStageNavigation.ts` 已删除，`WorkspaceHeaderShell.tsx` 已移除 workspace 主阶段 `CapsuleNav`。
 - ✅ 已完成：`workspace-stage.ts` 已将未知/空 stage 解析为 `canvas`，避免默认进入故事阶段；旧 `editor` 仍映射到 `videos`，后续会进一步收敛为 focus hint。
-- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas tests/unit/project-workspace/workspace-stage.test.ts` 通过，5 个测试文件 / 7 个测试通过。
+- ✅ 已完成：第二阶段基础画布壳。新增 `src/features/project-workspace/canvas/**`，当前 workspace 主内容已经从 legacy `ProjectCanvasRoute` 切到 `ProjectWorkspaceCanvas`，画布顶层为五个固定 StageNode。
+- ✅ 已完成：阶段布局支持保存/读取现有 canvas layout 表；本阶段不改 Prisma schema，不做破坏性 DB 变更。
+- ✅ 已完成：`CanvasToolbar` 已提供 reset layout、collapse all、expand all、fit view、focus stage。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：主入口已唯一画布化，但画布内容仍是 foundation 投影，尚未完成五个阶段大节点、完整业务 UI 迁移、阶段内虚拟化和 command registry。
+- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，但节点内部目前是摘要和操作入口占位，尚未完成故事输入、剧本 clip、分镜 panel、视频 panel、成片 timeline 的完整 UI 迁移、阶段内虚拟化和 command registry。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。

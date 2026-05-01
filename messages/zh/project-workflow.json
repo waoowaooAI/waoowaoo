@@ -222,6 +222,68 @@
     "layout": {
       "loading": "正在读取布局",
       "saving": "正在保存布局"
+    },
+    "workspace": {
+      "title": "工作区画布",
+      "subtitle": "故事、剧本、分镜、视频、成片统一在一个受控画布中完成",
+      "summary": "{stages} 个阶段 · {clips} 段剧本 · {storyboards} 组分镜",
+      "layoutLoading": "正在读取布局",
+      "layoutSaving": "正在保存布局",
+      "layoutWarning": "画布布局暂时无法同步，当前仍使用默认阶段布局。",
+      "toolbar": {
+        "resetLayout": "重置布局",
+        "collapseAll": "全部折叠",
+        "expandAll": "全部展开",
+        "fitView": "适配视图"
+      },
+      "focus": {
+        "story": "故事",
+        "script": "剧本",
+        "storyboard": "分镜",
+        "video": "视频",
+        "final": "成片"
+      },
+      "actions": {
+        "generateScript": "生成剧本",
+        "generateStoryboard": "生成分镜",
+        "generateAllVideos": "生成视频"
+      },
+      "status": {
+        "story": "故事",
+        "script": "剧本",
+        "storyboard": "分镜",
+        "video": "视频",
+        "final": "成片"
+      },
+      "stages": {
+        "story": {
+          "title": "故事",
+          "description": "输入和编辑当前剧集的原始内容。"
+        },
+        "script": {
+          "title": "剧本",
+          "description": "生成后的 clip 保持业务顺序，阶段整体可以在画布上移动。"
+        },
+        "storyboard": {
+          "title": "分镜",
+          "description": "分镜组和镜头顺序仍然由业务数据决定。"
+        },
+        "video": {
+          "title": "视频",
+          "description": "视频生成继续绑定到每个来源镜头。"
+        },
+        "final": {
+          "title": "成片",
+          "description": "成片和时间线汇总所有已生成的视频素材。"
+        }
+      },
+      "summaries": {
+        "story": "{storyChars} 个故事字符",
+        "script": "{clips} 段剧本",
+        "storyboard": "{storyboards} 组分镜 · {panels} 个镜头",
+        "video": "{videos} 个已生成或生成中的视频",
+        "final": "{videos} 个可用于成片的视频素材"
+      }
     }
   }
 }

@@ -4,11 +4,11 @@ import { useState } from 'react'
 import ProgressToast from '@/components/ProgressToast'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { AnimatedBackground } from '@/components/ui/SharedComponents'
-import ProjectCanvasRoute from '@/features/project-canvas/ProjectCanvasRoute'
 import { WorkspaceProvider } from './WorkspaceProvider'
 import WorkspaceAssetLibraryModal from './components/WorkspaceAssetLibraryModal'
 import WorkspaceAssistantPanel from './components/WorkspaceAssistantPanel'
 import WorkspaceHeaderShell from './components/WorkspaceHeaderShell'
+import ProjectWorkspaceCanvas from './canvas/ProjectWorkspaceCanvas'
 import { WorkspaceStageRuntimeProvider } from './WorkspaceStageRuntimeContext'
 import { useProjectWorkspaceController } from './hooks/useProjectWorkspaceController'
 import type { ProjectWorkspaceProps } from './types'
@@ -85,7 +85,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
 
           <div className="min-w-0 flex-1">
             <WorkspaceStageRuntimeProvider value={vm.runtime.stageRuntime}>
-              <ProjectCanvasRoute />
+              <ProjectWorkspaceCanvas />
             </WorkspaceStageRuntimeProvider>
           </div>
         </div>

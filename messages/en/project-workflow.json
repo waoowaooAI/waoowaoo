@@ -222,6 +222,68 @@
     "layout": {
       "loading": "Loading layout",
       "saving": "Saving layout"
+    },
+    "workspace": {
+      "title": "Workspace Canvas",
+      "subtitle": "One controlled canvas for story, script, storyboard, video, and final output",
+      "summary": "{stages} stages · {clips} clips · {storyboards} storyboards",
+      "layoutLoading": "Loading layout",
+      "layoutSaving": "Saving layout",
+      "layoutWarning": "Canvas layout could not sync. The default stage layout remains available.",
+      "toolbar": {
+        "resetLayout": "Reset Layout",
+        "collapseAll": "Collapse All",
+        "expandAll": "Expand All",
+        "fitView": "Fit View"
+      },
+      "focus": {
+        "story": "Story",
+        "script": "Script",
+        "storyboard": "Storyboard",
+        "video": "Video",
+        "final": "Final"
+      },
+      "actions": {
+        "generateScript": "Generate Script",
+        "generateStoryboard": "Generate Storyboard",
+        "generateAllVideos": "Generate Videos"
+      },
+      "status": {
+        "story": "Story",
+        "script": "Script",
+        "storyboard": "Storyboard",
+        "video": "Video",
+        "final": "Final"
+      },
+      "stages": {
+        "story": {
+          "title": "Story",
+          "description": "Input and edit the episode source material."
+        },
+        "script": {
+          "title": "Script",
+          "description": "Generated clips stay in business order while the stage can move on canvas."
+        },
+        "storyboard": {
+          "title": "Storyboard",
+          "description": "Storyboard groups and panels remain ordered by domain data."
+        },
+        "video": {
+          "title": "Video",
+          "description": "Video generation stays attached to each source panel."
+        },
+        "final": {
+          "title": "Final",
+          "description": "Final composition and timeline output collect generated video material."
+        }
+      },
+      "summaries": {
+        "story": "{storyChars} story characters",
+        "script": "{clips} clips",
+        "storyboard": "{storyboards} storyboard groups · {panels} panels",
+        "video": "{videos} generated or running videos",
+        "final": "{videos} video assets available for final output"
+      }
     }
   }
 }

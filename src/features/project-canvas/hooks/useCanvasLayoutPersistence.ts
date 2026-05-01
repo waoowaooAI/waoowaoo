@@ -56,6 +56,7 @@ export function useCanvasLayoutPersistence(params: {
   return {
     layout: query.data ?? null,
     isLoading: query.isLoading,
+    loadError: query.error,
     saveLayout: mutation.mutateAsync,
     isSaving: mutation.isPending,
     saveError: mutation.error,
