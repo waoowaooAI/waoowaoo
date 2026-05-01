@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 set -e
 
-npm run verify:commit
+echo "pre-commit: skipped. Full verification runs on pre-push via npm run verify:push."

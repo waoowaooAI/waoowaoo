@@ -99,7 +99,7 @@
     "test:pr": "bash scripts/test-regression-runner.sh npm run test:all",
     "typecheck": "tsc --noEmit",
     "lint:all": "npm run lint -- .",
-    "verify:commit": "npm run lint:all && npm run typecheck && npm run test:all",
+    "verify:commit": "echo \"verify:commit skipped; full verification runs on pre-push via npm run verify:push\"",
     "verify:push": "npm run lint:all && npm run typecheck && npm run test:all && npm run build",
     "migrate:image-urls-contract": "tsx scripts/migrate-image-urls-contract.ts",
     "migrate:model-config-contract": "tsx scripts/migrations/migrate-model-config-contract.ts",
