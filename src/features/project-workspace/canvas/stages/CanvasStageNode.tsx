@@ -1,6 +1,7 @@
 'use client'
 
 import type { NodeProps } from '@xyflow/react'
+import FinalTimelineView from '../../components/final/FinalTimelineView'
 import ScriptComposer from '../../components/script/ScriptComposer'
 import StoryComposer from '../../components/story/StoryComposer'
 import StoryboardComposer from '../../components/storyboard-stage/StoryboardComposer'
@@ -36,6 +37,14 @@ function CanvasStageBody({ data }: { readonly data: CanvasStageNode['data'] }) {
     return (
       <div className="nodrag nowheel h-full overflow-y-auto px-4 py-4">
         <VideoComposer />
+      </div>
+    )
+  }
+
+  if (data.stageId === 'final') {
+    return (
+      <div className="nodrag nowheel h-full overflow-y-auto px-4 py-4">
+        <FinalTimelineView />
       </div>
     )
   }

@@ -418,8 +418,8 @@ export type CanvasCommand =
 
 ### 阶段 7: FinalStageNode / 成片能力迁移
 
-- ⏸ **Task 7.1**: `src/features/project-workspace/canvas/stages/FinalStageNode.tsx` - 渲染成片阶段容器，显示 timeline 状态、视频汇总、导出入口。
-- ⏸ **Task 7.2**: `src/features/project-workspace/components/final/FinalTimelineView.tsx` - 如现有成片功能分散，抽出可复用成片视图。
+- ✅ **Task 7.1**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Final stage 分支已直接渲染 `FinalTimelineView`，显示 timeline 编辑器、预览、保存和导出入口。
+- ✅ **Task 7.2**: `src/features/project-workspace/components/final/FinalTimelineView.tsx` - 已抽出可复用成片视图，使用 `createProjectFromPanels()` 从已生成视频的 panels 构建初始 `VideoEditorProject`，并复用现有 `VideoEditorStage`。
 - ⏸ **Task 7.3**: `tests/unit/project-workspace/final-stage-node.test.tsx` - 覆盖 timeline 展示和导出入口。
 
 ### 阶段 8: Canvas Layout 持久化、折叠、重置和恢复
@@ -639,7 +639,8 @@ npm run verify:push
 - ✅ 已完成：剧本阶段第一块完整迁移。`ScriptComposer` 已从 `ScriptStage` 中抽出，Script StageNode 直接渲染现有 `ScriptView` 的剧本 clip、资产绑定和生成分镜入口。
 - ✅ 已完成：分镜阶段第一块完整迁移。`StoryboardComposer` 已从 `StoryboardStage` 中抽出，Storyboard StageNode 直接渲染现有 `StoryboardStageView` 的分镜组、panel、图片生成、编辑、插入、删除等入口。
 - ✅ 已完成：视频阶段第一块完整迁移。`VideoComposer` 已从 `VideoStageRoute` 中抽出，Video StageNode 直接渲染现有 `VideoStage` 的 panel video card、prompt、首尾帧、生成和批量生成入口。
+- ✅ 已完成：成片阶段第一块完整迁移。`FinalTimelineView` 已接入 Final StageNode，复用 `VideoEditorStage` 和 `createProjectFromPanels()` 从业务 panel 视频生成初始时间线。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事、剧本、分镜、视频节点已有完整能力；成片 timeline 仍是摘要占位，尚未完成阶段内虚拟化和 command registry。
+- ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能；下一步重点是阶段内部虚拟化、command registry、旧 wrapper 清理、组件级/系统级测试和浏览器 QA。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
