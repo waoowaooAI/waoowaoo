@@ -21,6 +21,9 @@ import type { ProjectCanvasFlowNode } from './flow-types'
 import CanvasInspector from './components/CanvasInspector'
 import { useCanvasLayoutPersistence } from './hooks/useCanvasLayoutPersistence'
 import type { UpsertCanvasLayoutInput } from '@/lib/project-canvas/layout/canvas-layout-contract'
+import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
+
+const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
 
 export interface ProjectCanvasProps {
   readonly projectId: string
@@ -53,7 +56,7 @@ function ProjectCanvasContent({
     storyText,
     clips,
     storyboards,
-    savedNodeLayouts: layout?.nodeLayouts ?? [],
+    savedNodeLayouts: layout?.nodeLayouts ?? EMPTY_SAVED_NODE_LAYOUTS,
   })
 
   useEffect(() => {

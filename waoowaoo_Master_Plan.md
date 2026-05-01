@@ -630,6 +630,11 @@ npm run verify:push
 - ✅ 已完成：canvas layout Prisma 模型、migration、GET/PATCH route、layout persistence hook。
 - ✅ 已完成：AGENTS.md 已纳入 Git 追踪，并定义提交/验证策略。
 - ✅ 已完成：Husky pre-commit 已改为不跑测试；pre-push 保留完整验证。
-- 🔄 执行中：将旧“新增 Canvas tab”计划升级为“唯一 Canvas Workspace 全量迁移”计划。
+- ✅ 已完成：将旧“新增 Canvas tab”计划升级为“唯一 Canvas Workspace 全量迁移”计划，并补充 React Flow culling、状态订阅、layout 降级三类风险控制。
+- ✅ 已完成：修复 `stage=canvas` 被 workspace 页面路由层判定为无效 stage 后回退到故事阶段的问题。新增 `src/features/project-workspace/workspace-stage.ts`，让 `canvas` 成为有效 workspace stage。
+- ✅ 已完成：修复进入当前半成品 canvas 后 React maximum update depth 问题。原因是空 saved layout 每次 render 创建新数组，导致 `flowNodes` 重新生成并触发 `setNodes` 循环；现在使用稳定空数组常量。
+- ✅ 已完成：让当前半成品 canvas 节点保持可拖拽，为 layout 保存验证提供基础。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas tests/unit/project-workspace/workspace-stage.test.ts` 通过，6 个测试文件 / 9 个测试通过。
+- ✅ 已验证：`npm run typecheck` 通过。
 - ⚠️ 当前代码仍是半成品：已存在 canvas tab/foundation，但未完成唯一 canvas、旧 stage 删除、完整功能迁移。
-- ⚠️ 当前工作区有未提交 canvas 修复和无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
+- ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。

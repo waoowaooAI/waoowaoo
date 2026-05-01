@@ -8,6 +8,8 @@ import type { ProjectCanvasFlowEdge, ProjectCanvasFlowNode } from '../flow-types
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
 import { resolveCanvasNodeLayouts } from '@/lib/project-canvas/layout/resolve-canvas-layout'
 
+const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
+
 interface UseProjectCanvasRuntimeParams {
   readonly projectId: string
   readonly episodeId: string
@@ -23,7 +25,7 @@ export function useProjectCanvasRuntime({
   storyText,
   clips,
   storyboards,
-  savedNodeLayouts = [],
+  savedNodeLayouts = EMPTY_SAVED_NODE_LAYOUTS,
 }: UseProjectCanvasRuntimeParams) {
   const graph = useMemo(() => buildProjectCanvasGraph({
     projectId,
@@ -63,7 +65,7 @@ export function useProjectCanvasRuntime({
           previewImageUrl: node.data.previewImageUrl,
           description: node.data.description,
         },
-        draggable: false,
+        draggable: true,
         selectable: true,
       }
     })

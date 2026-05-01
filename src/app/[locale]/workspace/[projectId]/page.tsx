@@ -19,10 +19,7 @@ import { AppIcon } from '@/components/ui/icons'
 import { readConfiguredAnalysisModel, shouldGuideToModelSetup } from '@/lib/workspace/model-setup'
 import { useRouter } from '@/i18n/navigation'
 import { readApiErrorMessage } from '@/lib/api/read-error-message'
-
-// 有效的stage值
-const VALID_STAGES = ['config', 'script', 'assets', 'text-storyboard', 'storyboard', 'videos', 'voice', 'editor'] as const
-type Stage = typeof VALID_STAGES[number]
+import { resolveWorkspaceStage } from '@/features/project-workspace/workspace-stage'
 
 interface Episode {
   id: string
@@ -53,9 +50,8 @@ export default function ProjectDetailPage() {
   const tc = useTranslations('common')
 
   // 从URL读取参数
-  const urlStage = searchParams.get('stage') as Stage | null
+  const urlStage = searchParams.get('stage')
   const urlEpisodeId = searchParams.get('episode') ?? null
-  const currentUrlStage = urlStage && VALID_STAGES.includes(urlStage) ? urlStage : null
 
   // 🔥 React Query 数据获取
   const queryClient = useQueryClient()
@@ -101,10 +97,7 @@ export default function ProjectDetailPage() {
     updateUrlParams({ stage })
   }, [updateUrlParams])
 
-  // Stage 状态完全由 URL 控制，不再从数据库同步
-  // 如果 URL 没有 stage 参数，默认使用 'config'
-  // 🚧 剪辑阶段 (editor) 暂时禁用，自动重定向到成片阶段 (videos)
-  const effectiveStage = currentUrlStage === 'editor' ? 'videos' : (currentUrlStage || 'config')
+  const effectiveStage = resolveWorkspaceStage(urlStage)
 
   // 获取剧集列表
   const episodes = useMemo<Episode[]>(() => {
