@@ -1,97 +1,123 @@
-# waoowaoo Master Plan: Project Workspace Infinite Canvas Migration
+# waoowaoo Master Plan: Canvas-First Workspace Full Migration
 
-> 状态机文档：本文件是 `waoowaoo` 项目从固定阶段式 UI 迁移到 `@xyflow/react` 规则化无限画布的唯一工程规划上下文。任何新接手模型必须先阅读本文件，再进行代码修改。每次代码修改完成后，必须同步更新本文档的任务状态、实际改动文件、验证结果与新增风险。
+> 状态机文档：本文件是 `waoowaoo` 项目从多 stage 工作区彻底迁移到唯一受控无限画布工作区的唯一工程上下文。任何新接手模型必须先阅读本文件，再执行代码修改。每次代码修改完成后，必须同步更新本文档的状态、实际改动文件、验证结果和风险。
 
 ## 1. 🎯 项目全局目标与上下文 (Project Context & Objectives)
 
 ### 业务背景 (Why)
 
-当前项目工作区以固定 stage/page UI 承载创作流程：故事输入、剧本、分镜图片、视频、成片编辑分别分散在不同视图中。分镜区域当前本质是顺序 grid/list：`StoryboardCanvas` 按 `sortedStoryboards` 顺序渲染分镜组，`StoryboardPanelList` 按 `panelIndex` 排序并用 CSS grid 展示 panel。该模式在节点数量增加、图片/视频/配音/成片关系变复杂后，会出现以下问题：
+当前 Project Workspace 以多个 stage/page 承载创作流程：故事、剧本、分镜、视频、成片分散在不同视图。用户必须不断切换页面才能理解和推进完整工作流。这个模式带来四个核心问题：
 
-- 用户难以在同一空间理解从故事到成片的完整依赖链路。
-- 图片、视频、任务状态、错误、重试入口分散，跨阶段定位成本高。
-- 固定 grid 只能表达顺序，不能表达“生成关系、引用关系、视频依赖、成片组合”等图结构。
-- 后续若加入更多 AI 节点、分支、版本、批注、资产引用，继续在固定 UI 上叠功能会导致低内聚、高耦合、难维护。
+- 创作链路割裂：故事、剧本、分镜、图片、视频、成片之间的依赖关系不在同一空间里。
+- 复杂度外露：用户需要理解“阶段切换”，而不是直接看到下一步该做什么。
+- 功能增长困难：未来加入多分支、资产引用、版本、批注、自定义节点后，继续叠 stage 会形成低内聚 UI。
+- Assistant 定位困难：Assistant 可以操作业务对象，但当前 UI 缺少统一空间坐标和节点定位能力。
 
-本迁移目标不是自由白板，而是 **规则化无限画布**：默认仍按系统规则排布，一排固定数量或按流程列/泳道自动排布；用户可以平移、缩放、拖动节点进行空间调整；拖动位置不改变业务顺序。
+产品目标不是做自由白板，而是做“苹果式受控自由画布”：默认不需要学习、不需要思考，系统用规则布局直接呈现完整流程；用户可以缩放、平移、拖动大阶段查看全局，但阶段内部仍保持规则化、低自由度、高可用性。
 
 ### 最终目标 (What)
 
-将当前 Project Workspace 从固定 stage UI 逐步迁移为基于 `@xyflow/react` 的规则化无限画布工作台：
+最终系统默认只有一个 Workspace Canvas。旧的故事/剧本/分镜/视频 stage tab 不再作为主入口存在，旧 stage 页面必须删除或收敛为画布内部组件。
 
 修改前：
 
-- UI 由 story/script/storyboard/video/editor 等 stage 分散承载。
-- 分镜图片通过 CSS grid/list 展示。
-- 视频卡片独立于分镜图片区。
-- UI 排布直接受页面结构限制。
-- 用户无法在同一空间观察全链路关系。
+- `/workspace/[projectId]` 通过 `stage` query 在故事、剧本、分镜、视频等页面间切换。
+- 每个 stage 各自持有 UI 结构和交互入口。
+- 分镜和视频是不同页面，用户需要跳转理解上下游关系。
+- 画布只是新增的半成品 tab。
 
 修改后：
 
-- Project Workspace 提供一个统一 Canvas View。
-- 故事、剧本 clip、分镜 panel、图片状态、视频节点、成片 timeline 以 nodes/edges 投影到画布。
-- 默认布局由确定性规则生成，用户拖动只保存 layout override。
-- 业务顺序、生成关系、画布位置三者彻底分离。
-- 旧业务数据、任务、worker、媒体归一化、route 语义保持为系统主数据，不被 React Flow 接管。
-- 所有节点按钮、旧入口、assistant 操作最终收敛到统一 command/operation 出口。
-
-核心原则：
+- 项目打开后默认进入唯一画布。
+- 画布内直接显示完整阶段容器：
 
 ```text
-Domain Data + Workflow Runtime
-        ↓
+StoryStageContainer
+  StoryComposer
+
+ScriptStageContainer
+  ClipList / ClipEditor
+
+StoryboardStageContainer
+  StoryboardGroups / PanelCards
+
+VideoStageContainer
+  VideoPanelCards
+
+FinalStageContainer
+  Timeline / Export entry
+```
+
+- 阶段容器整体可拖动、可折叠、可恢复默认布局。
+- 阶段内部默认保持当前规则化 UI，不允许普通空间拖动改变业务顺序。
+- 插入镜头、删除真实数据、重排镜头、生成图片、生成视频等仍走现有业务 operation/task/worker。
+- 第一版不做右侧 Inspector，不做手动连线，不做自由备注节点。
+- Minimap 需要保留，用于右下角全局预览。
+- Assistant 保留，可以定位阶段/节点、创建业务内容、打开对应节点操作。
+
+核心分层：
+
+```text
+Domain Data
+  project / episode / clips / storyboards / panels / videos / timeline
+
+Workflow Runtime
+  tasks / generation status / retry / rollback / errors
+
 Canvas Projection
-        ↓
-@xyflow/react nodes / edges
-        ↓
-Canvas UI interaction
-        ↓
+  stage containers + child view models
+
+Canvas Layout
+  stage x/y/width/height/zIndex/collapsed/viewport
+
+Canvas Runtime
+  @xyflow/react pan/zoom/minimap/stage dragging/reset layout
+
 Command Layer
-        ↓
-route / task / worker / DB
+  create / update / delete / insert panel / reorder / generate / regenerate / export
 ```
 
-禁止方向：
+必须保持的边界：
 
-```text
-React Flow nodes 作为业务事实源
-React Flow node.data 保存完整业务对象副本
-拖动节点直接改变 panelIndex/panelNumber
-节点组件绕过统一 command 直接写业务状态或 DB
-```
+- 业务顺序、生成关系、画布位置三者分离。
+- `panelIndex` / `panelNumber` / timeline 顺序仍来自业务数据。
+- 普通画布拖动只改变阶段容器位置，不改变镜头顺序。
+- 镜头排序必须走明确排序交互和 command。
+- 删除真实数据必须二次确认。
+- React Flow 不作为业务事实源。
 
 ### 影响范围 (Scope)
 
-预计新增主模块：
+预计新增或重构主模块：
 
 - `src/features/project-canvas/**`
 - `src/lib/project-canvas/**`
-- `src/app/api/projects/[projectId]/canvas-layout/**` 或等价 route
-- `tests/unit/project-canvas/**`
-- `tests/integration/api/contract/project-canvas-layout.route.test.ts`
-- `tests/regression/canvas-layout-*.test.ts`
-
-预计改动现有模块：
-
-- `src/features/project-workspace/ProjectWorkspace.tsx`
-- `src/features/project-workspace/components/WorkspaceStageContent.tsx`
-- `src/features/project-workspace/components/storyboard/**`
-- `src/features/project-workspace/components/video/**`
-- `src/features/project-workspace/WorkspaceStageRuntimeContext.tsx`
-- `src/lib/command-center/**` 或现有 operation/adapter 层
-- `src/lib/query/hooks/**`
-- `src/types/project.ts`
+- `src/features/project-workspace/canvas/**`
+- `src/features/project-workspace/components/**` 旧 stage 组件拆分与复用
+- `src/lib/command-center/**` 或现有 operation adapter
+- `src/app/api/projects/[projectId]/canvas-layout/route.ts`
 - `prisma/schema.prisma`
-- `tests/contracts/route-catalog.ts`
-- `tests/contracts/requirements-matrix.ts`
+- `tests/unit/project-canvas/**`
+- `tests/unit/project-workspace/**`
+- `tests/integration/api/contract/project-canvas-layout.route.test.ts`
+- `tests/regression/project-canvas-*.test.ts`
+- `tests/system/project-canvas-workflow.system.test.ts`
+
+预计删除或收敛模块：
+
+- `src/features/project-workspace/components/WorkspaceStageContent.tsx`
+- `src/features/project-workspace/hooks/useWorkspaceStageNavigation.ts`
+- 旧 stage tab/capsule nav 主流程入口
+- `ConfigStage.tsx` / `ScriptStage.tsx` / `StoryboardStage.tsx` / `VideoStageRoute.tsx` 作为独立页面入口
+- 旧 `stage` query 作为主导航的语义
 
 预估规模：
 
-- 新增文件：35-55 个。
-- 修改文件：25-45 个。
-- 新增/修改代码：约 3,000-6,500 行。
-- 测试新增/修改：约 1,500-3,000 行。
+- 新增文件：30-50 个。
+- 修改文件：45-75 个。
+- 删除或收敛文件：8-20 个。
+- 新增/修改代码：约 5,000-10,000 行。
+- 测试新增/修改：约 2,000-4,000 行。
 
 ### 技术栈与依赖 (Tech Stack)
 
@@ -104,132 +130,149 @@ React Flow node.data 保存完整业务对象副本
 - MySQL。
 - TanStack Query。
 - next-intl。
-- Tailwind / 项目内 glass UI primitives。
-- BullMQ worker/task runtime。
-- Remotion video editor。
+- Tailwind / 项目 glass UI primitives。
+- BullMQ task/worker runtime。
+- Remotion video/editor 相关能力。
 - Vitest。
 
-新增画布依赖：
-
-- 使用 `@xyflow/react`，也就是 React Flow v12+ 的新包名。
-- 禁止使用旧包名 `reactflow`。
-- React Flow 产品名仍然有效；`@xyflow/react` 是当前 npm 包名。
-
-依赖选择结论：
+画布依赖：
 
 - 主画布使用 `@xyflow/react`。
-- 暂不使用 tldraw 作为主画布。
-- tldraw 仅作为未来“自由批注/白板层”的候选，不进入当前主迁移路径。
+- 禁止使用旧包名 `reactflow`。
+- 第一版不引入 tldraw。
+- 第一版不引入 ELK/Dagre。阶段容器默认布局使用项目自研 rule-grid/stage-lane layout。未来如果需要复杂 DAG 自动布局，再通过 layout engine interface 接入 ELK。
 
 ## 2. 📂 核心文件目录树 (Directory Structure)
 
-当前高度相关目录：
+当前相关结构：
 
 ```text
 waoowaoo/
+  AGENTS.md
+  waoowaoo_Master_Plan.md
   prisma/
     schema.prisma
+    migrations/
+      20260501153000_add_project_canvas_layouts/
+        migration.sql
   src/
     app/
+      [locale]/
+        workspace/
+          [projectId]/
+            page.tsx
       api/
         projects/
           [projectId]/
-            panel/
-            panel-variant/
-            storyboards/
-            storyboard-group/
-            video/
-            lip-sync/
+            canvas-layout/
+              route.ts
     features/
+      project-canvas/
+        ProjectCanvas.tsx
+        ProjectCanvasRoute.tsx
+        flow-types.ts
+        components/
+          CanvasInspector.tsx
+        edges/
+        hooks/
+          useCanvasLayoutPersistence.ts
+          useProjectCanvasRuntime.ts
+        nodes/
       project-workspace/
         ProjectWorkspace.tsx
         WorkspaceProvider.tsx
         WorkspaceStageRuntimeContext.tsx
         components/
-          WorkspaceStageContent.tsx
+          ConfigStage.tsx
+          ScriptStage.tsx
           StoryboardStage.tsx
-          VideoStage.tsx
+          VideoStageRoute.tsx
           storyboard/
-            StoryboardCanvas.tsx
-            StoryboardGroup.tsx
-            StoryboardPanelList.tsx
-            PanelCard.tsx
-            hooks/
-              useStoryboardState.ts
-              useStoryboardStageController.ts
-              storyboard-state-utils.ts
-              usePanelOperations.ts
-              useImageGeneration.ts
-              usePanelVariant.ts
           video/
-            VideoPanelCard.tsx
-            panel-card/
         hooks/
           useProjectWorkspaceController.ts
-          useWorkspaceStageRuntime.ts
+          useWorkspaceProjectSnapshot.ts
+          useWorkspaceStageNavigation.ts
+        workspace-stage.ts
     lib/
-      project-workflow/
-        stages/
-          video-stage-runtime/
-            useVideoPanelsProjection.ts
-            useVideoPanelViewport.ts
-      command-center/
+      project-canvas/
+        graph/
+        layout/
       query/
-      run-runtime/
+      operations/
+      task/
       workers/
-    types/
-      project.ts
   tests/
     unit/
+      project-canvas/
+      project-workspace/
     integration/
     regression/
     system/
-    contracts/
 ```
 
-目标新增目录：
+目标结构：
 
 ```text
 src/
   features/
-    project-canvas/
-      ProjectCanvas.tsx
-      ProjectCanvasRoute.tsx
-      components/
+    project-workspace/
+      ProjectWorkspace.tsx
+      WorkspaceProvider.tsx
+      canvas/
+        ProjectWorkspaceCanvas.tsx
+        CanvasWorkspaceShell.tsx
         CanvasToolbar.tsx
-        CanvasInspector.tsx
+        CanvasStageFrame.tsx
+        CanvasStageHeader.tsx
+        CanvasResetLayoutButton.tsx
         CanvasMinimap.tsx
-        CanvasEmptyState.tsx
-      nodes/
-        StoryNode.tsx
-        ScriptClipNode.tsx
-        StoryboardGroupNode.tsx
-        PanelImageNode.tsx
-        VideoPanelNode.tsx
-        TimelineNode.tsx
-        nodeTypes.ts
-      edges/
-        SequenceEdge.tsx
-        DependencyEdge.tsx
-        edgeTypes.ts
-      hooks/
-        useProjectCanvasRuntime.ts
-        useCanvasSelection.ts
-        useCanvasNodeActions.ts
-        useCanvasViewportPersistence.ts
+        stageTypes.ts
+        stageRegistry.ts
+        hooks/
+          useCanvasWorkspaceRuntime.ts
+          useCanvasStageLayout.ts
+          useCanvasStageActions.ts
+          useCanvasFocus.ts
+        stages/
+          StoryStageNode.tsx
+          ScriptStageNode.tsx
+          StoryboardStageNode.tsx
+          VideoStageNode.tsx
+          FinalStageNode.tsx
+          stageNodeTypes.ts
+      components/
+        story/
+          StoryComposer.tsx
+        script/
+          ScriptClipList.tsx
+          ScriptClipCard.tsx
+        storyboard/
+          PanelCard.tsx
+          PanelCardBody.tsx
+          PanelCardActions.tsx
+          StoryboardGroupView.tsx
+        video/
+          VideoPanelCard.tsx
+          VideoPanelBody.tsx
+          VideoPanelActions.tsx
+    project-canvas/
+      legacy-foundation/
+        # Existing low-level graph/layout code may be kept or renamed after convergence.
   lib/
     project-canvas/
-      graph/
-        build-project-canvas-graph.ts
-        canvas-graph.types.ts
-        canvas-node-key.ts
       layout/
-        rule-grid-layout-engine.ts
-        resolve-canvas-layout.ts
-        canvas-layout.types.ts
-        layout-engine.types.ts
         canvas-layout-contract.ts
         canvas-layout-service.ts
+        stage-layout-engine.ts
+        reset-canvas-layout.ts
+      projection/
+        build-canvas-workspace-projection.ts
+        canvas-workspace-projection.types.ts
+      commands/
+        canvas-command.types.ts
+        execute-canvas-command.ts
+        canvas-command-registry.ts
   app/
     api/
       projects/
@@ -238,565 +281,324 @@ src/
             route.ts
 tests/
   unit/
+    project-workspace/
+      canvas-workspace-runtime.test.ts
+      canvas-stage-layout.test.ts
+      workspace-stage.test.ts
     project-canvas/
-      build-project-canvas-graph.test.ts
-      auto-layout.test.ts
-      resolve-canvas-layout.test.ts
-      canvas-node-key.test.ts
+      canvas-command-registry.test.ts
+      canvas-layout-service.test.ts
   integration/
     api/
       contract/
         project-canvas-layout.route.test.ts
   regression/
-    canvas-layout-preserves-business-order.test.ts
+    project-canvas-preserves-business-order.test.ts
+    project-canvas-delete-confirmation.test.ts
+  system/
+    project-canvas-full-workflow.system.test.ts
 ```
 
 ## 3. 🚀 阶段划分与原子任务分配 (Phases & Atomic Tasks)
 
-### 阶段 0: 架构基线与依赖决策
+### 阶段 0: 当前状态冻结与计划重写
 
-- ✅ **Task 0.1**: `waoowaoo_Master_Plan.md` - 创建主规划文档，明确迁移目标、架构边界、任务拆分、测试策略和工程约束。
-- ✅ **Task 0.2**: `package.json` - 新增 `@xyflow/react` 依赖声明；必须使用当前包名 `@xyflow/react`，禁止引入旧包名 `reactflow`。注意：受仓库命令限制，本次未运行 `npm install` 更新 `package-lock.json`，后续允许执行安装命令时必须同步 lockfile。
-- ✅ **Task 0.3**: `src/features/project-canvas/**` - 创建画布模块根目录，禁止把画布代码塞进 `project-workspace/components/storyboard` 或 `video` 子目录。完成结果：画布成为独立 feature，不污染旧 stage 实现。
-- ✅ **Task 0.4**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 增加 Canvas View 入口，但不删除旧 stage。完成结果：用户可以在原 stage 和新 canvas 之间切换，第一阶段不破坏现有功能。
+- ✅ **Task 0.1**: `AGENTS.md` - 已纳入 Git 追踪，明确授权修改后需要本地 commit、详细 commit 日志、pre-commit 不跑测试、pre-push 运行完整 `verify:push`。
+- ✅ **Task 0.2**: `waoowaoo_Master_Plan.md` - 将旧“新增 Canvas tab”计划重写为“唯一 Canvas Workspace 全量迁移”计划。
+- ✅ **Task 0.3**: `package.json` / `.husky/pre-commit` - 已调整 commit 验证策略：commit 不跑完整测试，push 前通过 `verify:push`。
+- ⚠️ **Task 0.4**: 当前工作区存在未提交画布修复：`src/app/[locale]/workspace/[projectId]/page.tsx`、`src/features/project-canvas/ProjectCanvas.tsx`、`src/features/project-canvas/hooks/useProjectCanvasRuntime.ts`、`src/features/project-workspace/workspace-stage.ts`、`tests/unit/project-workspace/workspace-stage.test.ts`、`waoowaoo_Master_Plan.md`。接手者必须在继续代码前确认这些改动状态，不得误删。
+- ⚠️ **Task 0.5**: 当前工作区存在无关删除 `CHANGELOG.md`。不得混入任何 canvas commit，除非用户明确要求处理。
 
-### 阶段 1: Canvas Graph 类型系统与节点 key 规范
+### 阶段 1: 删除 stage 主导航，建立唯一 Canvas 入口
 
-- ✅ **Task 1.1**: `src/lib/project-canvas/graph/canvas-graph.types.ts` - 定义核心类型：
-
-```ts
-export type ProjectCanvasNodeType =
-  | 'story'
-  | 'scriptClip'
-  | 'storyboardGroup'
-  | 'panelImage'
-  | 'videoPanel'
-  | 'timeline'
-
-export type ProjectCanvasEdgeType =
-  | 'sequence'
-  | 'dependsOn'
-  | 'generates'
-  | 'references'
-  | 'voiceBinding'
-  | 'timelinePlacement'
-
-export interface ProjectCanvasNodeData {
-  readonly nodeKey: string
-  readonly nodeType: ProjectCanvasNodeType
-  readonly targetId: string
-  readonly targetType: string
-  readonly title: string
-  readonly status: 'idle' | 'queued' | 'processing' | 'failed' | 'ready'
-}
-
-export interface ProjectCanvasGraph {
-  readonly nodes: ProjectCanvasNode[]
-  readonly edges: ProjectCanvasEdge[]
-}
-```
-
-完成结果：画布 graph 有明确类型，不使用任何 `any`。
-
-- ✅ **Task 1.2**: `src/lib/project-canvas/graph/canvas-node-key.ts` - 实现稳定 node key 生成函数：
+- ⏸ **Task 1.1**: `src/features/project-workspace/workspace-stage.ts` - 将 workspace stage 语义重定义为内部 canvas focus target，而不是页面切换枚举。保留 `resolveWorkspaceStage()` 仅用于兼容 URL 进入时解析到 canvas 内 focus。
+- ⏸ **Task 1.2**: `src/app/[locale]/workspace/[projectId]/page.tsx` - 移除以 `stage` query 控制主页面的逻辑。修改后：只要进入项目 episode，就渲染 `ProjectWorkspace` 的唯一 canvas。`stage` query 若存在，仅作为 canvas focus hint，不再决定页面分支。
+- ⏸ **Task 1.3**: `src/features/project-workspace/ProjectWorkspace.tsx` - 删除 `WorkspaceStageContent` 分支渲染，改为始终渲染 `ProjectWorkspaceCanvas`。函数签名保持：
 
 ```ts
-export function createStoryNodeKey(projectId: string): string
-export function createScriptClipNodeKey(clipId: string): string
-export function createStoryboardGroupNodeKey(storyboardId: string): string
-export function createPanelImageNodeKey(panelId: string): string
-export function createVideoPanelNodeKey(panelId: string): string
-export function createTimelineNodeKey(episodeId: string): string
+export default function ProjectWorkspace(props: ProjectWorkspaceProps): JSX.Element
 ```
 
-完成结果：所有节点刷新后 key 稳定，layout 能可靠匹配。
+预期结果：Workspace 只有一个主画布入口。
 
-- ✅ **Task 1.3**: `tests/unit/project-canvas/canvas-node-key.test.ts` - 覆盖所有 node key 生成函数，断言具体字符串值。预期结果：防止后续改动破坏 layout 匹配。
+- ⏸ **Task 1.4**: `src/features/project-workspace/components/WorkspaceHeaderShell.tsx` - 删除 `CapsuleNav` 主阶段导航。保留 episode selector、全局资产入口、设置、刷新。若需要阶段定位，移到 `CanvasToolbar`。
+- ⏸ **Task 1.5**: `src/features/project-workspace/hooks/useWorkspaceStageNavigation.ts` - 删除或改为 canvas toolbar focus items helper。不得继续作为页面 stage nav。
+- ⏸ **Task 1.6**: `messages/en/project-workflow.json` / `messages/zh/project-workflow.json` - 移除或重命名 stage tab 文案，新增 canvas toolbar 文案：reset layout、collapse all、expand all、focus story/script/storyboard/video/final。
+- ⏸ **Task 1.7**: `tests/unit/project-workspace/workspace-stage.test.ts` - 覆盖 `stage=canvas`、旧 `stage=storyboard`、未知 stage 的解析规则：都进入 canvas，旧 stage 只作为 focus hint。
 
-### 阶段 2: 确定性自动布局引擎
+### 阶段 2: Canvas Workspace Shell 与阶段容器布局
 
-- ✅ **Task 2.1**: `src/lib/project-canvas/layout/canvas-layout.types.ts` - 定义 layout 类型：
+- ⏸ **Task 2.1**: `src/features/project-workspace/canvas/stageTypes.ts` - 新增阶段类型：
 
 ```ts
-export interface CanvasNodeLayout {
-  readonly nodeKey: string
-  readonly x: number
-  readonly y: number
-  readonly width: number
-  readonly height: number
-  readonly zIndex: number
-  readonly locked: boolean
-  readonly collapsed: boolean
-}
+export type CanvasStageId = 'story' | 'script' | 'storyboard' | 'video' | 'final'
 
-export interface CanvasViewportLayout {
-  readonly x: number
-  readonly y: number
-  readonly zoom: number
+export interface CanvasStageDefinition {
+  readonly id: CanvasStageId
+  readonly titleKey: string
+  readonly defaultWidth: number
+  readonly defaultHeight: number
+  readonly order: number
 }
 ```
 
-完成结果：layout 只表达画布位置和 UI 状态，不包含业务字段。
+预期结果：阶段容器是稳定产品概念，不依赖旧 URL stage。
 
-- ✅ **Task 2.2**: `src/lib/project-canvas/layout/rule-grid-layout-engine.ts` - 实现规则化自动布局，并新增 `src/lib/project-canvas/layout/layout-engine.types.ts` 预留 `rule-grid | elk` 引擎接口：
+- ⏸ **Task 2.2**: `src/features/project-workspace/canvas/stageRegistry.ts` - 注册五个固定阶段容器。第一版不开放用户自定义阶段；未来通过 registry 扩展。
+- ⏸ **Task 2.3**: `src/lib/project-canvas/layout/stage-layout-engine.ts` - 新增阶段级布局引擎：
 
 ```ts
-export interface AutoLayoutOptions {
-  readonly columnsPerRow: number
-  readonly nodeWidth: number
-  readonly nodeHeight: number
-  readonly columnGap: number
-  readonly rowGap: number
-  readonly laneGap: number
-}
-
-export function buildRuleGridCanvasLayout(
-  graph: ProjectCanvasGraph,
-  options: AutoLayoutOptions,
-): Map<string, CanvasNodeLayout>
+export function buildDefaultCanvasStageLayouts(
+  stages: readonly CanvasStageDefinition[],
+): Map<CanvasStageId, CanvasStageLayout>
 ```
 
-布局规则：
+默认横向流程：story -> script -> storyboard -> video -> final。预期结果：打开项目自动 fit 全流程。
 
-- `StoryNode` 放在最左侧 lane。
-- `ScriptClipNode` 按 clip 顺序排列。
-- `StoryboardGroupNode` 放在对应 clip 下游。
-- `PanelImageNode` 在 group 内按 `panelIndex` 规则排布，一排 `columnsPerRow` 个。
-- `VideoPanelNode` 放在对应 `PanelImageNode` 下游或下一 lane。
-- `TimelineNode` 放在最右侧或底部固定 lane。
+- ⏸ **Task 2.4**: `src/lib/project-canvas/layout/canvas-layout-contract.ts` - 将 layout contract 扩展为支持 stage layout、collapsed、viewport、schemaVersion。不得保存业务字段。
+- ⏸ **Task 2.5**: `prisma/schema.prisma` - 如现有 `ProjectCanvasNodeLayout` 足够表达 stage layout，可复用 `nodeType='stage'`；否则新增明确 `ProjectCanvasStageLayout`。结构变更必须有 migration。
+- ⏸ **Task 2.6**: `src/features/project-workspace/canvas/ProjectWorkspaceCanvas.tsx` - 创建唯一画布 shell，使用 `@xyflow/react` 渲染五个 stage node，启用 pan/zoom/minimap/fitView。
+- ⏸ **Task 2.7**: `src/features/project-workspace/canvas/CanvasToolbar.tsx` - 新增画布工具栏：reset layout、collapse all、expand all、focus story/script/storyboard/video/final。按钮文案走 i18n。
+- ⏸ **Task 2.8**: `tests/unit/project-workspace/canvas-stage-layout.test.ts` - 断言五个阶段默认位置、顺序、尺寸、reset layout 输出具体值。
 
-完成结果：没有用户 override 时，画布每次生成位置完全一致；第一版使用自研 `rule-grid`，不引入 ELK/Dagre。
+### 阶段 3: StoryStageNode 完整迁移
 
-- ✅ **Task 2.3**: `src/lib/project-canvas/layout/resolve-canvas-layout.ts` - 实现自动布局 + 用户 override 合并：
+- ⏸ **Task 3.1**: `src/features/project-workspace/components/ConfigStage.tsx` - 拆分出 `StoryComposer`，只保留可复用的故事输入、配置、生成剧本入口，不保留 page/stage wrapper。
+- ⏸ **Task 3.2**: `src/features/project-workspace/components/story/StoryComposer.tsx` - 新增组件，接收：
 
 ```ts
-export function resolveCanvasNodeLayouts(params: {
-  readonly autoLayouts: Map<string, CanvasNodeLayout>
-  readonly savedLayouts: readonly CanvasNodeLayout[]
-}): Map<string, CanvasNodeLayout>
-```
-
-规则：
-
-- 有 saved layout 的 node 使用 saved x/y/width/height/zIndex。
-- 没有 saved layout 的 node 使用 auto layout。
-- saved layout 指向已不存在 node 时不得渲染，不得自动创建假节点。
-
-完成结果：新增节点自动排布，旧节点保持用户拖动位置。
-
-- ✅ **Task 2.4**: `tests/unit/project-canvas/auto-layout.test.ts` - 测试固定输入下位置确定、同一行列规则正确、显式失败。断言具体 x/y。
-- ✅ **Task 2.5**: `tests/unit/project-canvas/resolve-canvas-layout.test.ts` - 测试 saved override 优先、缺失节点回退自动布局、孤儿 saved layout 被忽略。
-
-### 阶段 3: 只读 Canvas Graph Builder
-
-- ✅ **Task 3.1**: `src/lib/project-canvas/graph/build-project-canvas-graph.ts` - 新增只读投影函数：
-
-```ts
-export interface BuildProjectCanvasGraphInput {
-  readonly projectId: string
-  readonly episodeId: string
-  readonly storyText: string | null
-  readonly clips: readonly ProjectClip[]
-  readonly storyboards: readonly ProjectStoryboard[]
-}
-
-export function buildProjectCanvasGraph(input: BuildProjectCanvasGraphInput): ProjectCanvasGraph
-```
-
-投影规则：
-
-- 每个 project 生成一个 `story` node。
-- 每个 clip 生成一个 `scriptClip` node。
-- 每个 storyboard 生成一个 `storyboardGroup` node。
-- 每个 panel 生成一个 `panelImage` node。
-- 每个 panel 若存在视频相关字段或视频阶段开启，生成一个 `videoPanel` node。
-- 每个 episode 生成一个 `timeline` node。
-
-边规则：
-
-- `story -> scriptClip` 使用 `generates`。
-- `scriptClip -> storyboardGroup` 使用 `generates`。
-- `storyboardGroup -> panelImage` 使用 `contains` 不作为 edge type；若需要可用 `dependsOn`，但第一版建议只渲染 sequence edge。
-- panel 之间按 `panelIndex` 生成 `sequence` edge。
-- `panelImage -> videoPanel` 使用 `generates` 或 `dependsOn`，第一版统一用 `dependsOn`。
-- 所有 videoPanel 汇入 `timeline` 使用 `timelinePlacement`。
-
-完成结果：业务数据被稳定投影为画布 view model，不发生 DB 或 query 写入。
-
-- ✅ **Task 3.2**: `tests/unit/project-canvas/build-project-canvas-graph.test.ts` - 构造 project/clips/storyboards/panels fixture，断言节点 key、edge source/target、panel 顺序。
-- ✅ **Task 3.3**: `src/features/project-canvas/hooks/useProjectCanvasRuntime.ts` - 从现有 workspace controller 接收 project/episode 数据，调用 `buildProjectCanvasGraph`、`buildRuleGridCanvasLayout` 和 `resolveCanvasNodeLayouts`，输出 React Flow nodes/edges。完成结果：hook 内不调用业务 mutation，React Flow 只接收轻量 node view model。
-
-### 阶段 4: React Flow 只读画布壳
-
-- ✅ **Task 4.1**: `src/features/project-canvas/ProjectCanvas.tsx` - 创建主画布组件，使用 `@xyflow/react`：
-
-```tsx
-export interface ProjectCanvasProps {
-  readonly projectId: string
-  readonly episodeId: string
+export interface StoryComposerProps {
+  readonly novelText: string
+  readonly isGenerating: boolean
+  readonly onUpdateEpisode: (key: string, value: unknown) => Promise<void>
+  readonly onGenerateScript: () => void
 }
 ```
 
-必须包含：
+预期结果：画布内故事阶段和旧故事输入功能等价。
 
-- `<ReactFlow />`
-- `<Background />`
-- `<Controls />`
-- `<MiniMap />`
-- nodeTypes / edgeTypes 注册
-- 只读模式下禁用业务 mutation
+- ⏸ **Task 3.3**: `src/features/project-workspace/canvas/stages/StoryStageNode.tsx` - 渲染 `CanvasStageFrame + StoryComposer`。节点内直接显示完整功能，不依赖点击 Inspector。
+- ⏸ **Task 3.4**: `tests/unit/project-workspace/story-stage-node.test.tsx` - 测试输入故事文本调用 `onUpdateEpisode` 的具体 key/value，点击生成调用 `onGenerateScript`。
 
-完成结果：能显示只读 nodes/edges，可 pan/zoom。
+### 阶段 4: ScriptStageNode 完整迁移
 
-- ✅ **Task 4.2**: `src/features/project-canvas/nodes/StoryNode.tsx` - 渲染故事摘要节点。节点只展示标题、状态和简要文本，不提供编辑。
-- ✅ **Task 4.3**: `src/features/project-canvas/nodes/ScriptClipNode.tsx` - 渲染剧本 clip 节点。展示 clip 顺序、summary、location、characters。
-- ✅ **Task 4.4**: `src/features/project-canvas/nodes/StoryboardGroupNode.tsx` - 渲染分镜组节点。展示 clip 标题、panel 数量、任务状态。
-- ✅ **Task 4.5**: `src/features/project-canvas/nodes/PanelImageNode.tsx` - 第一版只渲染压缩版 panel 卡片，不复用完整 `PanelCard`。展示编号、图片、shot type、状态。
-- ✅ **Task 4.6**: `src/features/project-canvas/nodes/VideoPanelNode.tsx` - 第一版只渲染视频缩略状态、生成状态、错误信息。
-- ✅ **Task 4.7**: `src/features/project-canvas/nodes/TimelineNode.tsx` - 展示成片入口和已有 timeline 状态，不执行导出。
-- ✅ **Task 4.8**: `src/features/project-canvas/edges/SequenceEdge.tsx` - 实现顺序边视觉。
-- ✅ **Task 4.9**: `src/features/project-canvas/edges/DependencyEdge.tsx` - 实现依赖边视觉。
-- ✅ **Task 4.10**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 增加 canvas stage 分支，接入 `ProjectCanvas`。禁止删除旧 stage。完成结果：用户可打开新画布验证视觉密度。
+- ⏸ **Task 4.1**: `src/features/project-workspace/components/ScriptStage.tsx` - 拆分出 `ScriptClipList` 和 `ScriptClipCard`。删除旧 page wrapper 的业务承担。
+- ⏸ **Task 4.2**: `src/features/project-workspace/components/script/ScriptClipList.tsx` - 展示完整剧本 clip 列表、clip 编辑、生成分镜入口。
+- ⏸ **Task 4.3**: `src/features/project-workspace/canvas/stages/ScriptStageNode.tsx` - 在阶段容器内渲染剧本完整内容和动作按钮。
+- ⏸ **Task 4.4**: `tests/unit/project-workspace/script-stage-node.test.tsx` - 覆盖 clip 编辑、生成分镜按钮、任务状态展示。
 
-### 阶段 5: Layout 持久化数据模型与 API
+### 阶段 5: StoryboardStageNode 完整迁移
 
-- ✅ **Task 5.1**: `prisma/schema.prisma` - 新增 layout 模型，并通过 `npx prisma generate` 验证 Prisma Client 类型生成：
-
-```prisma
-model ProjectCanvasLayout {
-  id            String   @id @default(uuid())
-  projectId     String
-  episodeId     String
-  schemaVersion Int      @default(1)
-  viewportX     Float    @default(0)
-  viewportY     Float    @default(0)
-  zoom          Float    @default(1)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now()) @updatedAt
-  nodeLayouts   ProjectCanvasNodeLayout[]
-
-  @@unique([projectId, episodeId])
-  @@index([projectId])
-  @@index([episodeId])
-  @@map("project_canvas_layouts")
-}
-
-model ProjectCanvasNodeLayout {
-  id          String   @id @default(uuid())
-  layoutId    String
-  nodeKey     String
-  nodeType    String
-  targetType  String
-  targetId    String
-  x           Float
-  y           Float
-  width       Float
-  height      Float
-  zIndex      Int      @default(0)
-  locked      Boolean  @default(false)
-  collapsed   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-  layout      ProjectCanvasLayout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
-
-  @@unique([layoutId, nodeKey])
-  @@index([layoutId])
-  @@index([targetType, targetId])
-  @@map("project_canvas_node_layouts")
-}
-```
-
-完成结果：layout 独立于业务表，panel/clip/storyboard 表不增加 x/y 字段；`ProjectEpisode` 通过一对一关系关联当前 episode 的 layout，`Project` 保留 layouts 集合关系。
-
-- ✅ **Task 5.2**: `prisma/migrations/20260501153000_add_project_canvas_layouts/migration.sql` - 新增结构迁移文件，创建 `project_canvas_layouts` 与 `project_canvas_node_layouts` 两张表。完成结果：这是前向 schema 变更，不删除旧业务表和旧业务字段。
-
-- ✅ **Task 5.3**: `src/lib/project-canvas/layout/canvas-layout-contract.ts` - 新增 zod contract，集中定义 GET/PATCH route 与前端保存 payload 的字段语义：
-
-```ts
-export const CANVAS_LAYOUT_SCHEMA_VERSION = 1
-export const canvasViewportLayoutSchema = z.object(...)
-export const canvasNodeLayoutInputSchema = z.object(...)
-export const upsertCanvasLayoutInputSchema = z.object(...)
-```
-
-完成结果：payload、route、service、前端 hook 共用同一份类型，避免前端允许、服务端拒绝的双轨语义。
-
-- ✅ **Task 5.4**: `src/lib/project-canvas/layout/canvas-layout-service.ts` - 新增读取与保存服务：
-
-```ts
-export async function getProjectCanvasLayout(params: {
-  readonly projectId: string
-  readonly episodeId: string
-}): Promise<ProjectCanvasLayoutSnapshot | null>
-
-export async function upsertProjectCanvasLayout(params: {
-  readonly projectId: string
-  readonly input: UpsertCanvasLayoutInput
-}): Promise<ProjectCanvasLayoutSnapshot>
-```
-
-完成结果：服务层包含 episode/project 归属校验和事务；保存时替换当前 layout 的 nodeLayouts，显式失败，不做静默兜底。
-
-- ✅ **Task 5.5**: `src/app/api/projects/[projectId]/canvas-layout/route.ts` - 新增 GET/PATCH route，复用 `apiHandler` 与 `requireProjectAuthLight`。完成结果：route 只负责鉴权、参数校验、调用 service 和返回响应，复杂业务下沉到 `src/lib/project-canvas/**`。
-- ✅ **Task 5.6**: `tests/integration/api/contract/project-canvas-layout.route.test.ts` - 覆盖 GET、PATCH、非法 payload、鉴权错误。完成结果：新增 route 有契约测试，断言具体入参和返回值。
-- ✅ **Task 5.7**: `tests/contracts/route-catalog.ts` - 加入 `/api/projects/[projectId]/canvas-layout` GET/PATCH route。完成结果：route catalog 与实际 API 同步。
-
-### 阶段 6: 拖拽保存与 viewport 保存
-
-- ✅ **Task 6.1**: `src/features/project-canvas/hooks/useCanvasLayoutPersistence.ts` - 实现 layout GET/PATCH hook，使用 TanStack Query、`apiFetch`、`checkApiResponse` 和 `queryKeys.project.canvasLayout(projectId, episodeId)`。完成结果：画布持久化入口集中，不散落在节点组件里。
-- ✅ **Task 6.2**: `src/features/project-canvas/ProjectCanvas.tsx` - 接入 React Flow controlled nodes、`applyNodeChanges`、拖拽保存和 viewport 保存。完成结果：保存 payload 只包含 viewport 与 node layout，不触碰业务字段。
-- ✅ **Task 6.3**: `src/features/project-canvas/hooks/useProjectCanvasRuntime.ts` - 接收 `savedNodeLayouts` 并合并到自动布局。完成结果：拖动 panel 后刷新位置可恢复，但 `panelIndex/panelNumber` 不变。
-- ⏸ **Task 6.4**: `tests/regression/canvas-layout-preserves-business-order.test.ts` - 保存某 panel 的 x/y 后，重新读取业务 panels，断言 `panelIndex`、`panelNumber`、`storyboardId` 未变化。
-
-### 阶段 7: 分镜图片区迁移为画布节点
-
-- ⏸ **Task 7.1**: `src/features/project-canvas/nodes/PanelImageNode.tsx` - 从压缩版节点升级为复用现有分镜能力。不得直接复制 `PanelCard` 大量逻辑；应通过 adapter props 传入已存在的 panel actions。
-- ⏸ **Task 7.2**: `src/features/project-canvas/hooks/useCanvasNodeActions.ts` - 将画布节点动作映射到现有分镜操作：
-
-```ts
-export interface CanvasPanelActions {
-  readonly regeneratePanelImage: (panelId: string, count?: number, force?: boolean) => void
-  readonly openImageEdit: (storyboardId: string, panelIndex: number) => void
-  readonly openAIData: (storyboardId: string, panelIndex: number) => void
-  readonly insertAfter: (storyboardId: string, panelId: string) => void
-  readonly generateVariant: (sourcePanelId: string, storyboardId: string) => void
-}
-```
-
-预期结果：节点按钮不直接调用 route，而是复用 workspace controller/operation。
-
-- ⏸ **Task 7.3**: `src/features/project-workspace/components/storyboard/PanelCard.tsx` - 若复用完整卡片导致节点过大，拆出 `PanelCardBody` 和 `PanelCardActions`，让 grid UI 与 canvas node 共享子组件。禁止复制粘贴两套卡片。
-- ⏸ **Task 7.4**: `src/features/project-canvas/components/CanvasInspector.tsx` - 将复杂编辑放在右侧 inspector。节点只承载缩略展示和快捷动作。
-- ⏸ **Task 7.5**: `tests/unit/project-canvas/panel-node-actions.test.tsx` - 测试点击节点生成按钮调用 action adapter 的具体入参，禁止只断言 `toHaveBeenCalled()`。
-
-### 阶段 8: 视频区接入同一画布
-
-- ⏸ **Task 8.1**: `src/lib/project-canvas/graph/build-project-canvas-graph.ts` - 为每个 panel 生成 `videoPanel` node，并建立 `panelImage -> videoPanel` edge。预期结果：视频节点和图片节点一一对应。
-- ⏸ **Task 8.2**: `src/features/project-canvas/nodes/VideoPanelNode.tsx` - 复用或拆分现有 `VideoPanelCard` 能力。节点展示视频状态、生成入口、首尾帧状态、错误态。
-- ⏸ **Task 8.3**: `src/features/project-canvas/hooks/useCanvasNodeActions.ts` - 增加视频动作：
-
-```ts
-export interface CanvasVideoActions {
-  readonly generateVideo: (storyboardId: string, panelIndex: number) => Promise<void>
-  readonly updateVideoPrompt: (
-    storyboardId: string,
-    panelIndex: number,
-    value: string,
-    field: 'videoPrompt' | 'firstLastFramePrompt',
-  ) => Promise<void>
-  readonly togglePanelLink: (storyboardId: string, panelIndex: number) => Promise<void>
-}
-```
-
-预期结果：视频生成仍复用现有 video runtime，不新造独立业务路径。
-
-- ⏸ **Task 8.4**: `src/lib/project-workflow/stages/video-stage-runtime/useVideoPanelViewport.ts` - 增加 canvas-aware 定位适配：旧滚动定位保留，canvas view 下使用 `focusNode(createVideoPanelNodeKey(panelId))`。
-- ⏸ **Task 8.5**: `tests/regression/canvas-video-node-panel-binding.test.ts` - 断言 video node 的 target panel 与原 `storyboardId + panelIndex` 绑定一致。
-
-### 阶段 9: Story / Script / Timeline 整合
-
-- ⏸ **Task 9.1**: `src/features/project-canvas/nodes/StoryNode.tsx` - 增加故事输入/摘要展示和打开 inspector 编辑入口。编辑必须走现有 config/story operation。
-- ⏸ **Task 9.2**: `src/features/project-canvas/nodes/ScriptClipNode.tsx` - 增加 clip 查看、定位对应 storyboard group 的交互。
-- ⏸ **Task 9.3**: `src/features/project-canvas/nodes/TimelineNode.tsx` - 接入现有 Remotion/editor 状态，展示最终成片入口。
-- ⏸ **Task 9.4**: `src/features/project-canvas/graph/build-project-canvas-graph.ts` - 完整连通 `StoryNode -> ScriptClipNode -> StoryboardGroupNode -> PanelImageNode -> VideoPanelNode -> TimelineNode`。
-- ⏸ **Task 9.5**: `tests/system/project-canvas-workflow.system.test.ts` - 系统级验证从已有 episode 数据进入 canvas，节点完整、边完整、关键操作可执行。
-
-### 阶段 10: Assistant 与 Command Layer 收敛
-
-- ⏸ **Task 10.1**: `src/lib/project-canvas/commands/canvas-command.types.ts` - 定义画布命令类型。命令只表达业务意图，不表达屏幕坐标：
+- ⏸ **Task 5.1**: `src/features/project-workspace/components/storyboard/PanelCard.tsx` - 拆分为 `PanelCardBody`、`PanelCardActions`、`PanelGenerationStatus`。禁止复制第二套 canvas panel card。
+- ⏸ **Task 5.2**: `src/features/project-workspace/components/storyboard/StoryboardGroupView.tsx` - 抽出分镜组渲染，保留 panel 编号、完整内容、图片、prompt、按钮、错误/重试状态。
+- ⏸ **Task 5.3**: `src/features/project-workspace/canvas/stages/StoryboardStageNode.tsx` - 渲染所有 storyboard group 和 panel。阶段内部不允许普通空间拖动 panel。
+- ⏸ **Task 5.4**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入现有分镜动作：生成图片、重生成、候选确认、AI data、插入镜头、删除镜头。
+- ⏸ **Task 5.5**: `src/lib/project-canvas/commands/canvas-command.types.ts` - 定义业务命令，不包含屏幕坐标：
 
 ```ts
 export type CanvasCommand =
-  | { readonly type: 'focus_node'; readonly nodeKey: string }
-  | { readonly type: 'select_node'; readonly nodeKey: string }
-  | { readonly type: 'open_inspector'; readonly nodeKey: string }
+  | { readonly type: 'insert_panel_after'; readonly storyboardId: string; readonly panelId: string }
+  | { readonly type: 'delete_panel'; readonly storyboardId: string; readonly panelId: string }
+  | { readonly type: 'reorder_panel'; readonly storyboardId: string; readonly sourcePanelId: string; readonly targetPanelId: string }
+  | { readonly type: 'generate_panel_image'; readonly panelId: string }
   | { readonly type: 'regenerate_panel_image'; readonly panelId: string }
-  | { readonly type: 'generate_panel_video'; readonly storyboardId: string; readonly panelIndex: number }
 ```
 
-预期结果：assistant 可以让 UI 聚焦节点，但不依赖坐标点击。
+- ⏸ **Task 5.6**: `tests/regression/project-canvas-preserves-business-order.test.ts` - 普通阶段拖动不改变 `panelIndex`；排序交互才改变业务顺序。
+- ⏸ **Task 5.7**: `tests/regression/project-canvas-delete-confirmation.test.ts` - 删除 panel 必须二次确认，取消时 DB 不变，确认时走真实删除链路。
 
-- ⏸ **Task 10.2**: `src/lib/project-canvas/commands/execute-canvas-command.ts` - 将 canvas command 路由到现有 operation。禁止新增绕过鉴权/任务/回滚的快捷路径。
-- ⏸ **Task 10.3**: `src/features/project-workspace/components/workspace-assistant/**` - assistant 结果中若包含 target panel/clip，canvas view 下调用 `focus_node` 和 `open_inspector`。
-- ⏸ **Task 10.4**: `tests/unit/project-canvas/execute-canvas-command.test.ts` - 覆盖 focus/select/open inspector 与业务 command 的分离。
+### 阶段 6: VideoStageNode 完整迁移
 
-### 阶段 11: 旧 Stage 收敛与代码清理
+- ⏸ **Task 6.1**: `src/features/project-workspace/components/video/VideoPanelCard.tsx` - 拆分出 `VideoPanelBody`、`VideoPanelActions`、`VideoPromptEditor`，供 canvas 使用。
+- ⏸ **Task 6.2**: `src/features/project-workspace/canvas/stages/VideoStageNode.tsx` - 每个 panel 一个 video card，和 panel 业务绑定。显示 prompt、首尾帧、生成按钮、重试、错误、任务状态。
+- ⏸ **Task 6.3**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入视频动作：生成视频、更新视频 prompt、首尾帧 prompt、面板联动。
+- ⏸ **Task 6.4**: `tests/unit/project-workspace/video-stage-node.test.tsx` - 覆盖视频 prompt 修改、生成按钮、错误展示的具体入参。
+- ⏸ **Task 6.5**: `tests/regression/project-canvas-video-panel-binding.test.ts` - 断言 video card 永远绑定对应 panel，成片顺序来自业务数据。
 
-- ⏸ **Task 11.1**: `src/features/project-workspace/components/StoryboardStage.tsx` - 当 canvas 分镜能力达到功能等价后，旧 grid/list stage 只保留为短期入口或删除。若删除必须同步更新 stage navigation 和 tests。
-- ⏸ **Task 11.2**: `src/features/project-workspace/components/VideoStage.tsx` - 当 canvas 视频能力达到功能等价后，旧视频 stage 收敛为 canvas inspector 或删除。
-- ⏸ **Task 11.3**: `src/features/project-workspace/hooks/useWorkspaceStageNavigation.ts` - 重新定义导航：从固定 stage 转为 canvas 主入口 + inspector/workflow modes。禁止硬编码根路由，必须遵守 `@/i18n/navigation` 规则。
-- ⏸ **Task 11.4**: `src/features/project-workspace/components/storyboard/**` - 删除不再使用的 grid-only 包装层，保留可复用卡片子组件。禁止保留双轨业务逻辑。
-- ⏸ **Task 11.5**: `tests/contracts/requirements-matrix.ts` - 更新需求矩阵，确保 canvas 替代旧 stage 的功能有测试映射。
+### 阶段 7: FinalStageNode / 成片能力迁移
+
+- ⏸ **Task 7.1**: `src/features/project-workspace/canvas/stages/FinalStageNode.tsx` - 渲染成片阶段容器，显示 timeline 状态、视频汇总、导出入口。
+- ⏸ **Task 7.2**: `src/features/project-workspace/components/final/FinalTimelineView.tsx` - 如现有成片功能分散，抽出可复用成片视图。
+- ⏸ **Task 7.3**: `tests/unit/project-workspace/final-stage-node.test.tsx` - 覆盖 timeline 展示和导出入口。
+
+### 阶段 8: Canvas Layout 持久化、折叠、重置和恢复
+
+- ⏸ **Task 8.1**: `src/features/project-workspace/canvas/hooks/useCanvasStageLayout.ts` - 管理 stage dragging、collapsed、viewport、reset layout。阶段内部节点不参与 React Flow 独立拖动。
+- ⏸ **Task 8.2**: `src/lib/project-canvas/layout/reset-canvas-layout.ts` - 新增 reset layout 服务函数，清除 saved stage overrides 或重写为默认布局。
+- ⏸ **Task 8.3**: `src/app/api/projects/[projectId]/canvas-layout/route.ts` - 扩展 PATCH 支持 collapsed、stage layout、viewport；新增 DELETE 或 POST reset endpoint 时必须更新 route catalog。
+- ⏸ **Task 8.4**: `tests/integration/api/contract/project-canvas-layout.route.test.ts` - 覆盖保存 stage layout、折叠状态、viewport、reset layout。
+- ⏸ **Task 8.5**: `tests/system/project-canvas-layout-restore.system.test.ts` - 刷新后恢复画布位置、折叠状态、viewport。
+
+### 阶段 9: Assistant 接入唯一画布
+
+- ⏸ **Task 9.1**: `src/lib/project-canvas/commands/canvas-command-registry.ts` - 建立 command registry，将 assistant、节点按钮、快捷键统一映射到现有 operation。
+- ⏸ **Task 9.2**: `src/features/project-workspace/components/workspace-assistant/**` - Assistant 保留在画布旁边；执行结果可定位阶段/节点、创建业务内容、打开节点相关操作。
+- ⏸ **Task 9.3**: `src/features/project-workspace/canvas/hooks/useCanvasFocus.ts` - 暴露 `focusStage(stageId)`、`focusPanel(panelId)`、`focusVideoPanel(panelId)`，只操作 UI 视角，不改业务数据。
+- ⏸ **Task 9.4**: `tests/unit/project-canvas/canvas-command-registry.test.ts` - 测试 assistant 和节点按钮共享同一个 command path。
+
+### 阶段 10: 删除旧 Stage 页面壳与清理双轨
+
+- ⏸ **Task 10.1**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 删除文件或改为空转移除引用。最终不允许根据 stage 渲染不同页面。
+- ⏸ **Task 10.2**: `src/features/project-workspace/components/ConfigStage.tsx` / `ScriptStage.tsx` / `StoryboardStage.tsx` / `VideoStageRoute.tsx` / `VoiceStageRoute.tsx` - 删除旧 page wrapper，保留已拆出的共享子组件。
+- ⏸ **Task 10.3**: `src/features/project-workspace/hooks/useProjectWorkspaceController.ts` - 删除 stage nav state，保留 runtime/actions；所有功能供 canvas stage 使用。
+- ⏸ **Task 10.4**: `src/features/project-workspace/StageNavigation.tsx` / `src/components/ui/CapsuleNav.tsx` 使用点 - 移除 workspace 主流程依赖；若其他页面仍使用 CapsuleNav，不删除组件本体。
+- ⏸ **Task 10.5**: `tests/contracts/requirements-matrix.ts` - 更新需求矩阵，确保旧 stage 功能全部映射到 canvas 测试。
+
+### 阶段 11: 最终系统验收
+
+- ⏸ **Task 11.1**: `tests/system/project-canvas-full-workflow.system.test.ts` - 系统级覆盖：输入故事 -> 生成剧本 -> 生成分镜 -> 生成图片 -> 生成视频 -> 成片入口，全程不进入旧 stage 页面。
+- ⏸ **Task 11.2**: `npm run verify:push` - push 前完整验证：lint、typecheck、test:all、build 全部通过。
+- ⏸ **Task 11.3**: 手动 QA - 打开项目默认画布，确认无 stage tab、全流程 fitView、minimap 可见、阶段可拖动、阶段可折叠、reset layout 可用、刷新后恢复。
 
 ## 4. 🧪 测试与验证策略 (Validation Strategy)
 
 ### 量化验收标准
 
-功能验收：
+产品验收：
 
-- Canvas View 能展示 story/script/storyboard/panel/video/timeline 全链路节点。
-- 默认自动布局稳定，同一输入连续构建 10 次，nodes x/y 完全一致。
-- 用户拖动节点刷新后位置保持。
-- 拖动节点不得改变任何 `panelIndex`、`panelNumber`、`storyboardId`。
-- 图片生成、修改、候选图确认、插入 panel、镜头变体仍走现有业务链路。
-- 视频生成、首尾帧、prompt 更新、镜头联动仍走现有业务链路。
-- assistant 不依赖画布坐标，只通过 nodeKey 进行 focus/select/inspector。
-- 所有新增 route 使用统一鉴权与错误出口。
-- 所有新增 UI 文案走 i18n，禁止硬编码固定语言。
+- 打开 `/workspace/[projectId]` 默认显示唯一 canvas，不显示旧 stage tab。
+- 用户无需进入任何非画布页面，即可完成故事输入、剧本生成、分镜生成、图片生成、视频生成、成片入口查看。
+- 画布默认显示完整流程，并自动 fit 到全流程。
+- 五个阶段容器默认可见：故事、剧本、分镜、视频、成片。
+- 阶段容器可整体拖动，阶段内部业务卡片默认不自由拖动。
+- 所有阶段可折叠/展开，刷新后保持状态。
+- Reset layout 后，阶段位置恢复默认规则布局。
+- Minimap 可见，并能反映全流程位置。
+- 删除真实数据必须二次确认。
+- 普通画布拖动不改变 `panelIndex`、`panelNumber`、timeline 顺序。
+- 镜头排序只能通过明确排序交互改变业务顺序。
+- 旧 stage 页面主入口完全消失。
+
+工程验收：
+
+- `@xyflow/react` 是唯一画布库。
+- 没有引入 `reactflow` 旧包名。
+- 没有引入 tldraw。
+- 没有在 React Flow node data 中塞完整业务对象副本。
+- route 仍使用 `apiHandler`、`requireProjectAuthLight` 等统一出口。
+- 节点按钮、assistant、快捷入口共享 command/operation，不直接绕过 route/task/worker。
+- UI 文案走 i18n。
+- 不使用 `any`。
+- 旧 stage wrapper 删除或无引用。
 
 性能验收：
 
-- 100 个 panel + 100 个 video node 时，Canvas 初次渲染可交互时间不超过 2 秒。
-- 500 个节点拖动画布不卡死，控制台无 React key warning、hydration warning。
-- node 拖动保存 debounce 后不产生高频 API 风暴。
-
-质量验收：
-
-- TypeScript 无 `any`。
-- `npm run typecheck` 通过。
-- 新增和改动功能均有对应 unit/integration/regression/system 测试。
-- route catalog、requirements matrix 更新。
-- 不存在 React Flow node.data 保存完整业务对象副本的实现。
-- 不存在 canvas node 直接调用 DB 或绕过现有 operation 的实现。
+- 100 个 panel + 100 个 video card 的项目，初次打开 canvas 到可交互不超过 2 秒。
+- 500 个业务卡片时，画布 pan/zoom 不出现明显卡死。
+- 拖动阶段容器保存 layout 不产生高频 API 风暴。
+- React 控制台无 maximum update depth、key warning、hydration warning。
 
 ### 具体测试步骤
 
-每个阶段最小验证：
+快速检查当前工作区：
 
 ```bash
-npm run typecheck
-npm run lint:all
+git status --short --branch --untracked-files=all
 ```
 
-画布核心单元测试：
+阶段解析和画布基础测试：
 
 ```bash
-cross-env BILLING_TEST_BOOTSTRAP=0 vitest run tests/unit/project-canvas
+BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas
 ```
 
-layout route 契约测试：
+画布 layout API 契约：
 
 ```bash
-cross-env BILLING_TEST_BOOTSTRAP=0 vitest run tests/integration/api/contract/project-canvas-layout.route.test.ts
+BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/integration/api/contract/project-canvas-layout.route.test.ts
 ```
 
 业务顺序回归：
 
 ```bash
-cross-env SYSTEM_TEST_BOOTSTRAP=1 vitest run tests/regression/canvas-layout-preserves-business-order.test.ts
+SYSTEM_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/regression/project-canvas-preserves-business-order.test.ts
 ```
 
-视频绑定回归：
+删除确认回归：
 
 ```bash
-cross-env SYSTEM_TEST_BOOTSTRAP=1 vitest run tests/regression/canvas-video-node-panel-binding.test.ts
+SYSTEM_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/regression/project-canvas-delete-confirmation.test.ts
 ```
 
-最终系统级验证：
+完整画布工作流系统测试：
 
 ```bash
-cross-env SYSTEM_TEST_BOOTSTRAP=1 vitest run tests/system/project-canvas-workflow.system.test.ts
+SYSTEM_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/system/project-canvas-full-workflow.system.test.ts
 ```
 
-发布前完整验证：
+提交前按改动风险手动运行必要测试；push 前必须运行：
 
 ```bash
-npm run test:all
-npm run build
+npm run verify:push
 ```
 
-手动 QA 清单：
+手动 QA：
 
-- 打开项目工作区，进入 Canvas View。
-- 缩放、平移、拖动 panel 节点。
-- 刷新页面，确认 layout 恢复。
-- 点击某 panel 的图片生成入口，确认任务状态从 queued/processing 到 ready 或 failed。
-- 打开 inspector 修改 prompt，确认保存后旧 stage 与 canvas 显示一致。
-- 生成视频，确认 video node 与原 video stage 状态一致。
-- assistant 定位某个 panel 后，canvas 聚焦该节点且打开 inspector。
+- 打开项目 URL，不带 `stage` 参数，确认默认是画布。
+- 输入故事并生成剧本，确认不跳转旧页面。
+- 生成分镜，确认分镜阶段容器直接更新。
+- 对某 panel 生成图片，确认任务状态和图片在同一 panel card 内展示。
+- 对某 panel 生成视频，确认 video stage 对应 card 更新。
+- 拖动故事阶段容器，刷新后位置恢复。
+- 折叠视频阶段，刷新后仍折叠。
+- 点击 reset layout，全部阶段回到默认位置。
+- 删除 panel，确认弹出二次确认；取消时业务数据不变。
 
 ## 5. 📝 架构备忘与工程约束 (Architecture Notes & Constraints)
 
-### 不可违反的领域边界
+### 产品约束
 
-- 业务顺序、生成关系、画布位置必须分离。
-- `panelIndex/panelNumber` 仍是故事和镜头顺序的事实源。
-- layout 只保存 `x/y/width/height/zIndex/viewport/collapsed/locked`。
-- 拖动节点不得隐式触发 reorder。
-- reorder 必须是显式 command，并同步 tests。
-- 画布不得成为第二套业务数据源。
+- Workspace 第一屏必须是唯一 canvas。
+- 第一版不做 Inspector，节点/阶段内容直接显示完整功能。
+- 第一版不做手动连线。
+- 第一版不做自由便签/备注节点。
+- 第一版不开放用户自定义阶段类型；“新建”先表达为现有业务创建：新建剧集、分镜组、插入镜头、生成视频等。
+- 未来可扩展到自由 workflow graph，但当前不改业务内核。
 
-### React Flow 使用约束
+### 数据约束
 
-- 只使用 `@xyflow/react`。
-- 禁止使用旧 npm 包名 `reactflow`。
-- React Flow nodes 的 `data` 必须轻量，只包含 nodeKey、targetId、status、必要展示字段和 action adapter 引用。
-- 禁止在 node.data 中塞完整 `Project`、`ProjectStoryboard`、`ProjectPanel`。
-- nodeTypes/edgeTypes 必须集中注册，禁止在组件内动态创建导致重渲染。
-- 大量节点场景必须评估 `onlyRenderVisibleElements` 或等价性能策略。
+- Canvas layout 只保存 UI 状态：stage position、size、zIndex、collapsed、viewport。
+- Domain Data 仍是主数据：episode、clips、storyboards、panels、video、timeline。
+- 删除真实数据必须走现有 operation/route 并二次确认。
+- 生成/重生成必须走 task/worker，不允许 UI 直接写结果。
+- 画布位置不得隐式改变业务顺序。
 
-### 文件与模块化约束
+### React Flow 约束
 
-- 画布代码必须进入 `src/features/project-canvas/**` 和 `src/lib/project-canvas/**`。
-- 不得把新画布逻辑散落到旧 storyboard/video 组件中。
-- 可复用 UI 从旧组件中拆出，但禁止复制粘贴两套业务卡片。
-- route 只负责鉴权、参数校验、调用服务、返回响应；复杂业务放入 `src/lib/project-canvas/**`。
-- 所有 route 复用 `apiHandler`、`requireUserAuth`、`requireProjectAuth`、`requireProjectAuthLight`。
+- React Flow 顶层节点应优先是阶段容器，而不是每个业务小卡片。
+- 阶段内部复杂 UI 使用普通 React 组件渲染，避免把每个按钮/卡片都建成 React Flow node。
+- `nodeTypes` 必须稳定注册，不得在 render 内动态创建。
+- 禁止 `node.data` 持有完整 project/episode/storyboard/panel 对象。
+- 大型项目必须评估 `onlyRenderVisibleElements`、阶段内部分页/虚拟化或折叠策略。
 
-### 数据安全约束
+### Command 约束
 
-- 新增 Prisma schema 和迁移属于结构变更，执行实际迁移前必须获得用户明确同意。
-- 不得运行 destructive database 操作。
-- 不得留下孤儿业务数据。
-- layout 保存失败必须显式报错，不允许静默忽略。
+- 所有业务动作必须进入 command/operation 层。
+- Canvas button、assistant、快捷键、未来右键菜单必须共享 command registry。
+- Command 表达业务意图，不表达屏幕坐标。
+- Assistant 暂时不感知画布位置；以后可增加 canvas-aware context。
 
-### i18n 与导航约束
+### 文件拆分约束
 
-- UI 文案必须走项目 i18n。
-- 页面导航必须使用 `@/i18n/navigation`。
-- 禁止硬编码根字面量页面路由。
+- 新画布 UI 放在 `src/features/project-workspace/canvas/**`。
+- 底层投影、布局、命令放在 `src/lib/project-canvas/**`。
+- 旧 stage 组件必须拆为共享子组件，不允许复制两套 PanelCard/VideoPanelCard。
+- 删除旧 wrapper 前必须保证 canvas 功能等价并有测试覆盖。
 
-### Assistant 约束
+### Git 与文档约束
 
-- assistant 操作业务对象，不操作屏幕坐标。
-- assistant 可新增 canvas-aware UI command：focus/select/highlight/open inspector。
-- assistant 不得依赖 DOM 点击坐标。
-- assistant 与节点按钮必须共享 command/operation 出口。
-
-### 零补丁原则
-
-- 当前目标是彻底重构 UI 架构，不是在旧 grid/list 上打补丁。
-- 允许阶段性并行旧 stage 与新 canvas，但业务逻辑不得双轨。
-- 旧 stage 保留期间只能作为旧入口，不能新增独立业务路径。
-- 功能等价后必须删除旧 wrapper 或收敛到共享组件。
+- 每次代码修改后必须更新 `waoowaoo_Master_Plan.md`。
+- 完成授权修改后必须本地 commit，commit message 包含变更摘要、核心文件、验证结果、风险/后续。
+- commit 不自动跑完整测试；push 前必须通过 `npm run verify:push`。
+- push 必须单独获得用户明确授权。
+- 当前无关 `CHANGELOG.md` 删除不得混入 canvas 相关提交。
 
 ### 当前进度快照
 
-- ✅ 已完成：确定主方案为 `@xyflow/react`，不是 tldraw。
-- ✅ 已完成：确定这是规则化无限画布，不是完全自由白板。
-- ✅ 已完成：确定核心原则为 Domain Data / Workflow Runtime / Canvas Projection / Canvas Layout / Command Layer 分离。
-- ✅ 已完成：创建本 Master Plan 文档。
-- ✅ 已完成：新增 `@xyflow/react` 依赖声明，并运行 `npm install` 同步 `package-lock.json`。
-- ✅ 已完成：创建 `src/lib/project-canvas/**` 的第一批 graph/layout 类型、稳定 node key、rule-grid 布局、layout override 合并、只读 graph builder。
-- ✅ 已完成：新增 `tests/unit/project-canvas/**` 第一批单元测试。
-- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas` 通过，4 个测试文件 / 5 个测试通过。
-- ✅ 已验证：`npm run typecheck` 通过。
-- ✅ 已完成：创建 `src/features/project-canvas/**` 的只读 React Flow 画布壳、节点、边、runtime hook，并接入 workspace `canvas` stage。
-- ✅ 已完成：新增 `messages/en/project-workflow.json` 与 `messages/zh/project-workflow.json` 的 canvas 文案，避免硬编码固定语言。
-- ✅ 已完成：新增 `tests/unit/project-canvas/workspace-stage-navigation.test.ts` 验证 canvas 导航入口。
-- ✅ 已完成：节点标题改为组件内 i18n 渲染，graph builder 仅输出结构化元数据；新增 panel 图片预览与 `CanvasInspector` 只读检查器骨架。
-- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas` 通过，5 个测试文件 / 7 个测试通过。
-- ✅ 已验证：`npm run typecheck` 通过。
-- ✅ 已验证：`npm run lint:all` 通过，存在仓库既有 warning，无新增 error。
-- ✅ 已验证：`npm run build` 通过，存在仓库既有 lint warning 与 bullmq dynamic dependency warning，无构建失败。
-- ✅ 已完成：用户已明确授权执行结构变更与推送；新增 `ProjectCanvasLayout`、`ProjectCanvasNodeLayout` Prisma 模型和迁移文件 `prisma/migrations/20260501153000_add_project_canvas_layouts/migration.sql`。
-- ✅ 已完成：新增 `src/lib/project-canvas/layout/canvas-layout-contract.ts` 与 `canvas-layout-service.ts`，layout payload、route、service、前端保存逻辑共用同一语义。
-- ✅ 已完成：新增 `/api/projects/[projectId]/canvas-layout` GET/PATCH route，并同步 `tests/contracts/route-catalog.ts`。
-- ✅ 已完成：新增 `src/features/project-canvas/hooks/useCanvasLayoutPersistence.ts`，`ProjectCanvas.tsx` 已支持拖动节点保存 layout override 与 viewport 保存。
-- ✅ 已完成：新增 `queryKeys.project.canvasLayout(projectId, episodeId)`，画布 layout query key 与现有 query key 体系一致。
-- ✅ 已验证：`npx prisma generate` 通过。
-- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas tests/integration/api/contract/project-canvas-layout.route.test.ts` 通过，6 个测试文件 / 11 个测试通过。
-- ✅ 已验证：`npm run typecheck` 通过。
-- ✅ 已验证：`npm run lint:all` 通过，存在仓库既有 warning，无新增 error。
-- ✅ 已验证：`npm run build` 通过，存在仓库既有 lint warning 与 bullmq dynamic dependency warning，无构建失败。
-- ⚠️ 当前边界：尚未执行真实数据库迁移命令；当前提交只包含 Prisma schema 与 migration 文件。落库迁移应在部署环境按标准发布流程执行。
+- ✅ 已完成：初始 `@xyflow/react` 依赖和 canvas foundation。
+- ✅ 已完成：canvas layout Prisma 模型、migration、GET/PATCH route、layout persistence hook。
+- ✅ 已完成：AGENTS.md 已纳入 Git 追踪，并定义提交/验证策略。
+- ✅ 已完成：Husky pre-commit 已改为不跑测试；pre-push 保留完整验证。
+- 🔄 执行中：将旧“新增 Canvas tab”计划升级为“唯一 Canvas Workspace 全量迁移”计划。
+- ⚠️ 当前代码仍是半成品：已存在 canvas tab/foundation，但未完成唯一 canvas、旧 stage 删除、完整功能迁移。
+- ⚠️ 当前工作区有未提交 canvas 修复和无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
