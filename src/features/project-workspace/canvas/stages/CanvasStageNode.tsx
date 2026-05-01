@@ -3,6 +3,7 @@
 import type { NodeProps } from '@xyflow/react'
 import ScriptComposer from '../../components/script/ScriptComposer'
 import StoryComposer from '../../components/story/StoryComposer'
+import StoryboardComposer from '../../components/storyboard-stage/StoryboardComposer'
 import type { CanvasStageNode } from '../workspace-canvas-types'
 
 function CanvasStageBody({ data }: { readonly data: CanvasStageNode['data'] }) {
@@ -18,6 +19,14 @@ function CanvasStageBody({ data }: { readonly data: CanvasStageNode['data'] }) {
     return (
       <div className="nodrag nowheel h-full overflow-y-auto px-4 py-4">
         <ScriptComposer />
+      </div>
+    )
+  }
+
+  if (data.stageId === 'storyboard') {
+    return (
+      <div className="nodrag nowheel h-full overflow-y-auto px-4 py-4">
+        <StoryboardComposer />
       </div>
     )
   }

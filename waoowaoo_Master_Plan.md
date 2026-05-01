@@ -387,8 +387,8 @@ export default function StoryComposer(): React.ReactElement
 ### 阶段 5: StoryboardStageNode 完整迁移
 
 - ⏸ **Task 5.1**: `src/features/project-workspace/components/storyboard/PanelCard.tsx` - 拆分为 `PanelCardBody`、`PanelCardActions`、`PanelGenerationStatus`。禁止复制第二套 canvas panel card。
-- ⏸ **Task 5.2**: `src/features/project-workspace/components/storyboard/StoryboardGroupView.tsx` - 抽出分镜组渲染，保留 panel 编号、完整内容、图片、prompt、按钮、错误/重试状态。
-- ⏸ **Task 5.3**: `src/features/project-workspace/canvas/stages/StoryboardStageNode.tsx` - 渲染所有 storyboard group 和 panel。阶段内部不允许普通空间拖动 panel。
+- 🔄 **Task 5.2**: `src/features/project-workspace/components/storyboard-stage/StoryboardComposer.tsx` - 已先复用现有 `StoryboardStageView`，完整保留 panel 编号、完整内容、图片、prompt、按钮、错误/重试状态。待补：进一步拆出 `StoryboardGroupView` 以降低节点内部复杂度。
+- ✅ **Task 5.3**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Storyboard stage 分支已直接渲染 `StoryboardComposer`，当前在阶段容器内展示所有 storyboard group 和 panel。阶段内部不开放普通空间拖动 panel。
 - ⏸ **Task 5.4**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入现有分镜动作：生成图片、重生成、候选确认、AI data、插入镜头、删除镜头。
 - ⏸ **Task 5.5**: `src/features/project-workspace/canvas/stages/StoryboardStageVirtualizedList.tsx` - 为 `StoryboardStageNode` 内部 panel/group 列表实现独立虚拟化或分块懒渲染，优先使用 `@tanstack/react-virtual` 或等价项目认可方案。禁止只依赖 React Flow `onlyRenderVisibleElements`。预期结果：500 个 panel 时只渲染视口附近卡片。
 - ⏸ **Task 5.6**: `tests/unit/project-workspace/storyboard-stage-virtualization.test.tsx` - 构造大量 panel fixture，断言初始渲染不会挂载全部 panel card，并验证滚动后可见窗口更新。
@@ -637,7 +637,8 @@ npm run verify:push
 - ✅ 已完成：`CanvasToolbar` 已提供 reset layout、collapse all、expand all、fit view、focus stage。
 - ✅ 已完成：故事阶段第一块完整迁移。`StoryComposer` 已从 `ConfigStage` 中抽出，Story StageNode 直接渲染故事输入、配置、生成剧本和智能分集入口。
 - ✅ 已完成：剧本阶段第一块完整迁移。`ScriptComposer` 已从 `ScriptStage` 中抽出，Script StageNode 直接渲染现有 `ScriptView` 的剧本 clip、资产绑定和生成分镜入口。
+- ✅ 已完成：分镜阶段第一块完整迁移。`StoryboardComposer` 已从 `StoryboardStage` 中抽出，Storyboard StageNode 直接渲染现有 `StoryboardStageView` 的分镜组、panel、图片生成、编辑、插入、删除等入口。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事和剧本节点已有完整能力；分镜 panel、视频 panel、成片 timeline 仍是摘要和操作入口占位，尚未完成阶段内虚拟化和 command registry。
+- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事、剧本、分镜节点已有完整能力；视频 panel、成片 timeline 仍是摘要和操作入口占位，尚未完成阶段内虚拟化和 command registry。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
