@@ -653,5 +653,6 @@ npm run verify:push
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-command-registry.test.ts tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workflow/workspace-runtime.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/integration/api/contract/project-canvas-layout.route.test.ts` 通过，6 个测试文件 / 22 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
 - ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。
+- ✅ 已验证：`npm run build` 通过。构建阶段存在仓库既有 lint warnings 与 bullmq dynamic dependency warning，但无编译错误，workspace 动态路由和 canvas-layout API 均进入生产构建结果。
 - ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能，旧 wrapper 已清理，阶段内部虚拟化和 command registry 基础层已完成。下一步重点是 command registry 全量接线、组件级/系统级测试和浏览器 QA。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
