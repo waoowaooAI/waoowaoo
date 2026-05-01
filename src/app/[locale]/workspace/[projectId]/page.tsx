@@ -70,10 +70,14 @@ export default function ProjectDetailPage() {
   const llmModelOptions = userModelsQuery.data?.llm || []
 
   // 更新URL参数（stage 和/或 episode）
-  const updateUrlParams = useCallback((updates: { stage?: string; episode?: string | null }) => {
+  const updateUrlParams = useCallback((updates: { stage?: string | null; episode?: string | null }) => {
     const params = new URLSearchParams(searchParams.toString())
     if (updates.stage !== undefined) {
-      params.set('stage', updates.stage)
+      if (updates.stage) {
+        params.set('stage', updates.stage)
+      } else {
+        params.delete('stage')
+      }
     }
     if (updates.episode !== undefined) {
       if (updates.episode) {
@@ -92,9 +96,10 @@ export default function ProjectDetailPage() {
     )
   }, [router, projectId, searchParams])
 
-  // 更新URL中的stage参数（保持向后兼容）
+  // Stage 已迁入唯一画布；旧 stage change 调用只清理 URL，不再切换页面。
   const updateUrlStage = useCallback((stage: string) => {
-    updateUrlParams({ stage })
+    void stage
+    updateUrlParams({ stage: null })
   }, [updateUrlParams])
 
   const effectiveStage = resolveWorkspaceStage(urlStage)
@@ -230,10 +235,9 @@ export default function ProjectDetailPage() {
       if (newEpisodes.length > 0) {
         // 如果需要触发全局分析，切换到 assets 阶段并带上参数
         if (triggerGlobalAnalysis) {
-          _ulogInfo('[Page] 触发全局分析，跳转到 assets 阶段，带 globalAnalyze=1 参数')
+          _ulogInfo('[Page] 触发全局分析，保留唯一画布入口并带 globalAnalyze=1 参数')
           // 使用相对路径更新，保留 locale
           const params = new URLSearchParams()
-          params.set('stage', 'assets')
           params.set('episode', newEpisodes[0].id)
           params.set('globalAnalyze', '1')
           const newUrl = `?${params.toString()}`

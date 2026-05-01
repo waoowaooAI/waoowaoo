@@ -251,7 +251,11 @@ export function useWorkspaceExecution({
       }
       return
     }
-    if (storyToScriptStream.status === 'completed' && currentStage === 'config' && storyToScriptStream.runId) {
+    if (
+      storyToScriptStream.status === 'completed' &&
+      (currentStage === 'canvas' || currentStage === 'config') &&
+      storyToScriptStream.runId
+    ) {
       void finalizeStoryToScriptSuccess(storyToScriptStream.runId)
       return
     }
@@ -293,7 +297,11 @@ export function useWorkspaceExecution({
       }
       return
     }
-    if (scriptToStoryboardStream.status === 'completed' && currentStage === 'script' && scriptToStoryboardStream.runId) {
+    if (
+      scriptToStoryboardStream.status === 'completed' &&
+      (currentStage === 'canvas' || currentStage === 'script') &&
+      scriptToStoryboardStream.runId
+    ) {
       void finalizeScriptToStoryboardSuccess(scriptToStoryboardStream.runId)
       return
     }

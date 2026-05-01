@@ -8,18 +8,27 @@ import type {
   ProjectCanvasLayoutSnapshot,
   UpsertCanvasLayoutInput,
 } from '@/lib/project-canvas/layout/canvas-layout-contract'
+import {
+  parseCanvasLayoutReadResponse,
+  type CanvasLayoutReadWarningCode,
+} from '@/lib/project-canvas/layout/canvas-layout-error-policy'
 
-interface CanvasLayoutResponse {
+interface CanvasLayoutWriteResponse {
   readonly success: boolean
   readonly layout: ProjectCanvasLayoutSnapshot | null
 }
 
-async function readCanvasLayout(projectId: string, episodeId: string): Promise<ProjectCanvasLayoutSnapshot | null> {
+interface CanvasLayoutPersistenceResult {
+  readonly layout: ProjectCanvasLayoutSnapshot | null
+  readonly warningCode: CanvasLayoutReadWarningCode | null
+}
+
+async function readCanvasLayout(projectId: string, episodeId: string): Promise<CanvasLayoutPersistenceResult> {
   const search = new URLSearchParams({ episodeId })
   const response = await apiFetch(`/api/projects/${projectId}/canvas-layout?${search.toString()}`)
   await checkApiResponse(response)
-  const payload = await response.json() as CanvasLayoutResponse
-  return payload.layout
+  const payload = await response.json() as unknown
+  return parseCanvasLayoutReadResponse(payload)
 }
 
 async function writeCanvasLayout(
@@ -32,11 +41,19 @@ async function writeCanvasLayout(
     body: JSON.stringify(input),
   })
   await checkApiResponse(response)
-  const payload = await response.json() as CanvasLayoutResponse
+  const payload = await response.json() as CanvasLayoutWriteResponse
   if (!payload.layout) {
     throw new Error('canvas layout save returned empty layout')
   }
   return payload.layout
+}
+
+async function resetCanvasLayout(projectId: string, episodeId: string): Promise<void> {
+  const search = new URLSearchParams({ episodeId })
+  const response = await apiFetch(`/api/projects/${projectId}/canvas-layout?${search.toString()}`, {
+    method: 'DELETE',
+  })
+  await checkApiResponse(response)
 }
 
 export function useCanvasLayoutPersistence(params: {
@@ -52,13 +69,18 @@ export function useCanvasLayoutPersistence(params: {
   const mutation = useMutation({
     mutationFn: (input: UpsertCanvasLayoutInput) => writeCanvasLayout(params.projectId, input),
   })
+  const resetMutation = useMutation({
+    mutationFn: () => resetCanvasLayout(params.projectId, params.episodeId),
+  })
 
   return {
-    layout: query.data ?? null,
+    layout: query.data?.layout ?? null,
+    layoutWarningCode: query.data?.warningCode ?? null,
     isLoading: query.isLoading,
     loadError: query.error,
     saveLayout: mutation.mutateAsync,
-    isSaving: mutation.isPending,
-    saveError: mutation.error,
+    resetLayout: resetMutation.mutateAsync,
+    isSaving: mutation.isPending || resetMutation.isPending,
+    saveError: mutation.error || resetMutation.error,
   }
 }

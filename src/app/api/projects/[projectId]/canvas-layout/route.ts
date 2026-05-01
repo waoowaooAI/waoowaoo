@@ -4,6 +4,7 @@ import { apiHandler, ApiError } from '@/lib/api-errors'
 import {
   CanvasLayoutEpisodeMismatchError,
   getProjectCanvasLayout,
+  resetProjectCanvasLayout,
   upsertProjectCanvasLayout,
 } from '@/lib/project-canvas/layout/canvas-layout-service'
 import { upsertCanvasLayoutInputSchema } from '@/lib/project-canvas/layout/canvas-layout-contract'
@@ -80,5 +81,38 @@ export const PATCH = apiHandler(async (
   return NextResponse.json({
     success: true,
     layout,
+  })
+})
+
+export const DELETE = apiHandler(async (
+  request: NextRequest,
+  context: { params: Promise<{ projectId: string }> },
+) => {
+  const { projectId } = await context.params
+  const authResult = await requireProjectAuthLight(projectId)
+  if (isErrorResponse(authResult)) return authResult
+
+  const episodeId = request.nextUrl.searchParams.get('episodeId')?.trim() || ''
+  if (!episodeId) {
+    throw new ApiError('INVALID_PARAMS', {
+      field: 'episodeId',
+      message: 'episodeId is required',
+    })
+  }
+
+  try {
+    await resetProjectCanvasLayout({ projectId, episodeId })
+  } catch (error) {
+    if (error instanceof CanvasLayoutEpisodeMismatchError) {
+      throw new ApiError('INVALID_PARAMS', {
+        field: 'episodeId',
+        message: 'episodeId does not belong to project',
+      })
+    }
+    throw error
+  }
+
+  return NextResponse.json({
+    success: true,
   })
 })

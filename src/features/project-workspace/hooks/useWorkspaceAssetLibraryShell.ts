@@ -75,6 +75,7 @@ export function useWorkspaceAssetLibraryShell({
 
   useEffect(() => {
     const needsAssets =
+      currentStage === 'canvas' ||
       currentStage === 'script' ||
       currentStage === 'assets' ||
       currentStage === 'storyboard' ||

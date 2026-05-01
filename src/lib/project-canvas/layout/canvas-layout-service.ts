@@ -166,3 +166,17 @@ export async function upsertProjectCanvasLayout(params: {
 
   return mapLayout(row)
 }
+
+export async function resetProjectCanvasLayout(params: {
+  readonly projectId: string
+  readonly episodeId: string
+}): Promise<void> {
+  await assertEpisodeBelongsToProject(params)
+
+  await prisma.projectCanvasLayout.deleteMany({
+    where: {
+      projectId: params.projectId,
+      episodeId: params.episodeId,
+    },
+  })
+}

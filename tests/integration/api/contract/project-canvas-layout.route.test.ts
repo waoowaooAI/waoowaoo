@@ -9,6 +9,7 @@ const authState = vi.hoisted(() => ({
 const canvasLayoutServiceMock = vi.hoisted(() => ({
   getProjectCanvasLayout: vi.fn(),
   upsertProjectCanvasLayout: vi.fn(),
+  resetProjectCanvasLayout: vi.fn(),
   CanvasLayoutEpisodeMismatchError: class CanvasLayoutEpisodeMismatchError extends Error {},
 }))
 
@@ -155,6 +156,28 @@ describe('api contract - project canvas layout route', () => {
     expect(canvasLayoutServiceMock.upsertProjectCanvasLayout).not.toHaveBeenCalled()
     const payload = await res.json() as { error: { code: string } }
     expect(payload.error.code).toBe('INVALID_PARAMS')
+  })
+
+  it('DELETE resets saved layout for an episode without returning fabricated layout data', async () => {
+    canvasLayoutServiceMock.resetProjectCanvasLayout.mockResolvedValueOnce(undefined)
+    const { DELETE } = await import('@/app/api/projects/[projectId]/canvas-layout/route')
+
+    const res = await DELETE(buildMockRequest({
+      path: '/api/projects/project-1/canvas-layout',
+      method: 'DELETE',
+      query: { episodeId: 'episode-1' },
+    }), {
+      params: Promise.resolve({ projectId: 'project-1' }),
+    })
+
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({
+      success: true,
+    })
+    expect(canvasLayoutServiceMock.resetProjectCanvasLayout).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      episodeId: 'episode-1',
+    })
   })
 
   it('returns auth error before reading layout', async () => {

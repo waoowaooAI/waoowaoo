@@ -59,6 +59,16 @@ export interface ProjectCanvasLayoutSnapshot {
   readonly nodeLayouts: readonly CanvasNodeLayoutSnapshot[]
 }
 
+export const canvasNodeLayoutSnapshotSchema: z.ZodType<CanvasNodeLayoutSnapshot> = canvasNodeLayoutInputSchema
+
+export const projectCanvasLayoutSnapshotSchema: z.ZodType<ProjectCanvasLayoutSnapshot> = z.object({
+  projectId: z.string().trim().min(1),
+  episodeId: z.string().trim().min(1),
+  schemaVersion: z.number().int(),
+  viewport: canvasViewportLayoutSchema,
+  nodeLayouts: z.array(canvasNodeLayoutSnapshotSchema),
+})
+
 export const upsertCanvasLayoutInputSchema = z.object({
   episodeId: z.string().trim().min(1),
   viewport: canvasViewportLayoutSchema,

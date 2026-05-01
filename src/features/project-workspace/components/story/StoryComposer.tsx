@@ -43,7 +43,7 @@ export default function StoryComposer() {
     if (!firstEpisodeId) return
 
     if (triggerGlobalAnalysis) {
-      router.replace(`?stage=assets&episode=${firstEpisodeId}&globalAnalyze=1`, { scroll: false })
+      router.replace(`?episode=${firstEpisodeId}&globalAnalyze=1`, { scroll: false })
       return
     }
     router.replace(`?episode=${firstEpisodeId}`, { scroll: false })

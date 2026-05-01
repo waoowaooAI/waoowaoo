@@ -1,5 +1,7 @@
 'use client'
 
+import type { CanvasStageId } from './stageTypes'
+
 interface CanvasToolbarProps {
   readonly title: string
   readonly subtitle: string
@@ -12,7 +14,7 @@ interface CanvasToolbarProps {
   readonly savingLabel: string
   readonly errorLabel: string | null
   readonly focusItems: readonly {
-    readonly id: string
+    readonly id: CanvasStageId
     readonly label: string
   }[]
   readonly isLoading: boolean
@@ -21,7 +23,7 @@ interface CanvasToolbarProps {
   readonly onCollapseAll: () => void
   readonly onExpandAll: () => void
   readonly onFitView: () => void
-  readonly onFocusStage: (stageId: string) => void
+  readonly onFocusStage: (stageId: CanvasStageId) => void
 }
 
 export default function CanvasToolbar({

@@ -70,6 +70,7 @@ vi.mock('@/features/project-workspace/components/workspace-assistant/workspace-a
 }))
 
 import { useWorkspaceAutoRun } from '@/features/project-workspace/hooks/useWorkspaceAutoRun'
+import { useWorkspaceAssetLibraryShell } from '@/features/project-workspace/hooks/useWorkspaceAssetLibraryShell'
 import {
   buildWorkflowCompletedMessage,
   buildWorkflowErrorMessage,
@@ -185,6 +186,41 @@ describe('useWorkspaceAutoRun', () => {
 
     expect(router.replace).not.toHaveBeenCalled()
     expect(runWithRebuildConfirm).not.toHaveBeenCalled()
+  })
+})
+
+describe('useWorkspaceAssetLibraryShell', () => {
+  beforeEach(() => {
+    useStateMock.mockReset()
+    useRefMock.mockReset()
+    useEffectMock.mockReset()
+    useCallbackMock.mockClear()
+
+    useStateMock.mockImplementation((initialValue: unknown) => [initialValue, vi.fn()])
+    useRefMock.mockImplementation((initialValue: unknown) => ({
+      current: initialValue,
+    }))
+  })
+
+  it('refreshes assets when the only visible workspace stage is the canvas', () => {
+    const effectCallbacks: Array<() => void | (() => void)> = []
+    const router = { replace: vi.fn() }
+    const onRefresh = vi.fn(async () => undefined)
+
+    useEffectMock.mockImplementation((callback: () => void | (() => void)) => {
+      effectCallbacks.push(callback)
+    })
+
+    useWorkspaceAssetLibraryShell({
+      currentStage: 'canvas',
+      searchParams: new URLSearchParams('episode=episode-1'),
+      router,
+      onRefresh,
+    })
+
+    effectCallbacks[1]?.()
+
+    expect(onRefresh).toHaveBeenCalledWith({ scope: 'assets' })
   })
 })
 

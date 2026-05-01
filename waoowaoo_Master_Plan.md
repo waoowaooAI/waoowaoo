@@ -310,8 +310,8 @@ tests/
 
 ### 阶段 1: 删除 stage 主导航，建立唯一 Canvas 入口
 
-- 🔄 **Task 1.1**: `src/features/project-workspace/workspace-stage.ts` - 将 workspace stage 语义重定义为内部 canvas focus target，而不是页面切换枚举。已完成第一步：未知 stage 和空 stage 默认进入 `canvas`，旧 `editor` 仅映射到 `videos` 以保持 URL 解析稳定；后续需要把旧 stage 语义进一步收敛为 canvas focus hint。
-- 🔄 **Task 1.2**: `src/app/[locale]/workspace/[projectId]/page.tsx` - 移除以 `stage` query 控制主页面的逻辑。当前页面层已不再通过 stage 渲染不同内容，但仍把解析后的 stage 传给 workspace runtime 作为 assistant/autoflow 上下文；后续需要把该字段重命名为 focus hint，避免继续表达页面分支。
+- ✅ **Task 1.1**: `src/features/project-workspace/workspace-stage.ts` - 已将 workspace stage 语义收敛为内部 canvas focus/context hint，而不是页面切换枚举。未知 stage 和空 stage 默认进入 `canvas`，旧 `editor` 仅映射到 `videos` 以保持历史 URL 解析稳定。
+- ✅ **Task 1.2**: `src/app/[locale]/workspace/[projectId]/page.tsx` / `src/features/project-workspace/hooks/useWorkspaceProjectSnapshot.ts` - 已移除以 `stage` query 控制主页面的逻辑。`onStageChange()` 不再写入旧 stage URL，只清理 `stage` query；workspace runtime 默认 `currentStage` 通过 `resolveWorkspaceStage()` 解析为空/未知即 `canvas`，仅作为 assistant/autoflow 上下文 hint。
 - ✅ **Task 1.3**: `src/features/project-workspace/ProjectWorkspace.tsx` - 已删除 `WorkspaceStageContent` 分支渲染，并在阶段 2 升级为始终渲染 `ProjectWorkspaceCanvas`。函数签名保持：
 
 ```ts
@@ -327,7 +327,7 @@ export default function ProjectWorkspace(props: ProjectWorkspaceProps): JSX.Elem
 
 ### 阶段 2: Canvas Workspace Shell 与阶段容器布局
 
-- ⏸ **Task 2.1**: `src/features/project-workspace/canvas/stageTypes.ts` - 新增阶段类型：
+- ✅ **Task 2.1**: `src/features/project-workspace/canvas/stageTypes.ts` - 已新增阶段类型：
 
 ```ts
 export type CanvasStageId = 'story' | 'script' | 'storyboard' | 'video' | 'final'
@@ -341,7 +341,7 @@ export interface CanvasStageDefinition {
 }
 ```
 
-预期结果：阶段容器是稳定产品概念，不依赖旧 URL stage。
+实际结果：阶段容器是稳定产品概念，不依赖旧 URL stage。
 
 - ✅ **Task 2.2**: `src/features/project-workspace/canvas/stageTypes.ts` - 已注册五个固定阶段容器：story、script、storyboard、video、final。第一版不开放用户自定义阶段；未来如需扩展，可把当前 definition array 提升为 registry。
 - ✅ **Task 2.3**: `src/features/project-workspace/canvas/stage-layout.ts` - 已新增阶段级布局引擎：
@@ -425,26 +425,26 @@ export type CanvasCommand =
 ### 阶段 8: Canvas Layout 持久化、折叠、重置和恢复
 
 - ⏸ **Task 8.1**: `src/features/project-workspace/canvas/hooks/useCanvasStageLayout.ts` - 管理 stage dragging、collapsed、viewport、reset layout。阶段内部节点不参与 React Flow 独立拖动。
-- ⏸ **Task 8.2**: `src/lib/project-canvas/layout/reset-canvas-layout.ts` - 新增 reset layout 服务函数，清除 saved stage overrides 或重写为默认布局。
-- ⏸ **Task 8.3**: `src/lib/project-canvas/layout/canvas-layout-error-policy.ts` - 定义 layout 加载/解析/版本不兼容策略：layout 失败时使用默认布局继续工作，并显示非阻塞警告；业务数据失败不得降级为假数据。
-- ⏸ **Task 8.4**: `src/features/project-workspace/canvas/components/CanvasLayoutWarning.tsx` - 展示 layout 加载失败、保存失败、schema version reset 等非阻塞状态。禁止静默吞错。
-- ⏸ **Task 8.5**: `src/app/api/projects/[projectId]/canvas-layout/route.ts` - 扩展 PATCH 支持 collapsed、stage layout、viewport；新增 DELETE 或 POST reset endpoint 时必须更新 route catalog。
-- ⏸ **Task 8.6**: `tests/integration/api/contract/project-canvas-layout.route.test.ts` - 覆盖保存 stage layout、折叠状态、viewport、reset layout、schemaVersion 不兼容。
-- ⏸ **Task 8.7**: `tests/unit/project-canvas/canvas-layout-error-policy.test.ts` - 覆盖 layout API 失败、schemaVersion 不兼容、解析失败时使用默认布局并产生可见 warning 状态。
+- ✅ **Task 8.2**: `src/lib/project-canvas/layout/canvas-layout-service.ts` - 已新增 `resetProjectCanvasLayout({ projectId, episodeId })`，只清除该 episode 的 saved canvas layout，不触碰业务数据。
+- ✅ **Task 8.3**: `src/lib/project-canvas/layout/canvas-layout-error-policy.ts` - 已定义 layout 读取/解析/版本不兼容策略：schemaVersion 不匹配时丢弃 saved layout、使用默认阶段布局并返回 warning code； malformed active-schema payload 显式报错，不伪造布局。
+- ✅ **Task 8.4**: `src/features/project-workspace/canvas/CanvasToolbar.tsx` / `ProjectWorkspaceCanvas.tsx` - 已展示 layout 加载失败、保存失败、schema version mismatch 的非阻塞 warning。当前为 toolbar inline warning，不单独新增组件，避免过度拆分。
+- ✅ **Task 8.5**: `src/app/api/projects/[projectId]/canvas-layout/route.ts` - PATCH 已支持 collapsed、stage layout、viewport；新增 DELETE reset endpoint，调用 `resetProjectCanvasLayout()` 清理 saved layout。
+- 🔄 **Task 8.6**: `tests/integration/api/contract/project-canvas-layout.route.test.ts` - 已覆盖 GET、PATCH 保存 stage layout/viewport、invalid payload、DELETE reset、auth error。schemaVersion 不兼容由 `canvas-layout-error-policy.test.ts` 在客户端读取策略层覆盖。
+- ✅ **Task 8.7**: `tests/unit/project-canvas/canvas-layout-error-policy.test.ts` - 已覆盖 active schema 正常读取、schemaVersion 不兼容时返回 default-layout warning code、active schema malformed payload 显式失败。
 - ⏸ **Task 8.8**: `tests/system/project-canvas-layout-restore.system.test.ts` - 刷新后恢复画布位置、折叠状态、viewport；layout 失败时仍显示完整业务工作流和 warning。
 
 ### 阶段 9: Assistant 接入唯一画布
 
-- 🔄 **Task 9.1**: `src/lib/project-canvas/commands/canvas-command-registry.ts` - 已建立 command registry 和强类型 `executeCanvasCommand()`；待补：把 assistant、节点按钮、快捷键全部切到该入口。
+- 🔄 **Task 9.1**: `src/lib/project-canvas/commands/canvas-command-registry.ts` / `src/features/project-workspace/canvas/ProjectWorkspaceCanvas.tsx` - 已建立 command registry 和强类型 `executeCanvasCommand()`；Toolbar focus 已通过 registry 执行，video command 可转发到 workspace runtime。待补：assistant、分镜图片、插入/删除、快捷键全部切到该入口。
 - ⏸ **Task 9.2**: `src/features/project-workspace/components/workspace-assistant/**` - Assistant 保留在画布旁边；执行结果可定位阶段/节点、创建业务内容、打开节点相关操作。
-- ⏸ **Task 9.3**: `src/features/project-workspace/canvas/hooks/useCanvasFocus.ts` - 暴露 `focusStage(stageId)`、`focusPanel(panelId)`、`focusVideoPanel(panelId)`，只操作 UI 视角，不改业务数据。
+- ✅ **Task 9.3**: `src/features/project-workspace/canvas/hooks/useCanvasFocus.ts` - 已暴露 `focusStage(stageId)`、`focusPanel(panelId)`、`focusVideoPanel(panelId)`，只操作 UI 视角，不改业务数据。第一版 panel/video panel 聚焦定位到对应大阶段，因为 panel 仍是阶段内部虚拟列表，不是顶层 React Flow node。
 - ✅ **Task 9.4**: `tests/unit/project-canvas/canvas-command-registry.test.ts` - 已覆盖命令路由的具体入参：插入 panel、生成视频、聚焦阶段，并断言 UI focus command 不触发业务重排。
 
 ### 阶段 10: 删除旧 Stage 页面壳与清理双轨
 
 - ✅ **Task 10.1**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 已删除文件并移除引用。Workspace 主内容不再根据 stage 分支渲染不同页面。
 - ✅ **Task 10.2**: `src/features/project-workspace/components/ConfigStage.tsx` / `ScriptStage.tsx` / `StoryboardStage.tsx` / `VideoStageRoute.tsx` / `VoiceStageRoute.tsx` / `src/features/project-workspace/StageNavigation.tsx` / `src/features/project-canvas/ProjectCanvasRoute.tsx` - 已删除旧 page wrapper 和旧 canvas tab route，保留已拆出的共享 composer/view 组件。
-- ⏸ **Task 10.3**: `src/features/project-workspace/hooks/useProjectWorkspaceController.ts` - 删除 stage nav state，保留 runtime/actions；所有功能供 canvas stage 使用。
+- 🔄 **Task 10.3**: `src/features/project-workspace/hooks/useProjectWorkspaceController.ts` / `src/features/project-workspace/hooks/useWorkspaceExecution.ts` / `src/features/project-workspace/hooks/useWorkspaceAssetLibraryShell.ts` - 已将 legacy stage state 收敛为 canvas context hint：默认 `canvas`、资产刷新覆盖 canvas、任务完成监听兼容 canvas。待补：后续把公开命名从 `currentStage` 重命名为 `currentCanvasFocus`，降低语义歧义。
 - 🔄 **Task 10.4**: `src/features/project-workspace/StageNavigation.tsx` / `src/components/ui/CapsuleNav.tsx` 使用点 - workspace 主流程已不再渲染 `CapsuleNav`；若其他页面仍使用 CapsuleNav，不删除组件本体。后续需要清理剩余旧 stage 文案和死代码。
 - ⏸ **Task 10.5**: `tests/contracts/requirements-matrix.ts` - 更新需求矩阵，确保旧 stage 功能全部映射到 canvas 测试。
 
@@ -631,7 +631,9 @@ npm run verify:push
 - ✅ 已完成：修复进入当前半成品 canvas 后 React maximum update depth 问题。原因是空 saved layout 每次 render 创建新数组，导致 `flowNodes` 重新生成并触发 `setNodes` 循环；现在使用稳定空数组常量。
 - ✅ 已完成：让当前半成品 canvas 节点保持可拖拽，为 layout 保存验证提供基础。
 - ✅ 已完成：第一阶段主入口收敛。`ProjectWorkspace.tsx` 现在始终渲染唯一画布，`WorkspaceStageContent.tsx` 和 `useWorkspaceStageNavigation.ts` 已删除，`WorkspaceHeaderShell.tsx` 已移除 workspace 主阶段 `CapsuleNav`。
-- ✅ 已完成：`workspace-stage.ts` 已将未知/空 stage 解析为 `canvas`，避免默认进入故事阶段；旧 `editor` 仍映射到 `videos`，后续会进一步收敛为 focus hint。
+- ✅ 已完成：`workspace-stage.ts` 已将未知/空 stage 解析为 `canvas`，避免默认进入故事阶段；旧 `editor` 仍映射到 `videos`，并且 `useWorkspaceProjectSnapshot` 现在统一复用该解析规则。
+- ✅ 已完成：旧 stage URL 写入已收敛。`onStageChange('script'/'storyboard'/'videos')` 不再把 workspace 主页面切到旧阶段，只清理 `stage` query；智能分集后的全局资产分析也不再写入 `stage=assets`。
+- ✅ 已完成：唯一画布下的运行时语义已补齐。默认 `currentStage=canvas` 时仍会刷新资产上下文，并能处理 story-to-script / script-to-storyboard 完成事件。
 - ✅ 已完成：第二阶段基础画布壳。新增 `src/features/project-workspace/canvas/**`，当前 workspace 主内容已经从 legacy `ProjectCanvasRoute` 切到 `ProjectWorkspaceCanvas`，画布顶层为五个固定 StageNode。
 - ✅ 已完成：阶段布局支持保存/读取现有 canvas layout 表；本阶段不改 Prisma schema，不做破坏性 DB 变更。
 - ✅ 已完成：`CanvasToolbar` 已提供 reset layout、collapse all、expand all、fit view、focus stage。
@@ -643,8 +645,13 @@ npm run verify:push
 - ✅ 已完成：阶段内部虚拟化第一版。分镜 `StoryboardCanvas` 和视频 `VideoRenderPanel` 已接入 `@tanstack/react-virtual`，大项目超过阈值时按阶段内部 group 虚拟化挂载。
 - ✅ 已完成：Canvas command registry 基础层。新增 `CanvasCommand` 类型和 `executeCanvasCommand()`，覆盖 focus、panel insert/delete/reorder、图片生成、视频生成、成片导出等业务意图。
 - ✅ 已完成：旧 stage wrapper 清理。已删除旧 `ConfigStage`、`ScriptStage`、`StoryboardStage`、`VideoStageRoute`、`VoiceStageRoute`、`StageNavigation` 和 legacy `ProjectCanvasRoute`。
+- ✅ 已完成：layout reset 和异常策略。新增 `resetProjectCanvasLayout()`、canvas-layout DELETE route、schema mismatch 读取策略；旧版本 layout 会回到默认阶段布局并显示 warning，不会套用错误坐标。
+- ✅ 已完成：Canvas command registry 首批接线。Toolbar 阶段定位通过 `executeCanvasCommand({ type: 'focus_stage' })` 执行；video command 已可转发到现有 workspace runtime。新增 `useCanvasFocus()`，panel/video panel 聚焦先定位到对应阶段。分镜图片/插入/删除仍由现有组件链路执行，后续再下沉到 registry。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-command-registry.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，7 个测试文件 / 12 个测试通过。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/integration/api/contract/project-canvas-layout.route.test.ts tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts` 通过，3 个测试文件 / 10 个测试通过。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-canvas/resolve-canvas-layout.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workflow/workspace-runtime.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas/canvas-command-registry.test.ts` 通过，6 个测试文件 / 18 个测试通过。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-command-registry.test.ts tests/unit/project-canvas/canvas-layout-error-policy.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workflow/workspace-runtime.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/integration/api/contract/project-canvas-layout.route.test.ts` 通过，6 个测试文件 / 22 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
 - ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。
-- ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能；下一步重点是阶段内部虚拟化、command registry、旧 wrapper 清理、组件级/系统级测试和浏览器 QA。
+- ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能，旧 wrapper 已清理，阶段内部虚拟化和 command registry 基础层已完成。下一步重点是 command registry 全量接线、组件级/系统级测试和浏览器 QA。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。

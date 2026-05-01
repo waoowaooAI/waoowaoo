@@ -16,8 +16,13 @@ import { useTranslations } from 'next-intl'
 import { useCanvasLayoutPersistence } from '@/features/project-canvas/hooks/useCanvasLayoutPersistence'
 import type { UpsertCanvasLayoutInput } from '@/lib/project-canvas/layout/canvas-layout-contract'
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
+import {
+  executeCanvasCommand,
+  type CanvasCommandHandlers,
+} from '@/lib/project-canvas/commands/canvas-command-registry'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
+import { useWorkspaceStageRuntime } from '../WorkspaceStageRuntimeContext'
 import CanvasToolbar from './CanvasToolbar'
 import {
   buildDefaultCanvasStageLayouts,
@@ -26,16 +31,22 @@ import {
 } from './stage-layout'
 import { CANVAS_STAGE_DEFINITIONS } from './stageTypes'
 import { useCanvasWorkspaceNodes } from './hooks/useCanvasWorkspaceNodes'
+import { useCanvasFocus } from './hooks/useCanvasFocus'
 import { workspaceCanvasStageNodeTypes } from './stages/stageNodeTypes'
 import type { CanvasStageNode } from './workspace-canvas-types'
 
 const DEFAULT_VIEWPORT = { x: 48, y: 96, zoom: 0.82 }
 const EMPTY_SAVED_NODE_LAYOUTS: readonly CanvasNodeLayout[] = []
 
+function throwUnsupportedCanvasCommand(command: string): never {
+  throw new Error(`Canvas command "${command}" is not wired to a workspace operation yet`)
+}
+
 function ProjectWorkspaceCanvasContent() {
   const t = useTranslations('projectWorkflow.canvas.workspace')
   const { projectId, episodeId } = useWorkspaceProvider()
   const { novelText, clips, storyboards } = useWorkspaceEpisodeStageData()
+  const runtime = useWorkspaceStageRuntime()
   const reactFlow = useReactFlow<CanvasStageNode>()
   const [nodes, setNodes] = useState<CanvasStageNode[]>([])
 
@@ -46,6 +57,8 @@ function ProjectWorkspaceCanvasContent() {
     isSaving,
     loadError,
     saveError,
+    layoutWarningCode,
+    resetLayout: resetSavedLayout,
   } = useCanvasLayoutPersistence({
     projectId,
     episodeId: episodeId ?? '',
@@ -63,6 +76,7 @@ function ProjectWorkspaceCanvasContent() {
     layouts: stageLayouts,
     translate: t,
   })
+  const canvasFocus = useCanvasFocus({ nodes, reactFlow })
 
   useEffect(() => {
     setNodes(flowNodes)
@@ -144,28 +158,40 @@ function ProjectWorkspaceCanvasContent() {
           },
         }
       })
-      void persistCurrentLayout(nextNodes)
       return nextNodes
     })
     void reactFlow.setViewport(DEFAULT_VIEWPORT)
-  }, [episodeId, persistCurrentLayout, reactFlow])
+    void resetSavedLayout()
+  }, [episodeId, reactFlow, resetSavedLayout])
 
   const fitView = useCallback(() => {
     void reactFlow.fitView({ padding: 0.14, duration: 180 })
   }, [reactFlow])
 
-  const focusStage = useCallback((stageId: string) => {
-    const node = nodes.find((candidate) => candidate.data.stageId === stageId)
-    if (!node) return
-    const height = node.data.collapsed ? CANVAS_STAGE_COLLAPSED_HEIGHT : node.data.expandedHeight
-    void reactFlow.setCenter(
-      node.position.x + node.data.width / 2,
-      node.position.y + height / 2,
-      { zoom: 0.82, duration: 180 },
-    )
-  }, [nodes, reactFlow])
+  const commandHandlers = useMemo<CanvasCommandHandlers>(() => ({
+    focusStage: canvasFocus.focusStage,
+    insertPanelAfter: () => throwUnsupportedCanvasCommand('insert_panel_after'),
+    deletePanel: () => throwUnsupportedCanvasCommand('delete_panel'),
+    reorderPanel: () => throwUnsupportedCanvasCommand('reorder_panel'),
+    generatePanelImage: () => throwUnsupportedCanvasCommand('generate_panel_image'),
+    regeneratePanelImage: () => throwUnsupportedCanvasCommand('regenerate_panel_image'),
+    generatePanelVideo: (input) => runtime.onGenerateVideo(
+      input.storyboardId,
+      input.panelIndex,
+      undefined,
+      undefined,
+      undefined,
+      input.panelId,
+    ),
+    generateAllVideos: () => runtime.onGenerateAllVideos(),
+    exportFinalVideo: () => throwUnsupportedCanvasCommand('export_final_video'),
+  }), [canvasFocus.focusStage, runtime])
 
-  const errorLabel = loadError || saveError ? t('layoutWarning') : null
+  const runCanvasCommand = useCallback((command: Parameters<typeof executeCanvasCommand>[0]) => {
+    void executeCanvasCommand(command, commandHandlers)
+  }, [commandHandlers])
+
+  const errorLabel = loadError || saveError || layoutWarningCode ? t('layoutWarning') : null
   const nodeCountSummary = t('summary', {
     stages: CANVAS_STAGE_DEFINITIONS.length,
     clips: clips.length,
@@ -198,7 +224,7 @@ function ProjectWorkspaceCanvasContent() {
         onCollapseAll={() => setAllCollapsed(true)}
         onExpandAll={() => setAllCollapsed(false)}
         onFitView={fitView}
-        onFocusStage={focusStage}
+        onFocusStage={(stageId) => runCanvasCommand({ type: 'focus_stage', stageId })}
       />
 
       <div className="h-[calc(100%-3.5rem)]">

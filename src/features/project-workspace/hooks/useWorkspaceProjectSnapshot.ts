@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { ProjectWorkspaceProps } from '../types'
 import type { CapabilitySelections } from '@/lib/ai-registry/types'
+import { resolveWorkspaceStage } from '../workspace-stage'
 
 function parseCapabilitySelections(raw: unknown): CapabilitySelections {
   if (!raw) return {}
@@ -31,7 +32,7 @@ export function useWorkspaceProjectSnapshot({
       projectCharacters: project.characters || [],
       projectLocations: project.locations || [],
       episodeStoryboards: episode?.storyboards || [],
-      currentStage: urlStage === 'editor' ? 'videos' : (urlStage || 'config'),
+      currentStage: resolveWorkspaceStage(urlStage ?? null),
       globalAssetText: project.globalAssetText || '',
       novelText: episode?.novelText || '',
       analysisModel: project.analysisModel ?? undefined,
