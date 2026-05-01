@@ -443,7 +443,7 @@ export type CanvasCommand =
 ### 阶段 10: 删除旧 Stage 页面壳与清理双轨
 
 - ✅ **Task 10.1**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 已删除文件并移除引用。Workspace 主内容不再根据 stage 分支渲染不同页面。
-- ⏸ **Task 10.2**: `src/features/project-workspace/components/ConfigStage.tsx` / `ScriptStage.tsx` / `StoryboardStage.tsx` / `VideoStageRoute.tsx` / `VoiceStageRoute.tsx` - 删除旧 page wrapper，保留已拆出的共享子组件。
+- ✅ **Task 10.2**: `src/features/project-workspace/components/ConfigStage.tsx` / `ScriptStage.tsx` / `StoryboardStage.tsx` / `VideoStageRoute.tsx` / `VoiceStageRoute.tsx` / `src/features/project-workspace/StageNavigation.tsx` / `src/features/project-canvas/ProjectCanvasRoute.tsx` - 已删除旧 page wrapper 和旧 canvas tab route，保留已拆出的共享 composer/view 组件。
 - ⏸ **Task 10.3**: `src/features/project-workspace/hooks/useProjectWorkspaceController.ts` - 删除 stage nav state，保留 runtime/actions；所有功能供 canvas stage 使用。
 - 🔄 **Task 10.4**: `src/features/project-workspace/StageNavigation.tsx` / `src/components/ui/CapsuleNav.tsx` 使用点 - workspace 主流程已不再渲染 `CapsuleNav`；若其他页面仍使用 CapsuleNav，不删除组件本体。后续需要清理剩余旧 stage 文案和死代码。
 - ⏸ **Task 10.5**: `tests/contracts/requirements-matrix.ts` - 更新需求矩阵，确保旧 stage 功能全部映射到 canvas 测试。
@@ -642,6 +642,7 @@ npm run verify:push
 - ✅ 已完成：成片阶段第一块完整迁移。`FinalTimelineView` 已接入 Final StageNode，复用 `VideoEditorStage` 和 `createProjectFromPanels()` 从业务 panel 视频生成初始时间线。
 - ✅ 已完成：阶段内部虚拟化第一版。分镜 `StoryboardCanvas` 和视频 `VideoRenderPanel` 已接入 `@tanstack/react-virtual`，大项目超过阈值时按阶段内部 group 虚拟化挂载。
 - ✅ 已完成：Canvas command registry 基础层。新增 `CanvasCommand` 类型和 `executeCanvasCommand()`，覆盖 focus、panel insert/delete/reorder、图片生成、视频生成、成片导出等业务意图。
+- ✅ 已完成：旧 stage wrapper 清理。已删除旧 `ConfigStage`、`ScriptStage`、`StoryboardStage`、`VideoStageRoute`、`VoiceStageRoute`、`StageNavigation` 和 legacy `ProjectCanvasRoute`。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-command-registry.test.ts tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，7 个测试文件 / 12 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
 - ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。
