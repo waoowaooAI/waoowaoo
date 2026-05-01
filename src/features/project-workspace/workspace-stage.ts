@@ -18,7 +18,7 @@ export function isWorkspaceStage(value: string | null): value is WorkspaceStage 
 }
 
 export function resolveWorkspaceStage(value: string | null): WorkspaceStage {
-  if (!isWorkspaceStage(value)) return 'config'
+  if (!isWorkspaceStage(value)) return 'canvas'
   if (value === 'editor') return 'videos'
   return value
 }

@@ -12,9 +12,9 @@ describe('workspace stage resolution', () => {
     expect(resolveWorkspaceStage('canvas')).toBe('canvas')
   })
 
-  it('keeps legacy editor requests on videos and rejects unknown stages', () => {
+  it('keeps legacy editor requests on videos and defaults unknown stages to canvas', () => {
     expect(resolveWorkspaceStage('editor')).toBe('videos')
-    expect(resolveWorkspaceStage('unknown')).toBe('config')
-    expect(resolveWorkspaceStage(null)).toBe('config')
+    expect(resolveWorkspaceStage('unknown')).toBe('canvas')
+    expect(resolveWorkspaceStage(null)).toBe('canvas')
   })
 })

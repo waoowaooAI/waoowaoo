@@ -11,7 +11,6 @@ import { useWorkspaceUserModels } from './useWorkspaceUserModels'
 import { useWorkspaceExecution } from './useWorkspaceExecution'
 import { useWorkspaceVideoActions } from './useWorkspaceVideoActions'
 import { useWorkspaceAssetLibraryShell } from './useWorkspaceAssetLibraryShell'
-import { useWorkspaceStageNavigation } from './useWorkspaceStageNavigation'
 import { useWorkspaceProjectSnapshot } from './useWorkspaceProjectSnapshot'
 import { useWorkspaceModalEscape } from './useWorkspaceModalEscape'
 import { useWorkspaceStageRuntime } from './useWorkspaceStageRuntime'
@@ -20,7 +19,6 @@ import { useWorkspaceAutoRun } from './useWorkspaceAutoRun'
 import { buildWorkspaceControllerViewModel } from './workspace-controller-view-model'
 import type { ProjectWorkspaceProps } from '../types'
 import { useRouter } from '@/i18n/navigation'
-import { resolveEpisodeStageArtifacts } from '@/lib/project-workflow/stage-readiness'
 
 export function useProjectWorkspaceController({
   project,
@@ -116,22 +114,6 @@ export function useProjectWorkspaceController({
     execution.storyToScriptStream.isRunning ||
     execution.storyToScriptStream.isRecoveredRunning ||
     execution.storyToScriptStream.status === 'running'
-  const isScriptToStoryboardRunning =
-    execution.scriptToStoryboardStream.isRunning ||
-    execution.scriptToStoryboardStream.isRecoveredRunning ||
-    execution.scriptToStoryboardStream.status === 'running'
-  const stageArtifacts = resolveEpisodeStageArtifacts(episode)
-
-  const isAnyOperationRunning =
-    isStartingStoryToScript ||
-    isStartingScriptToStoryboard ||
-    execution.isSubmittingTTS ||
-    execution.isAssetAnalysisRunning ||
-    execution.isConfirmingAssets ||
-    execution.isTransitioning ||
-    isStoryToScriptRunning ||
-    isScriptToStoryboardRunning
-
   useWorkspaceAutoRun({
     searchParams,
     router,
@@ -141,12 +123,6 @@ export function useProjectWorkspaceController({
     isStoryToScriptRunning,
     runWithRebuildConfirm: rebuildState.runWithRebuildConfirm,
     runStoryToScriptFlow: execution.runStoryToScriptFlow,
-  })
-
-  const capsuleNavItems = useWorkspaceStageNavigation({
-    isAnyOperationRunning,
-    stageArtifacts,
-    t,
   })
 
   const stageRuntime = useWorkspaceStageRuntime({
@@ -201,7 +177,6 @@ export function useProjectWorkspaceController({
 
   const stageNavState = {
     currentStage,
-    capsuleNavItems,
     handleStageChange: configActions.handleStageChange,
   }
 

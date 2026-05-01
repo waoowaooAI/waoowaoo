@@ -4,8 +4,8 @@ import { useState } from 'react'
 import ProgressToast from '@/components/ProgressToast'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { AnimatedBackground } from '@/components/ui/SharedComponents'
+import ProjectCanvasRoute from '@/features/project-canvas/ProjectCanvasRoute'
 import { WorkspaceProvider } from './WorkspaceProvider'
-import WorkspaceStageContent from './components/WorkspaceStageContent'
 import WorkspaceAssetLibraryModal from './components/WorkspaceAssetLibraryModal'
 import WorkspaceAssistantPanel from './components/WorkspaceAssistantPanel'
 import WorkspaceHeaderShell from './components/WorkspaceHeaderShell'
@@ -63,11 +63,6 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
         onEpisodeCreate={onEpisodeCreate}
         onEpisodeRename={onEpisodeRename}
         onEpisodeDelete={onEpisodeDelete}
-        capsuleNavItems={vm.stageNav.capsuleNavItems}
-        currentStage={vm.stageNav.currentStage}
-        onStageChange={vm.stageNav.handleStageChange}
-        projectId={projectId}
-        episodeId={episodeId}
         onOpenAssetLibrary={() => vm.ui.openAssetLibrary()}
         onOpenSettingsModal={() => vm.ui.setIsSettingsModalOpen(true)}
         onRefresh={() => vm.ui.onRefresh({ mode: 'full' })}
@@ -90,7 +85,7 @@ function ProjectWorkspaceContent(props: ProjectWorkspaceProps) {
 
           <div className="min-w-0 flex-1">
             <WorkspaceStageRuntimeProvider value={vm.runtime.stageRuntime}>
-              <WorkspaceStageContent currentStage={vm.stageNav.currentStage} />
+              <ProjectCanvasRoute />
             </WorkspaceStageRuntimeProvider>
           </div>
         </div>

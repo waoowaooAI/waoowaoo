@@ -67,14 +67,6 @@ interface BuildWorkspaceControllerViewModelParams {
   }
   stageNavState: {
     currentStage: string
-    capsuleNavItems: Array<{
-      id: string
-      label: string
-      icon: string
-      status: 'empty' | 'active' | 'processing' | 'ready'
-      disabled?: boolean
-      disabledLabel?: string
-    }>
     handleStageChange: (stage: string) => void
   }
   rebuildState: {

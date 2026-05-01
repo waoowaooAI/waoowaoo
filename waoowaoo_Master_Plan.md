@@ -192,7 +192,6 @@ waoowaoo/
         hooks/
           useProjectWorkspaceController.ts
           useWorkspaceProjectSnapshot.ts
-          useWorkspaceStageNavigation.ts
         workspace-stage.ts
     lib/
       project-canvas/
@@ -306,25 +305,25 @@ tests/
 - ✅ **Task 0.1**: `AGENTS.md` - 已纳入 Git 追踪，明确授权修改后需要本地 commit、详细 commit 日志、pre-commit 不跑测试、pre-push 运行完整 `verify:push`。
 - ✅ **Task 0.2**: `waoowaoo_Master_Plan.md` - 将旧“新增 Canvas tab”计划重写为“唯一 Canvas Workspace 全量迁移”计划。
 - ✅ **Task 0.3**: `package.json` / `.husky/pre-commit` - 已调整 commit 验证策略：commit 不跑完整测试，push 前通过 `verify:push`。
-- ⚠️ **Task 0.4**: 当前工作区存在未提交画布修复：`src/app/[locale]/workspace/[projectId]/page.tsx`、`src/features/project-canvas/ProjectCanvas.tsx`、`src/features/project-canvas/hooks/useProjectCanvasRuntime.ts`、`src/features/project-workspace/workspace-stage.ts`、`tests/unit/project-workspace/workspace-stage.test.ts`、`waoowaoo_Master_Plan.md`。接手者必须在继续代码前确认这些改动状态，不得误删。
+- ✅ **Task 0.4**: 当前半成品 canvas 入口修复已提交：`stage=canvas` 有效、React Flow maximum update depth 已修复、当前 foundation 节点可拖拽。
 - ⚠️ **Task 0.5**: 当前工作区存在无关删除 `CHANGELOG.md`。不得混入任何 canvas commit，除非用户明确要求处理。
 
 ### 阶段 1: 删除 stage 主导航，建立唯一 Canvas 入口
 
-- ⏸ **Task 1.1**: `src/features/project-workspace/workspace-stage.ts` - 将 workspace stage 语义重定义为内部 canvas focus target，而不是页面切换枚举。保留 `resolveWorkspaceStage()` 仅用于兼容 URL 进入时解析到 canvas 内 focus。
-- ⏸ **Task 1.2**: `src/app/[locale]/workspace/[projectId]/page.tsx` - 移除以 `stage` query 控制主页面的逻辑。修改后：只要进入项目 episode，就渲染 `ProjectWorkspace` 的唯一 canvas。`stage` query 若存在，仅作为 canvas focus hint，不再决定页面分支。
-- ⏸ **Task 1.3**: `src/features/project-workspace/ProjectWorkspace.tsx` - 删除 `WorkspaceStageContent` 分支渲染，改为始终渲染 `ProjectWorkspaceCanvas`。函数签名保持：
+- 🔄 **Task 1.1**: `src/features/project-workspace/workspace-stage.ts` - 将 workspace stage 语义重定义为内部 canvas focus target，而不是页面切换枚举。已完成第一步：未知 stage 和空 stage 默认进入 `canvas`，旧 `editor` 仅映射到 `videos` 以保持 URL 解析稳定；后续需要把旧 stage 语义进一步收敛为 canvas focus hint。
+- 🔄 **Task 1.2**: `src/app/[locale]/workspace/[projectId]/page.tsx` - 移除以 `stage` query 控制主页面的逻辑。当前页面层已不再通过 stage 渲染不同内容，但仍把解析后的 stage 传给 workspace runtime 作为 assistant/autoflow 上下文；后续需要把该字段重命名为 focus hint，避免继续表达页面分支。
+- ✅ **Task 1.3**: `src/features/project-workspace/ProjectWorkspace.tsx` - 已删除 `WorkspaceStageContent` 分支渲染，改为始终在 workspace 主内容区渲染 `ProjectCanvasRoute`。函数签名保持：
 
 ```ts
 export default function ProjectWorkspace(props: ProjectWorkspaceProps): JSX.Element
 ```
 
-预期结果：Workspace 只有一个主画布入口。
+实际结果：Workspace 现在只有一个主画布入口；当前仍使用 `src/features/project-canvas/ProjectCanvasRoute.tsx` foundation，完整阶段容器迁移在阶段 2-8 执行。
 
-- ⏸ **Task 1.4**: `src/features/project-workspace/components/WorkspaceHeaderShell.tsx` - 删除 `CapsuleNav` 主阶段导航。保留 episode selector、全局资产入口、设置、刷新。若需要阶段定位，移到 `CanvasToolbar`。
-- ⏸ **Task 1.5**: `src/features/project-workspace/hooks/useWorkspaceStageNavigation.ts` - 删除或改为 canvas toolbar focus items helper。不得继续作为页面 stage nav。
+- ✅ **Task 1.4**: `src/features/project-workspace/components/WorkspaceHeaderShell.tsx` - 已删除 `CapsuleNav` 主阶段导航。保留 episode selector、全局资产入口、设置、刷新。后续阶段定位统一放入 `CanvasToolbar`。
+- ✅ **Task 1.5**: `src/features/project-workspace/hooks/useWorkspaceStageNavigation.ts` - 已删除文件，workspace 主路径不再拥有页面 stage nav hook。
 - ⏸ **Task 1.6**: `messages/en/project-workflow.json` / `messages/zh/project-workflow.json` - 移除或重命名 stage tab 文案，新增 canvas toolbar 文案：reset layout、collapse all、expand all、focus story/script/storyboard/video/final。
-- ⏸ **Task 1.7**: `tests/unit/project-workspace/workspace-stage.test.ts` - 覆盖 `stage=canvas`、旧 `stage=storyboard`、未知 stage 的解析规则：都进入 canvas，旧 stage 只作为 focus hint。
+- ✅ **Task 1.7**: `tests/unit/project-workspace/workspace-stage.test.ts` - 已覆盖 `stage=canvas`、旧 `stage=editor`、未知 stage、空 stage 的解析规则。当前断言：未知/空 stage 进入 `canvas`。
 
 ### 阶段 2: Canvas Workspace Shell 与阶段容器布局
 
@@ -446,10 +445,10 @@ export type CanvasCommand =
 
 ### 阶段 10: 删除旧 Stage 页面壳与清理双轨
 
-- ⏸ **Task 10.1**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 删除文件或改为空转移除引用。最终不允许根据 stage 渲染不同页面。
+- ✅ **Task 10.1**: `src/features/project-workspace/components/WorkspaceStageContent.tsx` - 已删除文件并移除引用。Workspace 主内容不再根据 stage 分支渲染不同页面。
 - ⏸ **Task 10.2**: `src/features/project-workspace/components/ConfigStage.tsx` / `ScriptStage.tsx` / `StoryboardStage.tsx` / `VideoStageRoute.tsx` / `VoiceStageRoute.tsx` - 删除旧 page wrapper，保留已拆出的共享子组件。
 - ⏸ **Task 10.3**: `src/features/project-workspace/hooks/useProjectWorkspaceController.ts` - 删除 stage nav state，保留 runtime/actions；所有功能供 canvas stage 使用。
-- ⏸ **Task 10.4**: `src/features/project-workspace/StageNavigation.tsx` / `src/components/ui/CapsuleNav.tsx` 使用点 - 移除 workspace 主流程依赖；若其他页面仍使用 CapsuleNav，不删除组件本体。
+- 🔄 **Task 10.4**: `src/features/project-workspace/StageNavigation.tsx` / `src/components/ui/CapsuleNav.tsx` 使用点 - workspace 主流程已不再渲染 `CapsuleNav`；若其他页面仍使用 CapsuleNav，不删除组件本体。后续需要清理剩余旧 stage 文案和死代码。
 - ⏸ **Task 10.5**: `tests/contracts/requirements-matrix.ts` - 更新需求矩阵，确保旧 stage 功能全部映射到 canvas 测试。
 
 ### 阶段 11: 最终系统验收
@@ -634,7 +633,9 @@ npm run verify:push
 - ✅ 已完成：修复 `stage=canvas` 被 workspace 页面路由层判定为无效 stage 后回退到故事阶段的问题。新增 `src/features/project-workspace/workspace-stage.ts`，让 `canvas` 成为有效 workspace stage。
 - ✅ 已完成：修复进入当前半成品 canvas 后 React maximum update depth 问题。原因是空 saved layout 每次 render 创建新数组，导致 `flowNodes` 重新生成并触发 `setNodes` 循环；现在使用稳定空数组常量。
 - ✅ 已完成：让当前半成品 canvas 节点保持可拖拽，为 layout 保存验证提供基础。
-- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas tests/unit/project-workspace/workspace-stage.test.ts` 通过，6 个测试文件 / 9 个测试通过。
+- ✅ 已完成：第一阶段主入口收敛。`ProjectWorkspace.tsx` 现在始终渲染 `ProjectCanvasRoute`，`WorkspaceStageContent.tsx` 和 `useWorkspaceStageNavigation.ts` 已删除，`WorkspaceHeaderShell.tsx` 已移除 workspace 主阶段 `CapsuleNav`。
+- ✅ 已完成：`workspace-stage.ts` 已将未知/空 stage 解析为 `canvas`，避免默认进入故事阶段；旧 `editor` 仍映射到 `videos`，后续会进一步收敛为 focus hint。
+- ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas tests/unit/project-workspace/workspace-stage.test.ts` 通过，5 个测试文件 / 7 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：已存在 canvas tab/foundation，但未完成唯一 canvas、旧 stage 删除、完整功能迁移。
+- ⚠️ 当前代码仍是半成品：主入口已唯一画布化，但画布内容仍是 foundation 投影，尚未完成五个阶段大节点、完整业务 UI 迁移、阶段内虚拟化和 command registry。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
