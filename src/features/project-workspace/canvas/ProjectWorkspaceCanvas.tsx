@@ -18,7 +18,6 @@ import type { UpsertCanvasLayoutInput } from '@/lib/project-canvas/layout/canvas
 import type { CanvasNodeLayout } from '@/lib/project-canvas/layout/canvas-layout.types'
 import { useWorkspaceEpisodeStageData } from '../hooks/useWorkspaceEpisodeStageData'
 import { useWorkspaceProvider } from '../WorkspaceProvider'
-import { useWorkspaceStageRuntime } from '../WorkspaceStageRuntimeContext'
 import CanvasToolbar from './CanvasToolbar'
 import {
   buildDefaultCanvasStageLayouts,
@@ -37,7 +36,6 @@ function ProjectWorkspaceCanvasContent() {
   const t = useTranslations('projectWorkflow.canvas.workspace')
   const { projectId, episodeId } = useWorkspaceProvider()
   const { novelText, clips, storyboards } = useWorkspaceEpisodeStageData()
-  const runtime = useWorkspaceStageRuntime()
   const reactFlow = useReactFlow<CanvasStageNode>()
   const [nodes, setNodes] = useState<CanvasStageNode[]>([])
 
@@ -63,7 +61,6 @@ function ProjectWorkspaceCanvasContent() {
     clips,
     storyboards,
     layouts: stageLayouts,
-    runtime,
     translate: t,
   })
 

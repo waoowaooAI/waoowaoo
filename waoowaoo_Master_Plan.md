@@ -409,8 +409,8 @@ export type CanvasCommand =
 ### 阶段 6: VideoStageNode 完整迁移
 
 - ⏸ **Task 6.1**: `src/features/project-workspace/components/video/VideoPanelCard.tsx` - 拆分出 `VideoPanelBody`、`VideoPanelActions`、`VideoPromptEditor`，供 canvas 使用。
-- ⏸ **Task 6.2**: `src/features/project-workspace/canvas/stages/VideoStageNode.tsx` - 每个 panel 一个 video card，和 panel 业务绑定。显示 prompt、首尾帧、生成按钮、重试、错误、任务状态。
-- ⏸ **Task 6.3**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入视频动作：生成视频、更新视频 prompt、首尾帧 prompt、面板联动。
+- ✅ **Task 6.2**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Video stage 分支已直接渲染 `VideoComposer`，复用现有 `VideoStage`，每个 panel video card 仍和 panel 业务绑定，并显示 prompt、首尾帧、生成按钮、错误、任务状态。
+- 🔄 **Task 6.3**: `src/features/project-workspace/components/video-stage-canvas/VideoComposer.tsx` - 已接入现有视频动作：生成视频、批量生成视频、更新 video prompt、更新 panel video model、打开资产库。待补：统一进入 canvas command registry。
 - ⏸ **Task 6.4**: `src/features/project-workspace/canvas/stages/VideoStageVirtualizedList.tsx` - 为 `VideoStageNode` 内部 video card 列表实现独立虚拟化或分块懒渲染。禁止只依赖 React Flow 视口剔除。预期结果：500 个 video card 时只渲染视口附近卡片。
 - ⏸ **Task 6.5**: `tests/unit/project-workspace/video-stage-node.test.tsx` - 覆盖视频 prompt 修改、生成按钮、错误展示的具体入参。
 - ⏸ **Task 6.6**: `tests/unit/project-workspace/video-stage-virtualization.test.tsx` - 构造大量 video panel fixture，断言初始渲染不会挂载全部 video card。
@@ -638,7 +638,8 @@ npm run verify:push
 - ✅ 已完成：故事阶段第一块完整迁移。`StoryComposer` 已从 `ConfigStage` 中抽出，Story StageNode 直接渲染故事输入、配置、生成剧本和智能分集入口。
 - ✅ 已完成：剧本阶段第一块完整迁移。`ScriptComposer` 已从 `ScriptStage` 中抽出，Script StageNode 直接渲染现有 `ScriptView` 的剧本 clip、资产绑定和生成分镜入口。
 - ✅ 已完成：分镜阶段第一块完整迁移。`StoryboardComposer` 已从 `StoryboardStage` 中抽出，Storyboard StageNode 直接渲染现有 `StoryboardStageView` 的分镜组、panel、图片生成、编辑、插入、删除等入口。
+- ✅ 已完成：视频阶段第一块完整迁移。`VideoComposer` 已从 `VideoStageRoute` 中抽出，Video StageNode 直接渲染现有 `VideoStage` 的 panel video card、prompt、首尾帧、生成和批量生成入口。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事、剧本、分镜节点已有完整能力；视频 panel、成片 timeline 仍是摘要和操作入口占位，尚未完成阶段内虚拟化和 command registry。
+- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事、剧本、分镜、视频节点已有完整能力；成片 timeline 仍是摘要占位，尚未完成阶段内虚拟化和 command registry。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。

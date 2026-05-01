@@ -3,18 +3,16 @@
 import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import type { ProjectClip, ProjectStoryboard } from '@/types/project'
-import type { WorkspaceStageRuntimeValue } from '../../WorkspaceStageRuntimeContext'
 import type { CanvasStageLayout } from '../stage-layout'
 import { CANVAS_STAGE_COLLAPSED_HEIGHT } from '../stage-layout'
 import { CANVAS_STAGE_DEFINITIONS } from '../stageTypes'
-import type { CanvasStageAction, CanvasStageNode } from '../workspace-canvas-types'
+import type { CanvasStageNode } from '../workspace-canvas-types'
 
 interface UseCanvasWorkspaceNodesParams {
   readonly storyText: string
   readonly clips: readonly ProjectClip[]
   readonly storyboards: readonly ProjectStoryboard[]
   readonly layouts: readonly CanvasStageLayout[]
-  readonly runtime: WorkspaceStageRuntimeValue
   readonly translate: (key: string, values?: Record<string, string | number>) => string
 }
 
@@ -29,35 +27,11 @@ function countVideoPanels(storyboards: readonly ProjectStoryboard[]): number {
   }, 0)
 }
 
-function buildStageAction(params: {
-  readonly stageId: CanvasStageNode['data']['stageId']
-  readonly clips: readonly ProjectClip[]
-  readonly storyboards: readonly ProjectStoryboard[]
-  readonly runtime: WorkspaceStageRuntimeValue
-  readonly translate: (key: string) => string
-}): CanvasStageAction | null {
-  switch (params.stageId) {
-    case 'video':
-      return {
-        label: params.translate('actions.generateAllVideos'),
-        disabled: countPanels(params.storyboards) === 0,
-        busy: false,
-        run: () => params.runtime.onGenerateAllVideos(),
-      }
-    case 'storyboard':
-    case 'story':
-    case 'script':
-    case 'final':
-      return null
-  }
-}
-
 export function useCanvasWorkspaceNodes({
   storyText,
   clips,
   storyboards,
   layouts,
-  runtime,
   translate,
 }: UseCanvasWorkspaceNodesParams): CanvasStageNode[] {
   return useMemo(() => {
@@ -101,15 +75,9 @@ export function useCanvasWorkspaceNodes({
           width: layout.width,
           expandedHeight: layout.height,
           layoutNodeType: definition.layoutNodeType,
-          primaryAction: buildStageAction({
-            stageId: definition.id,
-            clips,
-            storyboards,
-            runtime,
-            translate,
-          }),
+          primaryAction: null,
         },
       } satisfies CanvasStageNode
     })
-  }, [clips, layouts, runtime, storyText, storyboards, translate])
+  }, [clips, layouts, storyText, storyboards, translate])
 }
