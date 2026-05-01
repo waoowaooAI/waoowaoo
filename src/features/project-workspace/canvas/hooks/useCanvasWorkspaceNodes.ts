@@ -37,13 +37,6 @@ function buildStageAction(params: {
   readonly translate: (key: string) => string
 }): CanvasStageAction | null {
   switch (params.stageId) {
-    case 'script':
-      return {
-        label: params.translate('actions.generateStoryboard'),
-        disabled: params.clips.length === 0 || params.runtime.isStartingScriptToStoryboard,
-        busy: params.runtime.isStartingScriptToStoryboard,
-        run: params.runtime.onRunScriptToStoryboard,
-      }
     case 'video':
       return {
         label: params.translate('actions.generateAllVideos'),
@@ -53,6 +46,7 @@ function buildStageAction(params: {
       }
     case 'storyboard':
     case 'story':
+    case 'script':
     case 'final':
       return null
   }

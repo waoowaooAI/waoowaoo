@@ -379,9 +379,9 @@ export default function StoryComposer(): React.ReactElement
 
 ### 阶段 4: ScriptStageNode 完整迁移
 
-- ⏸ **Task 4.1**: `src/features/project-workspace/components/ScriptStage.tsx` - 拆分出 `ScriptClipList` 和 `ScriptClipCard`。删除旧 page wrapper 的业务承担。
-- ⏸ **Task 4.2**: `src/features/project-workspace/components/script/ScriptClipList.tsx` - 展示完整剧本 clip 列表、clip 编辑、生成分镜入口。
-- ⏸ **Task 4.3**: `src/features/project-workspace/canvas/stages/ScriptStageNode.tsx` - 在阶段容器内渲染剧本完整内容和动作按钮。
+- ✅ **Task 4.1**: `src/features/project-workspace/components/ScriptStage.tsx` - 已拆分出 `ScriptComposer`。`ScriptStage` 当前只保留薄 wrapper，后续删除旧 page wrapper 时不再承载业务逻辑。
+- ✅ **Task 4.2**: `src/features/project-workspace/components/script/ScriptComposer.tsx` - 已复用现有 `ScriptView`，展示完整剧本 clip 列表、clip 编辑、资产绑定、生成分镜入口。
+- ✅ **Task 4.3**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Script stage 分支已直接渲染 `ScriptComposer`，节点内显示完整剧本功能和动作按钮，不依赖点击 Inspector。
 - ⏸ **Task 4.4**: `tests/unit/project-workspace/script-stage-node.test.tsx` - 覆盖 clip 编辑、生成分镜按钮、任务状态展示。
 
 ### 阶段 5: StoryboardStageNode 完整迁移
@@ -636,7 +636,8 @@ npm run verify:push
 - ✅ 已完成：阶段布局支持保存/读取现有 canvas layout 表；本阶段不改 Prisma schema，不做破坏性 DB 变更。
 - ✅ 已完成：`CanvasToolbar` 已提供 reset layout、collapse all、expand all、fit view、focus stage。
 - ✅ 已完成：故事阶段第一块完整迁移。`StoryComposer` 已从 `ConfigStage` 中抽出，Story StageNode 直接渲染故事输入、配置、生成剧本和智能分集入口。
+- ✅ 已完成：剧本阶段第一块完整迁移。`ScriptComposer` 已从 `ScriptStage` 中抽出，Script StageNode 直接渲染现有 `ScriptView` 的剧本 clip、资产绑定和生成分镜入口。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事节点已有完整输入能力；剧本 clip、分镜 panel、视频 panel、成片 timeline 仍是摘要和操作入口占位，尚未完成阶段内虚拟化和 command registry。
+- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事和剧本节点已有完整能力；分镜 panel、视频 panel、成片 timeline 仍是摘要和操作入口占位，尚未完成阶段内虚拟化和 command registry。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
