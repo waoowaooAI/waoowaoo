@@ -360,6 +360,7 @@ export function buildDefaultCanvasStageLayouts(
 - ⏸ **Task 2.6**: `src/features/project-workspace/canvas/ProjectWorkspaceCanvas.tsx` - 创建唯一画布 shell，使用 `@xyflow/react` 渲染五个 stage node，启用 pan/zoom/minimap/fitView。
 - ⏸ **Task 2.7**: `src/features/project-workspace/canvas/CanvasToolbar.tsx` - 新增画布工具栏：reset layout、collapse all、expand all、focus story/script/storyboard/video/final。按钮文案走 i18n。
 - ⏸ **Task 2.8**: `tests/unit/project-workspace/canvas-stage-layout.test.ts` - 断言五个阶段默认位置、顺序、尺寸、reset layout 输出具体值。
+- ⏸ **Task 2.9**: `src/features/project-workspace/canvas/state/canvas-workspace-store.ts` 或等价细粒度订阅模块 - 建立 Canvas Workspace 的状态边界。StageNode 只接收稳定 `stageId/layout/actionIds`，业务数据由阶段内部组件通过 TanStack Query selector、细粒度 context 或 Zustand/Jotai 等 store 按需订阅。预期结果：单个 panel/video 状态变化不得触发整个 Canvas 或所有 StageNode 重渲染。
 
 ### 阶段 3: StoryStageNode 完整迁移
 
@@ -393,7 +394,9 @@ export interface StoryComposerProps {
 - ⏸ **Task 5.2**: `src/features/project-workspace/components/storyboard/StoryboardGroupView.tsx` - 抽出分镜组渲染，保留 panel 编号、完整内容、图片、prompt、按钮、错误/重试状态。
 - ⏸ **Task 5.3**: `src/features/project-workspace/canvas/stages/StoryboardStageNode.tsx` - 渲染所有 storyboard group 和 panel。阶段内部不允许普通空间拖动 panel。
 - ⏸ **Task 5.4**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入现有分镜动作：生成图片、重生成、候选确认、AI data、插入镜头、删除镜头。
-- ⏸ **Task 5.5**: `src/lib/project-canvas/commands/canvas-command.types.ts` - 定义业务命令，不包含屏幕坐标：
+- ⏸ **Task 5.5**: `src/features/project-workspace/canvas/stages/StoryboardStageVirtualizedList.tsx` - 为 `StoryboardStageNode` 内部 panel/group 列表实现独立虚拟化或分块懒渲染，优先使用 `@tanstack/react-virtual` 或等价项目认可方案。禁止只依赖 React Flow `onlyRenderVisibleElements`。预期结果：500 个 panel 时只渲染视口附近卡片。
+- ⏸ **Task 5.6**: `tests/unit/project-workspace/storyboard-stage-virtualization.test.tsx` - 构造大量 panel fixture，断言初始渲染不会挂载全部 panel card，并验证滚动后可见窗口更新。
+- ⏸ **Task 5.7**: `src/lib/project-canvas/commands/canvas-command.types.ts` - 定义业务命令，不包含屏幕坐标：
 
 ```ts
 export type CanvasCommand =
@@ -404,16 +407,18 @@ export type CanvasCommand =
   | { readonly type: 'regenerate_panel_image'; readonly panelId: string }
 ```
 
-- ⏸ **Task 5.6**: `tests/regression/project-canvas-preserves-business-order.test.ts` - 普通阶段拖动不改变 `panelIndex`；排序交互才改变业务顺序。
-- ⏸ **Task 5.7**: `tests/regression/project-canvas-delete-confirmation.test.ts` - 删除 panel 必须二次确认，取消时 DB 不变，确认时走真实删除链路。
+- ⏸ **Task 5.8**: `tests/regression/project-canvas-preserves-business-order.test.ts` - 普通阶段拖动不改变 `panelIndex`；排序交互才改变业务顺序。
+- ⏸ **Task 5.9**: `tests/regression/project-canvas-delete-confirmation.test.ts` - 删除 panel 必须二次确认，取消时 DB 不变，确认时走真实删除链路。
 
 ### 阶段 6: VideoStageNode 完整迁移
 
 - ⏸ **Task 6.1**: `src/features/project-workspace/components/video/VideoPanelCard.tsx` - 拆分出 `VideoPanelBody`、`VideoPanelActions`、`VideoPromptEditor`，供 canvas 使用。
 - ⏸ **Task 6.2**: `src/features/project-workspace/canvas/stages/VideoStageNode.tsx` - 每个 panel 一个 video card，和 panel 业务绑定。显示 prompt、首尾帧、生成按钮、重试、错误、任务状态。
 - ⏸ **Task 6.3**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入视频动作：生成视频、更新视频 prompt、首尾帧 prompt、面板联动。
-- ⏸ **Task 6.4**: `tests/unit/project-workspace/video-stage-node.test.tsx` - 覆盖视频 prompt 修改、生成按钮、错误展示的具体入参。
-- ⏸ **Task 6.5**: `tests/regression/project-canvas-video-panel-binding.test.ts` - 断言 video card 永远绑定对应 panel，成片顺序来自业务数据。
+- ⏸ **Task 6.4**: `src/features/project-workspace/canvas/stages/VideoStageVirtualizedList.tsx` - 为 `VideoStageNode` 内部 video card 列表实现独立虚拟化或分块懒渲染。禁止只依赖 React Flow 视口剔除。预期结果：500 个 video card 时只渲染视口附近卡片。
+- ⏸ **Task 6.5**: `tests/unit/project-workspace/video-stage-node.test.tsx` - 覆盖视频 prompt 修改、生成按钮、错误展示的具体入参。
+- ⏸ **Task 6.6**: `tests/unit/project-workspace/video-stage-virtualization.test.tsx` - 构造大量 video panel fixture，断言初始渲染不会挂载全部 video card。
+- ⏸ **Task 6.7**: `tests/regression/project-canvas-video-panel-binding.test.ts` - 断言 video card 永远绑定对应 panel，成片顺序来自业务数据。
 
 ### 阶段 7: FinalStageNode / 成片能力迁移
 
@@ -425,9 +430,12 @@ export type CanvasCommand =
 
 - ⏸ **Task 8.1**: `src/features/project-workspace/canvas/hooks/useCanvasStageLayout.ts` - 管理 stage dragging、collapsed、viewport、reset layout。阶段内部节点不参与 React Flow 独立拖动。
 - ⏸ **Task 8.2**: `src/lib/project-canvas/layout/reset-canvas-layout.ts` - 新增 reset layout 服务函数，清除 saved stage overrides 或重写为默认布局。
-- ⏸ **Task 8.3**: `src/app/api/projects/[projectId]/canvas-layout/route.ts` - 扩展 PATCH 支持 collapsed、stage layout、viewport；新增 DELETE 或 POST reset endpoint 时必须更新 route catalog。
-- ⏸ **Task 8.4**: `tests/integration/api/contract/project-canvas-layout.route.test.ts` - 覆盖保存 stage layout、折叠状态、viewport、reset layout。
-- ⏸ **Task 8.5**: `tests/system/project-canvas-layout-restore.system.test.ts` - 刷新后恢复画布位置、折叠状态、viewport。
+- ⏸ **Task 8.3**: `src/lib/project-canvas/layout/canvas-layout-error-policy.ts` - 定义 layout 加载/解析/版本不兼容策略：layout 失败时使用默认布局继续工作，并显示非阻塞警告；业务数据失败不得降级为假数据。
+- ⏸ **Task 8.4**: `src/features/project-workspace/canvas/components/CanvasLayoutWarning.tsx` - 展示 layout 加载失败、保存失败、schema version reset 等非阻塞状态。禁止静默吞错。
+- ⏸ **Task 8.5**: `src/app/api/projects/[projectId]/canvas-layout/route.ts` - 扩展 PATCH 支持 collapsed、stage layout、viewport；新增 DELETE 或 POST reset endpoint 时必须更新 route catalog。
+- ⏸ **Task 8.6**: `tests/integration/api/contract/project-canvas-layout.route.test.ts` - 覆盖保存 stage layout、折叠状态、viewport、reset layout、schemaVersion 不兼容。
+- ⏸ **Task 8.7**: `tests/unit/project-canvas/canvas-layout-error-policy.test.ts` - 覆盖 layout API 失败、schemaVersion 不兼容、解析失败时使用默认布局并产生可见 warning 状态。
+- ⏸ **Task 8.8**: `tests/system/project-canvas-layout-restore.system.test.ts` - 刷新后恢复画布位置、折叠状态、viewport；layout 失败时仍显示完整业务工作流和 warning。
 
 ### 阶段 9: Assistant 接入唯一画布
 
@@ -485,6 +493,8 @@ export type CanvasCommand =
 
 - 100 个 panel + 100 个 video card 的项目，初次打开 canvas 到可交互不超过 2 秒。
 - 500 个业务卡片时，画布 pan/zoom 不出现明显卡死。
+- StoryboardStageNode / VideoStageNode 内部必须有独立虚拟化或分块懒渲染；500 个 panel/video card 时初始挂载数量不得等于总数量。
+- 单个 panel/video 状态变化不得触发整个 Canvas 或全部 StageNode 重渲染。
 - 拖动阶段容器保存 layout 不产生高频 API 风暴。
 - React 控制台无 maximum update depth、key warning、hydration warning。
 
@@ -526,6 +536,18 @@ SYSTEM_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/regression/project-canvas-d
 SYSTEM_TEST_BOOTSTRAP=1 npm exec -- vitest run tests/system/project-canvas-full-workflow.system.test.ts
 ```
 
+阶段内虚拟化测试：
+
+```bash
+BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/storyboard-stage-virtualization.test.tsx tests/unit/project-workspace/video-stage-virtualization.test.tsx
+```
+
+layout 降级策略测试：
+
+```bash
+BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-canvas/canvas-layout-error-policy.test.ts
+```
+
 提交前按改动风险手动运行必要测试；push 前必须运行：
 
 ```bash
@@ -562,6 +584,7 @@ npm run verify:push
 - 删除真实数据必须走现有 operation/route 并二次确认。
 - 生成/重生成必须走 task/worker，不允许 UI 直接写结果。
 - 画布位置不得隐式改变业务顺序。
+- Layout 是 UI 偏好，可以在加载失败、保存失败或 schemaVersion 不兼容时使用默认布局继续工作，但必须显示非阻塞 warning 并记录错误；业务数据加载失败必须显式报错，禁止伪造默认业务数据。
 
 ### React Flow 约束
 
@@ -569,7 +592,15 @@ npm run verify:push
 - 阶段内部复杂 UI 使用普通 React 组件渲染，避免把每个按钮/卡片都建成 React Flow node。
 - `nodeTypes` 必须稳定注册，不得在 render 内动态创建。
 - 禁止 `node.data` 持有完整 project/episode/storyboard/panel 对象。
-- 大型项目必须评估 `onlyRenderVisibleElements`、阶段内部分页/虚拟化或折叠策略。
+- React Flow 的 `onlyRenderVisibleElements` 只能剔除顶层 StageNode，不能剔除 StageNode 内部卡片。StoryboardStageNode 和 VideoStageNode 必须实现阶段内部虚拟化或分块懒渲染，禁止只依赖 React Flow 视口剔除。
+- StageNode 只接收稳定、轻量 props。业务数据更新必须通过细粒度订阅进入阶段内部组件，禁止把完整 project/episode/panels/videos 从 Canvas 顶层逐层 props drilling 到所有卡片。
+
+### 状态管理约束
+
+- Canvas 顶层只管理画布 UI 状态：viewport、stage layout、selection/focus、collapse。
+- Domain 数据由业务组件按需订阅：优先使用 TanStack Query cache selector、细粒度 hooks，或引入明确的 Zustand/Jotai store；选择 store 前必须说明取舍。
+- 单个 panel/video 的任务状态、错误、图片或视频 URL 更新，不得导致 StoryStageNode、ScriptStageNode、FinalStageNode 重渲染。
+- Command/action 引用必须稳定，禁止在 Canvas render 中为每个卡片创建新闭包造成大面积重渲染。
 
 ### Command 约束
 
