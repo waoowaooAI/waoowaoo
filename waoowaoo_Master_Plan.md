@@ -451,7 +451,7 @@ export type CanvasCommand =
 ### 阶段 11: 最终系统验收
 
 - ⏸ **Task 11.1**: `tests/system/project-canvas-full-workflow.system.test.ts` - 系统级覆盖：输入故事 -> 生成剧本 -> 生成分镜 -> 生成图片 -> 生成视频 -> 成片入口，全程不进入旧 stage 页面。
-- ⏸ **Task 11.2**: `npm run verify:push` - push 前完整验证：lint、typecheck、test:all、build 全部通过。
+- ✅ **Task 11.2**: `npm run verify:push` - 已通过完整验证：lint、typecheck、test:all、build 全部成功。lint/build 仍输出仓库既有 warnings 与 bullmq dynamic dependency warning，但 exit code 为 0。
 - ⏸ **Task 11.3**: 手动 QA - 打开项目默认画布，确认无 stage tab、全流程 fitView、minimap 可见、阶段可拖动、阶段可折叠、reset layout 可用、刷新后恢复。
 
 ## 4. 🧪 测试与验证策略 (Validation Strategy)
@@ -654,5 +654,6 @@ npm run verify:push
 - ✅ 已验证：`npm run typecheck` 通过。
 - ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。
 - ✅ 已验证：`npm run build` 通过。构建阶段存在仓库既有 lint warnings 与 bullmq dynamic dependency warning，但无编译错误，workspace 动态路由和 canvas-layout API 均进入生产构建结果。
+- ✅ 已验证：`npm run verify:push` 通过。覆盖 lint:all、typecheck、test:guards、unit、billing integration/concurrency、api/provider/chain/task integration、system、regression、production build。
 - ⚠️ 当前代码仍需强化：五个阶段大节点均已接入完整现有功能，旧 wrapper 已清理，阶段内部虚拟化和 command registry 基础层已完成。下一步重点是 command registry 全量接线、组件级/系统级测试和浏览器 QA。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
