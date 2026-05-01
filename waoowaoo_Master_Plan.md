@@ -390,7 +390,7 @@ export default function StoryComposer(): React.ReactElement
 - 🔄 **Task 5.2**: `src/features/project-workspace/components/storyboard-stage/StoryboardComposer.tsx` - 已先复用现有 `StoryboardStageView`，完整保留 panel 编号、完整内容、图片、prompt、按钮、错误/重试状态。待补：进一步拆出 `StoryboardGroupView` 以降低节点内部复杂度。
 - ✅ **Task 5.3**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Storyboard stage 分支已直接渲染 `StoryboardComposer`，当前在阶段容器内展示所有 storyboard group 和 panel。阶段内部不开放普通空间拖动 panel。
 - ⏸ **Task 5.4**: `src/features/project-workspace/canvas/hooks/useCanvasStageActions.ts` - 接入现有分镜动作：生成图片、重生成、候选确认、AI data、插入镜头、删除镜头。
-- ⏸ **Task 5.5**: `src/features/project-workspace/canvas/stages/StoryboardStageVirtualizedList.tsx` - 为 `StoryboardStageNode` 内部 panel/group 列表实现独立虚拟化或分块懒渲染，优先使用 `@tanstack/react-virtual` 或等价项目认可方案。禁止只依赖 React Flow `onlyRenderVisibleElements`。预期结果：500 个 panel 时只渲染视口附近卡片。
+- ✅ **Task 5.5**: `src/features/project-workspace/components/storyboard/StoryboardCanvas.tsx` - 已用 `@tanstack/react-virtual` 为分镜阶段内部 storyboard group 列表实现独立虚拟化。超过阈值时只挂载可视窗口附近 group，禁止只依赖 React Flow `onlyRenderVisibleElements`。
 - ⏸ **Task 5.6**: `tests/unit/project-workspace/storyboard-stage-virtualization.test.tsx` - 构造大量 panel fixture，断言初始渲染不会挂载全部 panel card，并验证滚动后可见窗口更新。
 - ⏸ **Task 5.7**: `src/lib/project-canvas/commands/canvas-command.types.ts` - 定义业务命令，不包含屏幕坐标：
 
@@ -411,7 +411,7 @@ export type CanvasCommand =
 - ⏸ **Task 6.1**: `src/features/project-workspace/components/video/VideoPanelCard.tsx` - 拆分出 `VideoPanelBody`、`VideoPanelActions`、`VideoPromptEditor`，供 canvas 使用。
 - ✅ **Task 6.2**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Video stage 分支已直接渲染 `VideoComposer`，复用现有 `VideoStage`，每个 panel video card 仍和 panel 业务绑定，并显示 prompt、首尾帧、生成按钮、错误、任务状态。
 - 🔄 **Task 6.3**: `src/features/project-workspace/components/video-stage-canvas/VideoComposer.tsx` - 已接入现有视频动作：生成视频、批量生成视频、更新 video prompt、更新 panel video model、打开资产库。待补：统一进入 canvas command registry。
-- ⏸ **Task 6.4**: `src/features/project-workspace/canvas/stages/VideoStageVirtualizedList.tsx` - 为 `VideoStageNode` 内部 video card 列表实现独立虚拟化或分块懒渲染。禁止只依赖 React Flow 视口剔除。预期结果：500 个 video card 时只渲染视口附近卡片。
+- ✅ **Task 6.4**: `src/features/project-workspace/components/video-stage/VideoRenderPanel.tsx` - 已用 `@tanstack/react-virtual` 为视频阶段内部 storyboard video group 列表实现独立虚拟化。超过阈值时只挂载可视窗口附近 group，禁止只依赖 React Flow 视口剔除。
 - ⏸ **Task 6.5**: `tests/unit/project-workspace/video-stage-node.test.tsx` - 覆盖视频 prompt 修改、生成按钮、错误展示的具体入参。
 - ⏸ **Task 6.6**: `tests/unit/project-workspace/video-stage-virtualization.test.tsx` - 构造大量 video panel fixture，断言初始渲染不会挂载全部 video card。
 - ⏸ **Task 6.7**: `tests/regression/project-canvas-video-panel-binding.test.ts` - 断言 video card 永远绑定对应 panel，成片顺序来自业务数据。
@@ -640,6 +640,7 @@ npm run verify:push
 - ✅ 已完成：分镜阶段第一块完整迁移。`StoryboardComposer` 已从 `StoryboardStage` 中抽出，Storyboard StageNode 直接渲染现有 `StoryboardStageView` 的分镜组、panel、图片生成、编辑、插入、删除等入口。
 - ✅ 已完成：视频阶段第一块完整迁移。`VideoComposer` 已从 `VideoStageRoute` 中抽出，Video StageNode 直接渲染现有 `VideoStage` 的 panel video card、prompt、首尾帧、生成和批量生成入口。
 - ✅ 已完成：成片阶段第一块完整迁移。`FinalTimelineView` 已接入 Final StageNode，复用 `VideoEditorStage` 和 `createProjectFromPanels()` 从业务 panel 视频生成初始时间线。
+- ✅ 已完成：阶段内部虚拟化第一版。分镜 `StoryboardCanvas` 和视频 `VideoRenderPanel` 已接入 `@tanstack/react-virtual`，大项目超过阈值时按阶段内部 group 虚拟化挂载。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
 - ✅ 已验证：`npm run lint` 通过，0 errors；当前仓库仍有 91 个既有 warnings，未在本次迁移中扩大为 error。

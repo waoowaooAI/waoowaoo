@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslations } from 'next-intl'
 import { ProjectClip, ProjectPanel, ProjectStoryboard } from '@/types/project'
 import StoryboardGroup from './StoryboardGroup'
@@ -10,6 +11,9 @@ import { VariantData, VariantOptions } from './hooks/usePanelVariant'
 import type { PanelSaveState } from './hooks/usePanelCrudActions'
 import { AppIcon } from '@/components/ui/icons'
 import { GlassButton } from '@/components/ui/primitives'
+
+const STORYBOARD_GROUP_VIRTUALIZATION_THRESHOLD = 8
+const ESTIMATED_STORYBOARD_GROUP_HEIGHT = 960
 
 interface StoryboardCanvasProps {
   sortedStoryboards: ProjectStoryboard[]
@@ -140,6 +144,7 @@ export default function StoryboardCanvas({
   setLocalStoryboards,
 }: StoryboardCanvasProps) {
   const t = useTranslations('storyboard')
+  const scrollParentRef = useRef<HTMLDivElement | null>(null)
   const referencePanelOptionsByPanelId = useMemo(() => {
     const optionsByPanelId = new Map<string, Array<{ panelId: string; label: string; imageUrl: string }>>()
     const previousOptions: Array<{ panelId: string; label: string; imageUrl: string }> = []
@@ -164,6 +169,13 @@ export default function StoryboardCanvas({
     return optionsByPanelId
   }, [getTextPanels, sortedStoryboards, storyboardStartIndex, t])
 
+  const virtualizer = useVirtualizer({
+    count: sortedStoryboards.length,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => ESTIMATED_STORYBOARD_GROUP_HEIGHT,
+    overscan: 2,
+  })
+
   if (sortedStoryboards.length === 0) {
     return (
       <div className="text-center py-12 text-[var(--glass-text-tertiary)]">
@@ -173,94 +185,129 @@ export default function StoryboardCanvas({
     )
   }
 
+  const renderStoryboardGroup = (storyboard: ProjectStoryboard, sbIndex: number) => {
+    const clip = getClipInfo(storyboard.clipId)
+    const textPanels = getTextPanels(storyboard)
+    const isSubmittingStoryboardTask = submittingStoryboardIds.has(storyboard.id)
+    const isSelectingCandidate = selectingCandidateIds.has(storyboard.id)
+    const isSubmittingStoryboardTextTask = submittingStoryboardTextIds.has(storyboard.id)
+    const hasAnyImage = textPanels.some((panel) => panel.imageUrl)
+    const failedError = storyboard.lastError ?? null
+
+    return (
+      <div data-storyboard-group-id={storyboard.id}>
+        <StoryboardGroup
+          storyboard={storyboard}
+          clip={clip}
+          sbIndex={sbIndex}
+          totalStoryboards={sortedStoryboards.length}
+          textPanels={textPanels}
+          storyboardStartIndex={storyboardStartIndex[storyboard.id]}
+          videoRatio={videoRatio}
+          isExpanded={expandedClips.has(storyboard.id)}
+          isSubmittingStoryboardTask={isSubmittingStoryboardTask}
+          isSelectingCandidate={isSelectingCandidate}
+          isSubmittingStoryboardTextTask={isSubmittingStoryboardTextTask}
+          hasAnyImage={hasAnyImage}
+          failedError={failedError}
+          savingPanels={savingPanels}
+          deletingPanelIds={deletingPanelIds}
+          copyingPanelIds={copyingPanelIds}
+          saveStateByPanel={saveStateByPanel}
+          hasUnsavedByPanel={hasUnsavedByPanel}
+          modifyingPanels={modifyingPanels}
+          submittingPanelImageIds={submittingPanelImageIds}
+          onToggleExpand={() => onToggleExpandedClip(storyboard.id)}
+          onMoveUp={() => onMoveStoryboardGroup(storyboard.clipId, 'up')}
+          onMoveDown={() => onMoveStoryboardGroup(storyboard.clipId, 'down')}
+          onRegenerateText={() => onRegenerateStoryboardText(storyboard.id)}
+          onAddPanel={() => onAddPanel(storyboard.id)}
+          onDeleteStoryboard={() => onDeleteStoryboard(storyboard.id, textPanels.length)}
+          onGenerateAllIndividually={() => onGenerateAllIndividually(storyboard.id)}
+          onPreviewImage={onPreviewImage}
+          onCloseError={() => onCloseStoryboardError(storyboard.id)}
+          getPanelEditData={getPanelEditData}
+          onPanelUpdate={onPanelUpdate}
+          onPanelCopy={onPanelCopy}
+          onPanelDelete={(panelId) => onPanelDelete(panelId, storyboard.id, setLocalStoryboards)}
+          onOpenCharacterPicker={onOpenCharacterPicker}
+          onOpenLocationPicker={onOpenLocationPicker}
+          onRemoveCharacter={(panel, index) => onRemoveCharacter(panel, index, storyboard.id)}
+          onRemoveLocation={(panel) => onRemoveLocation(panel, storyboard.id)}
+          onRetryPanelSave={onRetryPanelSave}
+          getReferencePanelOptions={(panelId) => referencePanelOptionsByPanelId.get(panelId) || []}
+          onRegeneratePanelImage={onRegeneratePanelImage}
+          onOpenEditModal={(panelIndex) => onOpenEditModal(storyboard.id, panelIndex)}
+          onOpenAIDataModal={(panelIndex) => onOpenAIDataModal(storyboard.id, panelIndex)}
+          getPanelCandidates={getPanelCandidates}
+          onSelectPanelCandidateIndex={onSelectPanelCandidateIndex}
+          onConfirmPanelCandidate={onConfirmPanelCandidate}
+          onCancelPanelCandidate={onCancelPanelCandidate}
+          formatClipTitle={formatClipTitle}
+          movingClipId={movingClipId}
+          isCopyingStoryboard={copyingStoryboardId === storyboard.id}
+          isCopyingAnyStoryboard={copyingStoryboardId !== null}
+          onInsertPanel={onInsertPanel}
+          insertingAfterPanelId={insertingAfterPanelId}
+          projectId={projectId}
+          episodeId={episodeId}
+          onPanelVariant={onPanelVariant}
+          submittingVariantPanelId={submittingVariantPanelId}
+          onCopyStoryboard={() => onCopyStoryboard(storyboard.id, sbIndex + 1)}
+        />
+
+        <div className="flex justify-center py-2">
+          <GlassButton
+            variant="ghost"
+            size="sm"
+            onClick={() => addStoryboardGroup(sbIndex + 1)}
+            disabled={addingStoryboardGroup}
+            className="opacity-60 hover:opacity-100"
+          >
+            <AppIcon name="plusAlt" className="h-3 w-3" />
+            <span>{t('group.insertHere')}</span>
+          </GlassButton>
+        </div>
+      </div>
+    )
+  }
+
+  if (sortedStoryboards.length <= STORYBOARD_GROUP_VIRTUALIZATION_THRESHOLD) {
+    return (
+      <>
+        {sortedStoryboards.map((storyboard, sbIndex) => (
+          <div key={storyboard.id}>{renderStoryboardGroup(storyboard, sbIndex)}</div>
+        ))}
+      </>
+    )
+  }
+
   return (
-    <>
-      {sortedStoryboards.map((storyboard, sbIndex) => {
-        const clip = getClipInfo(storyboard.clipId)
-        const textPanels = getTextPanels(storyboard)
-        const isSubmittingStoryboardTask = submittingStoryboardIds.has(storyboard.id)
-        const isSelectingCandidate = selectingCandidateIds.has(storyboard.id)
-        const isSubmittingStoryboardTextTask = submittingStoryboardTextIds.has(storyboard.id)
-        const hasAnyImage = textPanels.some((panel) => panel.imageUrl)
-        const failedError = storyboard.lastError ?? null
-
-        return (
-          <div key={storyboard.id}>
-            <StoryboardGroup
-              storyboard={storyboard}
-              clip={clip}
-              sbIndex={sbIndex}
-              totalStoryboards={sortedStoryboards.length}
-              textPanels={textPanels}
-              storyboardStartIndex={storyboardStartIndex[storyboard.id]}
-              videoRatio={videoRatio}
-              isExpanded={expandedClips.has(storyboard.id)}
-              isSubmittingStoryboardTask={isSubmittingStoryboardTask}
-              isSelectingCandidate={isSelectingCandidate}
-              isSubmittingStoryboardTextTask={isSubmittingStoryboardTextTask}
-              hasAnyImage={hasAnyImage}
-              failedError={failedError}
-              savingPanels={savingPanels}
-              deletingPanelIds={deletingPanelIds}
-              copyingPanelIds={copyingPanelIds}
-              saveStateByPanel={saveStateByPanel}
-              hasUnsavedByPanel={hasUnsavedByPanel}
-              modifyingPanels={modifyingPanels}
-              submittingPanelImageIds={submittingPanelImageIds}
-              onToggleExpand={() => onToggleExpandedClip(storyboard.id)}
-              onMoveUp={() => onMoveStoryboardGroup(storyboard.clipId, 'up')}
-              onMoveDown={() => onMoveStoryboardGroup(storyboard.clipId, 'down')}
-              onRegenerateText={() => onRegenerateStoryboardText(storyboard.id)}
-              onAddPanel={() => onAddPanel(storyboard.id)}
-              onDeleteStoryboard={() => onDeleteStoryboard(storyboard.id, textPanels.length)}
-              onGenerateAllIndividually={() => onGenerateAllIndividually(storyboard.id)}
-              onPreviewImage={onPreviewImage}
-              onCloseError={() => onCloseStoryboardError(storyboard.id)}
-              getPanelEditData={getPanelEditData}
-              onPanelUpdate={onPanelUpdate}
-              onPanelCopy={onPanelCopy}
-              onPanelDelete={(panelId) => onPanelDelete(panelId, storyboard.id, setLocalStoryboards)}
-              onOpenCharacterPicker={onOpenCharacterPicker}
-              onOpenLocationPicker={onOpenLocationPicker}
-              onRemoveCharacter={(panel, index) => onRemoveCharacter(panel, index, storyboard.id)}
-              onRemoveLocation={(panel) => onRemoveLocation(panel, storyboard.id)}
-              onRetryPanelSave={onRetryPanelSave}
-              getReferencePanelOptions={(panelId) => referencePanelOptionsByPanelId.get(panelId) || []}
-              onRegeneratePanelImage={onRegeneratePanelImage}
-              onOpenEditModal={(panelIndex) => onOpenEditModal(storyboard.id, panelIndex)}
-              onOpenAIDataModal={(panelIndex) => onOpenAIDataModal(storyboard.id, panelIndex)}
-              getPanelCandidates={getPanelCandidates}
-              onSelectPanelCandidateIndex={onSelectPanelCandidateIndex}
-              onConfirmPanelCandidate={onConfirmPanelCandidate}
-              onCancelPanelCandidate={onCancelPanelCandidate}
-              formatClipTitle={formatClipTitle}
-              movingClipId={movingClipId}
-              isCopyingStoryboard={copyingStoryboardId === storyboard.id}
-              isCopyingAnyStoryboard={copyingStoryboardId !== null}
-              onInsertPanel={onInsertPanel}
-              insertingAfterPanelId={insertingAfterPanelId}
-              projectId={projectId}
-              episodeId={episodeId}
-              onPanelVariant={onPanelVariant}
-              submittingVariantPanelId={submittingVariantPanelId}
-              onCopyStoryboard={() => onCopyStoryboard(storyboard.id, sbIndex + 1)}
-            />
-
-            <div className="flex justify-center py-2">
-              <GlassButton
-                variant="ghost"
-                size="sm"
-                onClick={() => addStoryboardGroup(sbIndex + 1)}
-                disabled={addingStoryboardGroup}
-                className="opacity-60 hover:opacity-100"
-              >
-                <AppIcon name="plusAlt" className="h-3 w-3" />
-                <span>{t('group.insertHere')}</span>
-              </GlassButton>
+    <div
+      ref={scrollParentRef}
+      data-testid="storyboard-stage-virtualized-list"
+      className="max-h-[calc(100vh-14rem)] overflow-y-auto pr-2"
+    >
+      <div
+        className="relative w-full"
+        style={{ height: virtualizer.getTotalSize() }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const storyboard = sortedStoryboards[virtualItem.index]
+          if (!storyboard) return null
+          return (
+            <div
+              key={storyboard.id}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              className="absolute left-0 top-0 w-full"
+              style={{ transform: `translateY(${virtualItem.start}px)` }}
+            >
+              {renderStoryboardGroup(storyboard, virtualItem.index)}
             </div>
-          </div>
-        )
-      })}
-    </>
+          )
+        })}
+      </div>
+    </div>
   )
 }

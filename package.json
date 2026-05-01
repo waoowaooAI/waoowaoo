@@ -137,6 +137,7 @@
     "@remotion/cli": "^4.0.405",
     "@remotion/player": "^4.0.405",
     "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-virtual": "^3.13.24",
     "@types/archiver": "^7.0.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.6",

@@ -1,5 +1,6 @@
 import { getAspectRatioConfig } from '@/lib/constants'
-import { useCallback, useEffect, useMemo, useState, type MutableRefObject } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslations } from 'next-intl'
 import type { CapabilitySelections, CapabilityValue } from '@/lib/ai-registry/types'
 import { AppIcon } from '@/components/ui/icons'
@@ -7,6 +8,9 @@ import { normalizeVideoGenerationSelections, projectVideoPricingTiersByFixedSele
 import { InlineVideoGenerationControls, VideoPanelCard, type VideoPanel, type VideoModelOption, type MatchedVoiceLine, type FirstLastFrameParams, type VideoGenerationOptionValue, type VideoGenerationOptions } from '../video'
 import type { PromptField } from '@/lib/project-workflow/stages/video-stage-runtime/useVideoPromptState'
 import { useAdaptiveCardGrid } from '../layout/useAdaptiveCardGrid'
+
+const VIDEO_GROUP_VIRTUALIZATION_THRESHOLD = 8
+const ESTIMATED_VIDEO_GROUP_HEIGHT = 760
 
 type GroupCapabilityDefinition = EffectiveVideoCapabilityDefinition
 
@@ -175,6 +179,7 @@ export default function VideoRenderPanel({
   savePrompt,
 }: VideoRenderPanelProps) {
   const t = useTranslations('video')
+  const scrollParentRef = useRef<HTMLDivElement | null>(null)
   const isVerticalRatio = getAspectRatioConfig(videoRatio).isVertical
   const videoGrid = useAdaptiveCardGrid({
     itemCount: allPanels.length,
@@ -357,151 +362,197 @@ export default function VideoRenderPanel({
     submittingGroupId,
   ])
 
+  const groupVirtualizer = useVirtualizer({
+    count: videoGroups.length,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => ESTIMATED_VIDEO_GROUP_HEIGHT,
+    overscan: 2,
+  })
+
+  const renderVideoGroup = (group: VideoPanelGroup) => {
+    const groupPanelsWithImages = group.panels.filter(({ panel }) => panel.imageUrl).length
+    const groupHasRunningVideo = group.panels.some(({ panel }) => panel.videoTaskRunning)
+    const isSubmittingThisGroup = submittingGroupId === group.storyboardId
+
+    return (
+      <section data-video-group-id={group.storyboardId} className="space-y-3">
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--glass-stroke-base)] pb-2"
+          style={videoGrid.contentStyle}
+        >
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-[var(--glass-text-primary)]">
+              {t('groupBatch.title', { number: group.groupNumber })}
+            </h3>
+            <p className="text-xs text-[var(--glass-text-tertiary)]">
+              {t('groupBatch.summary', {
+                total: group.panels.length,
+                ready: groupPanelsWithImages,
+              })}
+            </p>
+          </div>
+          <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+            <InlineVideoGenerationControls
+              models={userVideoModels ?? []}
+              modelValue={groupSelectedModel}
+              onModelChange={setGroupSelectedModel}
+              capabilityFields={groupCapabilityFields}
+              capabilityOverrides={groupGenerationOptions}
+              onCapabilityChange={setGroupCapabilityValue}
+              fields={['resolution']}
+              disabled={groupHasRunningVideo || !!submittingGroupId}
+              className="flex-none"
+              size="xs"
+              wrap={false}
+            />
+            <button
+              type="button"
+              onClick={() => { void handleConfirmGroupBatch(group) }}
+              disabled={
+                groupPanelsWithImages === 0
+                || groupHasRunningVideo
+                || !!submittingGroupId
+                || !groupSelectedModel
+                || groupMissingCapabilityFields.length > 0
+              }
+              className="glass-btn-base glass-btn-primary h-8 px-3 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              title={t('groupBatch.open')}
+            >
+              {isSubmittingThisGroup ? (
+                <AppIcon name="loader" className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <AppIcon name="plus" className="h-3.5 w-3.5" />
+              )}
+              <span>{t('groupBatch.open')}</span>
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="grid gap-4"
+          style={{ ...videoGrid.contentStyle, ...videoGrid.gridStyle }}
+        >
+          {group.panels.map(({ panel, absoluteIndex }) => {
+            const panelKey = `${panel.storyboardId}-${panel.panelIndex}`
+            const isLinked = linkedPanels.get(panelKey) || false
+            const isLastFrame = isLinkedAsLastFrame(absoluteIndex)
+            const nextPanel = getNextPanel(absoluteIndex)
+            const prevPanel = absoluteIndex > 0 ? allPanels[absoluteIndex - 1] : null
+            const hasNext = absoluteIndex < allPanels.length - 1
+            const promptField: PromptField = isLinked ? 'firstLastFramePrompt' : 'videoPrompt'
+            const defaultFlPrompt = getDefaultFlPrompt(panel.textPanel?.video_prompt, nextPanel?.textPanel?.video_prompt)
+            const externalPrompt = isLinked
+              ? (panel.firstLastFramePrompt || defaultFlPrompt)
+              : panel.textPanel?.video_prompt
+            const localPrompt = getLocalPrompt(panelKey, externalPrompt, promptField)
+            const isSavingPrompt = savingPrompts.has(`${promptField}:${panelKey}`)
+
+            return (
+              <div
+                key={panelKey}
+                ref={(element) => {
+                  if (element) panelRefs.current.set(panelKey, element)
+                  else panelRefs.current.delete(panelKey)
+                }}
+                className={`transition-all duration-500 ${highlightedPanelKey === panelKey
+                  ? 'ring-4 ring-[var(--glass-stroke-focus)] ring-offset-2 ring-offset-[var(--glass-bg-canvas)] rounded-2xl scale-[1.02]'
+                  : ''
+                }`}
+              >
+                <VideoPanelCard
+                  panel={{
+                    ...panel,
+                    lipSyncTaskRunning: panel.lipSyncTaskRunning || false,
+                  }}
+                  panelIndex={absoluteIndex}
+                  defaultVideoModel={defaultVideoModel}
+                  capabilityOverrides={capabilityOverrides}
+                  videoRatio={videoRatio}
+                  userVideoModels={userVideoModels}
+                  projectId={projectId}
+                  episodeId={episodeId}
+                  runningVoiceLineIds={runningVoiceLineIds}
+                  matchedVoiceLines={panelVoiceLines.get(panelKey) || []}
+                  onLipSync={onLipSync}
+                  showLipSyncVideo={panelVideoPreference.get(panelKey) ?? true}
+                  onToggleLipSyncVideo={onToggleLipSyncVideo}
+                  isLinked={isLinked}
+                  isLastFrame={isLastFrame}
+                  nextPanel={nextPanel}
+                  prevPanel={prevPanel}
+                  hasNext={hasNext}
+                  flModel={flModel}
+                  flModelOptions={flModelOptions}
+                  flGenerationOptions={flGenerationOptions}
+                  flCapabilityFields={flCapabilityFields}
+                  flMissingCapabilityFields={flMissingCapabilityFields}
+                  flCustomPrompt={flCustomPrompts.get(panelKey) || panel.firstLastFramePrompt || ''}
+                  defaultFlPrompt={defaultFlPrompt}
+                  localPrompt={localPrompt}
+                  isSavingPrompt={isSavingPrompt}
+                  onUpdateLocalPrompt={(value) => {
+                    updateLocalPrompt(panelKey, value, promptField)
+                    if (isLinked) onFlCustomPromptChange(panelKey, value)
+                  }}
+                  onSavePrompt={(value) => savePrompt(panel.storyboardId, panel.panelIndex, panelKey, value, promptField)}
+                  onGenerateVideo={onGenerateVideo}
+                  onUpdatePanelVideoModel={onUpdatePanelVideoModel}
+                  onToggleLink={onToggleLink}
+                  onFlModelChange={onFlModelChange}
+                  onFlCapabilityChange={onFlCapabilityChange}
+                  onFlCustomPromptChange={onFlCustomPromptChange}
+                  onResetFlPrompt={onResetFlPrompt}
+                  onGenerateFirstLastFrame={onGenerateFirstLastFrame}
+                  onPreviewImage={onPreviewImage}
+                />
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    )
+  }
+
+  if (videoGroups.length > VIDEO_GROUP_VIRTUALIZATION_THRESHOLD) {
+    return (
+      <div ref={videoGrid.containerRef} className="w-full">
+        <div
+          ref={scrollParentRef}
+          data-testid="video-stage-virtualized-list"
+          className="max-h-[calc(100vh-14rem)] overflow-y-auto pr-2"
+        >
+          <div
+            className="relative w-full"
+            style={{ height: groupVirtualizer.getTotalSize() }}
+          >
+            {groupVirtualizer.getVirtualItems().map((virtualItem) => {
+              const group = videoGroups[virtualItem.index]
+              if (!group) return null
+              return (
+                <div
+                  key={group.storyboardId}
+                  data-index={virtualItem.index}
+                  ref={groupVirtualizer.measureElement}
+                  className="absolute left-0 top-0 w-full"
+                  style={{ transform: `translateY(${virtualItem.start}px)` }}
+                >
+                  {renderVideoGroup(group)}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div ref={videoGrid.containerRef} className="w-full space-y-6">
-      {videoGroups.map((group) => {
-        const groupPanelsWithImages = group.panels.filter(({ panel }) => panel.imageUrl).length
-        const groupHasRunningVideo = group.panels.some(({ panel }) => panel.videoTaskRunning)
-        const isSubmittingThisGroup = submittingGroupId === group.storyboardId
-
-        return (
-          <section key={group.storyboardId} className="space-y-3">
-            <div
-              className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--glass-stroke-base)] pb-2"
-              style={videoGrid.contentStyle}
-            >
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-[var(--glass-text-primary)]">
-                  {t('groupBatch.title', { number: group.groupNumber })}
-                </h3>
-                <p className="text-xs text-[var(--glass-text-tertiary)]">
-                  {t('groupBatch.summary', {
-                    total: group.panels.length,
-                    ready: groupPanelsWithImages,
-                  })}
-                </p>
-              </div>
-              <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-                <InlineVideoGenerationControls
-                  models={userVideoModels ?? []}
-                  modelValue={groupSelectedModel}
-                  onModelChange={setGroupSelectedModel}
-                  capabilityFields={groupCapabilityFields}
-                  capabilityOverrides={groupGenerationOptions}
-                  onCapabilityChange={setGroupCapabilityValue}
-                  fields={['resolution']}
-                  disabled={groupHasRunningVideo || !!submittingGroupId}
-                  className="flex-none"
-                  size="xs"
-                  wrap={false}
-                />
-                <button
-                  type="button"
-                  onClick={() => { void handleConfirmGroupBatch(group) }}
-                  disabled={
-                    groupPanelsWithImages === 0
-                    || groupHasRunningVideo
-                    || !!submittingGroupId
-                    || !groupSelectedModel
-                    || groupMissingCapabilityFields.length > 0
-                  }
-                  className="glass-btn-base glass-btn-primary h-8 px-3 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                  title={t('groupBatch.open')}
-                >
-                  {isSubmittingThisGroup ? (
-                    <AppIcon name="loader" className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <AppIcon name="plus" className="h-3.5 w-3.5" />
-                  )}
-                  <span>{t('groupBatch.open')}</span>
-                </button>
-              </div>
-            </div>
-
-            <div
-              className="grid gap-4"
-              style={{ ...videoGrid.contentStyle, ...videoGrid.gridStyle }}
-            >
-              {group.panels.map(({ panel, absoluteIndex }) => {
-                const panelKey = `${panel.storyboardId}-${panel.panelIndex}`
-                const isLinked = linkedPanels.get(panelKey) || false
-                const isLastFrame = isLinkedAsLastFrame(absoluteIndex)
-                const nextPanel = getNextPanel(absoluteIndex)
-                const prevPanel = absoluteIndex > 0 ? allPanels[absoluteIndex - 1] : null
-                const hasNext = absoluteIndex < allPanels.length - 1
-                const promptField: PromptField = isLinked ? 'firstLastFramePrompt' : 'videoPrompt'
-                const defaultFlPrompt = getDefaultFlPrompt(panel.textPanel?.video_prompt, nextPanel?.textPanel?.video_prompt)
-                const externalPrompt = isLinked
-                  ? (panel.firstLastFramePrompt || defaultFlPrompt)
-                  : panel.textPanel?.video_prompt
-                const localPrompt = getLocalPrompt(panelKey, externalPrompt, promptField)
-                const isSavingPrompt = savingPrompts.has(`${promptField}:${panelKey}`)
-
-                return (
-                  <div
-                    key={panelKey}
-                    ref={(element) => {
-                      if (element) panelRefs.current.set(panelKey, element)
-                      else panelRefs.current.delete(panelKey)
-                    }}
-                    className={`transition-all duration-500 ${highlightedPanelKey === panelKey
-                      ? 'ring-4 ring-[var(--glass-stroke-focus)] ring-offset-2 ring-offset-[var(--glass-bg-canvas)] rounded-2xl scale-[1.02]'
-                      : ''
-                    }`}
-                  >
-                    <VideoPanelCard
-                      panel={{
-                        ...panel,
-                        lipSyncTaskRunning: panel.lipSyncTaskRunning || false,
-                      }}
-                      panelIndex={absoluteIndex}
-                      defaultVideoModel={defaultVideoModel}
-                      capabilityOverrides={capabilityOverrides}
-                      videoRatio={videoRatio}
-                      userVideoModels={userVideoModels}
-                      projectId={projectId}
-                      episodeId={episodeId}
-                      runningVoiceLineIds={runningVoiceLineIds}
-                      matchedVoiceLines={panelVoiceLines.get(panelKey) || []}
-                      onLipSync={onLipSync}
-                      showLipSyncVideo={panelVideoPreference.get(panelKey) ?? true}
-                      onToggleLipSyncVideo={onToggleLipSyncVideo}
-                      isLinked={isLinked}
-                      isLastFrame={isLastFrame}
-                      nextPanel={nextPanel}
-                      prevPanel={prevPanel}
-                      hasNext={hasNext}
-                      flModel={flModel}
-                      flModelOptions={flModelOptions}
-                      flGenerationOptions={flGenerationOptions}
-                      flCapabilityFields={flCapabilityFields}
-                      flMissingCapabilityFields={flMissingCapabilityFields}
-                      flCustomPrompt={flCustomPrompts.get(panelKey) || panel.firstLastFramePrompt || ''}
-                      defaultFlPrompt={defaultFlPrompt}
-                      localPrompt={localPrompt}
-                      isSavingPrompt={isSavingPrompt}
-                      onUpdateLocalPrompt={(value) => {
-                        updateLocalPrompt(panelKey, value, promptField)
-                        if (isLinked) onFlCustomPromptChange(panelKey, value)
-                      }}
-                      onSavePrompt={(value) => savePrompt(panel.storyboardId, panel.panelIndex, panelKey, value, promptField)}
-                      onGenerateVideo={onGenerateVideo}
-                      onUpdatePanelVideoModel={onUpdatePanelVideoModel}
-                      onToggleLink={onToggleLink}
-                      onFlModelChange={onFlModelChange}
-                      onFlCapabilityChange={onFlCapabilityChange}
-                      onFlCustomPromptChange={onFlCustomPromptChange}
-                      onResetFlPrompt={onResetFlPrompt}
-                      onGenerateFirstLastFrame={onGenerateFirstLastFrame}
-                      onPreviewImage={onPreviewImage}
-                    />
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )
-      })}
+      {videoGroups.map((group) => (
+        <div key={group.storyboardId}>
+          {renderVideoGroup(group)}
+        </div>
+      ))}
 
     </div>
   )
