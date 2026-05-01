@@ -1,6 +1,7 @@
 {
   "stages": {
     "story": "Story",
+    "canvas": "Canvas",
     "script": "Script",
     "storyboard": "Storyboard",
     "video": "Video",
@@ -172,5 +173,55 @@
     },
     "confirm": "Continue and Clear",
     "cancel": "Cancel"
+  },
+  "canvas": {
+    "title": "Project Canvas",
+    "subtitle": "Read-only workflow graph for the current episode",
+    "summary": "{nodes} nodes · {edges} edges",
+    "nodeTypes": {
+      "story": "Story",
+      "scriptClip": "Script",
+      "storyboardGroup": "Storyboard",
+      "panelImage": "Image",
+      "videoPanel": "Video",
+      "timeline": "Timeline"
+    },
+    "nodeTitles": {
+      "story": "Story",
+      "scriptClip": "Clip {index}",
+      "storyboardGroup": "Storyboard Group {index}",
+      "panelImage": "Panel {index}",
+      "videoPanel": "Panel {index} Video",
+      "timeline": "Timeline"
+    },
+    "status": {
+      "idle": "Idle",
+      "queued": "Queued",
+      "processing": "Processing",
+      "failed": "Failed",
+      "ready": "Ready"
+    },
+    "nodeDescriptions": {
+      "story": "Episode source material and creative direction.",
+      "scriptClip": "Script segment generated from the story.",
+      "storyboardGroup": "Storyboard group aligned to one script segment.",
+      "panelImage": "Image-stage panel node. Actions migrate here in the next phase.",
+      "videoPanel": "Video-stage node attached to its source image panel.",
+      "timeline": "Final composition target for generated video material."
+    },
+    "previewAlt": {
+      "panelImage": "Panel {index} image preview"
+    },
+    "inspector": {
+      "title": "Inspector",
+      "empty": "Select a node to inspect its canvas metadata.",
+      "nodeType": "Type",
+      "status": "Status",
+      "nodeKey": "Node key"
+    },
+    "layout": {
+      "loading": "Loading layout",
+      "saving": "Saving layout"
+    }
   }
 }

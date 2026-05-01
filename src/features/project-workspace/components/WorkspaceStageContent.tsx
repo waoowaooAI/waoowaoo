@@ -5,6 +5,7 @@ import ScriptStage from './ScriptStage'
 import StoryboardStage from './StoryboardStage'
 import VideoStageRoute from './VideoStageRoute'
 import VoiceStageRoute from './VoiceStageRoute'
+import ProjectCanvasRoute from '@/features/project-canvas/ProjectCanvasRoute'
 
 interface WorkspaceStageContentProps {
   currentStage: string
@@ -16,6 +17,8 @@ export default function WorkspaceStageContent({
   return (
     <div key={currentStage} className="animate-page-enter w-full">
       {currentStage === 'config' && <ConfigStage />}
+
+      {currentStage === 'canvas' && <ProjectCanvasRoute />}
 
       {(currentStage === 'script' || currentStage === 'assets') && <ScriptStage />}
 

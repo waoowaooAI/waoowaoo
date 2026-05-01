@@ -141,6 +141,7 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.6",
     "@vercel/og": "^0.8.6",
+    "@xyflow/react": "^12.10.1",
     "ai": "^6.0.116",
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",

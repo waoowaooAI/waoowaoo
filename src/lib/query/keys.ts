@@ -97,6 +97,8 @@ export const queryKeys = {
         detail: (projectId: string) => ['project', projectId] as const,
         episodes: (projectId: string) => ['project', projectId, 'episodes'] as const,
         data: (projectId: string) => ['project', projectId, 'data'] as const,
+        canvasLayout: (projectId: string, episodeId: string) =>
+            ['project', projectId, 'canvas-layout', episodeId] as const,
         context: (projectId: string, episodeId?: string | null, currentStage?: string | null) =>
             ['project', projectId, 'context', episodeId ?? '', currentStage ?? ''] as const,
         commands: (projectId: string, episodeId?: string | null) =>

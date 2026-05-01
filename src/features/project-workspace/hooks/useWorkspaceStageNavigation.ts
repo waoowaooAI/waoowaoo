@@ -32,6 +32,10 @@ export function useWorkspaceStageNavigation({
         return stageArtifacts.hasScript ? 'ready' : 'empty'
       case 'storyboard':
         return stageArtifacts.hasStoryboard ? 'ready' : 'empty'
+      case 'canvas':
+        return stageArtifacts.hasStory || stageArtifacts.hasScript || stageArtifacts.hasStoryboard || stageArtifacts.hasVideo
+          ? 'ready'
+          : 'active'
       case 'videos':
       case 'editor':
         return stageArtifacts.hasVideo ? 'ready' : 'empty'
@@ -44,6 +48,7 @@ export function useWorkspaceStageNavigation({
 
   return [
     { id: 'config', icon: 'S', label: t('stages.story'), status: getStageStatus('config') },
+    { id: 'canvas', icon: 'C', label: t('stages.canvas'), status: getStageStatus('canvas') },
     { id: 'script', icon: 'A', label: t('stages.script'), status: getStageStatus('assets') },
     { id: 'storyboard', icon: 'B', label: t('stages.storyboard'), status: getStageStatus('storyboard') },
     { id: 'videos', icon: 'V', label: t('stages.video'), status: getStageStatus('videos') },

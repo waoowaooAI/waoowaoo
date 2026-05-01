@@ -138,6 +138,7 @@ model ProjectEpisode {
   storyboards             ProjectStoryboard[]
   voiceLines              ProjectVoiceLine[]
   editorProject           VideoEditorProject?
+  canvasLayout            ProjectCanvasLayout?
 
   @@unique([projectId, episodeNumber])
   @@index([projectId])
@@ -561,9 +562,53 @@ model Project {
   episodes           ProjectEpisode[]
   characters         ProjectCharacter[]
   locations          ProjectLocation[]
+  canvasLayouts      ProjectCanvasLayout[]
 
   @@index([userId])
   @@map("projects")
+}
+
+model ProjectCanvasLayout {
+  id            String                    @id @default(uuid())
+  projectId     String
+  episodeId     String                    @unique
+  schemaVersion Int                       @default(1)
+  viewportX     Float                     @default(0)
+  viewportY     Float                     @default(0)
+  zoom          Float                     @default(1)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @default(now()) @updatedAt
+  project       Project                   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  episode       ProjectEpisode            @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  nodeLayouts   ProjectCanvasNodeLayout[]
+
+  @@unique([projectId, episodeId])
+  @@index([projectId])
+  @@map("project_canvas_layouts")
+}
+
+model ProjectCanvasNodeLayout {
+  id          String              @id @default(uuid())
+  layoutId    String
+  nodeKey     String
+  nodeType    String
+  targetType  String
+  targetId    String
+  x           Float
+  y           Float
+  width       Float
+  height      Float
+  zIndex      Int                 @default(0)
+  locked      Boolean             @default(false)
+  collapsed   Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now()) @updatedAt
+  layout      ProjectCanvasLayout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+
+  @@unique([layoutId, nodeKey])
+  @@index([layoutId])
+  @@index([targetType, targetId])
+  @@map("project_canvas_node_layouts")
 }
 
 model Session {

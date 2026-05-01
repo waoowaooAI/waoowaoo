@@ -1,6 +1,7 @@
 {
   "stages": {
     "story": "故事",
+    "canvas": "画布",
     "script": "剧本",
     "storyboard": "分镜",
     "video": "成片",
@@ -172,5 +173,55 @@
     },
     "confirm": "继续并清空",
     "cancel": "取消"
+  },
+  "canvas": {
+    "title": "项目画布",
+    "subtitle": "当前剧集的只读工作流图",
+    "summary": "{nodes} 个节点 · {edges} 条关系",
+    "nodeTypes": {
+      "story": "故事",
+      "scriptClip": "剧本",
+      "storyboardGroup": "分镜组",
+      "panelImage": "图片",
+      "videoPanel": "视频",
+      "timeline": "成片"
+    },
+    "nodeTitles": {
+      "story": "故事",
+      "scriptClip": "第 {index} 段剧本",
+      "storyboardGroup": "第 {index} 组分镜",
+      "panelImage": "第 {index} 个镜头",
+      "videoPanel": "第 {index} 个镜头视频",
+      "timeline": "成片时间线"
+    },
+    "status": {
+      "idle": "空闲",
+      "queued": "排队中",
+      "processing": "处理中",
+      "failed": "失败",
+      "ready": "已就绪"
+    },
+    "nodeDescriptions": {
+      "story": "剧集原始素材与创作方向。",
+      "scriptClip": "由故事生成的剧本片段。",
+      "storyboardGroup": "与一个剧本片段对应的分镜组。",
+      "panelImage": "图片阶段的镜头节点，下一阶段会迁移操作入口。",
+      "videoPanel": "挂在来源图片镜头后的成片节点。",
+      "timeline": "生成视频素材最终汇入的成片目标。"
+    },
+    "previewAlt": {
+      "panelImage": "第 {index} 个镜头图片预览"
+    },
+    "inspector": {
+      "title": "检查器",
+      "empty": "选择一个节点查看它的画布元数据。",
+      "nodeType": "类型",
+      "status": "状态",
+      "nodeKey": "节点键"
+    },
+    "layout": {
+      "loading": "正在读取布局",
+      "saving": "正在保存布局"
+    }
   }
 }
