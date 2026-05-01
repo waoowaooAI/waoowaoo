@@ -1,7 +1,29 @@
 'use client'
 
 import type { NodeProps } from '@xyflow/react'
+import StoryComposer from '../../components/story/StoryComposer'
 import type { CanvasStageNode } from '../workspace-canvas-types'
+
+function CanvasStageBody({ data }: { readonly data: CanvasStageNode['data'] }) {
+  if (data.stageId === 'story') {
+    return (
+      <div className="nodrag nowheel h-full overflow-y-auto px-4 py-4">
+        <StoryComposer />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full flex-col gap-3 overflow-hidden p-4">
+      <div className="rounded-md border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-canvas)] p-3">
+        <p className="text-xs leading-5 text-[var(--glass-text-secondary)]">{data.summary}</p>
+      </div>
+      <div className="min-h-0 flex-1 rounded-md border border-dashed border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-canvas)] p-3">
+        <p className="text-xs leading-5 text-[var(--glass-text-tertiary)]">{data.description}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function CanvasStageNode({ data, selected }: NodeProps<CanvasStageNode>) {
   const primaryAction = data.primaryAction
@@ -43,13 +65,8 @@ export default function CanvasStageNode({ data, selected }: NodeProps<CanvasStag
       </header>
 
       {!data.collapsed ? (
-        <div className="flex h-[calc(100%-92px)] flex-col gap-3 overflow-hidden p-4">
-          <div className="rounded-md border border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-canvas)] p-3">
-            <p className="text-xs leading-5 text-[var(--glass-text-secondary)]">{data.summary}</p>
-          </div>
-          <div className="min-h-0 flex-1 rounded-md border border-dashed border-[var(--glass-stroke-soft)] bg-[var(--glass-bg-canvas)] p-3">
-            <p className="text-xs leading-5 text-[var(--glass-text-tertiary)]">{data.description}</p>
-          </div>
+        <div className="h-[calc(100%-92px)] overflow-hidden">
+          <CanvasStageBody data={data} />
         </div>
       ) : null}
     </section>

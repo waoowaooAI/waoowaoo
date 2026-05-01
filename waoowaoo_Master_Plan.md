@@ -365,21 +365,16 @@ export function resolveCanvasStageLayouts(params: {
 
 ### 阶段 3: StoryStageNode 完整迁移
 
-- ⏸ **Task 3.1**: `src/features/project-workspace/components/ConfigStage.tsx` - 拆分出 `StoryComposer`，只保留可复用的故事输入、配置、生成剧本入口，不保留 page/stage wrapper。
-- ⏸ **Task 3.2**: `src/features/project-workspace/components/story/StoryComposer.tsx` - 新增组件，接收：
+- ✅ **Task 3.1**: `src/features/project-workspace/components/ConfigStage.tsx` - 已拆分出 `StoryComposer`。`ConfigStage` 当前只保留薄 wrapper，后续删除旧 page wrapper 时不再承载业务逻辑。
+- ✅ **Task 3.2**: `src/features/project-workspace/components/story/StoryComposer.tsx` - 已新增组件，复用 `ProjectInputStage`、`SmartImportWizard`、`WorkspaceStageRuntimeContext`、`useWorkspaceEpisodeStageData`，覆盖故事输入、配置、生成剧本、智能分集完成后的 episode 定位。
 
 ```ts
-export interface StoryComposerProps {
-  readonly novelText: string
-  readonly isGenerating: boolean
-  readonly onUpdateEpisode: (key: string, value: unknown) => Promise<void>
-  readonly onGenerateScript: () => void
-}
+export default function StoryComposer(): React.ReactElement
 ```
 
 预期结果：画布内故事阶段和旧故事输入功能等价。
 
-- ⏸ **Task 3.3**: `src/features/project-workspace/canvas/stages/StoryStageNode.tsx` - 渲染 `CanvasStageFrame + StoryComposer`。节点内直接显示完整功能，不依赖点击 Inspector。
+- ✅ **Task 3.3**: `src/features/project-workspace/canvas/stages/CanvasStageNode.tsx` - Story stage 分支已直接渲染 `StoryComposer`，节点内显示完整故事输入能力，不依赖点击 Inspector。为防止画布拖拽抢占输入，StoryComposer 容器使用 `nodrag nowheel`。
 - ⏸ **Task 3.4**: `tests/unit/project-workspace/story-stage-node.test.tsx` - 测试输入故事文本调用 `onUpdateEpisode` 的具体 key/value，点击生成调用 `onGenerateScript`。
 
 ### 阶段 4: ScriptStageNode 完整迁移
@@ -640,7 +635,8 @@ npm run verify:push
 - ✅ 已完成：第二阶段基础画布壳。新增 `src/features/project-workspace/canvas/**`，当前 workspace 主内容已经从 legacy `ProjectCanvasRoute` 切到 `ProjectWorkspaceCanvas`，画布顶层为五个固定 StageNode。
 - ✅ 已完成：阶段布局支持保存/读取现有 canvas layout 表；本阶段不改 Prisma schema，不做破坏性 DB 变更。
 - ✅ 已完成：`CanvasToolbar` 已提供 reset layout、collapse all、expand all、fit view、focus stage。
+- ✅ 已完成：故事阶段第一块完整迁移。`StoryComposer` 已从 `ConfigStage` 中抽出，Story StageNode 直接渲染故事输入、配置、生成剧本和智能分集入口。
 - ✅ 已验证：`BILLING_TEST_BOOTSTRAP=0 npm exec -- vitest run tests/unit/project-workspace/canvas/stage-layout.test.ts tests/unit/project-workspace/workspace-stage.test.ts tests/unit/project-canvas` 通过，6 个测试文件 / 9 个测试通过。
 - ✅ 已验证：`npm run typecheck` 通过。
-- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，但节点内部目前是摘要和操作入口占位，尚未完成故事输入、剧本 clip、分镜 panel、视频 panel、成片 timeline 的完整 UI 迁移、阶段内虚拟化和 command registry。
+- ⚠️ 当前代码仍是半成品：五个阶段大节点已存在，故事节点已有完整输入能力；剧本 clip、分镜 panel、视频 panel、成片 timeline 仍是摘要和操作入口占位，尚未完成阶段内虚拟化和 command registry。
 - ⚠️ 当前工作区有无关 `CHANGELOG.md` 删除，后续提交必须精确控制范围。
